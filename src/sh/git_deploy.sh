@@ -36,30 +36,34 @@ repo_dir="$deploy_dir/repo"										#pode ser um ponto de montagem em /mnt/ , c
 mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
 
 if [ ! -e "$deploy_dir/parametros.txt" ]; then								#cria arquivo de parâmetros, caso não exista.
-	echo '' > $deploy_dir/parametros.txt
+	touch $deploy_dir/parametros.txt
 fi
 
 if [ ! -e "$deploy_dir/hist_deploy.txt" ]; then								#cria arquivo de histórico, caso não exista.
-	echo '' > $deploy_dir/hist_deploy.txt
+	touch $deploy_dir/hist_deploy.txt
 fi
 
 ##### REMOVE ARQUIVOS, PONTOS DE MONTAGEM E LINKS SIMBÓLICOS TEMPORÁRIOS #####
 
-rm -Rf $temp_dir;											#apaga o diretório $temp_dir, caso exista.
-mkdir -p $temp_dir;
+clean_temp () {
+	rm -Rf $temp_dir;										#apaga o diretório $temp_dir, caso exista.
+	mkdir -p $temp_dir;
 
-grep -E "/mnt/destino_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt				#os pontos de montagem são obtidos do arquivo /proc/mounts
+	grep -E "/mnt/destino_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt			#os pontos de montagem são obtidos do arquivo /proc/mounts
 
-sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
+	sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
 
-desmontar="$(cat $temp_dir/pontos_de_montagem.txt | wc -l)"						#Se > 0, há necessidade de desmontar pontos de montagem.
+	desmontar="$(cat $temp_dir/pontos_de_montagem.txt | wc -l)"					#Se > 0, há necessidade de desmontar pontos de montagem.
 
-if [ $desmontar -gt "0" ]; then
-	cat $temp_dir/pontos_de_montagem.txt | xargs sudo umount					#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-fi
+	if [ $desmontar -gt "0" ]; then
+		cat $temp_dir/pontos_de_montagem.txt | xargs sudo umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
+	fi
 
-rm -Rf /mnt/destino_*											#já desmontados, os pontos de montagem temporários podem ser apagados.
-rm -f $deploy_dir/destino_*										#remoção de link simbólico.
+	rm -Rf /mnt/destino_*										#já desmontados, os pontos de montagem temporários podem ser apagados.
+	rm -f $deploy_dir/destino_*									#remoção de link simbólico.
+}
+
+clean_temp
 
 #### Validação do input do usuário ###### 
 
@@ -269,6 +273,8 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	echo -e "\nDeploy concluído."
 else
 	echo -e "\nDeploy abortado."
+
+	clean_temp
 	exit
 fi
 
@@ -286,6 +292,7 @@ echo -e "$data_log$app_log$rev_log$chamado" >> $deploy_dir/hist_deploy.txt
 grep -i "$app" $deploy_dir/hist_deploy.txt > $atividade_dir/historico_deploy_$app.txt
 cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
+clean_temp
 exit
 
 #comparar logs com: rsync -rnivc --delete origem/VISAO/ destino/VISAO/ > modificacoes_rsync.txt

@@ -1,0 +1,27 @@
+Instruções:
+
+1) O script requer o pacote cifs-utils (instalar com o comando "sudo yum install cifs-utils")
+2) Deve ser criado o diretório /opt/git_deploy/sh/ (os arquivos *.sh devem ser colocados aqui)
+3) Os scripts devem possuir permissão de execução (executar "chmod +x <nomedoarquivo.sh>")
+4) Gerar uma chave pública a ser armazenada no Git para o usuário que realizará os deploys
+(a definir), conforme segue:
+
+- executar como root : "ssh-keygen -t rsa -C <nomeusuario@anatel.gov.br>"
+- para ver a chave gerada, executar, no diretório HOME do usuário root: "cat .ssh/id_rsa.pub"
+- Copiar a chave e inserir no GIT. Caminho: "http://git.anatel.gov.br/profile",
+"Edit Profile Settings", "SSH Keys", "Add SSH Key".
+
+Execução:
+
+sudo /opt/git_deploy/sh/git_deploy.sh <sistema> <hash> <chamado>
+
+Logs:
+
+São gravados 3 logs:
+
+- hist_deploy.txt (em /opt/git_deploy/)
+- modificacoes.txt (em /opt/git_deploy/chamados/<sistema>/<numchamado.anochamado>)
+- hist_deploy_sistema.txt (além do diretório anterior, em /opt/git_deploy/chamados/<sistema>/)
+
+
+
