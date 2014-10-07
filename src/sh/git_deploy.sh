@@ -14,7 +14,7 @@ if [ "$(ps aux | grep -E 'git_deploy.sh' | grep -Ev 'grep|sudo' | wc -l)" -gt "2
 	exit												# - execuções simultâneas pelo mesmo usuário
 fi													# - mesmo repositório GIT (mover repositórios para /opt/repo/)
 													# - mesmo diretório de destino
-#### UTILIZAÇÃO: sudo ./git_deploy.sh <aplicação> <revisão> <chamado>############
+#### UTILIZAÇÃO: sudo ./git_deploy.sh <aplicação> <revisão> <chamado> (modo) ############
 
 if [ "$#" -lt 3 ]; then											#o script requer exatamente 3 parâmetros.
 	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <chamado>"
@@ -86,7 +86,7 @@ while [ -z $(echo $chamado | grep -Ex "[0-9]+/[0-9]{4}") ]; do						#chamado: n(
 	read chamado
 done
 
-while [-z $(echo $modo | grep -Ex "[pd]") ]; do
+while [ -z $(echo $modo | grep -Ex "[pd]") ]; do
 	if [ -z "$modo" ]; then
 		modo=$modo_padrao
 	else
