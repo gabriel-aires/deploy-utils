@@ -16,14 +16,15 @@ fi													# - mesmo repositório GIT (mover repositórios para /opt/repo/)
 													# - mesmo diretório de destino
 #### UTILIZAÇÃO: sudo ./git_deploy.sh <aplicação> <revisão> <chamado>############
 
-if [ "$#" -ne 3 ]; then											#o script requer exatamente 3 parâmetros.
-	echo "O script requer 2 parâmetros: <aplicação> <revisão> <chamado>"
+if [ "$#" -lt 3 ]; then											#o script requer exatamente 3 parâmetros.
+	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <chamado>"
 	exit
 fi
 
 app=$1
 rev=$2
 chamado=$3
+modo=$4													# p - preservar arquivos no destino | d - deletar arquivos no destino.
 
 #### Constantes #####
 
@@ -32,6 +33,7 @@ temp_dir="$deploy_dir/.temp"
 script_dir="$deploy_dir/sh"										#deve existir previamente e conter este script, bem como o checkout.sh
 chamados_dir="$deploy_dir/chamados"
 repo_dir="$deploy_dir/repo"										#pode ser um ponto de montagem em /mnt/ , caso conveniente.
+modo_padrao="p"
 
 mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
 
@@ -84,6 +86,15 @@ while [ -z $(echo $chamado | grep -Ex "[0-9]+/[0-9]{4}") ]; do						#chamado: n(
 	read chamado
 done
 
+while [-z $(echo $modo | grep -Ex "[pd]") ]; do
+	if [ -z "$modo" ]; then
+		modo=$modo_padrao
+	else
+		echo -e "\nErro. Escolha o modo de execução: [p, d]"
+		read modo
+	fi
+done
+
 if [ $(grep -Ei "^$app " $deploy_dir/parametros.txt | wc -l) -ne "1" ]; then				#caso não haja registro referente ao sistema ou haja entradas duplicadas.
 	sed -i "/^$app .*$/d" $deploy_dir/parametros.txt									 
 
@@ -130,7 +141,7 @@ echo -e "Repositório:\t$repo"
 echo -e "Caminho:\t$raiz"
 echo -e "Destino:\t$dir_destino"
 
-##### GIT CLONE #########	
+##### GIT #########	
 
 if [ ! -d "$repo_dir/$app/.git" ]; then
 	echo " "
@@ -194,8 +205,6 @@ sed -i -r "s|(^.{130})$destino/|\1|" $temp_dir/detalhe_destino.list;
 grep -vxF --file=$temp_dir/detalhe_destino.list $temp_dir/detalhe_origem.list > $temp_dir/arq.alterado;	#este arquivo contém a lista dos arquivos alterados.
 sed -i -r 's/^.{130}//' $temp_dir/arq.alterado								#remoção do hash na lista de arquivos modificados.
 
-grep -EH "*" $temp_dir/arq.* > $atividade_dir/modificacoes.txt;								
-
 ##### CRIAÇÃO / REMOÇÃO DE DIRETÓRIOS #####
 
 find "$origem/" -type d | sort > $temp_dir/d_origem.txt;						#lista diretórios em "origem" e "destino"
@@ -210,12 +219,19 @@ sed -i -r "s|^\"$destino/|\"|" $temp_dir/d_destino.txt;
 grep -vxF --file=$temp_dir/d_origem.txt $temp_dir/d_destino.txt > $temp_dir/dir.excluido;		#verifica quais diretórios existem somente no destino (excluídos) ou somente na origem (adicionados)
 grep -vxF --file=$temp_dir/d_destino.txt $temp_dir/d_origem.txt > $temp_dir/dir.adicionado;
 
-grep -EH "*" $temp_dir/dir.* >> $atividade_dir/modificacoes.txt;					#resumo de todas as modificações a serem realizadas.
+##### LOG E RESUMO DAS MUDANÇAS ######
+
+if [ "$modo" == 'd' ]; then
+	grep -EH "*" $temp_dir/arq.* > $atividade_dir/modificacoes.txt;								
+	grep -EH "*" $temp_dir/dir.* >> $atividade_dir/modificacoes.txt;								
+else
+	grep -EH "*" $temp_dir/arq.adicionado > $atividade_dir/modificacoes.txt;
+	grep -EH "*" $temp_dir/arq.alterado >> $atividade_dir/modificacoes.txt;								
+	grep -EH "*" $temp_dir/dir.adicionado >> $atividade_dir/modificacoes.txt;								
+fi
 
 sed -i -r "s|^$temp_dir/||" $atividade_dir/modificacoes.txt
 sed -i "s/:/:\t/" $atividade_dir/modificacoes.txt							#formatação para leitura
-
-##### RESUMO DAS MUDANÇAS ######
 
 adicionados="$(grep -E "^arq\.adicionado" $atividade_dir/modificacoes.txt | wc -l)"
 excluidos="$(grep -E "^arq\.excluido" $atividade_dir/modificacoes.txt | wc -l)"
@@ -250,12 +266,15 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.adicionado							
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.excluido
 
-	if [ "$(cat $temp_dir/dir.excluido | wc -l)" -gt "0" ]; then
-		cat $temp_dir/dir.excluido | xargs rm -Rf						# 1 - remoção de diretórios marcados para exclusão no destino.
-	fi
-								
-	if [ "$(cat $temp_dir/arq.excluido | wc -l)" -gt "0" ]; then
-		cat $temp_dir/arq.excluido | xargs rm -f						# 2 - remoção de arquivos marcados para exclusão no destino.
+
+	if [ "$modo" == 'd']; then
+		if [ "$(cat $temp_dir/dir.excluido | wc -l)" -gt "0" ]; then
+			cat $temp_dir/dir.excluido | xargs rm -Rf					# 1 - remoção de diretórios marcados para exclusão no destino.
+		fi
+									
+		if [ "$(cat $temp_dir/arq.excluido | wc -l)" -gt "0" ]; then
+			cat $temp_dir/arq.excluido | xargs rm -f					# 2 - remoção de arquivos marcados para exclusão no destino.
+		fi
 	fi
 
 	if [ "$(cat $temp_dir/dir.adicionado | wc -l)" -gt "0" ]; then
@@ -278,7 +297,7 @@ else
 	exit
 fi
 
-##### LOG #####
+##### HISTORICO DE DEPLOY #####
 
 let "tamanho_app=$(echo $app | wc -c)-1"
 
