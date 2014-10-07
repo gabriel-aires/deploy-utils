@@ -267,7 +267,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.excluido
 
 
-	if [ "$modo" == 'd']; then
+	if [ "$modo" == 'd' ]; then
 		if [ "$(cat $temp_dir/dir.excluido | wc -l)" -gt "0" ]; then
 			cat $temp_dir/dir.excluido | xargs rm -Rf					# 1 - remoção de diretórios marcados para exclusão no destino.
 		fi
