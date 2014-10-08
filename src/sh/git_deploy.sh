@@ -45,27 +45,7 @@ if [ ! -e "$deploy_dir/hist_deploy.txt" ]; then								#cria arquivo de históri
 	touch $deploy_dir/hist_deploy.txt
 fi
 
-##### REMOVE ARQUIVOS, PONTOS DE MONTAGEM E LINKS SIMBÓLICOS TEMPORÁRIOS #####
-
-clean_temp () {
-	rm -Rf $temp_dir;										#apaga o diretório $temp_dir, caso exista.
-	mkdir -p $temp_dir;
-
-	grep -E "/mnt/destino_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt			#os pontos de montagem são obtidos do arquivo /proc/mounts
-
-	sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
-
-	desmontar="$(cat $temp_dir/pontos_de_montagem.txt | wc -l)"					#Se > 0, há necessidade de desmontar pontos de montagem.
-
-	if [ $desmontar -gt "0" ]; then
-		cat $temp_dir/pontos_de_montagem.txt | xargs sudo umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-	fi
-
-	rm -Rf /mnt/destino_*										#já desmontados, os pontos de montagem temporários podem ser apagados.
-	rm -f $deploy_dir/destino_*									#remoção de link simbólico.
-}
-
-clean_temp
+source $script_dir/clean_temp.sh $temp_dir								#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
 
 #### Validação do input do usuário ###### 
 
@@ -143,14 +123,7 @@ echo -e "Destino:\t$dir_destino"
 
 ##### GIT #########	
 
-if [ ! -d "$repo_dir/$app/.git" ]; then
-	echo " "
-	git clone --progress $repo $repo_dir/$app							#clona o repositório, caso ainda não tenha sido feito.
-fi
-
-echo " "
-
-source $script_dir/checkout.sh "$repo_dir/$app" $rev							#ver checkout.sh: cd <repositorio> , git fetch, git checkout
+source $script_dir/checkout.sh $repo "$repo_dir/$app" $rev						#ver checkout.sh: (git clone), cd <repositorio> , git fetch, git checkout...
 
 origem="$repo_dir/$app/$raiz"
 
@@ -161,7 +134,7 @@ fi
 ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
 
 data="$(date +%Y%m%d%H%M%S)"
-destino="$deploy_dir/destino_$data"
+destino="$temp_dir/destino_$data"
 mnt_destino="/mnt/destino_$data"
 
 atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"													
@@ -171,7 +144,8 @@ mkdir -p $mnt_destino $atividade_dir
 
 echo -e "\nAcesso ao diretório de deploy."
 
-sudo mount.cifs $dir_destino $mnt_destino -o user=airesgabriel dom=ANATEL				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+sudo mount.cifs $dir_destino $mnt_destino -o user=airesgabriel dom=ANATEL || (source $script_dir/clean_temp.sh && exit)			#montagem do compartilhamento de destino (requer pacote cifs-utils)
+
 ln -s $mnt_destino $destino										#cria link simbólico para o ponto de montagem.	
 
 ##### DIFF ARQUIVOS #####
@@ -293,7 +267,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 else
 	echo -e "\nDeploy abortado."
 
-	clean_temp
+	source $script_dir/clean_temp.sh $temp_dir
 	exit
 fi
 
@@ -311,7 +285,7 @@ echo -e "$data_log$app_log$rev_log$chamado" >> $deploy_dir/hist_deploy.txt
 grep -i "$app" $deploy_dir/hist_deploy.txt > $atividade_dir/historico_deploy_$app.txt
 cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
-clean_temp
+source $script_dir/clean_temp.sh $temp_dir
 exit
 
 #comparar logs com: rsync -rnivc --delete origem/VISAO/ destino/VISAO/ > modificacoes_rsync.txt
