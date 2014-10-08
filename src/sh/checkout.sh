@@ -14,6 +14,6 @@ echo " "
 
 cd "$caminho_sistema"
 
-(git fetch --all --force --quiet && git checkout --force --quiet $rev) || (source ./clean_temp.sh && exit)
+(git fetch --all --force --quiet && git checkout --force --quiet $rev) || (source clean_temp.sh && exit)
 
 cd $dir
