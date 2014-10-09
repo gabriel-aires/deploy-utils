@@ -123,7 +123,7 @@ echo -e "Destino:\t$dir_destino"
 
 ##### GIT #########	
 
-source $script_dir/checkout.sh $repo "$repo_dir/$app" $rev						#ver checkout.sh: (git clone), cd <repositorio> , git fetch, git checkout...
+source $script_dir/checkout.sh $repo "$repo_dir/$app" $rev $script_dir $temp_dir			#ver checkout.sh: (git clone), cd <repositorio> , git fetch, git checkout...
 
 origem="$repo_dir/$app/$raiz"
 
@@ -144,7 +144,9 @@ mkdir -p $mnt_destino $atividade_dir
 
 echo -e "\nAcesso ao diretório de deploy."
 
-sudo mount.cifs $dir_destino $mnt_destino -o user=airesgabriel dom=ANATEL || (source $script_dir/clean_temp.sh && exit)			#montagem do compartilhamento de destino (requer pacote cifs-utils)
+mount.cifs $dir_destino $mnt_destino -o user=airesgabriel dom=ANATEL || { 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+	source $script_dir/clean_temp.sh $temp_dir && exit 
+}
 
 ln -s $mnt_destino $destino										#cria link simbólico para o ponto de montagem.	
 
