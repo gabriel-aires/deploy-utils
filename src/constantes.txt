@@ -1,0 +1,8 @@
+temp_dir="$deploy_dir/.temp"
+script_dir="$deploy_dir/sh"
+chamados_dir="$deploy_dir/chamados"
+repo_dir="$deploy_dir/repo"
+parametros_git=$deploy_dir/parametros.txt
+historico=$deploy_dir/hist_deploy.txt
+modo_padrao="p"
+

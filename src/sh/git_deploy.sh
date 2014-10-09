@@ -28,26 +28,25 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 
 #### Constantes #####
 
-deploy_dir="/opt/git_deploy"
-temp_dir="$deploy_dir/.temp"
-script_dir="$deploy_dir/sh"										#deve existir previamente e conter este script, bem como o checkout.sh
-chamados_dir="$deploy_dir/chamados"
-repo_dir="$deploy_dir/repo"										#pode ser um ponto de montagem em /mnt/ , caso conveniente.
-modo_padrao="p"
+deploy_dir="/opt/git_deploy"										#diretório de instalação.
+
+source $deploy_dir/constantes.txt									#carrega o arquivo de constantes.
 
 mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
 
-if [ ! -e "$deploy_dir/parametros.txt" ]; then								#cria arquivo de parâmetros, caso não exista.
-	touch $deploy_dir/parametros.txt
+if [ ! -e "$parametros_git" ]; then									#cria arquivo de parâmetros, caso não exista.
+	touch $parametros_git
 fi
 
-if [ ! -e "$deploy_dir/hist_deploy.txt" ]; then								#cria arquivo de histórico, caso não exista.
-	touch $deploy_dir/hist_deploy.txt
+if [ ! -e "$historico" ]; then										#cria arquivo de histórico, caso não exista.
+	touch $historico	
 fi
 
 source $script_dir/clean_temp.sh $temp_dir								#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
 
 #### Validação do input do usuário ###### 
+
+clear
 
 while [ -z $(echo $app | grep -Ex "[A-Za-z]+") ]; do
 	echo -e "\nErro. Informe o nome do sistema corretamente:"
@@ -75,8 +74,8 @@ while [ -z $(echo $modo | grep -Ex "[pd]") ]; do
 	fi
 done
 
-if [ $(grep -Ei "^$app " $deploy_dir/parametros.txt | wc -l) -ne "1" ]; then				#caso não haja registro referente ao sistema ou haja entradas duplicadas.
-	sed -i "/^$app .*$/d" $deploy_dir/parametros.txt									 
+if [ $(grep -Ei "^$app " $parametros_git | wc -l) -ne "1" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
+	sed -i "/^$app .*$/d" $parametros_git									 
 
 	echo -e "\nInforme o repositorio a ser utilizado:"
 	read repo
@@ -109,11 +108,11 @@ if [ $(grep -Ei "^$app " $deploy_dir/parametros.txt | wc -l) -ne "1" ]; then				
 	raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 	dir_destino="$(echo $dir_destino | sed -r 's|/$||')"						#remove / no fim do caminho.
 
-	echo "$app $repo $raiz $dir_destino" >> $deploy_dir/parametros.txt
+	echo "$app $repo $raiz $dir_destino" >> $parametros_git
 else													#caso a entrada correspondente ao sistema já esteja preenchida, os parâmetros são obtidos do arquivo $deploy_dir/parametros.txt
-	repo=$(grep -Ei "^$app " $deploy_dir/parametros.txt | cut -d ' ' -f2)
-	raiz=$(grep -Ei "^$app " $deploy_dir/parametros.txt | cut -d ' ' -f3)
-	dir_destino=$(grep -Ei "^$app " $deploy_dir/parametros.txt | cut -d ' ' -f4)
+	repo=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f2)
+	raiz=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f3)
+	dir_destino=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f4)
 fi
 
 echo -e "\nSistema:\t$app"
@@ -282,9 +281,9 @@ data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h
 rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
 rev_log=$(echo '                ' | sed -r "s|^ {9}|$rev_log|")
 
-echo -e "$data_log$app_log$rev_log$chamado" >> $deploy_dir/hist_deploy.txt
+echo -e "$data_log$app_log$rev_log$chamado" >> $historico
 
-grep -i "$app" $deploy_dir/hist_deploy.txt > $atividade_dir/historico_deploy_$app.txt
+grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
 cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
 source $script_dir/clean_temp.sh $temp_dir
