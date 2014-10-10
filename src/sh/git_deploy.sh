@@ -26,7 +26,7 @@ rev=$2
 chamado=$3
 modo=$4													# p - preservar arquivos no destino | d - deletar arquivos no destino.
 
-#### Constantes #####
+#### Inicialização #####
 
 deploy_dir="/opt/git_deploy"										#diretório de instalação.
 
@@ -42,7 +42,28 @@ if [ ! -e "$historico" ]; then										#cria arquivo de histórico, caso não e
 	touch $historico	
 fi
 
-source $script_dir/clean_temp.sh $temp_dir								#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
+function clean_temp () {										#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
+
+	mkdir -p $temp_dir;
+
+	grep -E "/mnt/destino_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt			#os pontos de montagem são obtidos do arquivo /proc/mounts
+	sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
+
+	desmontar="$(cat $temp_dir/pontos_de_montagem.txt | wc -l)"					#Se > 0, há necessidade de desmontar pontos de montagem.
+
+	if [ $desmontar -gt "0" ]; then
+		cat $temp_dir/pontos_de_montagem.txt | xargs sudo umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
+	fi
+
+	rm -Rf /mnt/destino_*										#já desmontados, os pontos de montagem temporários podem ser apagados.
+	rm -f $temp_dir/destino_*									#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
+	rm -Rf $temp_dir/*;										#apaga outros arquivos e subdiretórios em $temp_dir, caso existam.
+
+}
+
+trap "clean_temp" EXIT SIGQUIT SIGKILL SIGTERM SIGINT							#a função será chamada sempre que o script for finalizado.
+
+clean_temp								
 
 #### Validação do input do usuário ###### 
 
@@ -143,9 +164,7 @@ mkdir -p $mnt_destino $atividade_dir
 
 echo -e "\nAcesso ao diretório de deploy."
 
-mount.cifs $dir_destino $mnt_destino -o user=airesgabriel dom=ANATEL || { 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
-	source $script_dir/clean_temp.sh $temp_dir && exit 
-}
+mount.cifs $dir_destino $mnt_destino -o user=airesgabriel dom=ANATEL || exit 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
 
 ln -s $mnt_destino $destino										#cria link simbólico para o ponto de montagem.	
 
@@ -267,8 +286,6 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	echo -e "\nDeploy concluído."
 else
 	echo -e "\nDeploy abortado."
-
-	source $script_dir/clean_temp.sh $temp_dir
 	exit
 fi
 
@@ -286,7 +303,6 @@ echo -e "$data_log$app_log$rev_log$chamado" >> $historico
 grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
 cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
-source $script_dir/clean_temp.sh $temp_dir
 exit
 
 #comparar logs com: rsync -rnivc --delete origem/VISAO/ destino/VISAO/ > modificacoes_rsync.txt
