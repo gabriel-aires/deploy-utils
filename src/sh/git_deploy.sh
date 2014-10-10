@@ -26,21 +26,26 @@ rev=$2
 chamado=$3
 modo=$4													# p - preservar arquivos no destino | d - deletar arquivos no destino.
 
-#### Inicialização #####
+#### Funções ##########
 
-deploy_dir="/opt/git_deploy"										#diretório de instalação.
+function checkout () {											# o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
-source $deploy_dir/constantes.txt									#carrega o arquivo de constantes.
+	dir=$(pwd)
 
-mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
+	if [ ! -d "$repo_dir/$app/.git" ]; then
+		echo " "
+		git clone --progress $repo "$repo_dir/$app"						#clona o repositório, caso ainda não tenha sido feito.
+	fi
 
-if [ ! -e "$parametros_git" ]; then									#cria arquivo de parâmetros, caso não exista.
-	touch $parametros_git
-fi
+	echo " "
 
-if [ ! -e "$historico" ]; then										#cria arquivo de histórico, caso não exista.
-	touch $historico	
-fi
+	cd "$repo_dir/$app"
+
+	{ git fetch --all --force --quiet && git checkout --force --quiet $rev } || exit
+
+	cd $dir
+
+}
 
 function clean_temp () {										#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
 
@@ -61,7 +66,23 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 }
 
-trap "clean_temp" EXIT SIGQUIT SIGKILL SIGTERM SIGINT							#a função será chamada sempre que o script for finalizado.
+trap "clean_temp" EXIT SIGQUIT SIGKILL SIGTERM SIGINT							#a função será chamada quando o script for finalizado ou interrompido.
+
+#### Inicialização #####
+
+deploy_dir="/opt/git_deploy"										#diretório de instalação.
+
+source $deploy_dir/constantes.txt									#carrega o arquivo de constantes.
+
+mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
+
+if [ ! -e "$parametros_git" ]; then									#cria arquivo de parâmetros, caso não exista.
+	touch $parametros_git
+fi
+
+if [ ! -e "$historico" ]; then										#cria arquivo de histórico, caso não exista.
+	touch $historico	
+fi
 
 clean_temp								
 
@@ -143,7 +164,7 @@ echo -e "Destino:\t$dir_destino"
 
 ##### GIT #########	
 
-source $script_dir/checkout.sh $repo "$repo_dir/$app" $rev $script_dir $temp_dir			#ver checkout.sh: (git clone), cd <repositorio> , git fetch, git checkout...
+checkout												#ver checkout(): (git clone), cd <repositorio> , git fetch, git checkout...
 
 origem="$repo_dir/$app/$raiz"
 
