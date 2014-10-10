@@ -14,7 +14,7 @@ if [ "$(ps aux | grep -E 'git_deploy.sh' | grep -Ev 'grep|sudo' | wc -l)" -gt "2
 	exit												# - execuções simultâneas pelo mesmo usuário
 fi													# - mesmo repositório GIT (mover repositórios para /opt/repo/)
 													# - mesmo diretório de destino
-#### UTILIZAÇÃO: sudo ./git_deploy.sh <aplicação> <revisão> <chamado> (modo) ############
+#### UTILIZAÇÃO: git_deploy.sh <aplicação> <revisão> <chamado> (modo) ############
 
 if [ "$#" -lt 3 ]; then											#o script requer exatamente 3 parâmetros.
 	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <chamado>"
@@ -30,20 +30,18 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 
 function checkout () {											# o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
-	dir=$(pwd)
-
 	if [ ! -d "$repo_dir/$app/.git" ]; then
 		echo " "
-		git clone --progress $repo "$repo_dir/$app"						#clona o repositório, caso ainda não tenha sido feito.
+		git clone --progress "$repo" "$repo_dir/$app"						#clona o repositório, caso ainda não tenha sido feito.
 	fi
 
 	echo " "
 
 	cd "$repo_dir/$app"
 
-	{ git fetch --all --force --quiet && git checkout --force --quiet $rev } || exit
+	( git fetch --all --force --quiet && git checkout --force --quiet $rev ) || exit
 
-	cd $dir
+	cd "$script_dir"
 
 }
 
@@ -57,7 +55,7 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 	desmontar="$(cat $temp_dir/pontos_de_montagem.txt | wc -l)"					#Se > 0, há necessidade de desmontar pontos de montagem.
 
 	if [ $desmontar -gt "0" ]; then
-		cat $temp_dir/pontos_de_montagem.txt | xargs sudo umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
+		cat $temp_dir/pontos_de_montagem.txt | xargs umount					#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
 	fi
 
 	rm -Rf /mnt/destino_*										#já desmontados, os pontos de montagem temporários podem ser apagados.
@@ -281,8 +279,8 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.adicionado							
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.excluido
 
-
 	if [ "$modo" == 'd' ]; then
+	
 		if [ "$(cat $temp_dir/dir.excluido | wc -l)" -gt "0" ]; then
 			cat $temp_dir/dir.excluido | xargs rm -Rf					# 1 - remoção de diretórios marcados para exclusão no destino.
 		fi
@@ -290,6 +288,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 		if [ "$(cat $temp_dir/arq.excluido | wc -l)" -gt "0" ]; then
 			cat $temp_dir/arq.excluido | xargs rm -f					# 2 - remoção de arquivos marcados para exclusão no destino.
 		fi
+
 	fi
 
 	if [ "$(cat $temp_dir/dir.adicionado | wc -l)" -gt "0" ]; then
@@ -304,26 +303,30 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 		cat $temp_dir/arq.alterado | xargs -d "\n" -L 1 sh -c					# 5 - sobrescrita de arquivos modificados.
 	fi
 
+	##### HISTORICO DE DEPLOY #####
+
+	let "tamanho_app=$(echo $app | wc -c)-1"
+
+	app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
+	data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
+	rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
+	rev_log=$(echo '                ' | sed -r "s|^ {9}|$rev_log|")
+
+	echo -e "$data_log$app_log$rev_log$chamado" >> $historico
+
+	cp $historico $chamados_dir
+
+	grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
+	cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
+
+	rm -Rf "$atividade_dir_PENDENTE"								#caso o processo tenha sido abortado anteriormente, a pasta "_PENDENTE" será removida no ato do deploy.
+
 	echo -e "\nDeploy concluído."
 else
 	echo -e "\nDeploy abortado."
-	exit
+	mv "$atividade_dir" "$atividade_dir_PENDENTE"
 fi
-
-##### HISTORICO DE DEPLOY #####
-
-let "tamanho_app=$(echo $app | wc -c)-1"
-
-app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
-data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
-rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
-rev_log=$(echo '                ' | sed -r "s|^ {9}|$rev_log|")
-
-echo -e "$data_log$app_log$rev_log$chamado" >> $historico
-
-grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
-cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
 exit
 
-#comparar logs com: rsync -rnivc --delete origem/VISAO/ destino/VISAO/ > modificacoes_rsync.txt
+#TODO: averiguar a possibilidade de utilizar o rsync para o diff entre origem e destingo. Ex: rsync -rnivc --delete origem/VISAO/ destino/VISAO/ > modificacoes_rsync.txt
