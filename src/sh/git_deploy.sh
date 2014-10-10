@@ -179,6 +179,10 @@ mnt_destino="/mnt/destino_$data"
 atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"													
 atividade_dir="$chamados_dir/$app/$atividade_dir"							#Diretório onde serão armazenados os logs do atendimento.
 
+if [ -d "${atividade_dir}_PENDENTE" ]; then
+	rm -Rf "${atividade_dir}_PENDENTE"
+fi
+
 mkdir -p $mnt_destino $atividade_dir
 
 echo -e "\nAcesso ao diretório de deploy."
@@ -318,8 +322,6 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 
 	grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
 	cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
-
-	rm -Rf "${atividade_dir}_PENDENTE"								#caso o processo tenha sido abortado anteriormente, a pasta "_PENDENTE" será removida no ato do deploy.
 
 	echo -e "\nDeploy concluído."
 else
