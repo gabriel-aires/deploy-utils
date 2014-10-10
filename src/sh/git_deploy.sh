@@ -319,14 +319,14 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
 	cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
-	rm -Rf "$atividade_dir_PENDENTE"								#caso o processo tenha sido abortado anteriormente, a pasta "_PENDENTE" será removida no ato do deploy.
+	rm -Rf "${atividade_dir}_PENDENTE"								#caso o processo tenha sido abortado anteriormente, a pasta "_PENDENTE" será removida no ato do deploy.
 
 	echo -e "\nDeploy concluído."
 else
 	echo -e "\nDeploy abortado."
-	mv "$atividade_dir" "$atividade_dir_PENDENTE"
+	mv "$atividade_dir" "${atividade_dir}_PENDENTE"
 fi
 
 exit
 
-#TODO: averiguar a possibilidade de utilizar o rsync para o diff entre origem e destingo. Ex: rsync -rnivc --delete origem/VISAO/ destino/VISAO/ > modificacoes_rsync.txt
+#TODO: averiguar a possibilidade de utilizar o rsync para o diff entre origem e destino. Ex: rsync -rnivc --delete origem/VISAO/ destino/VISAO/ > modificacoes_rsync.txt
