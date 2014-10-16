@@ -31,7 +31,12 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 #### Inicialização #####
 
 deploy_dir="/opt/git_deploy"										#diretório de instalação.
-source $deploy_dir/constantes.txt									#carrega o arquivo de constantes.
+source $deploy_dir/constantes.txt || exit									#carrega o arquivo de constantes.
+
+if [ -z "$temp_dir" ] || [ -z "$chamados_dir" ] || [ -z "$repo_dir" ]; then
+    echo 'Favor preencher corretamente o arquivo $deploy_dir/constantes.txt e tentar novamente.'
+    exit
+fi
 
 mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
 
