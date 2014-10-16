@@ -1,5 +1,7 @@
 #!/bin/bash
 
+estado="inicializacao"
+
 ##### Execução somente como usuário root ######
 
 if [ ! "$(echo $USER)" == 'root' ]; then
@@ -25,6 +27,21 @@ app=$1
 rev=$2
 chamado=$3
 modo=$4													# p - preservar arquivos no destino | d - deletar arquivos no destino.
+
+#### Inicialização #####
+
+deploy_dir="/opt/git_deploy"										#diretório de instalação.
+source $deploy_dir/constantes.txt									#carrega o arquivo de constantes.
+
+mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
+
+if [ ! -e "$parametros_git" ]; then									#cria arquivo de parâmetros, caso não exista.
+	touch $parametros_git
+fi
+
+if [ ! -e "$historico" ]; then										#cria arquivo de histórico, caso não exista.
+	touch $historico	
+fi
 
 #### Funções ##########
 
@@ -52,11 +69,7 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 	grep -E "/mnt/destino_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt			#os pontos de montagem são obtidos do arquivo /proc/mounts
 	sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
 
-	desmontar="$(cat $temp_dir/pontos_de_montagem.txt | wc -l)"					#Se > 0, há necessidade de desmontar pontos de montagem.
-
-	if [ $desmontar -gt "0" ]; then
-		cat $temp_dir/pontos_de_montagem.txt | xargs umount					#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-	fi
+	cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
 
 	rm -Rf /mnt/destino_*										#já desmontados, os pontos de montagem temporários podem ser apagados.
 	rm -f $temp_dir/destino_*									#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
@@ -66,25 +79,15 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 trap "clean_temp" EXIT SIGQUIT SIGKILL SIGTERM SIGINT							#a função será chamada quando o script for finalizado ou interrompido.
 
-#### Inicialização #####
+clean_temp	
 
-deploy_dir="/opt/git_deploy"										#diretório de instalação.
+echo $estado > $temp_dir/progresso.txt							
 
-source $deploy_dir/constantes.txt									#carrega o arquivo de constantes.
-
-mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
-
-if [ ! -e "$parametros_git" ]; then									#cria arquivo de parâmetros, caso não exista.
-	touch $parametros_git
-fi
-
-if [ ! -e "$historico" ]; then										#cria arquivo de histórico, caso não exista.
-	touch $historico	
-fi
-
-clean_temp								
+estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
 
 #### Validação do input do usuário ###### 
+
+estado="validacao" && echo $estado >> $temp_dir/progresso.txt
 
 clear
 
@@ -155,10 +158,25 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
 	dir_destino=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f4)
 fi
 
+atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"													
+atividade_dir="$chamados_dir/$app/$atividade_dir"							#Diretório onde serão armazenados os logs do atendimento.
+
+if [ -d "${atividade_dir}_PENDENTE" ]; then
+	rm -Rf "${atividade_dir}_PENDENTE"
+fi
+
+mkdir -p $atividade_dir
+
 echo -e "\nSistema:\t$app"
 echo -e "Repositório:\t$repo"
 echo -e "Caminho:\t$raiz"
 echo -e "Destino:\t$dir_destino"
+
+estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
+
+### início da leitura ###
+
+estado="leitura" && echo $estado >> $temp_dir/progresso.txt
 
 ##### GIT #########	
 
@@ -176,14 +194,8 @@ data="$(date +%Y%m%d%H%M%S)"
 destino="$temp_dir/destino_$data"
 mnt_destino="/mnt/destino_$data"
 
-atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"													
-atividade_dir="$chamados_dir/$app/$atividade_dir"							#Diretório onde serão armazenados os logs do atendimento.
 
-if [ -d "${atividade_dir}_PENDENTE" ]; then
-	rm -Rf "${atividade_dir}_PENDENTE"
-fi
-
-mkdir -p $mnt_destino $atividade_dir
+mkdir -p $mnt_destino
 
 echo -e "\nAcesso ao diretório de deploy."
 
@@ -263,12 +275,79 @@ echo -e "Arquivos modificados:\t$modificados"
 echo -e "Diretórios criados:\t$dir_criado"
 echo -e "Diretórios removidos:\t$dir_removido"
 
+estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
+
 ###### ESCRITA DAS MUDANÇAS EM DISCO ######
 
 echo -e "\nGravar mudanças em disco? (s/n)"
 read ans
 
 if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
+
+	#### preparação do script de rollback ####
+
+	estado="backup" && echo $estado >> $temp_dir/progresso.txt
+	
+	rm -Rf "$chamados_dir/$app/ROLLBACK_*"
+
+	bak_dir="$chamados_dir/$app/ROLLBACK_$data"
+
+	mkdir -p $bak_dir
+
+	cp $temp_dir/arq.adicionado $temp_dir/arq.remover_novos
+	cp $temp_dir/arq.alterado $temp_dir/arq.restaurar_alterados
+	cp $temp_dir/arq.excluido $temp_dir/arq.restaurar_excluidos
+
+	sed -r "s|^\"|\"$bak_dir/|" $temp_dir/d_destino.txt > $temp_dir/dir.restaurar_todos
+	cp $temp_dir/dir.adicionado $temp_dir/dir.remover_novos						# toda a estrutura de diretórios do destino será recriada no diretório ROLLBACK.
+
+	sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/arq.restaurar_alterados					#reinserção das aspas na lista de arquivos modificados.
+
+	sed -i -r "s|^\"|\"$destino/|" $temp_dir/arq.restaurar_alterados				#caminho absoluto no diretório de origem para arquivos e diretórios adicionados ou modificados.
+	sed -i -r "s|^\"|\"$destino/|" $temp_dir/arq.restaurar_excluidos
+
+	sed -i -r "s|(^\"$destino/)(.*$)|\$\(cp -f \1\2 \"$bak_dir/\2\)|" $temp_dir/arq.restaurar_alterados
+	sed -i -r "s|/[^/]+\"\)$|\"\)|" $temp_dir/arq.restaurar_alterados
+
+	sed -i -r "s|(^\"$destino/)(.*$)|\$\(cp -f \1\2 \"$bak_dir/\2\)|" $temp_dir/arq.restaurar_excluidos		
+	sed -i -r "s|/[^/]+\"\)$|\"\)|" $temp_dir/arq.restaurar_excluidos					#cópia de novos arquivos: $(cp -f "<caminho_origem/arquivo_origem>" "<caminho_destino>")
+	
+	sed -i -r "s|^\"|\"$destino/|" $temp_dir/arq.remover_novos						#caminho absoluto no diretório de destino para arquivos e diretórios a serem removidos.
+	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.remover_novos							
+
+	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rm -f \1\2\)|" $temp_dir/arq.remover_novos
+	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rm -Rf \1\2\)|" $temp_dir/dir.remover_novos
+	
+	rm -f $bak_dir/rollback.txt
+	touch $bak_dir/rollback.txt
+
+	cat $temp_dir/dir.remover_novos >> $bak_dir/rollback.txt					# 1 - remoção de diretórios a serem criados no destino.
+	cat $temp_dir/arq.remover_novos >> $bak_dir/rollback.txt					# 2 - remoção de arquivos a serem criados no destino.
+								
+	if [ "$(cat $temp_dir/dir.restaurar_todos | wc -l)" -gt "0" ]; then
+		cat $temp_dir/dir.restaurar_todos | xargs mkdir -p
+		sed -i -r "s|(^\"$bak_dir/)(.*$)|\$\(mkdir -p \"$destino/\2\)|" $temp_dir/dir.restaurar_todos	# 3 - criação da estrutura de diretórios dentro da pasta ROLLBACK
+		cat $temp_dir/dir.restaurar_todos >> $bak_dir/rollback.txt
+	fi
+
+	if [ "$(cat $temp_dir/arq.restaurar_alterados | wc -l)" -gt "0" ]; then								
+		cat $temp_dir/arq.restaurar_alterados | xargs -d "\n" -L 1 sh -c			# 5 - cópia de arquivos a serem modificados para a pasta ROLLBACK
+		sed -i -r "s|(^\$\(cp -f )(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.*$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_alterados
+		cat $temp_dir/arq.restaurar_alterados >> $bak_dir/rollback.txt
+	fi
+
+	if [ "$(cat $temp_dir/arq.restaurar_excluidos | wc -l)" -gt "0" ]; then
+		cat $temp_dir/arq.restaurar_excluidos | xargs -d "\n" -L 1 sh -c			# 4 - cópia de arquivos a serem excluidos para a pasta ROLLBACK
+		sed -i -r "s|(^\$\(cp -f )(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.*$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_excluidos
+		cat $temp_dir/arq.restaurar_excluidos >> $bak_dir/rollback.txt 
+	fi	
+
+	estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
+
+	#### gravação das alterações em disco ####
+		
+	estado="escrita" && echo $estado >> $temp_dir/progresso.txt
+	
 	sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/arq.alterado						#reinserção das aspas na lista de arquivos modificados.
 
 	sed -i -r "s|^\"|\"$origem/|" $temp_dir/arq.adicionado						#caminho absoluto no diretório de origem para arquivos e diretórios adicionados ou modificados.
@@ -284,31 +363,20 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.excluido
 
 	if [ "$modo" == 'd' ]; then
-	
-		if [ "$(cat $temp_dir/dir.excluido | wc -l)" -gt "0" ]; then
-			cat $temp_dir/dir.excluido | xargs rm -Rf					# 1 - remoção de diretórios marcados para exclusão no destino.
-		fi
-									
-		if [ "$(cat $temp_dir/arq.excluido | wc -l)" -gt "0" ]; then
-			cat $temp_dir/arq.excluido | xargs rm -f					# 2 - remoção de arquivos marcados para exclusão no destino.
-		fi
-
+		cat $temp_dir/dir.excluido | xargs --no-run-if-empty rm -Rf					# 1 - remoção de diretórios marcados para exclusão no destino.
+		cat $temp_dir/arq.excluido | xargs --no-run-if-empty rm -f					# 2 - remoção de arquivos marcados para exclusão no destino.
 	fi
 
-	if [ "$(cat $temp_dir/dir.adicionado | wc -l)" -gt "0" ]; then
-		cat $temp_dir/dir.adicionado | xargs mkdir -p						# 3 - criação de diretórios no destino. 
-	fi
+	cat $temp_dir/dir.adicionado | xargs --no-run-if-empty mkdir -p						# 3 - criação de diretórios no destino. 
+	cat $temp_dir/arq.adicionado | xargs --no-run-if-empty -d "\n" -L 1 sh -c				# 4 - cópia de arquivos novos no destino.
+	cat $temp_dir/arq.alterado | xargs --no-run-if-empty -d "\n" -L 1 sh -c					# 5 - sobrescrita de arquivos modificados.
 
-	if [ "$(cat $temp_dir/arq.adicionado | wc -l)" -gt "0" ]; then
-		cat $temp_dir/arq.adicionado | xargs -d "\n" -L 1 sh -c					# 4 - cópia de arquivos novos no destino.
-	fi	
-
-	if [ "$(cat $temp_dir/arq.alterado | wc -l)" -gt "0" ]; then								
-		cat $temp_dir/arq.alterado | xargs -d "\n" -L 1 sh -c					# 5 - sobrescrita de arquivos modificados.
-	fi
+	estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
 
 	##### HISTORICO DE DEPLOY #####
 
+	estado="log" && echo $estado >> $temp_dir/progresso.txt
+	
 	let "tamanho_app=$(echo $app | wc -c)-1"
 
 	app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
@@ -322,6 +390,8 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 
 	grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
 	cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
+
+	estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
 
 	echo -e "\nDeploy concluído."
 else
