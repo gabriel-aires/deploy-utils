@@ -33,7 +33,9 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 deploy_dir="/opt/git_deploy"										#diretório de instalação.
 source $deploy_dir/constantes.txt || exit									#carrega o arquivo de constantes.
 
-if [ -z "$temp_dir" ] || [ -z "$chamados_dir" ] || [ -z "$repo_dir" ]; then
+echo $temp_dir $chamados_dir $repo_dir
+
+if [ -z $(echo $temp_dir | grep -E "^/opt/[^/]+") ] || [ -z $(echo $chamados_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] || [ -z $(echo $repo_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+")  ]; then
     echo 'Favor preencher corretamente o arquivo $deploy_dir/constantes.txt e tentar novamente.'
     exit
 fi
@@ -63,7 +65,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 
 	( git fetch --all --force --quiet && git checkout --force --quiet $rev ) || exit
 
-	cd "$script_dir"
+	cd - 
 
 }
 
@@ -76,9 +78,11 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 	cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
 
-	rm -Rf /mnt/destino_*										#já desmontados, os pontos de montagem temporários podem ser apagados.
-	rm -f $temp_dir/destino_*									#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
-	rm -Rf $temp_dir/*;										#apaga outros arquivos e subdiretórios em $temp_dir, caso existam.
+	if [ -d "/mnt/destino_*" ]; then
+		rmdir "/mnt/destino_*" || exit									#já desmontados, os pontos de montagem temporários podem ser apagados.
+	fi
+
+	rm -f $temp_dir/*										#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
 
 }
 
@@ -128,7 +132,7 @@ if [ $(grep -Ei "^$app " $parametros_git | wc -l) -ne "1" ]; then					#caso não
 	echo -e "\nInforme o repositorio a ser utilizado:"
 	read repo
 	
-	while [ -z $(echo $repo | grep -Ex "^git@git.anatel.gov.br:.+/.+\.git$|^http://git.anatel.gov.br.*/.+\.git$") ]; do	#Expressão regular para validação do caminho para o repositóio (SSH ou HTTP).
+	while [ -z $(echo $repo | grep -Ex "^git@git.anatel.gov.br:.+/.+\.git$|^http://(.+@)?git.anatel.gov.br.*/.+\.git$") ]; do	#Expressão regular para validação do caminho para o repositóio (SSH ou HTTP).
 		echo -e "\nErro. Informe um caminho válido para o repositório GIT:"
 		read -r repo
 	done	
@@ -167,7 +171,8 @@ atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"
 atividade_dir="$chamados_dir/$app/$atividade_dir"							#Diretório onde serão armazenados os logs do atendimento.
 
 if [ -d "${atividade_dir}_PENDENTE" ]; then
-	rm -Rf "${atividade_dir}_PENDENTE"
+	rm -f "${atividade_dir}_PENDENTE/*"
+	rmdir "${atividade_dir}_PENDENTE"
 fi
 
 mkdir -p $atividade_dir
@@ -198,7 +203,6 @@ fi
 data="$(date +%Y%m%d%H%M%S)"
 destino="$temp_dir/destino_$data"
 mnt_destino="/mnt/destino_$data"
-
 
 mkdir -p $mnt_destino
 
@@ -321,14 +325,14 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.remover_novos							
 
 	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rm -f \1\2\)|" $temp_dir/arq.remover_novos
-	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rm -Rf \1\2\)|" $temp_dir/dir.remover_novos
+	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rmdir \1\2\)|" $temp_dir/dir.remover_novos
 	
 	rm -f $bak_dir/rollback.txt
 	touch $bak_dir/rollback.txt
 
-	cat $temp_dir/dir.remover_novos >> $bak_dir/rollback.txt					# 1 - remoção de diretórios a serem criados no destino.
-	cat $temp_dir/arq.remover_novos >> $bak_dir/rollback.txt					# 2 - remoção de arquivos a serem criados no destino.
-								
+	cat $temp_dir/arq.remover_novos >> $bak_dir/rollback.txt					# 1 - remoção de arquivos a serem criados no destino.
+	cat $temp_dir/dir.remover_novos >> $bak_dir/rollback.txt					# 2 - remoção de diretórios a serem criados no destino.
+							
 	if [ "$(cat $temp_dir/dir.restaurar_todos | wc -l)" -gt "0" ]; then
 		cat $temp_dir/dir.restaurar_todos | xargs mkdir -p
 		sed -i -r "s|(^\"$bak_dir/)(.*$)|\$\(mkdir -p \"$destino/\2\)|" $temp_dir/dir.restaurar_todos	# 3 - criação da estrutura de diretórios dentro da pasta ROLLBACK
@@ -368,8 +372,8 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.excluido
 
 	if [ "$modo" == 'd' ]; then
-		cat $temp_dir/dir.excluido | xargs --no-run-if-empty rm -Rf					# 1 - remoção de diretórios marcados para exclusão no destino.
-		cat $temp_dir/arq.excluido | xargs --no-run-if-empty rm -f					# 2 - remoção de arquivos marcados para exclusão no destino.
+		cat $temp_dir/arq.excluido | xargs --no-run-if-empty rm -f					# 1 - remoção de arquivos marcados para exclusão no destino.
+		cat $temp_dir/dir.excluido | xargs --no-run-if-empty rmdir					# 2 - remoção de diretórios marcados para exclusão no destino.
 	fi
 
 	cat $temp_dir/dir.adicionado | xargs --no-run-if-empty mkdir -p						# 3 - criação de diretórios no destino. 

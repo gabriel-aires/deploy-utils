@@ -1,8 +1,7 @@
 temp_dir="$deploy_dir/.temp"
-script_dir="$deploy_dir/sh"
 chamados_dir="/mnt/historico_deploy_asp"
 repo_dir="$deploy_dir/repo"
-parametros_git=$deploy_dir/parametros.txt
-historico=$deploy_dir/hist_deploy.txt
+parametros_git="$deploy_dir/parametros.txt"
+historico="$deploy_dir/hist_deploy.txt"
 modo_padrao="p"
 
