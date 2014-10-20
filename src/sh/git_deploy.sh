@@ -83,7 +83,55 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 }
 
-trap "clean_temp" EXIT SIGQUIT SIGKILL SIGTERM SIGINT							#a função será chamada quando o script for finalizado ou interrompido.
+function etapa () {
+	
+	if [ "$estado" == 'fim_validacao' ] || [ "$estado" == 'leitura' ] || [ "$estado" == 'fim_leitura' ]; then
+	
+		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		echo -e "\nDeploy abortado."
+
+	elif [ "$estado" == 'backup' ] || [ "$estado" == 'fim_backup' ]; then
+	
+		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		rm -Rf $chamados_dir/$app/ROLLBACK_*
+		rm -f $chamados_dir/$app/rollback_*
+		echo -e "\nDeploy abortado."
+
+	elif [ "$estado" == 'escrita' ]; then
+
+		echo -e "\nDeploy interrompido. Revertendo alterações..."
+		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		cat $chamados_dir/$app/rollback_$data.txt | xargs --no-run-if-empty -d "\n" -L 1 sh -c
+		rm -Rf $chamados_dir/$app/ROLLBACK_*
+		rm -f $chamados_dir/$app/rollback_*
+		echo -e "\nRollback finalizado."	
+	
+	elif [ "$estado" == 'fim_escrita' ]; then
+		
+		##### LOG DE DEPLOY #####
+	
+		let "tamanho_app=$(echo $app | wc -c)-1"
+
+		app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
+		data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
+		rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
+		rev_log=$(echo '                ' | sed -r "s|^ {9}|$rev_log|")
+
+		echo -e "$data_log$app_log$rev_log$chamado" >> $historico
+
+		cp $historico $chamados_dir
+
+		grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
+		cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
+
+		echo -e "\nDeploy concluído."
+	fi
+
+	clean_temp
+
+}
+
+trap "etapa" EXIT SIGQUIT SIGKILL SIGTERM SIGINT							#a função será chamada quando o script for finalizado ou interrompido.
 
 clean_temp	
 
@@ -99,6 +147,7 @@ done
 app=$(echo $app | sed -r 's/(^.*$)/\L\1/')								#apenas letras minúsculas.
 
 while [ -z $(echo $rev | grep -Ex "^([0-9a-f]){9}[0-9a-f]*$") ]; do					#a revisão é uma string hexadecimal de 9 ou mais caracteres.
+
 	echo -e "\nErro. Informe a revisão corretamente:"
 	read rev
 done
@@ -376,30 +425,6 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 
 	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
-	##### HISTORICO DE DEPLOY #####
-
-	estado="log" && echo $estado >> $atividade_dir/progresso.txt
-	
-	let "tamanho_app=$(echo $app | wc -c)-1"
-
-	app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
-	data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
-	rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
-	rev_log=$(echo '                ' | sed -r "s|^ {9}|$rev_log|")
-
-	echo -e "$data_log$app_log$rev_log$chamado" >> $historico
-
-	cp $historico $chamados_dir
-
-	grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
-	cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
-
-	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
-
-	echo -e "\nDeploy concluído."
-else
-	echo -e "\nDeploy abortado."
-	mv "$atividade_dir" "${atividade_dir}_PENDENTE"
 fi
 
 exit
