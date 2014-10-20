@@ -208,7 +208,7 @@ mkdir -p $mnt_destino
 
 echo -e "\nAcesso ao diretório de deploy."
 
-mount.cifs $dir_destino $mnt_destino -o user=airesgabriel dom=ANATEL || exit 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+mount.cifs $dir_destino $mnt_destino -o credentials=$credenciais || exit 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
 
 ln -s $mnt_destino $destino										#cria link simbólico para o ponto de montagem.	
 
