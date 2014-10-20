@@ -77,10 +77,7 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 	sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
 
 	cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-
-	if [ -d "/mnt/destino_*" ]; then
-		rmdir "/mnt/destino_*" || exit									#já desmontados, os pontos de montagem temporários podem ser apagados.
-	fi
+	cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir				#já desmontados, os pontos de montagem temporários podem ser apagados.
 
 	rm -f $temp_dir/*										#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
 
@@ -213,6 +210,7 @@ mount.cifs $dir_destino $mnt_destino -o credentials=$credenciais || exit 				#mo
 ln -s $mnt_destino $destino										#cria link simbólico para o ponto de montagem.	
 
 ##### DIFF ARQUIVOS #####
+
 
 find "$origem/" -type f | sort > $temp_dir/origem.txt;							#lista arquivos em "origem" e "destino"
 find "$destino/" -follow -type f | sort > $temp_dir/destino.txt;
