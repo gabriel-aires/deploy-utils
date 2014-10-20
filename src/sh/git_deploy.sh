@@ -1,6 +1,6 @@
 #!/bin/bash
 
-estado="inicializacao"
+estado="validacao"
 
 ##### Execução somente como usuário root ######
 
@@ -87,13 +87,7 @@ trap "clean_temp" EXIT SIGQUIT SIGKILL SIGTERM SIGINT							#a função será ch
 
 clean_temp	
 
-echo $estado > $temp_dir/progresso.txt							
-
-estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
-
 #### Validação do input do usuário ###### 
-
-estado="validacao" && echo $estado >> $temp_dir/progresso.txt
 
 clear
 
@@ -168,8 +162,8 @@ atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"
 atividade_dir="$chamados_dir/$app/$atividade_dir"							#Diretório onde serão armazenados os logs do atendimento.
 
 if [ -d "${atividade_dir}_PENDENTE" ]; then
-	rm -f "${atividade_dir}_PENDENTE/*"
-	rmdir "${atividade_dir}_PENDENTE"
+	rm -f ${atividade_dir}_PENDENTE/*
+	rmdir ${atividade_dir}_PENDENTE
 fi
 
 mkdir -p $atividade_dir
@@ -179,11 +173,13 @@ echo -e "Repositório:\t$repo"
 echo -e "Caminho:\t$raiz"
 echo -e "Destino:\t$dir_destino"
 
-estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
+echo $estado > $atividade_dir/progresso.txt							
+
+estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
 ### início da leitura ###
 
-estado="leitura" && echo $estado >> $temp_dir/progresso.txt
+estado="leitura" && echo $estado >> $atividade_dir/progresso.txt
 
 ##### GIT #########	
 
@@ -282,7 +278,7 @@ echo -e "Arquivos modificados:\t$modificados"
 echo -e "Diretórios criados:\t$dir_criado"
 echo -e "Diretórios removidos:\t$dir_removido"
 
-estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
+estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
 ###### ESCRITA DAS MUDANÇAS EM DISCO ######
 
@@ -293,9 +289,9 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 
 	#### preparação do script de rollback ####
 
-	estado="backup" && echo $estado >> $temp_dir/progresso.txt
+	estado="backup" && echo $estado >> $atividade_dir/progresso.txt
 	
-	rm -Rf "$chamados_dir/$app/ROLLBACK_*"
+	rm -Rf $chamados_dir/$app/ROLLBACK_*
 
 	bak_dir="$chamados_dir/$app/ROLLBACK_$data"
 
@@ -325,35 +321,35 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rm -f \1\2\)|" $temp_dir/arq.remover_novos
 	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rmdir \1\2\)|" $temp_dir/dir.remover_novos
 	
-	rm -f $bak_dir/rollback.txt
-	touch $bak_dir/rollback.txt
+	rm -f $chamados_dir/$app/rollback_$data.txt
+	touch $chamados_dir/$app/rollback_$data.txt
 
-	cat $temp_dir/arq.remover_novos >> $bak_dir/rollback.txt					# 1 - remoção de arquivos a serem criados no destino.
-	cat $temp_dir/dir.remover_novos >> $bak_dir/rollback.txt					# 2 - remoção de diretórios a serem criados no destino.
+	cat $temp_dir/arq.remover_novos >> $chamados_dir/$app/rollback_$data.txt					# 1 - remoção de arquivos a serem criados no destino.
+	cat $temp_dir/dir.remover_novos >> $chamados_dir/$app/rollback_$data.txt					# 2 - remoção de diretórios a serem criados no destino.
 							
 	if [ "$(cat $temp_dir/dir.restaurar_todos | wc -l)" -gt "0" ]; then
 		cat $temp_dir/dir.restaurar_todos | xargs mkdir -p
 		sed -i -r "s|(^\"$bak_dir/)(.*$)|\$\(mkdir -p \"$destino/\2\)|" $temp_dir/dir.restaurar_todos	# 3 - criação da estrutura de diretórios dentro da pasta ROLLBACK
-		cat $temp_dir/dir.restaurar_todos >> $bak_dir/rollback.txt
+		cat $temp_dir/dir.restaurar_todos >> $chamados_dir/$app/rollback_$data.txt
 	fi
 
 	if [ "$(cat $temp_dir/arq.restaurar_alterados | wc -l)" -gt "0" ]; then								
 		cat $temp_dir/arq.restaurar_alterados | xargs -d "\n" -L 1 sh -c			# 5 - cópia de arquivos a serem modificados para a pasta ROLLBACK
-		sed -i -r "s|(^\$\(cp -f )(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.*$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_alterados
-		cat $temp_dir/arq.restaurar_alterados >> $bak_dir/rollback.txt
+		sed -i -r "s|(^.+)(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.+$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_alterados
+		cat $temp_dir/arq.restaurar_alterados >> $chamados_dir/$app/rollback_$data.txt
 	fi
 
 	if [ "$(cat $temp_dir/arq.restaurar_excluidos | wc -l)" -gt "0" ]; then
 		cat $temp_dir/arq.restaurar_excluidos | xargs -d "\n" -L 1 sh -c			# 4 - cópia de arquivos a serem excluidos para a pasta ROLLBACK
-		sed -i -r "s|(^\$\(cp -f )(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.*$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_excluidos
-		cat $temp_dir/arq.restaurar_excluidos >> $bak_dir/rollback.txt 
+		sed -i -r "s|(^.+)(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.+$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_excluidos
+		cat $temp_dir/arq.restaurar_excluidos >> $chamados_dir/$app/rollback_$data.txt
 	fi	
 
-	estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
+	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
 	#### gravação das alterações em disco ####
 		
-	estado="escrita" && echo $estado >> $temp_dir/progresso.txt
+	estado="escrita" && echo $estado >> $atividade_dir/progresso.txt
 	
 	sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/arq.alterado						#reinserção das aspas na lista de arquivos modificados.
 
@@ -378,11 +374,11 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	cat $temp_dir/arq.adicionado | xargs --no-run-if-empty -d "\n" -L 1 sh -c				# 4 - cópia de arquivos novos no destino.
 	cat $temp_dir/arq.alterado | xargs --no-run-if-empty -d "\n" -L 1 sh -c					# 5 - sobrescrita de arquivos modificados.
 
-	estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
+	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
 	##### HISTORICO DE DEPLOY #####
 
-	estado="log" && echo $estado >> $temp_dir/progresso.txt
+	estado="log" && echo $estado >> $atividade_dir/progresso.txt
 	
 	let "tamanho_app=$(echo $app | wc -c)-1"
 
@@ -398,7 +394,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
 	cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
-	estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
+	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
 	echo -e "\nDeploy concluído."
 else

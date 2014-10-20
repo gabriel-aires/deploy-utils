@@ -1,7 +1,8 @@
 Instruções:
 
 1) O script requer o pacote cifs-utils (instalar com o comando "sudo yum install cifs-utils")
-2) Deve ser criado o diretório /opt/git_deploy/sh/ (os arquivos *.sh devem ser colocados aqui)
+2) Colocar os arquivos git_deploy.sh e rollback.sh no diretório /usr/local/sbin/
+3) Copiar o arquivo constantes.txt para o diretório /opt/git_deploy/
 3) Os scripts devem possuir permissão de execução (executar "chmod +x <nomedoarquivo.sh>")
 4) Gerar uma chave pública a ser armazenada no Git para o usuário que realizará os deploys
 (a definir), conforme segue:
@@ -13,7 +14,9 @@ Instruções:
 
 Execução:
 
-sudo /opt/git_deploy/sh/git_deploy.sh <sistema> <hash> <chamado>
+1) sudo git_deploy.sh <sistema> <hash> <chamado> (modo)
+
+2) sudo rollback.sh <sistema>
 
 Logs:
 
