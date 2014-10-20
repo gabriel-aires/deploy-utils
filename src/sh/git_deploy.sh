@@ -243,8 +243,8 @@ sed -i -r 's/^.{130}//' $temp_dir/arq.alterado								#remoção do hash na list
 
 ##### CRIAÇÃO / REMOÇÃO DE DIRETÓRIOS #####
 
-find "$origem/" -type d | sort > $temp_dir/d_origem.txt;						#lista diretórios em "origem" e "destino"
-find "$destino/" -follow -type d | sort > $temp_dir/d_destino.txt;
+find "$origem/" -type d | sort -r > $temp_dir/d_origem.txt;						#lista diretórios em "origem" e "destino". A ordenação inversa (sort -r) é necessária para uma eventual exclusão dos diretórios.
+find "$destino/" -follow -type d | sort -r > $temp_dir/d_destino.txt;
 
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/d_origem.txt;							#as aspas são necessárias quando há espaços nos nomes de diretórios
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/d_destino.txt;
