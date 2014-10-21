@@ -89,25 +89,32 @@ function etapa () {
 	
 	if [ "$estado" == 'fim_validacao' ] || [ "$estado" == 'leitura' ] || [ "$estado" == 'fim_leitura' ]; then
 	
-		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy abortado."
+		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
 
 	elif [ "$estado" == 'backup' ] || [ "$estado" == 'fim_backup' ]; then
-	
-		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+
 		rm -Rf $chamados_dir/$app/ROLLBACK_*
 		rm -f $chamados_dir/$app/rollback_*
+		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy abortado."
+		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
 
 	elif [ "$estado" == 'escrita' ]; then
 
 		echo -e "\nDeploy interrompido durante a etapa de escrita. Revertendo alterações..."
-		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		echo "rollback" >> $atividade_dir/progresso.txt
+		
 		cat $chamados_dir/$app/rollback_$data.txt | xargs --no-run-if-empty -d "\n" -L 1 sh -c
+		
 		rm -Rf $chamados_dir/$app/ROLLBACK_*
 		rm -f $chamados_dir/$app/rollback_*
+		echo "fim_rollback" >> $atividade_dir/progresso.txt
+		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "Rollback finalizado."	
-	
+		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+
 	elif [ "$estado" == 'fim_escrita' ]; then
 		
 		##### LOG DE DEPLOY #####
@@ -125,7 +132,8 @@ function etapa () {
 
 		grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
 		cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
-
+		
+		echo "deploy_concluido" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy concluído."
 	fi
 
@@ -372,8 +380,8 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.remover_novos							
 
 	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rm -f \1\2\)|" $temp_dir/arq.remover_novos
-	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rmdir \1\2\)|" $temp_dir/dir.remover_novos
-	
+	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rmdir \1\2 2> /dev/null\)|" $temp_dir/dir.remover_novos		#Como o comando rmidr não possui a opção -f, ocorrerá erro no rollback caso algum diretório
+														#ainda não tenha sido criado na etapa de escrita. Este erro pode ser ignorado sem problemas.	
 	rm -f $chamados_dir/$app/rollback_*
 	touch $chamados_dir/$app/rollback_$data.txt
 
