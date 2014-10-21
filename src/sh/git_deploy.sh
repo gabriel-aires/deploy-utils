@@ -59,13 +59,13 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git clone --progress "$repo" "$repo_dir/$app"						#clona o repositório, caso ainda não tenha sido feito.
 	fi
 
-	echo " "
+	echo -e "\nObtendo a revisão ${rev}..."
 
 	cd "$repo_dir/$app"
 
-	( git fetch --all --force --quiet && git checkout --force --quiet $rev ) || exit
+	( git fetch --all --force --quiet && git checkout --force --quiet $rev ) || etapa
 
-	cd - 
+	cd - &> /dev/null 
 
 }
 
@@ -85,6 +85,8 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 function etapa () {
 	
+	wait
+	
 	if [ "$estado" == 'fim_validacao' ] || [ "$estado" == 'leitura' ] || [ "$estado" == 'fim_leitura' ]; then
 	
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
@@ -99,18 +101,18 @@ function etapa () {
 
 	elif [ "$estado" == 'escrita' ]; then
 
-		echo -e "\nDeploy interrompido. Revertendo alterações..."
+		echo -e "\nDeploy interrompido durante a etapa de escrita. Revertendo alterações..."
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
 		cat $chamados_dir/$app/rollback_$data.txt | xargs --no-run-if-empty -d "\n" -L 1 sh -c
 		rm -Rf $chamados_dir/$app/ROLLBACK_*
 		rm -f $chamados_dir/$app/rollback_*
-		echo -e "\nRollback finalizado."	
+		echo -e "Rollback finalizado."	
 	
 	elif [ "$estado" == 'fim_escrita' ]; then
 		
 		##### LOG DE DEPLOY #####
 	
-		let "tamanho_app=$(echo $app | wc -c)-1"
+		let "tamanho_app=$(echo $app | wc -c)-1" 
 
 		app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
 		data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
@@ -128,18 +130,18 @@ function etapa () {
 	fi
 
 	clean_temp
-	
-	exit 2
 
 }
 
-trap "etapa" EXIT SIGQUIT SIGKILL SIGTERM SIGINT							#a função será chamada quando o script for finalizado ou interrompido.
+trap "etapa; exit" SIGQUIT SIGTERM SIGINT SIGTERM SIGHUP						#a função será chamada quando o script for finalizado ou interrompido.
 
 clean_temp	
 
 #### Validação do input do usuário ###### 
 
 clear
+
+echo "Iniciando processo de deploy..."
 
 while [ -z $(echo $app | grep -Ex "[A-Za-z]+") ]; do
 	echo -e "\nErro. Informe o nome do sistema corretamente:"
@@ -250,9 +252,9 @@ mnt_destino="/mnt/destino_$data"
 
 mkdir -p $mnt_destino
 
-echo -e "\nAcesso ao diretório de deploy."
+echo -e "\nAcessando o diretório de deploy..."
 
-mount.cifs $dir_destino $mnt_destino -o credentials=$credenciais || exit 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+mount.cifs $dir_destino $mnt_destino -o credentials=$credenciais || etapa 	 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
 
 ln -s $mnt_destino $destino										#cria link simbólico para o ponto de montagem.	
 
@@ -322,7 +324,7 @@ modificados="$(grep -E "^arq\.alterado" $atividade_dir/modificacoes.txt | wc -l)
 dir_criado="$(grep -E "^dir\.adicionado" $atividade_dir/modificacoes.txt | wc -l)"
 dir_removido="$(grep -E "^dir\.excluido" $atividade_dir/modificacoes.txt | wc -l)"
 
-echo -e "\nLog das modificacoes gravado no arquivo $atividade_dir/modificacoes.txt!\n"
+echo -e "\nLog das modificacoes gravado no arquivo modificacoes.txt\n"
 echo -e "Arquivos adicionados:\t$adicionados "
 echo -e "Arquivos excluidos:\t$excluidos"
 echo -e "Arquivos modificados:\t$modificados"
@@ -426,9 +428,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	cat $temp_dir/arq.alterado | xargs --no-run-if-empty -d "\n" -L 1 sh -c					# 5 - sobrescrita de arquivos modificados.
 
 	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
-
+	
 fi
 
-exit
-
-#TODO: averiguar a possibilidade de utilizar o rsync para o diff entre origem e destino. Ex: rsync -rnivc --delete origem/VISAO/ destino/VISAO/ > modificacoes_rsync.txt
+etapa
