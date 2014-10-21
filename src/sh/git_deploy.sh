@@ -158,7 +158,7 @@ done
 
 app=$(echo $app | sed -r 's/(^.*$)/\L\1/')								#apenas letras minúsculas.
 
-while [ -z $(echo $rev | grep -Ex "^([0-9a-f]){9}[0-9a-f]*$") ]; do					#a revisão é uma string hexadecimal de 9 ou mais caracteres.
+while [ -z $(echo $rev | grep -Ex "^([0-9a-f]){9}[0-9a-f]*$|^v[0-9]+\.[0-9]+(\.[0-9]+)?$") ]; do	#a revisão é uma string hexadecimal de 9 ou mais caracteres ou uma tag do tipo v1.2.3
 
 	echo -e "\nErro. Informe a revisão corretamente:"
 	read rev
