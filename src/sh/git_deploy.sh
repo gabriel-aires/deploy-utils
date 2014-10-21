@@ -374,7 +374,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rm -f \1\2\)|" $temp_dir/arq.remover_novos
 	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rmdir \1\2\)|" $temp_dir/dir.remover_novos
 	
-	rm -f $chamados_dir/$app/rollback_$data.txt
+	rm -f $chamados_dir/$app/rollback_*
 	touch $chamados_dir/$app/rollback_$data.txt
 
 	cat $temp_dir/arq.remover_novos >> $chamados_dir/$app/rollback_$data.txt					# 1 - remoção de arquivos a serem criados no destino.
