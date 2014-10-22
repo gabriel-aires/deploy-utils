@@ -138,6 +138,7 @@ function etapa () {
 	fi
 
 	clean_temp
+    exit 0
 
 }
 
