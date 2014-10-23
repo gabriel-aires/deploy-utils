@@ -119,14 +119,25 @@ function etapa () {
 		
 		##### LOG DE DEPLOY #####
 	
-		let "tamanho_app=$(echo $app | wc -c)-1" 
-
-		app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
 		data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
-		rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
-		rev_log=$(echo '                ' | sed -r "s|^ {9}|$rev_log|")
+		
+		let "tamanho_app=$(echo $app | wc -c)-1" 
+		app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
 
-		echo -e "$data_log$app_log$rev_log$chamado" >> $historico
+		rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
+		let "tamanho_rev=$(echo $rev_log | wc -c)-1"
+	 	rev_log=$(echo '                ' | sed -r "s|^ {$tamanho_rev}|$rev_log|")
+
+		let "tamanho_chamado=$(echo $chamado | wc -c)-1" 
+		chamado_log=$(echo '                ' | sed -r "s|^ {$tamanho_chamado}|$app|")
+		
+		if [ "$modo" == 'p' ]; then
+			obs_log='Arquivos e diretórios obsoletos preservados.'
+		else
+			obs_log='Arquivos e diretórios obsoletos deletados.'
+		fi
+		
+		echo -e "$data_log $app_log $rev_log $chamado_log $obs_log" >> $historico
 
 		cp $historico $chamados_dir
 
