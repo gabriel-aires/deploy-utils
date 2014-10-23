@@ -33,9 +33,9 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 deploy_dir="/opt/git_deploy"										#diretório de instalação.
 source $deploy_dir/constantes.txt || exit									#carrega o arquivo de constantes.
 
-echo $temp_dir $chamados_dir $repo_dir
+echo $temp $chamados_dir $repo_dir
 
-if [ -z $(echo $temp_dir | grep -E "^/opt/[^/]+") ] || [ -z $(echo $chamados_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] || [ -z $(echo $repo_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+")  ]; then
+if [ -z $(echo $temp | grep -E "^/opt/[^/]+") ] || [ -z $(echo $chamados_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] || [ -z $(echo $repo_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+")  ]; then
     echo 'Favor preencher corretamente o arquivo $deploy_dir/constantes.txt e tentar novamente.'
     exit
 fi
@@ -71,15 +71,14 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 
 function clean_temp () {										#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
 
-	mkdir -p $temp_dir;
-
-	grep -E "/mnt/destino_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt			#os pontos de montagem são obtidos do arquivo /proc/mounts
+	grep -E "/mnt/$app_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt				#os pontos de montagem são obtidos do arquivo /proc/mounts
 	sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
 
 	cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
 	cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir				#já desmontados, os pontos de montagem temporários podem ser apagados.
 
 	rm -f $temp_dir/*										#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
+	rmdir $temp_dir
 
 }
 
@@ -92,6 +91,7 @@ function etapa () {
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy abortado."
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		clean_temp
 
 	elif [ "$estado" == 'backup' ] || [ "$estado" == 'fim_backup' ]; then
 
@@ -100,6 +100,7 @@ function etapa () {
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy abortado."
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		clean_temp
 
 	elif [ "$estado" == 'escrita' ]; then
 
@@ -114,6 +115,7 @@ function etapa () {
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "Rollback finalizado."	
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		clean_temp
 
 	elif [ "$estado" == 'fim_escrita' ]; then
 		
@@ -148,16 +150,13 @@ function etapa () {
 		
 		echo "deploy_concluido" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy concluído."
+		clean_temp
 	fi
 
-	clean_temp
     	exit 0
-
 }
 
 trap "etapa; exit" SIGQUIT SIGTERM SIGINT SIGTERM SIGHUP						#a função será chamada quando o script for finalizado ou interrompido.
-
-clean_temp	
 
 #### Validação do input do usuário ###### 
 
@@ -234,16 +233,19 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
-
-atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"													
-atividade_dir="$chamados_dir/$app/$atividade_dir"							#Diretório onde serão armazenados os logs do atendimento.
+chamado="$(echo $chamado | sed -r 's|/|\.|')"													
+atividade_dir="$chamados_dir/$app/$chamado"								#Diretório onde serão armazenados os logs do atendimento.
+temp_dir="$temp/$chamado"
 
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
 	rmdir ${atividade_dir}_PENDENTE
 fi
 
+clean_temp
+
 mkdir -p $atividade_dir
+mkdir -p $temp_dir;
 
 echo -e "\nSistema:\t$app"
 echo -e "Repositório:\t$repo"
@@ -276,8 +278,8 @@ fi
 ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
 
 data="$(date +%Y%m%d%H%M%S)"
-destino="$temp_dir/destino_$data"
-mnt_destino="/mnt/destino_$data"
+destino="$temp_dir/$app_$data"
+mnt_destino="/mnt/$app_$data"
 
 mkdir -p $mnt_destino
 
