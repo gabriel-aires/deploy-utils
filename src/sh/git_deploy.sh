@@ -254,7 +254,7 @@ if [ ! -d "$origem" ]; then
 fi
 
 if [ ! -d "$origem" ]; then										
-	echo -e "\nO caminho \'$origem\' é inválido. Favor corrigir o arquivo $parametros_git."
+	echo -e "\nErro: $origem não é um caminho válido.\nFavor corrigir o arquivo $parametros_git."
 	etapa
 fi
 
