@@ -70,6 +70,8 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 }
 
 function clean_temp () {										#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
+	
+	mkdir -p $temp_dir
 
 	grep -E "/mnt/$app_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt				#os pontos de montagem são obtidos do arquivo /proc/mounts
 	sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
