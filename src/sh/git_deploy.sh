@@ -138,7 +138,7 @@ function etapa () {
 	fi
 
 	clean_temp
-    exit 0
+    	exit 0
 
 }
 
@@ -253,6 +253,11 @@ if [ ! -d "$origem" ]; then
 	origem="$repo_dir/$raiz"									#é comum que o usuário informe a pasta do sistema como parte da raiz.
 fi
 
+if [ ! -d "$origem" ]; then										
+	echo -e "\nO caminho \'$origem\' é inválido. Favor corrigir o arquivo $parametros_git."
+	etapa
+fi
+
 ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
 
 data="$(date +%Y%m%d%H%M%S)"
@@ -263,15 +268,14 @@ mkdir -p $mnt_destino
 
 echo -e "\nAcessando o diretório de deploy..."
 
-mount.cifs $dir_destino $mnt_destino -o credentials=$credenciais || etapa 	 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+mount.cifs $dir_destino $mnt_destino -o credentials=$credenciais || etapa 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
 
 ln -s $mnt_destino $destino										#cria link simbólico para o ponto de montagem.	
 
 ##### DIFF ARQUIVOS #####
 
-
-find "$origem/" -type f | sort > $temp_dir/origem.txt;							#lista arquivos em "origem" e "destino"
-find "$destino/" -follow -type f | sort > $temp_dir/destino.txt;
+find "$origem/" -type f | sort > $temp_dir/origem.txt || etapa						#lista arquivos em "origem" e "destino"
+find "$destino/" -follow -type f | sort > $temp_dir/destino.txt || etapa
 
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/origem.txt;							#as aspas são necessárias quando há espaços nos nomes de arquivos
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/destino.txt;
@@ -301,8 +305,8 @@ sed -i -r 's/^.{130}//' $temp_dir/arq.alterado								#remoção do hash na list
 
 ##### CRIAÇÃO / REMOÇÃO DE DIRETÓRIOS #####
 
-find "$origem/" -type d | sort -r > $temp_dir/d_origem.txt;						#lista diretórios em "origem" e "destino". A ordenação inversa (sort -r) é necessária para uma eventual exclusão dos diretórios.
-find "$destino/" -follow -type d | sort -r > $temp_dir/d_destino.txt;
+find "$origem/" -type d | sort -r > $temp_dir/d_origem.txt || etapa					#lista diretórios em "origem" e "destino". A ordenação inversa (sort -r) é necessária para uma eventual exclusão dos diretórios.
+find "$destino/" -follow -type d | sort -r > $temp_dir/d_destino.txt || etapa
 
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/d_origem.txt;							#as aspas são necessárias quando há espaços nos nomes de diretórios
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/d_destino.txt;
@@ -352,7 +356,8 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	#### preparação do script de rollback ####
 
 	estado="backup" && echo $estado >> $atividade_dir/progresso.txt
-	
+	echo -e "\nCriando backup diferencial..."
+		
 	rm -Rf $chamados_dir/$app/ROLLBACK_*
 
 	bak_dir="$chamados_dir/$app/ROLLBACK_$data"
@@ -412,7 +417,8 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	#### gravação das alterações em disco ####
 		
 	estado="escrita" && echo $estado >> $atividade_dir/progresso.txt
-	
+	echo -e "\nEscrevendo alterações no diretório de destino..."	
+
 	sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/arq.alterado						#reinserção das aspas na lista de arquivos modificados.
 
 	sed -i -r "s|^\"|\"$origem/|" $temp_dir/arq.adicionado						#caminho absoluto no diretório de origem para arquivos e diretórios adicionados ou modificados.
