@@ -141,7 +141,9 @@ function etapa () {
 
 		cp $historico $chamados_dir
 
-		grep -i "$app" $historico > $atividade_dir/historico_deploy_$app.txt
+		let "tamanho_data=$(echo $data_log | wc -c)" 
+		grep -Ei "^(.){$tamanho_data}$app" $historico > $atividade_dir/historico_deploy_$app.txt
+		
 		cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 		
 		echo "deploy_concluido" >> $atividade_dir/progresso.txt
