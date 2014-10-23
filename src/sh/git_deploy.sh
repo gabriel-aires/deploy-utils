@@ -119,7 +119,7 @@ function etapa () {
 		
 		##### LOG DE DEPLOY #####
 	
-		data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
+		horario_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
 		
 		tamanho_app=$(echo -n $app | wc -m)
 		app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
@@ -137,12 +137,12 @@ function etapa () {
 			obs_log='Arquivos e diretórios obsoletos deletados.'
 		fi
 		
-		echo -e "$data_log$app_log$rev_log$chamado_log$obs_log" >> $historico
+		echo -e "$horario_log$app_log$rev_log$chamado_log$obs_log" >> $historico
 
 		cp $historico $chamados_dir
 
-		tamanho_data=$(echo -n $data_log | wc -m) 
-		grep -Ei "^(.){$tamanho_data}$app" $historico > $atividade_dir/historico_deploy_$app.txt
+		tamanho_horario=$(echo -n "$horario_log" | wc -m) 
+		grep -Ei "^(.){$tamanho_horario}$app" $historico > $atividade_dir/historico_deploy_$app.txt
 		
 		cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 		
