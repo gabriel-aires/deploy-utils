@@ -121,14 +121,14 @@ function etapa () {
 	
 		data_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
 		
-		let "tamanho_app=$(echo $app | wc -c)-1" 
+		tamanho_app=$(echo -n $app | wc -m)
 		app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
 
 		rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
-		let "tamanho_rev=$(echo $rev_log | wc -c)-1"
+		tamanho_rev=$(echo -n $rev_log | wc -m)
 	 	rev_log=$(echo '                ' | sed -r "s|^ {$tamanho_rev}|$rev_log|")
 
-		let "tamanho_chamado=$(echo $chamado | wc -c)-1" 
+		tamanho_chamado=$(echo -n $chamado | wc -m) 
 		chamado_log=$(echo '                ' | sed -r "s|^ {$tamanho_chamado}|$chamado|")
 		
 		if [ "$modo" == 'p' ]; then
@@ -137,11 +137,11 @@ function etapa () {
 			obs_log='Arquivos e diretórios obsoletos deletados.'
 		fi
 		
-		echo -e "$data_log $app_log $rev_log $chamado_log $obs_log" >> $historico
+		echo -e "$data_log$app_log$rev_log$chamado_log$obs_log" >> $historico
 
 		cp $historico $chamados_dir
 
-		tamanho_data=$(echo $data_log | wc -c) 
+		tamanho_data=$(echo -n $data_log | wc -m) 
 		grep -Ei "^(.){$tamanho_data}$app" $historico > $atividade_dir/historico_deploy_$app.txt
 		
 		cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
