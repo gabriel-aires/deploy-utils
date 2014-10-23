@@ -406,7 +406,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 		cat $temp_dir/arq.restaurar_alterados >> $chamados_dir/$app/rollback_$data.txt
 	fi
 
-	if [ "$(cat $temp_dir/arq.restaurar_excluidos | wc -l)" -gt "0" ]; then
+	if [ "$(cat $temp_dir/arq.restaurar_excluidos | wc -l)" -gt "0" ] && [ "$modo" == 'd' ]; then
 		cat $temp_dir/arq.restaurar_excluidos | xargs -d "\n" -L 1 sh -c			# 4 - cópia de arquivos a serem excluidos para a pasta ROLLBACK
 		sed -i -r "s|(^.+)(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.+$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_excluidos
 		cat $temp_dir/arq.restaurar_excluidos >> $chamados_dir/$app/rollback_$data.txt
