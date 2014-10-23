@@ -54,14 +54,14 @@ fi
 
 function checkout () {											# o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
-	if [ ! -d "$repo_dir/$app/.git" ]; then
+	if [ ! -d "$repo_dir/$nomerepo/.git" ]; then
 		echo " "
-		git clone --progress "$repo" "$repo_dir/$app"						#clona o repositório, caso ainda não tenha sido feito.
+		git clone --progress "$repo" "$repo_dir/$nomerepo"					#clona o repositório, caso ainda não tenha sido feito.
 	fi
 
 	echo -e "\nObtendo a revisão ${rev}..."
 
-	cd "$repo_dir/$app"
+	cd "$repo_dir/$nomerepo"
 
 	( git fetch --all --force --quiet && git checkout --force --quiet $rev ) || etapa
 
@@ -233,6 +233,8 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
 	dir_destino=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f4)
 fi
 
+nomerepo=$(echo $repo | sed -r "s|([^/:]+)\.git$|\1|")
+
 atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"													
 atividade_dir="$chamados_dir/$app/$atividade_dir"							#Diretório onde serão armazenados os logs do atendimento.
 
@@ -260,10 +262,10 @@ estado="leitura" && echo $estado >> $atividade_dir/progresso.txt
 
 checkout												#ver checkout(): (git clone), cd <repositorio> , git fetch, git checkout...
 
-origem="$repo_dir/$app/$raiz"
+origem="$repo_dir/$nomerepo/$raiz"
 
 if [ ! -d "$origem" ]; then										
-	origem="$repo_dir/$raiz"									#é comum que o usuário informe a pasta do sistema como parte da raiz.
+	origem="$repo_dir/$raiz"									#é comum que o usuário informe a pasta do sistema (nomerepo) como parte da raiz.
 fi
 
 if [ ! -d "$origem" ]; then										
