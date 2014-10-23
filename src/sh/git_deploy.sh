@@ -165,7 +165,7 @@ clear
 
 echo "Iniciando processo de deploy..."
 
-while [ -z $(echo $app | grep -Ex "[A-Za-z]+") ]; do
+while [ -z $(echo $app | grep -Ex "[A-Za-z]+_?[0-9A-Za-z]+") ]; do
 	echo -e "\nErro. Informe o nome do sistema corretamente:"
 	read app
 done
