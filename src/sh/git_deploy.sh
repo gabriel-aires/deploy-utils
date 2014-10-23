@@ -269,7 +269,7 @@ if [ ! -d "$origem" ]; then
 fi
 
 if [ ! -d "$origem" ]; then										
-	echo -e "\nErro: $origem não é um caminho válido.\nFavor corrigir o arquivo $parametros_git."
+	echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_git."
 	etapa
 fi
 
