@@ -233,7 +233,7 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
 	dir_destino=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f4)
 fi
 
-nomerepo=$(echo $repo | sed -r "s|([^/:]+)\.git$|\1|")
+nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 
 atividade_dir="$(echo $chamado | sed -r 's|/|\.|')"													
 atividade_dir="$chamados_dir/$app/$atividade_dir"							#Diretório onde serão armazenados os logs do atendimento.
