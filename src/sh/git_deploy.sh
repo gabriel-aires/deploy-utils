@@ -129,7 +129,7 @@ function etapa () {
 	 	rev_log=$(echo '                ' | sed -r "s|^ {$tamanho_rev}|$rev_log|")
 
 		let "tamanho_chamado=$(echo $chamado | wc -c)-1" 
-		chamado_log=$(echo '                ' | sed -r "s|^ {$tamanho_chamado}|$app|")
+		chamado_log=$(echo '                ' | sed -r "s|^ {$tamanho_chamado}|$chamado|")
 		
 		if [ "$modo" == 'p' ]; then
 			obs_log='Arquivos e diretórios obsoletos preservados.'
