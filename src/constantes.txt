@@ -1,6 +1,7 @@
 temp="$deploy_dir/.temp"
 chamados_dir="/mnt/historico_deploy_asp"
 repo_dir="$deploy_dir/repo"
+lock_dir="/var/lock/git_deploy"
 parametros_git="$deploy_dir/parametros.txt"
 historico="$deploy_dir/hist_deploy.txt"
 credenciais="$deploy_dir/credenciais.txt"

@@ -9,13 +9,6 @@ if [ ! "$(echo $USER)" == 'root' ]; then
 	exit
 fi
 
-##### Bloqueio de execuções simultâneas #######
-
-if [ "$(ps aux | grep -E 'git_deploy.sh' | grep -Ev 'grep|sudo' | wc -l)" -gt "2" ]; then		#TODO: bloquear execuções simultâneas apenas nos casos abaixo:
-	echo "Há outro deploy em andamento. Favor tentar novamente mais tarde."				# - usuário root
-	exit												# - execuções simultâneas pelo mesmo usuário
-fi													# - mesmo repositório GIT (mover repositórios para /opt/repo/)
-													# - mesmo diretório de destino
 #### UTILIZAÇÃO: git_deploy.sh <aplicação> <revisão> <chamado> (modo) ############
 
 if [ "$#" -lt 3 ]; then											#o script requer exatamente 3 parâmetros.
@@ -31,16 +24,18 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 #### Inicialização #####
 
 deploy_dir="/opt/git_deploy"										#diretório de instalação.
-source $deploy_dir/constantes.txt || exit									#carrega o arquivo de constantes.
+source $deploy_dir/constantes.txt || exit								#carrega o arquivo de constantes.
 
-echo $temp $chamados_dir $repo_dir
-
-if [ -z $(echo $temp | grep -E "^/opt/[^/]+") ] || [ -z $(echo $chamados_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] || [ -z $(echo $repo_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+")  ]; then
+if [ -z $(echo $temp | grep -E "^/opt/[^/]+") ] \
+	|| [ -z $(echo $chamados_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] \
+	|| [ -z $(echo $repo_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+")  ] \
+	|| [ -z $(echo $lock_dir | grep -E "^/var/[^/]+") ];
+then
     echo 'Favor preencher corretamente o arquivo $deploy_dir/constantes.txt e tentar novamente.'
     exit
 fi
 
-mkdir -p $deploy_dir $chamados_dir $repo_dir 								#cria os diretórios necessários, caso não existam.
+mkdir -p $temp $deploy_dir $chamados_dir $repo_dir $lock_dir						#cria os diretórios necessários, caso não existam.
 
 if [ ! -e "$parametros_git" ]; then									#cria arquivo de parâmetros, caso não exista.
 	touch $parametros_git
@@ -71,16 +66,28 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 
 function clean_temp () {										#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
 	
-	mkdir -p $temp_dir
+	if [ ! -z $temp_dir ]; then
 
-	grep -E "/mnt/$app_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt				#os pontos de montagem são obtidos do arquivo /proc/mounts
-	sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
+		mkdir -p $temp_dir
+	
+		if [ ! -z "$app" ]; then
+			grep -E "/mnt/$app_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt			#os pontos de montagem são obtidos do arquivo /proc/mounts
+			sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
+			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount			#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
+			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir			#já desmontados, os pontos de montagem temporários podem ser apagados.
+		fi
 
-	cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-	cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir				#já desmontados, os pontos de montagem temporários podem ser apagados.
+		rm -f $temp_dir/*										#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
+		rmdir $temp_dir
 
-	rm -f $temp_dir/*										#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
-	rmdir $temp_dir
+	fi
+}
+
+function clean_locks () {
+
+	if [ -d $temp_dir ] && [ -f "$lock_dir/locks" ]; then
+		cat $temp_dir/locks | xargs --no-run-if-empty rm -f					#remove locks
+	fi
 
 }
 
@@ -171,10 +178,7 @@ while [ -z $(echo $app | grep -Ex "[A-Za-z]+_?[0-9A-Za-z]+") ]; do
 	read app
 done
 
-app=$(echo $app | sed -r 's/(^.*$)/\L\1/')								#apenas letras minúsculas.
-
 while [ -z $(echo $rev | grep -Ex "^([0-9a-f]){9}[0-9a-f]*$|^v[0-9]+\.[0-9]+(\.[0-9]+)?$") ]; do	#a revisão é uma string hexadecimal de 9 ou mais caracteres ou uma tag do tipo v1.2.3
-
 	echo -e "\nErro. Informe a revisão corretamente:"
 	read rev
 done
@@ -193,41 +197,77 @@ while [ -z $(echo $modo | grep -Ex "[pd]") ]; do
 	fi
 done
 
+app=$(echo $app | sed -r 's/(^.*$)/\L\1/')								#apenas letras minúsculas.
+chamado="$(echo $chamado | sed -r 's|/|\.|')"								#chamados no formato código.ano						
+temp_dir="$temp/$chamado"
+
+#### Verifica deploys simultâneos e cria lockfiles, conforme necessário ########
+
+if [ -d $temp_dir ] || [ -f $lock_dir/$chamado ] then
+	echo -e "\nDeploy abortado: há outro deploy do chamado $chamado em curso." && etapa
+else
+	mkdir -p $temp_dir
+	touch $lock_dir/$chamado && echo "$lock_dir/$chamado" > $temp_dir/locks
+fi
+
+if [ -f $lock_dir/$app ]; then			
+	echo -e "\nDeploy abortado: há outro deploy da aplicação $app em curso." && etapa
+else
+	touch $lock_dir/$app &&	echo "$lock_dir/$app" >> $temp_dir/locks
+fi  
+
+if [ -f $lock_dir/$rev ]; then			
+	echo -e "\nDeploy abortado: há outro deploy da revisão $rev em curso." && etapa
+else
+	touch $lock_dir/$rev &&	echo "$lock_dir/$rev" >> $temp_dir/locks
+fi  
+
 if [ $(grep -Ei "^$app " $parametros_git | wc -l) -ne "1" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
-	sed -i "/^$app .*$/d" $parametros_git									 
-
-	echo -e "\nInforme o repositorio a ser utilizado:"
-	read repo
 	
-	while [ -z $(echo $repo | grep -Ex "^git@git.anatel.gov.br:.+/.+\.git$|^http://(.+@)?git.anatel.gov.br.*/.+\.git$") ]; do	#Expressão regular para validação do caminho para o repositóio (SSH ou HTTP).
-		echo -e "\nErro. Informe um caminho válido para o repositório GIT:"
-		read -r repo
-	done	
+	echo -e "\nFavor informar abaixo os parâmetros da aplicação $app."
 
-	echo -e "\nInforme o caminho para a raiz da aplicação:"
-	read -r raiz											#utilizar a opção -r para permitir a leitura de contrabarras.
-	raiz="$(echo $raiz | sed -r 's|\\|/|g')"							#troca \ por /, se necessário.
+	if [ -f $lock_dir/parametros ]; then			
+		echo -e "\Erro: o arquivo $parametros_git está bloqueado para edição. Favor tentar novamente." && etapa
+	else
+		touch $lock_dir/parametros && echo "$lock_dir/parametros" >> $temp_dir/locks
+
+		sed -i "/^$app .*$/d" $parametros_git									 
+
+		echo -e "\nInforme o repositorio a ser utilizado:"
+		read repo
+		
+		while [ -z $(echo $repo | grep -Ex "^git@git.anatel.gov.br:.+/.+\.git$|^http://(.+@)?git.anatel.gov.br.*/.+\.git$") ]; do	#Expressão regular para validação do caminho para o repositóio (SSH ou HTTP).
+			echo -e "\nErro. Informe um caminho válido para o repositório GIT:"
+			read -r repo
+		done	
 	
-	while [ -z $(echo $raiz | grep -Ex "^/?[^/ \\]*(/[^/ \\]+)*/?$") ]; do				#Expressão regular para validação do caminho para a raiz da aplicação. ex: (/)aaa/bbbb/*(/)
-		echo -e "\nErro. Informe um caminho válido para a raiz da aplicação:"
-		read -r raiz
-		raiz="$(echo $raiz | sed -r 's|\\|/|g')"
-	done												
-
-	echo -e "\nInforme o diretório de destino:"
-	read -r dir_destino										#utilizar a opção -r para permitir a leitura de contrabarras.
-	dir_destino="$(echo $dir_destino | sed -r 's|\\|/|g')"						#troca \ por /, se necessário.
+		echo -e "\nInforme o caminho para a raiz da aplicação:"
+		read -r raiz											#utilizar a opção -r para permitir a leitura de contrabarras.
+		raiz="$(echo $raiz | sed -r 's|\\|/|g')"							#troca \ por /, se necessário.
+		
+		while [ -z $(echo $raiz | grep -Ex "^/?[^/ \\]*(/[^/ \\]+)*/?$") ]; do				#Expressão regular para validação do caminho para a raiz da aplicação. ex: (/)aaa/bbbb/*(/)
+			echo -e "\nErro. Informe um caminho válido para a raiz da aplicação:"
+			read -r raiz
+			raiz="$(echo $raiz | sed -r 's|\\|/|g')"
+		done												
 	
-	while [ -z $(echo $dir_destino | grep -Ex "^/(/[^/ \\]+)+/?$") ]; do				#Expressão regular para validação de string de compartilhamento CIFS. ex: \\aaa\bb\*(\)
-		echo -e "\nErro. Informe um caminho válido para o diretório de destino:"
-		read -r dir_destino
-		dir_destino="$(echo $dir_destino | sed -r 's|\\|/|g')"
-	done
-
-	raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
-	dir_destino="$(echo $dir_destino | sed -r 's|/$||')"						#remove / no fim do caminho.
-
-	echo "$app $repo $raiz $dir_destino" >> $parametros_git
+		echo -e "\nInforme o diretório de destino:"
+		read -r dir_destino										#utilizar a opção -r para permitir a leitura de contrabarras.
+		dir_destino="$(echo $dir_destino | sed -r 's|\\|/|g')"						#troca \ por /, se necessário.
+		
+		while [ -z $(echo $dir_destino | grep -Ex "^/(/[^/ \\]+)+/?$") ]; do				#Expressão regular para validação de string de compartilhamento CIFS. ex: \\aaa\bb\*(\)
+			echo -e "\nErro. Informe um caminho válido para o diretório de destino:"
+			read -r dir_destino
+			dir_destino="$(echo $dir_destino | sed -r 's|\\|/|g')"
+		done
+	
+		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
+		dir_destino="$(echo $dir_destino | sed -r 's|/$||')"						#remove / no fim do caminho.
+	
+		echo "$app $repo $raiz $dir_destino" >> $parametros_git
+	
+		rm -f $lock_dir/parametros
+	fi  
 else													#caso a entrada correspondente ao sistema já esteja preenchida, os parâmetros são obtidos do arquivo $deploy_dir/parametros.txt
 	repo=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f2)
 	raiz=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f3)
@@ -235,9 +275,21 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
-chamado="$(echo $chamado | sed -r 's|/|\.|')"													
+nomedestino=$(echo $dir_destino | sed -r "s|/|_|")
+
+if [ -f $lock_dir/$nomerepo ]; then			
+	echo -e "\nDeploy abortado: há outro deploy utilizando o repositório $repo." && etapa
+else
+	touch $lock_dir/$nomerepo && echo "$lock_dir/$nomerepo" >> $temp_dir/locks
+fi  
+
+if [ -f $lock_dir/$nomedestino ]; then			
+	echo -e "\nDeploy abortado: há outro deploy utilizando o diretório $dir_destino." && etapa
+else
+	touch $lock_dir/$nomedestino && echo "$lock_dir/$nomedestino" >> $temp_dir/locks
+fi  
+
 atividade_dir="$chamados_dir/$app/$chamado"								#Diretório onde serão armazenados os logs do atendimento.
-temp_dir="$temp/$chamado"
 
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
