@@ -1,10 +1,12 @@
 #!/bin/bash
 
 estado="validacao"
+pid=$$
+data="$(date +%Y%m%d%H%M%S)"
 
 ##### Execução somente como usuário root ######
 
-if [ ! "$(echo $USER)" == 'root' ]; then
+if [ ! "$USER" == 'root' ]; then
 	echo "Requer usuário root."
 	exit
 fi
@@ -26,7 +28,9 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 deploy_dir="/opt/git_deploy"										#diretório de instalação.
 source $deploy_dir/constantes.txt || exit								#carrega o arquivo de constantes.
 
-if [ -z $(echo $temp | grep -E "^/opt/[^/]+") ] \
+temp_dir="$temp/$pid"
+
+if [ -z $(echo $temp_dir | grep -E "^/opt/[^/]+") ] \
 	|| [ -z $(echo $chamados_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] \
 	|| [ -z $(echo $repo_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+")  ] \
 	|| [ -z $(echo $lock_dir | grep -E "^/var/[^/]+") ];
@@ -35,7 +39,7 @@ then
     exit
 fi
 
-mkdir -p $temp $deploy_dir $chamados_dir $repo_dir $lock_dir						#cria os diretórios necessários, caso não existam.
+mkdir -p $deploy_dir $temp $chamados_dir $repo_dir $lock_dir						#cria os diretórios necessários, caso não existam.
 
 if [ ! -e "$parametros_git" ]; then									#cria arquivo de parâmetros, caso não exista.
 	touch $parametros_git
@@ -51,7 +55,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 
 	if [ ! -d "$repo_dir/$nomerepo/.git" ]; then
 		echo " "
-		git clone --progress "$repo" "$repo_dir/$nomerepo"					#clona o repositório, caso ainda não tenha sido feito.
+		git clone --progress "$repo" "$repo_dir/$nomerepo" || etapa				#clona o repositório, caso ainda não tenha sido feito.
 	fi
 
 	echo -e "\nObtendo a revisão ${rev}..."
@@ -71,21 +75,41 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 		mkdir -p $temp_dir
 	
 		if [ ! -z "$app" ]; then
-			grep -E "/mnt/$app_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt			#os pontos de montagem são obtidos do arquivo /proc/mounts
+			grep -E "/mnt/$app_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
 			sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
-			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount			#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir			#já desmontados, os pontos de montagem temporários podem ser apagados.
+			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount		#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
+			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir		#já desmontados, os pontos de montagem temporários podem ser apagados.
 		fi
 
-		rm -f $temp_dir/*										#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
+		rm -f $temp_dir/*									#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
 		rmdir $temp_dir
-
+	else
+		etapa
 	fi
+}
+
+function lock () {											#argumentos: nome_trava, mensagem_erro
+
+	if [ -d $temp_dir ] && [ -d $lock_dir ]; then
+	
+		if [ ! -f $temp_dir/locks ]; then
+			touch $temp_dir/locks
+		fi
+	
+		if [ -f $lock_dir/$1 ] then
+			echo -e "\n$2" && etapa
+		else
+			touch $lock_dir/$1 && echo "$lock_dir/$1" >> $temp_dir/locks
+		fi
+	else
+		etapa
+	fi
+
 }
 
 function clean_locks () {
 
-	if [ -d $temp_dir ] && [ -f "$lock_dir/locks" ]; then
+	if [ -d $lock_dir ] && [ -f "$temp_dir/locks" ]; then
 		cat $temp_dir/locks | xargs --no-run-if-empty rm -f					#remove locks
 	fi
 
@@ -100,7 +124,6 @@ function etapa () {
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy abortado."
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
-		clean_temp
 
 	elif [ "$estado" == 'backup' ] || [ "$estado" == 'fim_backup' ]; then
 
@@ -109,7 +132,6 @@ function etapa () {
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy abortado."
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
-		clean_temp
 
 	elif [ "$estado" == 'escrita' ]; then
 
@@ -124,7 +146,6 @@ function etapa () {
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "Rollback finalizado."	
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
-		clean_temp
 
 	elif [ "$estado" == 'fim_escrita' ]; then
 		
@@ -159,10 +180,12 @@ function etapa () {
 		
 		echo "deploy_concluido" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy concluído."
-		clean_temp
 	fi
 
-    	exit 0
+	clean_temp
+	clean_locks
+
+	wait &&	exit 0
 }
 
 trap "etapa; exit" SIGQUIT SIGTERM SIGINT SIGTERM SIGHUP						#a função será chamada quando o script for finalizado ou interrompido.
@@ -199,37 +222,20 @@ done
 
 app=$(echo $app | sed -r 's/(^.*$)/\L\1/')								#apenas letras minúsculas.
 chamado="$(echo $chamado | sed -r 's|/|\.|')"								#chamados no formato código.ano						
-temp_dir="$temp/$chamado"
 
 #### Verifica deploys simultâneos e cria lockfiles, conforme necessário ########
 
-if [ -d $temp_dir ] || [ -f $lock_dir/$chamado ] then
-	echo -e "\nDeploy abortado: há outro deploy do chamado $chamado em curso." && etapa
-else
-	mkdir -p $temp_dir
-	touch $lock_dir/$chamado && echo "$lock_dir/$chamado" > $temp_dir/locks
-fi
-
-if [ -f $lock_dir/$app ]; then			
-	echo -e "\nDeploy abortado: há outro deploy da aplicação $app em curso." && etapa
-else
-	touch $lock_dir/$app &&	echo "$lock_dir/$app" >> $temp_dir/locks
-fi  
-
-if [ -f $lock_dir/$rev ]; then			
-	echo -e "\nDeploy abortado: há outro deploy da revisão $rev em curso." && etapa
-else
-	touch $lock_dir/$rev &&	echo "$lock_dir/$rev" >> $temp_dir/locks
-fi  
+lock $chamado "Deploy abortado: há outro deploy do chamado $chamado em curso."
+lock $app "Deploy abortado: há outro deploy da aplicação $app em curso." 
+lock $rev "Deploy abortado: há outro deploy da revisão $rev em curso."
 
 if [ $(grep -Ei "^$app " $parametros_git | wc -l) -ne "1" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
 	
 	echo -e "\nFavor informar abaixo os parâmetros da aplicação $app."
 
-	if [ -f $lock_dir/parametros ]; then			
-		echo -e "\Erro: o arquivo $parametros_git está bloqueado para edição. Favor tentar novamente." && etapa
-	else
-		touch $lock_dir/parametros && echo "$lock_dir/parametros" >> $temp_dir/locks
+	lock "parametros" "Erro: o arquivo $parametros_git está bloqueado para edição. Favor tentar novamente."
+
+	if [ -z $(grep -Ei "^$lock_dir/parametros$" $temp_dir/locks) ]; then
 
 		sed -i "/^$app .*$/d" $parametros_git									 
 
@@ -267,6 +273,8 @@ if [ $(grep -Ei "^$app " $parametros_git | wc -l) -ne "1" ]; then					#caso não
 		echo "$app $repo $raiz $dir_destino" >> $parametros_git
 	
 		rm -f $lock_dir/parametros
+	else
+		etapa
 	fi  
 else													#caso a entrada correspondente ao sistema já esteja preenchida, os parâmetros são obtidos do arquivo $deploy_dir/parametros.txt
 	repo=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f2)
@@ -277,17 +285,8 @@ fi
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 nomedestino=$(echo $dir_destino | sed -r "s|/|_|")
 
-if [ -f $lock_dir/$nomerepo ]; then			
-	echo -e "\nDeploy abortado: há outro deploy utilizando o repositório $repo." && etapa
-else
-	touch $lock_dir/$nomerepo && echo "$lock_dir/$nomerepo" >> $temp_dir/locks
-fi  
-
-if [ -f $lock_dir/$nomedestino ]; then			
-	echo -e "\nDeploy abortado: há outro deploy utilizando o diretório $dir_destino." && etapa
-else
-	touch $lock_dir/$nomedestino && echo "$lock_dir/$nomedestino" >> $temp_dir/locks
-fi  
+lock $nomerepo "Deploy abortado: há outro deploy utilizando o repositório $repo."
+lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
 
 atividade_dir="$chamados_dir/$app/$chamado"								#Diretório onde serão armazenados os logs do atendimento.
 
@@ -331,9 +330,8 @@ fi
 
 ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
 
-data="$(date +%Y%m%d%H%M%S)"
-destino="$temp_dir/$app_$data"
-mnt_destino="/mnt/$app_$data"
+destino="$temp_dir/$app_$pid"
+mnt_destino="/mnt/$app_$pid"
 
 mkdir -p $mnt_destino
 
