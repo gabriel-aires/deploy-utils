@@ -96,7 +96,7 @@ function lock () {											#argumentos: nome_trava, mensagem_erro
 			touch $temp_dir/locks
 		fi
 	
-		if [ -f $lock_dir/$1 ] then
+		if [ -f $lock_dir/$1 ]; then
 			echo -e "\n$2" && etapa
 		else
 			touch $lock_dir/$1 && echo "$lock_dir/$1" >> $temp_dir/locks
