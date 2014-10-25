@@ -25,6 +25,8 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 
 #### Inicialização #####
 
+clear
+
 deploy_dir="/opt/git_deploy"										#diretório de instalação.
 source $deploy_dir/constantes.txt || exit								#carrega o arquivo de constantes.
 
@@ -74,8 +76,8 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 		mkdir -p $temp_dir
 	
-		if [ ! -z "$app" ]; then
-			grep -E "/mnt/$app_.*" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
+		if [ ! -z "$mnt_destino" ]; then
+			grep -E "$mnt_destino" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
 			sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
 			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount		#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
 			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir		#já desmontados, os pontos de montagem temporários podem ser apagados.
@@ -190,9 +192,9 @@ function etapa () {
 
 trap "etapa; exit" SIGQUIT SIGTERM SIGINT SIGTERM SIGHUP						#a função será chamada quando o script for finalizado ou interrompido.
 
-#### Validação do input do usuário ###### 
+clean_temp && mkdir -p $temp_dir
 
-clear
+#### Validação do input do usuário ###### 
 
 echo "Iniciando processo de deploy..."
 
@@ -295,10 +297,7 @@ if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rmdir ${atividade_dir}_PENDENTE
 fi
 
-clean_temp
-
 mkdir -p $atividade_dir
-mkdir -p $temp_dir;
 
 echo -e "\nSistema:\t$app"
 echo -e "Repositório:\t$repo"
