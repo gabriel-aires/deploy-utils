@@ -184,8 +184,8 @@ function etapa () {
 		echo -e "\nDeploy concluído."
 	fi
 
-	clean_temp
 	clean_locks
+	clean_temp
 
 	wait &&	exit 0
 }
