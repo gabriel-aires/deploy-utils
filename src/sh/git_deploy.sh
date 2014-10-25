@@ -285,7 +285,7 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
-nomedestino=$(echo $dir_destino | sed -r "s|/|_|")
+nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
 
 lock $nomerepo "Deploy abortado: há outro deploy utilizando o repositório $repo."
 lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
