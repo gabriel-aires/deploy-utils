@@ -237,7 +237,7 @@ if [ $(grep -Ei "^$app " $parametros_git | wc -l) -ne "1" ]; then					#caso não
 
 	lock "parametros" "Erro: o arquivo $parametros_git está bloqueado para edição. Favor tentar novamente."
 
-	if [ -z $(grep -Ei "^$lock_dir/parametros$" $temp_dir/locks) ]; then
+	if [ ! -z $(grep -Ei "^$lock_dir/parametros$" $temp_dir/locks) ]; then
 
 		sed -i "/^$app .*$/d" $parametros_git									 
 
