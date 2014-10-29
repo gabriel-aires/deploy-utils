@@ -46,7 +46,8 @@ if [ ! -d "$deploy_dir" ] \
 	|| [ ! -d "$lock_dir" ] \
 	|| [ ! -f "$parametros_git" ] \
 	|| [ ! -f "$historico" ] \
-	|| [ ! -f "$credenciais" ] ; then									
+	|| [ ! -f "$credenciais" ];
+then									
     echo 'Impossível realizar rollback: não há deploys anteriores.'
     exit
 
@@ -103,8 +104,7 @@ function clean_locks () {
 
 
 function fim () {
-	
-	wait
+
 
 	clean_locks
 	clean_temp
@@ -180,6 +180,7 @@ echo -e "\nContinuar? (s/n)"
 read ans
 
 if [ -z $(echo $ans | grep -Ei "^[s]$") ]; then
+	mv "$atividade_dir" "${atividade_dir}_PENDENTE"
 	fim
 fi
 
@@ -215,7 +216,7 @@ rev_log='NA              '
 tamanho_chamado=$(echo -n $chamado | wc -m) 
 chamado_log=$(echo '                ' | sed -r "s|^ {$tamanho_chamado}|$chamado|")
 
-obs_log=$(echo $datarollback | sed -r "s|^(....)(..)(..)(..)(..)(..)$|Rollback correspondente a \3/\2/\1, \4h\5m\6s|")
+obs_log=$(echo $datarollback | sed -r "s|^(....)(..)(..)(..)(..)(..)$|Rollback correspondente a \3/\2/\1 às \4h\5m\6s|")
 
 echo -e "$horario_log$app_log$rev_log$chamado_log$obs_log" >> $historico
 
@@ -226,7 +227,6 @@ grep -Ei "^(.){$tamanho_horario}$app" $historico > $atividade_dir/historico_depl
 
 cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
-echo "rollback_concluido" >> $atividade_dir/progresso.txt
 echo -e "\nRollback concluído."
 
 estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
