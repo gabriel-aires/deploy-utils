@@ -287,7 +287,7 @@ fi
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
 
-lock $nomerepo "Deploy abortado: há outro deploy utilizando o repositório $repo."
+lock "${nomerepo}.git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
 lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
 
 atividade_dir="$chamados_dir/$app/$chamado"								#Diretório onde serão armazenados os logs do atendimento.
