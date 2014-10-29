@@ -41,12 +41,12 @@ fi
 
 if [ ! -d "$deploy_dir" ] \
 	|| [ ! -d "$temp" ] \
-	|| [ ! -d "$chamdos_dir/$app" ] \
+	|| [ ! -d "$chamados_dir/$app" ] \
 	|| [ ! -d "$repo_dir" ] \
 	|| [ ! -d "$lock_dir" ] \
 	|| [ ! -f "$parametros_git" ] \
 	|| [ ! -f "$historico" ] \
-	|| [ ! -f "$credenciais" ] ; then									#cria arquivo de parâmetros, caso não exista.
+	|| [ ! -f "$credenciais" ] ; then									
     echo 'Impossível realizar rollback: não há deploys anteriores.'
     exit
 
