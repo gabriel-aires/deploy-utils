@@ -329,7 +329,7 @@ fi
 
 ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
 
-destino="/mnt/$app_$pid"
+destino="/mnt/${app}_${pid}${data}"
 
 mkdir -p $destino
 
