@@ -180,7 +180,7 @@ estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
 estado="rollback" && echo $estado >> $atividade_dir/progresso.txt
 
-datarollback=$(echo $rollback | sed -r "s|/rollback_(.*)\.txt|\1|")
+datarollback=$(echo $rollback | sed -r "s|^.*/rollback_(.*)\.txt$|\1|")
 destino="/mnt/${app}_${datarollback}"
 
 echo -e "\nAcessando o diretório de deploy..."
