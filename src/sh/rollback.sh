@@ -138,7 +138,7 @@ find "$chamados_dir/$app" -type f -iname "rollback_*.txt" > $temp_dir/nomescript
 
 if [ $(cat "$temp_dir/nomescript" | wc -l) -eq "1" ]; then
 	rollback=$(cat "$temp_dir/nomescript")
- 	nomerollback=$(echo $dir_destino | sed -r "s|/|_|g")
+ 	nomerollback=$(echo $rollback | sed -r "s|/|_|g")
 else
 	echo -e "\nO backup não está disponível. Rollback abortado."
 	fim
@@ -176,6 +176,13 @@ echo $estado > $atividade_dir/progresso.txt
 
 estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
+echo -e "\nContinuar? (s/n)"
+read ans
+
+if [ -z $(echo $ans | grep -Ei "^[s]$") ]; then
+	fim
+fi
+
 ### ROLBACK ###
 
 estado="rollback" && echo $estado >> $atividade_dir/progresso.txt
@@ -196,9 +203,6 @@ wait
 rm -Rf $chamados_dir/$app/ROLLBACK_*
 rm -f $chamados_dir/$app/rollback_*
 
-echo "fim_$estado" >> $atividade_dir/progresso.txt
-echo -e "Rollback finalizado."	
-		
 ##### LOG #####
 	
 horario_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
@@ -224,5 +228,7 @@ cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
 
 echo "rollback_concluido" >> $atividade_dir/progresso.txt
 echo -e "\nRollback concluído."
+
+estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
 fim
