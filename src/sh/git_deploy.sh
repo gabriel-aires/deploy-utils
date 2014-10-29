@@ -76,14 +76,14 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 		mkdir -p $temp_dir
 	
-		if [ ! -z "$mnt_destino" ]; then
-			grep -E "$mnt_destino" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
+		if [ ! -z "$destino" ]; then
+			grep -E "$destino" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
 			sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
 			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount		#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
 			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir		#já desmontados, os pontos de montagem temporários podem ser apagados.
 		fi
 
-		rm -f $temp_dir/*									#remoção de link simbólico (a opção -R não foi utilizada para que o link simbólico não seja seguido).
+		rm -f $temp_dir/*									
 		rmdir $temp_dir
 	else
 		etapa
@@ -329,21 +329,18 @@ fi
 
 ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
 
-destino="$temp_dir/$app_$pid"
-mnt_destino="/mnt/$app_$pid"
+destino="/mnt/$app_$pid"
 
-mkdir -p $mnt_destino
+mkdir -p $destino
 
 echo -e "\nAcessando o diretório de deploy..."
 
-mount.cifs $dir_destino $mnt_destino -o credentials=$credenciais || etapa 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
-
-ln -s $mnt_destino $destino										#cria link simbólico para o ponto de montagem.	
+mount.cifs $dir_destino $destino -o credentials=$credenciais || etapa 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
 
 ##### DIFF ARQUIVOS #####
 
 find "$origem/" -type f | sort > $temp_dir/origem.txt || etapa						#lista arquivos em "origem" e "destino"
-find "$destino/" -follow -type f | sort > $temp_dir/destino.txt || etapa
+find "$destino/" -type f | sort > $temp_dir/destino.txt || etapa
 
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/origem.txt;							#as aspas são necessárias quando há espaços nos nomes de arquivos
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/destino.txt;
@@ -374,7 +371,7 @@ sed -i -r 's/^.{130}//' $temp_dir/arq.alterado								#remoção do hash na list
 ##### CRIAÇÃO / REMOÇÃO DE DIRETÓRIOS #####
 
 find "$origem/" -type d | sort -r > $temp_dir/d_origem.txt || etapa					#lista diretórios em "origem" e "destino". A ordenação inversa (sort -r) é necessária para uma eventual exclusão dos diretórios.
-find "$destino/" -follow -type d | sort -r > $temp_dir/d_destino.txt || etapa
+find "$destino/" -type d | sort -r > $temp_dir/d_destino.txt || etapa
 
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/d_origem.txt;							#as aspas são necessárias quando há espaços nos nomes de diretórios
 sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/d_destino.txt;
