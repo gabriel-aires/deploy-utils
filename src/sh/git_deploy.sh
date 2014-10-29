@@ -329,11 +329,11 @@ fi
 
 ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
 
-destino="/mnt/${app}_${pid}${data}"
-
-mkdir -p $destino
-
 echo -e "\nAcessando o diretório de deploy..."
+
+destino="/mnt/${app}_${data}"
+
+mkdir $destino || etapa
 
 mount.cifs $dir_destino $destino -o credentials=$credenciais || etapa 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
 
