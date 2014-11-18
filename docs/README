@@ -1,22 +1,37 @@
 Instruções:
 
-1) O script requer o pacote cifs-utils (instalar com o comando "sudo yum install cifs-utils")
+1) O script requer o pacote cifs-utils (instalar com o comando "sudo yum install cifs-utils") para montagem de diretórios compartilhados.
 2) Colocar os arquivos git_deploy.sh e rollback.sh no diretório /usr/local/sbin/
 3) Copiar o arquivo constantes.txt para o diretório /opt/git_deploy/
-3) Os scripts devem possuir permissão de execução (executar "chmod +x <nomedoarquivo.sh>")
-4) Gerar uma chave pública a ser armazenada no Git para o usuário que realizará os deploys
-(a definir), conforme segue:
+4) Criar o arquivo credenciais.txt com as informações a seguir:
 
-- executar como root : "ssh-keygen -t rsa -C <nomeusuario@anatel.gov.br>"
-- para ver a chave gerada, executar, no diretório HOME do usuário root: "cat .ssh/id_rsa.pub"
-- Copiar a chave e inserir no GIT. Caminho: "http://git.anatel.gov.br/profile",
-"Edit Profile Settings", "SSH Keys", "Add SSH Key".
+    user=<conta do AD com privilégios de leitura e escrita nos diretórios das aplicações>
+    pass=<senha>
+    dom=ANATEL
+    
+5) Os scripts devem possuir permissão de execução (executar "sudo chmod +x <nomedoarquivo.sh>")
+6) Gerar uma chave pública a ser armazenada no gitlab para o usuário que realizará os deploys (a definir), conforme segue:
+
+    - Executar como root : "ssh-keygen -t rsa -C <nomeusuario@anatel.gov.br>"
+    - Para ver a chave gerada, executar, no diretório HOME do usuário root: "cat .ssh/id_rsa.pub"
+    - Copiar a chave e inserir no GIT. Caminho: "http://git.anatel.gov.br/profile", "Edit Profile Settings", "SSH Keys", "Add SSH Key".
 
 Execução:
 
-1) sudo git_deploy.sh <sistema> <hash> <chamado> (modo)
+Deploy: sudo git_deploy.sh <sistema> <branch, tag ou revisão> <chamado> (modo)
 
-2) sudo rollback.sh <sistema>
+OBS: 
+
+a) Os modos de deploys consistem de "p" (preserva arquivos obsoletos no diretório de deploy) e "d" (deleta arquivos obsoletos no diretório de deploy). Este
+    argumento não é obrigatório. Quando não informado, o script utilizará o modo padrão especificado no arquivo /opt/git_deploy/constantes.txt.
+
+b) Na primeira execução, será criado o arquivo parâmetros.txt no diretório /opt/git_deploy/. Devem ser informados, a cada primeiro deploy de uma aplicação:
+        
+        - repositório no gitlab (ex: ssh://git.anatel.gov.br:<porta>/<grupo>/<projeto>.git)
+        - diretório raiz da aplicação no repositório  (ex: src/main/asp)
+        - diretório de deploy (ex: \\<host>v$\sistemas_web\intranet\<sistema> )
+        
+Rollback: sudo rollback.sh <sistema>
 
 Logs:
 
@@ -25,6 +40,3 @@ São gravados 3 logs:
 - hist_deploy.txt (em /opt/git_deploy/)
 - modificacoes.txt (em /opt/git_deploy/chamados/<sistema>/<numchamado.anochamado>)
 - hist_deploy_sistema.txt (além do diretório anterior, em /opt/git_deploy/chamados/<sistema>/)
-
-
-
