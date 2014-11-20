@@ -134,11 +134,11 @@ done
 app=$(echo $app | sed -r 's/(^.*$)/\L\1/')								#apenas letras minúsculas.
 chamado="$(echo $chamado | sed -r 's|/|\.|')"								#chamados no formato código.ano						
 
-find "$chamados_dir/$app" -type f -iname "rollback_*.txt" > $temp_dir/nomescript
+find "$chamados_dir/$app" -type d -iname "rollback_*" > $temp_dir/dir_backup
 
-if [ $(cat "$temp_dir/nomescript" | wc -l) -eq "1" ]; then
-	rollback=$(cat "$temp_dir/nomescript")
- 	nomerollback=$(echo $rollback | sed -r "s|/|_|g")
+if [ $(cat "$temp_dir/dir_backup" | wc -l) -eq "1" ]; then
+	bak_dir=$(cat "$temp_dir/dir_backup")
+ 	nomerollback=$(echo $bak_dir | sed -r "s|/|_|g")
 else
 	echo -e "\nO backup não está disponível. Rollback abortado."
 	fim
@@ -188,7 +188,7 @@ fi
 
 estado="rollback" && echo $estado >> $atividade_dir/progresso.txt
 
-datarollback=$(echo $rollback | sed -r "s|^.*/rollback_(.*)\.txt$|\1|")
+datarollback=$(echo $bak_dir | sed -r "s|^.*/ROLLBACK_(.*$)|\1|")
 destino="/mnt/${app}_${datarollback}"
 
 echo -e "\nAcessando o diretório de deploy..."
@@ -197,7 +197,7 @@ mkdir $destino || fim
 
 mount.cifs $dir_destino $destino -o credentials=$credenciais || fim 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
 
-cat $rollback | xargs --no-run-if-empty -d "\n" -L 1 sh -c
+rsync -rc $bak_dir/ $destino/ || fim
 		
 wait
 
