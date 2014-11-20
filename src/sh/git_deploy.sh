@@ -140,10 +140,10 @@ function etapa () {
 		echo -e "\nDeploy interrompido durante a etapa de escrita. Revertendo alterações..."
 		echo "rollback" >> $atividade_dir/progresso.txt
 		
-		cat $chamados_dir/$app/rollback_$data.txt | xargs --no-run-if-empty -d "\n" -L 1 sh -c
+		rsync -rc --inplace $bak_dir/ $destino/ 
 		
 		rm -Rf $chamados_dir/$app/ROLLBACK_*
-		rm -f $chamados_dir/$app/rollback_*
+		
 		echo "fim_rollback" >> $atividade_dir/progresso.txt
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "Rollback finalizado."	
@@ -339,75 +339,28 @@ mount.cifs $dir_destino $destino -o credentials=$credenciais || etapa 				#monta
 
 ##### DIFF ARQUIVOS #####
 
-find "$origem/" -type f | sort > $temp_dir/origem.txt || etapa						#lista arquivos em "origem" e "destino"
-find "$destino/" -type f | sort > $temp_dir/destino.txt || etapa
-
-sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/origem.txt;							#as aspas são necessárias quando há espaços nos nomes de arquivos
-sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/destino.txt;
-
-sed -i -r "s|^\"$origem/|\"|" $temp_dir/origem.txt;							#removendo-se o nome dos diretórios pai, é possível a comparação entre os caminhos em cada lista
-sed -i -r "s|^\"$destino/|\"|" $temp_dir/destino.txt;
-
-grep -vxF --file=$temp_dir/origem.txt $temp_dir/destino.txt > $temp_dir/arq.excluido;			#verifica quais arquivos existem somente no destino (excluídos) ou somente na origem (adicionados)
-grep -vxF --file=$temp_dir/destino.txt $temp_dir/origem.txt > $temp_dir/arq.adicionado;
-
-cat $temp_dir/arq.excluido > $temp_dir/aux.txt;
-cat $temp_dir/arq.adicionado >> $temp_dir/aux.txt;							#arquivos que foram adicionados ou excluídos
-
-grep -vxF --file=$temp_dir/aux.txt $temp_dir/destino.txt > $temp_dir/aux2.txt;				#arquivos que existem em ambos, mas não necessariamente foram modificados.
-
-sed -r "s|^\"|\"$origem/|" $temp_dir/aux2.txt > $temp_dir/origem.list;					#para os arquivos comuns a ambos, foi restaurado seu caminho completo visando à comparação de suas propriedades (abaixo).
-sed -r "s|^\"|\"$destino/|" $temp_dir/aux2.txt > $temp_dir/destino.list;
-
-cat $temp_dir/origem.list | xargs sha512sum > $temp_dir/detalhe_origem.list;				#Verificação por hash (para verificação dos arquivos modificados por tamanho e data, trocar "sha512" por "ls -l --full-time").
-cat $temp_dir/destino.list | xargs sha512sum > $temp_dir/detalhe_destino.list;
-
-sed -i -r "s|(^.{130})$origem/|\1|" $temp_dir/detalhe_origem.list;					#130 é a quantidade de caracteres do hash mais 2 espaços.					
-sed -i -r "s|(^.{130})$destino/|\1|" $temp_dir/detalhe_destino.list;
-
-grep -vxF --file=$temp_dir/detalhe_destino.list $temp_dir/detalhe_origem.list > $temp_dir/arq.alterado;	#este arquivo contém a lista dos arquivos alterados.
-sed -i -r 's/^.{130}//' $temp_dir/arq.alterado								#remoção do hash na lista de arquivos modificados.
-
-##### CRIAÇÃO / REMOÇÃO DE DIRETÓRIOS #####
-
-find "$origem/" -type d | sort -r > $temp_dir/d_origem.txt || etapa					#lista diretórios em "origem" e "destino". A ordenação inversa (sort -r) é necessária para uma eventual exclusão dos diretórios.
-find "$destino/" -type d | sort -r > $temp_dir/d_destino.txt || etapa
-
-sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/d_origem.txt;							#as aspas são necessárias quando há espaços nos nomes de diretórios
-sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/d_destino.txt;
-
-sed -i -r "s|^\"$origem/|\"|" $temp_dir/d_origem.txt;							#removendo-se o nome dos diretórios pai, é possível a comparação entre os caminhos em cada lista
-sed -i -r "s|^\"$destino/|\"|" $temp_dir/d_destino.txt;
-
-grep -vxF --file=$temp_dir/d_origem.txt $temp_dir/d_destino.txt > $temp_dir/dir.excluido;		#verifica quais diretórios existem somente no destino (excluídos) ou somente na origem (adicionados)
-grep -vxF --file=$temp_dir/d_destino.txt $temp_dir/d_origem.txt > $temp_dir/dir.adicionado;
-
-##### LOG E RESUMO DAS MUDANÇAS ######
-
-if [ "$modo" == 'd' ]; then
-	grep -EH "*" $temp_dir/arq.* > $atividade_dir/modificacoes.txt;								
-	grep -EH "*" $temp_dir/dir.* >> $atividade_dir/modificacoes.txt;								
+if [ $modo = 'p' ]; then
+	rsync -rnic --inplace $origem/ $destino/ > $atividade_dir/modificacoes.txt || etapa
 else
-	grep -EH "*" $temp_dir/arq.adicionado > $atividade_dir/modificacoes.txt;
-	grep -EH "*" $temp_dir/arq.alterado >> $atividade_dir/modificacoes.txt;								
-	grep -EH "*" $temp_dir/dir.adicionado >> $atividade_dir/modificacoes.txt;								
+	rsync -rnic --delete --inplace $origem/ $destino/ > $atividade_dir/modificacoes.txt || etapa
 fi
 
-sed -i -r "s|^$temp_dir/||" $atividade_dir/modificacoes.txt
-sed -i "s/:/:\t/" $atividade_dir/modificacoes.txt							#formatação para leitura
+##### RESUMO DAS MUDANÇAS ######
 
-adicionados="$(grep -E "^arq\.adicionado" $atividade_dir/modificacoes.txt | wc -l)"
-excluidos="$(grep -E "^arq\.excluido" $atividade_dir/modificacoes.txt | wc -l)"
-modificados="$(grep -E "^arq\.alterado" $atividade_dir/modificacoes.txt | wc -l)"
-dir_criado="$(grep -E "^dir\.adicionado" $atividade_dir/modificacoes.txt | wc -l)"
-dir_removido="$(grep -E "^dir\.excluido" $atividade_dir/modificacoes.txt | wc -l)"
+adicionados="$(grep -E "^>f\+" $atividade_dir/modificacoes.txt | wc -l)"
+excluidos="$(grep -E "^\*deleting .*[^/]$" $atividade_dir/modificacoes.txt | wc -l)"
+modificados="$(grep -E "^>f[^\+]" $atividade_dir/modificacoes.txt | wc -l)"
+dir_criado="$(grep -E "^cd\+" $atividade_dir/modificacoes.txt | wc -l)"
+dir_removido="$(grep -E "^\*deleting .*/$" $atividade_dir/modificacoes.txt | wc -l)"
 
-echo -e "\nLog das modificacoes gravado no arquivo modificacoes.txt\n"
-echo -e "Arquivos adicionados:\t$adicionados "
-echo -e "Arquivos excluidos:\t$excluidos"
-echo -e "Arquivos modificados:\t$modificados"
-echo -e "Diretórios criados:\t$dir_criado"
-echo -e "Diretórios removidos:\t$dir_removido"
+echo -e "\nLog das modificacoes gravado no arquivo modificacoes.txt\n" > $atividade_dir/resumo.txt
+echo -e "Arquivos adicionados:\t$adicionados " >> $atividade_dir/resumo.txt
+echo -e "Arquivos excluidos:\t$excluidos" >> $atividade_dir/resumo.txt
+echo -e "Arquivos modificados:\t$modificados" >> $atividade_dir/resumo.txt
+echo -e "Diretórios criados:\t$dir_criado" >> $atividade_dir/resumo.txt
+echo -e "Diretórios removidos:\t$dir_removido" >> $atividade_dir/resumo.txt
+
+cat $atividade_dir/resumo.txt
 
 estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
@@ -421,7 +374,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	#### preparação do script de rollback ####
 
 	estado="backup" && echo $estado >> $atividade_dir/progresso.txt
-	echo -e "\nCriando backup diferencial..."
+	echo -e "\nCriando backup"
 		
 	rm -Rf $chamados_dir/$app/ROLLBACK_*
 
@@ -429,53 +382,7 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 
 	mkdir -p $bak_dir
 
-	cp $temp_dir/arq.adicionado $temp_dir/arq.remover_novos
-	cp $temp_dir/arq.alterado $temp_dir/arq.restaurar_alterados
-	cp $temp_dir/arq.excluido $temp_dir/arq.restaurar_excluidos
-
-	sed -r "s|^\"|\"$bak_dir/|" $temp_dir/d_destino.txt > $temp_dir/dir.restaurar_todos
-	cp $temp_dir/dir.adicionado $temp_dir/dir.remover_novos						# toda a estrutura de diretórios do destino será recriada no diretório ROLLBACK.
-
-	sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/arq.restaurar_alterados					#reinserção das aspas na lista de arquivos modificados.
-
-	sed -i -r "s|^\"|\"$destino/|" $temp_dir/arq.restaurar_alterados				#caminho absoluto no diretório de origem para arquivos e diretórios adicionados ou modificados.
-	sed -i -r "s|^\"|\"$destino/|" $temp_dir/arq.restaurar_excluidos
-
-	sed -i -r "s|(^\"$destino/)(.*$)|\$\(cp -f \1\2 \"$bak_dir/\2\)|" $temp_dir/arq.restaurar_alterados
-	sed -i -r "s|/[^/]+\"\)$|\"\)|" $temp_dir/arq.restaurar_alterados
-
-	sed -i -r "s|(^\"$destino/)(.*$)|\$\(cp -f \1\2 \"$bak_dir/\2\)|" $temp_dir/arq.restaurar_excluidos		
-	sed -i -r "s|/[^/]+\"\)$|\"\)|" $temp_dir/arq.restaurar_excluidos					#cópia de novos arquivos: $(cp -f "<caminho_origem/arquivo_origem>" "<caminho_destino>")
-	
-	sed -i -r "s|^\"|\"$destino/|" $temp_dir/arq.remover_novos						#caminho absoluto no diretório de destino para arquivos e diretórios a serem removidos.
-	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.remover_novos							
-
-	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rm -f \1\2\)|" $temp_dir/arq.remover_novos
-	sed -i -r "s|(^\"$destino/)(.*$)|\$\(rmdir \1\2 2> /dev/null\)|" $temp_dir/dir.remover_novos		#Como o comando rmidr não possui a opção -f, ocorrerá erro no rollback caso algum diretório
-														#ainda não tenha sido criado na etapa de escrita. Este erro pode ser ignorado sem problemas.	
-	rm -f $chamados_dir/$app/rollback_*
-	touch $chamados_dir/$app/rollback_$data.txt
-
-	cat $temp_dir/arq.remover_novos >> $chamados_dir/$app/rollback_$data.txt					# 1 - remoção de arquivos a serem criados no destino.
-	cat $temp_dir/dir.remover_novos >> $chamados_dir/$app/rollback_$data.txt					# 2 - remoção de diretórios a serem criados no destino.
-							
-	if [ "$(cat $temp_dir/dir.restaurar_todos | wc -l)" -gt "0" ]; then
-		cat $temp_dir/dir.restaurar_todos | xargs mkdir -p
-		sed -i -r "s|(^\"$bak_dir/)(.*$)|\$\(mkdir -p \"$destino/\2\)|" $temp_dir/dir.restaurar_todos	# 3 - criação da estrutura de diretórios dentro da pasta ROLLBACK
-		cat $temp_dir/dir.restaurar_todos >> $chamados_dir/$app/rollback_$data.txt
-	fi
-
-	if [ "$(cat $temp_dir/arq.restaurar_alterados | wc -l)" -gt "0" ]; then								
-		cat $temp_dir/arq.restaurar_alterados | xargs -d "\n" -L 1 sh -c			# 5 - cópia de arquivos a serem modificados para a pasta ROLLBACK
-		sed -i -r "s|(^.+)(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.+$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_alterados
-		cat $temp_dir/arq.restaurar_alterados >> $chamados_dir/$app/rollback_$data.txt
-	fi
-
-	if [ "$(cat $temp_dir/arq.restaurar_excluidos | wc -l)" -gt "0" ] && [ "$modo" == 'd' ]; then
-		cat $temp_dir/arq.restaurar_excluidos | xargs -d "\n" -L 1 sh -c			# 4 - cópia de arquivos a serem excluidos para a pasta ROLLBACK
-		sed -i -r "s|(^.+)(\"$destino)(/[^\"]*\" )(\"$bak_dir)(.+$)|\1\4\3\2\5|" $temp_dir/arq.restaurar_excluidos
-		cat $temp_dir/arq.restaurar_excluidos >> $chamados_dir/$app/rollback_$data.txt
-	fi	
+	rsync -rc --inplace $destino/ $bak_dir/ || etapa
 
 	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 
@@ -484,28 +391,11 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	estado="escrita" && echo $estado >> $atividade_dir/progresso.txt
 	echo -e "\nEscrevendo alterações no diretório de destino..."	
 
-	sed -i -r 's|(^.*$)|\"\1\"|' $temp_dir/arq.alterado						#reinserção das aspas na lista de arquivos modificados.
-
-	sed -i -r "s|^\"|\"$origem/|" $temp_dir/arq.adicionado						#caminho absoluto no diretório de origem para arquivos e diretórios adicionados ou modificados.
-	sed -i -r "s|^\"|\"$origem/|" $temp_dir/arq.alterado
-
-	sed -i -r "s|(^\"$origem/)(.*$)|\$\(cp -f \1\2 \"$destino/\2\)|" $temp_dir/arq.adicionado		
-	sed -i -r "s|/[^/]+\"\)$|\"\)|" $temp_dir/arq.adicionado					#cópia de novos arquivos: $(cp -f "<caminho_origem/arquivo_origem>" "<caminho_destino>")
-
-	sed -i -r "s|(^\"$origem/)(.*$)|\$\(cp -f \1\2 \"$destino/\2\)|" $temp_dir/arq.alterado		#sobrescrita de arquivos alterados: $(cp -f "<caminho_origem/arquivo_origem>" "<caminho_destino/arquivo_destino>")
-
-	sed -i -r "s|^\"|\"$destino/|" $temp_dir/arq.excluido						#caminho absoluto no diretório de destino para arquivos e diretórios a serem removidos.
-	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.adicionado							
-	sed -i -r "s|^\"|\"$destino/|" $temp_dir/dir.excluido
-
-	if [ "$modo" == 'd' ]; then
-		cat $temp_dir/arq.excluido | xargs --no-run-if-empty rm -f					# 1 - remoção de arquivos marcados para exclusão no destino.
-		cat $temp_dir/dir.excluido | xargs --no-run-if-empty rmdir					# 2 - remoção de diretórios marcados para exclusão no destino.
+	if [ $modo = 'p' ]; then
+		rsync -rc --inplace $origem/ $destino/ || etapa
+	else
+		rsync -rc --delete --inplace $origem/ $destino/ || etapa
 	fi
-
-	cat $temp_dir/dir.adicionado | xargs --no-run-if-empty mkdir -p						# 3 - criação de diretórios no destino. 
-	cat $temp_dir/arq.adicionado | xargs --no-run-if-empty -d "\n" -L 1 sh -c				# 4 - cópia de arquivos novos no destino.
-	cat $temp_dir/arq.alterado | xargs --no-run-if-empty -d "\n" -L 1 sh -c					# 5 - sobrescrita de arquivos modificados.
 
 	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
 	
