@@ -13,6 +13,8 @@ Instruções:
 6) Gerar uma chave pública a ser armazenada no gitlab para o usuário que realizará os deploys (a definir), conforme segue:
 
     - Executar como root : "ssh-keygen -t rsa -C <nomeusuario@anatel.gov.br>"
+                           "eval $(ssh-agent -s)"
+                           "ssh-add .ssh/id_rsa.pub"
     - Para ver a chave gerada, executar, no diretório HOME do usuário root: "cat .ssh/id_rsa.pub"
     - Copiar a chave e inserir no GIT. Caminho: "http://git.anatel.gov.br/profile", "Edit Profile Settings", "SSH Keys", "Add SSH Key".
 
