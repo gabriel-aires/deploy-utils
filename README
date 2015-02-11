@@ -1,4 +1,18 @@
-Manual de implantação:
+----------------------
+OBSERVAÇÕES:
+----------------------
+
+O script de deploy ainda não está pronto para o ambiente de produção. No momento ele só funciona num cenário onde:
+
+* NÃO há alta disponibilidade.
+* cada máquina roda APENAS UMA versão do JBoss.
+* cada máquina atende ao ambiente de internet OU intranet EXCLUSIVAMENTE.
+
+Qualquer alteração nestas condições deverá, necessariamente, ensejar uma modificação no script e/ou na estrutura de diretórios onde os pacotes serão disponibilizados.
+
+----------------------
+MANUAL DE IMPLANTAÇÃO:
+----------------------
 
 1) O procedimento de deploy automático de aplicações *.war requer um compartilhamento acessível a todas as máquinas Linux que rodam servidores de aplicação JBOSS. A estrutura de diretórios deve seguir a forma abaixo:
 
@@ -59,9 +73,20 @@ Manual de implantação:
 
                 (...)            
 
+2) Clonar o repositório dentro do diretório /opt/:
 
-2) Para todas as máquinas, os caminhos "//SERVIDOR/COMPARTILHAMENTO/DEPLOY" e "//SERVIDOR/COMPARTILHAMENTO/LOGS" deverão ser informados no arquivo /opt/autodeploy-jboss/conf/global.conf e também referenciados em /etc/fstab para montagem automática durante o boot.
+git clone http://git.anatel.gov.br/airesgabriel/autodeploy-jboss.git
 
-3) Os parâmetros inerentes a cada máquina devem ser editados no arquivo /opt/autodeploy-jboss/conf/local.conf .
+3) Para todas as máquinas, os caminhos "//SERVIDOR/COMPARTILHAMENTO/DEPLOY" e "//SERVIDOR/COMPARTILHAMENTO/LOGS" deverão ser informados no arquivo /opt/autodeploy-jboss/conf/global.conf . Também devem ser criadas as respectivas entradas em /etc/fstab para montagem automática durante o boot.
 
-4) O script /opt/autodeploy-jboss/sh/autodeploy-jboss.sh deve ser adicionado à crontab do usuário root para execução automática conforme agendamento especificado.
+4) Os parâmetros inerentes a cada máquina devem ser editados no arquivo /opt/autodeploy-jboss/conf/local.conf .
+
+5) O script /opt/autodeploy-jboss/sh/autodeploy-jboss.sh deve ser adicionado à crontab do usuário root, conforme segue:
+
+crontab -e
+
+(adicionar a entrada abaixo no arquivo aberto para edição)
+
+# Realiza deploy de novos pacotes e disponibiliza logs das instâncias JBOSS.
+*/5 * * * * /opt/autodeploy-jboss/sh/autodeploy-jboss.sh >> "/opt/autodeploy-jboss/log/deploy-$(date +%F).log" 2>&1
+

@@ -7,8 +7,7 @@
 
 function log () {
 
-	touch $LOG
-	echo -e "$(date +"%F %Hh%Mm%Ss") : $HOSTNAME : $1 : $2" >> $LOG
+	echo -e "$(date +"%F %Hh%Mm%Ss") : $HOSTNAME : $1 : $2" 
 
 }
 
@@ -52,7 +51,7 @@ if [ ! -z "$TEMP" ]; then
 	rm -f "$TEMP/*"
 fi
 
-# cria diretório de logs / expurga logs de deploy do mês anterior.
+# cria pasta de logs / expurga logs de deploy do mês anterior.
 
 if [ ! -z "$LOGS" ]; then
 	mkdir -p $LOGS
@@ -94,18 +93,18 @@ log "INFO" "Verificando a consistência da estrutura de diretórios em ${CAMINHO
 
 # eliminar da estrutura de diretórios subjacente os arquivos e subpastas cujos nomes contenham espaços.
 
-find ${ORIGEM}/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rf >> $LOG
-find ${DESTINO}/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rf >> $LOG
+find ${ORIGEM}/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
+find ${DESTINO}/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
 
 # garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
 
-find ${ORIGEM}/* -type d | grep -Ei "^${ORIGEM}/[^/]+/[^/]+" | xargs -r -d "\n" rm -Rf >> $LOG
-find ${DESTINO}/* -type d | grep -Ei "^${DESTINO}/[^/]+/[^/]+" | xargs -r -d "\n" rm -Rf >> $LOG
+find ${ORIGEM}/* -type d | grep -Ei "^${ORIGEM}/[^/]+/[^/]+" | xargs -r -d "\n" rm -Rfv
+find ${DESTINO}/* -type d | grep -Ei "^${DESTINO}/[^/]+/[^/]+" | xargs -r -d "\n" rm -Rfv
 
 # eliminar arquivos em local incorreto ou com extensão diferente de .war / .log
 
-find "$ORIGEM" -type f | grep -Eixv "^${ORIGEM}/[^/]+/[^/]+\.war$" | xargs -r -d "\n" rm -f >> $LOG
-find "$DESTINO" -type f | grep -Eixv "^${DESTINO}/[^/]+/[^/]+\.log$" | xargs -r -d "\n" rm -f >> $LOG
+find "$ORIGEM" -type f | grep -Eixv "^${ORIGEM}/[^/]+/[^/]+\.war$" | xargs -r -d "\n" rm -fv
+find "$DESTINO" -type f | grep -Eixv "^${DESTINO}/[^/]+/[^/]+\.log$" | xargs -r -d "\n" rm -fv
 
 ######## DEPLOY #########
 
@@ -134,7 +133,7 @@ else
 	
 	if [ $(cat $TEMP/remove_incorretos.list | wc -l) -gt 0 ]; then
 		log "WARN" "Removendo pacotes em diretórios incorretos..."
-		cat $TEMP/remove_incorretos.list | xargs -r -d "\n" rm -f >> $LOG
+		cat $TEMP/remove_incorretos.list | xargs -r -d "\n" rm -fv
 	fi
 
 	# Caso haja pacotes, deve haver no máximo um pacote por diretório
@@ -155,7 +154,7 @@ else
 
 	if [ $(cat $TEMP/remove_versoes.list | wc -l) -gt 0 ]; then
 		log "WARN" "Removendo pacotes com mais de uma versão..."
-		cat $TEMP/remove_versoes.list | xargs -r -d "\n" rm -f >> $LOG
+		cat $TEMP/remove_versoes.list | xargs -r -d "\n" rm -fv
 	fi
 
 	find "$ORIGEM" -type f > $TEMP/war.list
@@ -164,7 +163,7 @@ else
 		log "INFO" "Não há novos pacotes para deploy."
 	else
 		log "INFO" "Verificação do diretório ${CAMINHO_PACOTES_REMOTO} concluída. Iniciando processo de deploy dos pacotes abaixo."
-		cat $TEMP/war.list >> $LOG
+		cat $TEMP/war.list 
 	
 		cat $TEMP/war.list | while read PACOTE; do
 
@@ -204,18 +203,18 @@ else
 					if [ $(pgrep -f "jboss.*$INSTANCIA_JBOSS" | wc -l) -ne 0 ]; then
 						log "ERRO" "Não foi possível parar a instância $INSTANCIA_JBOSS do JBOSS. Deploy abortado."
 					else
-						rm -f $OLD 2>> $LOG
-						mv $PACOTE $DIR_DEPLOY 2>> $LOG
-						chown jboss:jboss $DIR_DEPLOY/$WAR 2>> $LOG
+						rm -f $OLD 
+						mv $PACOTE $DIR_DEPLOY 
+						chown jboss:jboss $DIR_DEPLOY/$WAR 
 				
 						if [ -d "$DIR_TEMP" ]; then
-							rm -Rf $DIR_TEMP/* 2>> $LOG
+							rm -Rf $DIR_TEMP/* 
 					        fi
 						if [ -d "$DIR_WORK" ]; then
-				        	       	rm -Rf $DIR_WORK/* 2>> $LOG
+				        	       	rm -Rf $DIR_WORK/* 
 					        fi
 						if [ -d "$DIR_DATA" ]; then
-					                rm -Rf $DIR_TEMP/* 2>> $LOG
+					                rm -Rf $DIR_TEMP/* 
 						fi
 		 
 						eval $INICIAR_INSTANCIA && wait				
@@ -237,27 +236,35 @@ fi
 
 log "INFO" "Copiando logs de deploy e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
 
-find $CAMINHO_INSTANCIAS_JBOSS -type f -iname 'server.log' > $TEMP/log_aplicacoes.list
-find $DESTINO/* -type d | sed -r 's|$DESTINO/||g' >> $TEMP/destinos.list
+find $DESTINO/* -type d | sed -r 's|$DESTINO/||g' > $TEMP/app.list
 
-cat $TEMP/log_aplicacoes.list | while read LOG_APP; do
-	INSTANCIA_JBOSS=$( echo $LOG_APP | sed -r "s|^${$CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Ll][Oo][Gg]/[Ss][Ee][Rr][Vv][Ee][Rr]\.[Ll][Oo][Gg]$|\1|" )
-	find $CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/deploy/[a-z]+[\_\-]?[a-z]+[_\-\.0-9]*\.war" > $TEMP/aplicacoes.list
+cat $TEMP/app.list | while read APP; do
 
-	cat $TEMP/aplicacoes.list | while read APLICACAO; do
-		APP=$( echo $APLICACAO | sed -r "s|^$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/[Dd][Ed][Pp][Ll][Oo][Yy]/([a-z]+[\_\-]?[a-z]+)[_\-\.0-9]*\.[Ww][Aa][Rr]$|\1|" )
-		
-		cat $TEMP/destinos.list | while read DIR_APP; do
-			
-			if [ "$APP" == "$DIR_APP" ]; then
-				cp -f $LOG_APP $DESTINO/$DIR_APP
-				cp -f $LOG $DESTINO/$DIR_APP
-			fi			
+	LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${APP}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${APP}/log/server.log") 2> /dev/null
+	CAMINHO_APP=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP[_\-\.0-9]*\.war") 2> /dev/null
 
-		done
-	done
+	if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
+
+		cp -f $LOG_APP "$DESTINO/$APP/server.log"
+		cp -f $LOG "$DESTINO/$APP/deploy.log"
+
+	elif [ $( echo $CAMINHO_APP | wc -l ) -eq 1 ]; then
+
+		INSTANCIA_JBOSS=$(echo $CAMINHO_APP | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
+		LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log") 2> /dev/null
+	
+		if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
+
+			cp -f $LOG_APP "$DESTINO/$APP/server.log"
+			cp -f $LOG "$DESTINO/$APP/deploy.log"
+
+		else
+			log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $APP."
+		fi		
+	else
+		log "ERRO" "A aplicação $APP não foi encontrada."
+	fi
+
 done
-
-log "INFO" "FIM."
 
 end "0"
