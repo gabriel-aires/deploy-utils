@@ -26,8 +26,8 @@ function end () {
 
 ###### INICIALIZAÇÃO ######
 
-ARQ_PROPS_GLOBAL='/opt/autodeploy-jboss/global.conf'
-ARQ_PROPS_LOCAL='/opt/autodeploy-jboss/local.conf'
+ARQ_PROPS_GLOBAL='/opt/autodeploy-jboss/conf/global.conf'
+ARQ_PROPS_LOCAL='/opt/autodeploy-jboss/conf/local.conf'
 TEMP='/opt/autodeploy-jboss/temp'
 LOGS='/opt/autodeploy-jboss/log'
 LOG="$LOGS/deploy-$(date +%F).log"
