@@ -240,8 +240,8 @@ find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > $TEMP/app.list
 
 cat $TEMP/app.list | while read APP; do
 
-	LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${APP}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${APP}/log/server.log") 2> /dev/null
-	CAMINHO_APP=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP[_\-\.0-9]*\.war") 2> /dev/null
+	LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${APP}/log/server.log" 2> /dev/null)
+	CAMINHO_APP=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP[_\-\.0-9]*\.war" 2> /dev/null)
 
 	if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
 
@@ -251,7 +251,7 @@ cat $TEMP/app.list | while read APP; do
 	elif [ $( echo $CAMINHO_APP | wc -l ) -eq 1 ]; then
 
 		INSTANCIA_JBOSS=$(echo $CAMINHO_APP | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
-		LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log") 2> /dev/null
+		LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log" 2> /dev/null)
 	
 		if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
 
