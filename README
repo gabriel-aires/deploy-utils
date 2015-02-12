@@ -88,4 +88,7 @@ crontab -e
 (adicionar a entrada abaixo no arquivo aberto para edição)
 
 # Realiza deploy de novos pacotes e disponibiliza logs das instâncias JBOSS.
-*/5 * * * * /opt/autodeploy-jboss/sh/autodeploy-jboss.sh >> "/opt/autodeploy-jboss/log/deploy-$(date +%F).log" 2>&1
+
+DATA_LOG=date +%F
+
+*/5 * * * * bash /opt/autodeploy-jboss/sh/autodeploy-jboss.sh >> /opt/autodeploy-jboss/log/deploy-$($DATA_LOG).log 2>&1
