@@ -236,7 +236,7 @@ fi
 
 log "INFO" "Copiando logs de deploy e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
 
-find $DESTINO/* -type d | sed -r 's|$DESTINO/||g' > $TEMP/app.list
+find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > $TEMP/app.list
 
 cat $TEMP/app.list | while read APP; do
 
