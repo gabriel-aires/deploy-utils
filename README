@@ -81,7 +81,7 @@ git clone http://git.anatel.gov.br/airesgabriel/autodeploy-jboss.git
 
 4) Os parâmetros inerentes a cada máquina devem ser editados no arquivo /opt/autodeploy-jboss/conf/local.conf .
 
-5) O script /opt/autodeploy-jboss/sh/autodeploy-jboss.sh deve ser adicionado à crontab do usuário root, conforme segue:
+5) Conceder permissão de execução ao script com "chmod +x /opt/autodeploy-jboss/sh/autodeploy-jboss.sh" e adicioná-lo à crontab do usuário root, conforme segue:
 
 crontab -e
 
@@ -89,4 +89,3 @@ crontab -e
 
 # Realiza deploy de novos pacotes e disponibiliza logs das instâncias JBOSS.
 */5 * * * * /opt/autodeploy-jboss/sh/autodeploy-jboss.sh >> "/opt/autodeploy-jboss/log/deploy-$(date +%F).log" 2>&1
-
