@@ -235,6 +235,7 @@ fi
 ######## LOGS #########
 
 log "INFO" "Copiando logs de deploy e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
+echo ''
 
 find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > $TEMP/app.list
 
