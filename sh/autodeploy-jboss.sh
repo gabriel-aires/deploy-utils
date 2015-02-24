@@ -171,7 +171,7 @@ else
 			APP=$( echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 			OLD=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP[_\-\.0-9]*\.war")
 	
-			if [ $( echo $OLD | wc -l ) -ne 1 ]; then
+			if [ $( echo $OLD | wc -l ) -ne 1 ] || [ -z $OLD ]; then
 				log "ERRO" "Deploy abortado. Não foi encontrado pacote anterior. O deploy deverá ser feito manualmente."
 			else
 				log "INFO" "O pacote $OLD será substituído".
