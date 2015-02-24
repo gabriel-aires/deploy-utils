@@ -169,7 +169,7 @@ else
 
 			WAR=$( echo $PACOTE | sed -r "s|^${ORIGEM}/[^/]+/([^/]+\.[Ww][Aa][Rr])$|\1|" )
 			APP=$( echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
-			OLD=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP[_\-\.0-9]*\.war")
+			OLD=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war")
 	
 			if [ $( echo $OLD | wc -l ) -ne 1 ] || [ -z $OLD ]; then
 				log "ERRO" "Deploy abortado. Não foi encontrado pacote anterior. O deploy deverá ser feito manualmente."
@@ -204,8 +204,8 @@ else
 						log "ERRO" "Não foi possível parar a instância $INSTANCIA_JBOSS do JBOSS. Deploy abortado."
 					else
 						rm -f $OLD 
-						mv $PACOTE $DIR_DEPLOY 
-						chown jboss:jboss $DIR_DEPLOY/$WAR 
+						mv $PACOTE $DIR_DEPLOY/$APP.war 
+						chown jboss:jboss $DIR_DEPLOY/$APP.war 
 				
 						if [ -d "$DIR_TEMP" ]; then
 							rm -Rf $DIR_TEMP/* 
@@ -242,7 +242,7 @@ find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > $TEMP/app.list
 cat $TEMP/app.list | while read APP; do
 
 	LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${APP}/log/server.log" 2> /dev/null)
-	CAMINHO_APP=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP[_\-\.0-9]*\.war" 2> /dev/null)
+	CAMINHO_APP=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" 2> /dev/null)
 
 	if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
 
