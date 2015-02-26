@@ -11,7 +11,7 @@ if [ ! "$USER" == 'root' ]; then
 	exit
 fi
 
-#### UTILIZAÇÃO: git_deploy.sh <aplicação> <revisão> <chamado> (modo) ############
+#### UTILIZAÇÃO: deloy_paginas.sh <aplicação> <revisão> <chamado> (modo) ############
 
 if [ "$#" -lt 3 ]; then											#o script requer exatamente 3 parâmetros.
 	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <chamado>"
@@ -27,8 +27,8 @@ modo=$4													# p - preservar arquivos no destino | d - deletar arquivos n
 
 clear
 
-deploy_dir="/opt/git_deploy"										#diretório de instalação.
-source $deploy_dir/constantes.txt || exit								#carrega o arquivo de constantes.
+deploy_dir="/opt/autodeploy-paginas"										#diretório de instalação.
+source $deploy_dir/conf/global.conf || exit								#carrega o arquivo de constantes.
 
 temp_dir="$temp/$pid"
 
