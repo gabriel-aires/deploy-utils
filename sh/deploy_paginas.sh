@@ -33,7 +33,7 @@ source $deploy_dir/conf/global.conf || exit								#carrega o arquivo de constan
 temp_dir="$temp/$pid"
 
 if [ -z $(echo $temp_dir | grep -E "^/opt/[^/]+") ] \
-	|| [ -z $(echo $chamados_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] \
+	|| [ -z $(echo $historico_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] \
 	|| [ -z $(echo $repo_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+")  ] \
 	|| [ -z $(echo $lock_dir | grep -E "^/var/[^/]+") ];
 then
@@ -41,10 +41,10 @@ then
     exit
 fi
 
-mkdir -p $deploy_dir $temp $chamados_dir $repo_dir $lock_dir						#cria os diretórios necessários, caso não existam.
+mkdir -p $deploy_dir $temp $historico_dir $repo_dir $lock_dir						#cria os diretórios necessários, caso não existam.
 
-if [ ! -e "$parametros_git" ]; then									#cria arquivo de parâmetros, caso não exista.
-	touch $parametros_git
+if [ ! -e "$parametros_app" ]; then									#cria arquivo de parâmetros, caso não exista.
+	touch $parametros_app
 fi
 
 if [ ! -e "$historico" ]; then										#cria arquivo de histórico, caso não exista.
@@ -129,8 +129,8 @@ function etapa () {
 
 	elif [ "$estado" == 'backup' ] || [ "$estado" == 'fim_backup' ]; then
 
-		rm -Rf $chamados_dir/$app/ROLLBACK_*
-		rm -f $chamados_dir/$app/rollback_*
+		rm -Rf $historico_dir/$app/ROLLBACK_*
+		rm -f $historico_dir/$app/rollback_*
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy abortado."
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
@@ -142,7 +142,7 @@ function etapa () {
 		
 		rsync -rc --inplace $bak_dir/ $destino/ 
 		
-		rm -Rf $chamados_dir/$app/ROLLBACK_*
+		rm -Rf $historico_dir/$app/ROLLBACK_*
 		
 		echo "fim_rollback" >> $atividade_dir/progresso.txt
 		echo "deploy_abortado" >> $atividade_dir/progresso.txt
@@ -173,12 +173,12 @@ function etapa () {
 		
 		echo -e "$horario_log$app_log$rev_log$chamado_log$obs_log" >> $historico
 
-		cp $historico $chamados_dir
+		cp $historico $historico_dir
 
 		tamanho_horario=$(echo -n "$horario_log" | wc -m) 
 		grep -Ei "^(.){$tamanho_horario}$app" $historico > $atividade_dir/historico_deploy_$app.txt
 		
-		cp $atividade_dir/historico_deploy_$app.txt $chamados_dir/$app
+		cp $atividade_dir/historico_deploy_$app.txt $historico_dir/$app
 		
 		echo "deploy_concluido" >> $atividade_dir/progresso.txt
 		echo -e "\nDeploy concluído."
@@ -231,15 +231,15 @@ lock $chamado "Deploy abortado: há outro deploy do chamado $chamado em curso."
 lock $app "Deploy abortado: há outro deploy da aplicação $app em curso." 
 lock $rev "Deploy abortado: há outro deploy da revisão $rev em curso."
 
-if [ $(grep -Ei "^$app " $parametros_git | wc -l) -ne "1" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
+if [ $(grep -Ei "^$app " $parametros_app | wc -l) -ne "1" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
 	
 	echo -e "\nFavor informar abaixo os parâmetros da aplicação $app."
 
-	lock "parametros" "Erro: o arquivo $parametros_git está bloqueado para edição. Favor tentar novamente."
+	lock "parametros" "Erro: o arquivo $parametros_app está bloqueado para edição. Favor tentar novamente."
 
 	if [ ! -z $(grep -Ei "^$lock_dir/parametros$" $temp_dir/locks) ]; then
 
-		sed -i "/^$app .*$/d" $parametros_git									 
+		sed -i "/^$app .*$/d" $parametros_app									 
 
 		echo -e "\nInforme o repositorio a ser utilizado:"
 		read repo
@@ -272,16 +272,16 @@ if [ $(grep -Ei "^$app " $parametros_git | wc -l) -ne "1" ]; then					#caso não
 		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 		dir_destino="$(echo $dir_destino | sed -r 's|/$||')"						#remove / no fim do caminho.
 	
-		echo "$app $repo $raiz $dir_destino" >> $parametros_git
+		echo "$app $repo $raiz $dir_destino" >> $parametros_app
 	
 		rm -f $lock_dir/parametros
 	else
 		etapa
 	fi  
 else													#caso a entrada correspondente ao sistema já esteja preenchida, os parâmetros são obtidos do arquivo $deploy_dir/parametros.txt
-	repo=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f2)
-	raiz=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f3)
-	dir_destino=$(grep -Ei "^$app " $parametros_git | cut -d ' ' -f4)
+	repo=$(grep -Ei "^$app " $parametros_app | cut -d ' ' -f2)
+	raiz=$(grep -Ei "^$app " $parametros_app | cut -d ' ' -f3)
+	dir_destino=$(grep -Ei "^$app " $parametros_app | cut -d ' ' -f4)
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
@@ -290,7 +290,7 @@ nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
 lock "${nomerepo}.git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
 lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
 
-atividade_dir="$chamados_dir/$app/$chamado"								#Diretório onde serão armazenados os logs do atendimento.
+atividade_dir="$historico_dir/$app/$chamado"								#Diretório onde serão armazenados os logs do atendimento.
 
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
@@ -323,7 +323,7 @@ if [ ! -d "$origem" ]; then
 fi
 
 if [ ! -d "$origem" ]; then										
-	echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_git."
+	echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app."
 	etapa
 fi
 
@@ -376,9 +376,9 @@ if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
 	estado="backup" && echo $estado >> $atividade_dir/progresso.txt
 	echo -e "\nCriando backup"
 		
-	rm -Rf $chamados_dir/$app/ROLLBACK_*
+	rm -Rf $historico_dir/$app/ROLLBACK_*
 
-	bak_dir="$chamados_dir/$app/ROLLBACK_$data"
+	bak_dir="$historico_dir/$app/ROLLBACK_$data"
 
 	mkdir -p $bak_dir
 
