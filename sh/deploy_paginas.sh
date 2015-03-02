@@ -269,6 +269,11 @@ if [ $(grep -Ei "^$app " $parametros_app | wc -l) -ne "1" ]; then					#caso não
 			dir_destino="$(echo $dir_destino | sed -r 's|\\|/|g')"
 		done
 	
+		while [ -z $(echo $os | grep -Ex "^linux$|^windows$") ]; do				#Expressão regular para validação de string de compartilhamento CIFS. ex: \\aaa\bb\*(\)
+			echo -e "\nErro. Informe um nome válido para o sistema operacional (windows/linux):"
+			read -r os
+		done
+	
 		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 		dir_destino="$(echo $dir_destino | sed -r 's|/$||')"						#remove / no fim do caminho.
 	
@@ -335,7 +340,11 @@ destino="/mnt/${app}_${data}"
 
 mkdir $destino || etapa
 
-mount.cifs $dir_destino $destino -o credentials=$credenciais || etapa 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+if [ $os == 'windows' ]; then
+    mount.cifs $dir_destino $destino -o credentials=$credenciais || etapa 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+else
+    mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || etapa 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
+fi
 
 ##### DIFF ARQUIVOS #####
 
