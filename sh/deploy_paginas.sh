@@ -268,8 +268,11 @@ if [ $(grep -Ei "^$app " $parametros_app | wc -l) -ne "1" ]; then					#caso não
 			read -r dir_destino
 			dir_destino="$(echo $dir_destino | sed -r 's|\\|/|g')"
 		done
-	
-		while [ -z $(echo $os | grep -Ex "^linux$|^windows$") ]; do				#Expressão regular para validação de string de compartilhamento CIFS. ex: \\aaa\bb\*(\)
+
+		echo -e "\nInforme o sistema operacional:"
+		read -r os                          										
+
+		while [ -z $(echo $os | grep -Ex "^linux$|^windows$") ]; do				
 			echo -e "\nErro. Informe um nome válido para o sistema operacional (windows/linux):"
 			read -r os
 		done
@@ -277,7 +280,7 @@ if [ $(grep -Ei "^$app " $parametros_app | wc -l) -ne "1" ]; then					#caso não
 		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 		dir_destino="$(echo $dir_destino | sed -r 's|/$||')"						#remove / no fim do caminho.
 	
-		echo "$app $repo $raiz $dir_destino" >> $parametros_app
+		echo "$app $repo $raiz $dir_destino $os" >> $parametros_app
 	
 		rm -f $lock_dir/parametros
 	else
@@ -287,6 +290,7 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
 	repo=$(grep -Ei "^$app " $parametros_app | cut -d ' ' -f2)
 	raiz=$(grep -Ei "^$app " $parametros_app | cut -d ' ' -f3)
 	dir_destino=$(grep -Ei "^$app " $parametros_app | cut -d ' ' -f4)
+	os=$(grep -Ei "^$app " $parametros_app | cut -d ' ' -f5)	
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
