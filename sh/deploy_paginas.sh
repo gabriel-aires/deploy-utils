@@ -32,12 +32,25 @@ source $deploy_dir/conf/global.conf || exit								#carrega o arquivo de constan
 
 temp_dir="$temp/$pid"
 
-if [ -z $(echo $temp_dir | grep -E "^/opt/[^/]+") ] \
-	|| [ -z $(echo $historico_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+") ] \
-	|| [ -z $(echo $repo_dir | grep -E "^/opt/[^/]+|^/mnt/[^/]+")  ] \
-	|| [ -z $(echo $lock_dir | grep -E "^/var/[^/]+") ];
+if [ -z $regex_temp_dir ] \
+    || [ -z $regex_temp_dir ] \
+    || [ -z $regex_historico_dir ] \
+    || [ -z $regex_repo_dir ] \
+    || [ -z $regex_lock_dir ] \
+    || [ -z $regex_app ] \
+    || [ -z $regex_rev ] \
+    || [ -z $regex_chamado ] \
+    || [ -z $regex_modo ] \
+    || [ -z $regex_repo ] \
+    || [ -z $regex_raiz ] \
+    || [ -z $regex_dir_destino ] \
+    || [ -z $regex_os ] \
+    || [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
+	|| [ -z $(echo $historico_dir | grep -E "$regex_historico_dir") ] \
+	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
+	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ];
 then
-    echo 'Favor preencher corretamente o arquivo $deploy_dir/constantes.txt e tentar novamente.'
+    echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
     exit
 fi
 
@@ -198,22 +211,22 @@ clean_temp && mkdir -p $temp_dir
 
 echo "Iniciando processo de deploy..."
 
-while [ -z $(echo $app | grep -Ex "[A-Za-z]+_?[0-9A-Za-z]+") ]; do
+while [ -z $(echo $app | grep -Ex "$regex_app") ]; do
 	echo -e "\nErro. Informe o nome do sistema corretamente:"
 	read app
 done
 
-while [ -z $(echo $rev | grep -Ex "^([0-9a-f]){9}[0-9a-f]*$|^v[0-9]+\.[0-9]+(\.[0-9]+)?$") ]; do	#a revisão é uma string hexadecimal de 9 ou mais caracteres ou uma tag do tipo v1.2.3
+while [ -z $(echo $rev | grep -Ex "$regex_rev") ]; do	#a revisão é uma string hexadecimal de 9 ou mais caracteres ou uma tag do tipo v1.2.3
 	echo -e "\nErro. Informe a revisão corretamente:"
 	read rev
 done
 
-while [ -z $(echo $chamado | grep -Ex "[0-9]+/[0-9]{4}") ]; do						#chamado: n(nnn ...)/aaaa
+while [ -z $(echo $chamado | grep -Ex "$regex_chamado") ]; do						#chamado: n(nnn ...)/aaaa
 	echo -e "\nErro. Informe o chamado corretamente:"
 	read chamado
 done
 
-while [ -z $(echo $modo | grep -Ex "[pd]") ]; do
+while [ -z $(echo $modo | grep -Ex "$regex_modo") ]; do
 	if [ -z "$modo" ]; then
 		modo=$modo_padrao
 	else
@@ -244,7 +257,7 @@ if [ $(grep -Ei "^$app " $parametros_app | wc -l) -ne "1" ]; then					#caso não
 		echo -e "\nInforme o repositorio a ser utilizado:"
 		read repo
 		
-		while [ -z $(echo $repo | grep -Ex "^git@git.anatel.gov.br:.+/.+\.git$|^http://(.+@)?git.anatel.gov.br.*/.+\.git$") ]; do	#Expressão regular para validação do caminho para o repositóio (SSH ou HTTP).
+		while [ -z $(echo $repo | grep -Ex "$regex_repo") ]; do	#Expressão regular para validação do caminho para o repositóio (SSH ou HTTP).
 			echo -e "\nErro. Informe um caminho válido para o repositório GIT:"
 			read -r repo
 		done	
@@ -253,7 +266,7 @@ if [ $(grep -Ei "^$app " $parametros_app | wc -l) -ne "1" ]; then					#caso não
 		read -r raiz											#utilizar a opção -r para permitir a leitura de contrabarras.
 		raiz="$(echo $raiz | sed -r 's|\\|/|g')"							#troca \ por /, se necessário.
 		
-		while [ -z $(echo $raiz | grep -Ex "^/?[^/ \\]*(/[^/ \\]+)*/?$") ]; do				#Expressão regular para validação do caminho para a raiz da aplicação. ex: (/)aaa/bbbb/*(/)
+		while [ -z $(echo $raiz | grep -Ex "$regex_raiz") ]; do				#Expressão regular para validação do caminho para a raiz da aplicação. ex: (/)aaa/bbbb/*(/)
 			echo -e "\nErro. Informe um caminho válido para a raiz da aplicação:"
 			read -r raiz
 			raiz="$(echo $raiz | sed -r 's|\\|/|g')"
@@ -263,7 +276,7 @@ if [ $(grep -Ei "^$app " $parametros_app | wc -l) -ne "1" ]; then					#caso não
 		read -r dir_destino										#utilizar a opção -r para permitir a leitura de contrabarras.
 		dir_destino="$(echo $dir_destino | sed -r 's|\\|/|g')"						#troca \ por /, se necessário.
 		
-		while [ -z $(echo $dir_destino | grep -Ex "^/(/[^/ \\]+)+/?$") ]; do				#Expressão regular para validação de string de compartilhamento CIFS. ex: \\aaa\bb\*(\)
+		while [ -z $(echo $dir_destino | grep -Ex "$regex_dir_destino") ]; do				#Expressão regular para validação de string de compartilhamento CIFS. ex: \\aaa\bb\*(\)
 			echo -e "\nErro. Informe um caminho válido para o diretório de destino:"
 			read -r dir_destino
 			dir_destino="$(echo $dir_destino | sed -r 's|\\|/|g')"
@@ -272,7 +285,7 @@ if [ $(grep -Ei "^$app " $parametros_app | wc -l) -ne "1" ]; then					#caso não
 		echo -e "\nInforme o sistema operacional:"
 		read -r os                          										
 
-		while [ -z $(echo $os | grep -Ex "^linux$|^windows$") ]; do				
+		while [ -z $(echo $os | grep -Ex "$regex_os") ]; do				
 			echo -e "\nErro. Informe um nome válido para o sistema operacional (windows/linux):"
 			read -r os
 		done
