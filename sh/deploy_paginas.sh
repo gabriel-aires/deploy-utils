@@ -8,20 +8,39 @@ data="$(date +%Y%m%d%H%M%S)"
 
 if [ ! "$USER" == 'root' ]; then
 	echo "Requer usuário root."
-	exit
+	exit 1
 fi
 
-#### UTILIZAÇÃO: deloy_paginas.sh <aplicação> <revisão> <chamado> (modo) ############
+#### UTILIZAÇÃO: deloy_paginas.sh <aplicação> <revisão> <chamado> -opções ############
 
-if [ "$#" -lt 3 ]; then											#o script requer exatamente 3 parâmetros.
+while getopts ":dfh" opcao; do
+      case $opcao in
+        d)
+            modo='d'	
+            ;;
+        f)
+            interativo=0	
+            ;;      
+        h)
+        	echo "O script requer 3 parâmetros: <aplicação> <revisão> <chamado>. Utilizar as opções\
+        	    -d para forçar a deleção de arquivos obsoletos e -f para forçar a execução do\
+        	    script de forma não interativa"	&& exit 0
+            ;;      
+        \?)
+            echo "-$OPTARG não é uma opção válida ( -d -f -h )." && exit 1
+            ;;
+      esac
+done
+
+if [ "$#" -lt 3 ]; then	
 	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <chamado>"
-	exit
+	exit 1
 fi
 
 app=$1
 rev=$2
 chamado=$3
-modo=$4													# p - preservar arquivos no destino | d - deletar arquivos no destino.
+
 
 #### Inicialização #####
 
@@ -48,7 +67,9 @@ if [ -z $regex_temp_dir ] \
     || [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $historico_dir | grep -E "$regex_historico_dir") ] \
 	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
-	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ];
+	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
+    || [ -z $modo_padrao ] \
+    || [ -z $interativo ];
 then
     echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
     exit
