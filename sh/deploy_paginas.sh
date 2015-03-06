@@ -377,15 +377,20 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
 	fi
 fi
 
-mklist "\$hosts_${ambiente}" $temp_dir/hosts_$ambiente			
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
-nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
-
 lock "${nomerepo}\.git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
-lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
+
+mklist "\$hosts_${ambiente}" $temp_dir/hosts_$ambiente
+echo '' > $temp_dir/dir_destino
+
+cat $temp_dir/hosts_$ambiente | while read $host; do
+    dir_destino="//$host/$share" 
+    nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
+    lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."    
+    echo "$dir_destino" > $temp_dir/dir_destino
+done
 
 atividade_dir="$historico_dir/$app/$(date +%F)/$rev_$ambiente"								#Diretório onde serão armazenados os logs do atendimento.
-
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
 	rmdir ${atividade_dir}_PENDENTE
@@ -393,109 +398,118 @@ fi
 
 mkdir -p $atividade_dir
 
-echo -e "\nSistema:\t$app"
-echo -e "Repositório:\t$repo"
-echo -e "Caminho:\t$raiz"
-echo -e "Destino:\t$dir_destino"
+cat $temp_dir/dir_destino | while read $dir_destino; do
 
-echo $estado > $atividade_dir/progresso_$host.txt							
-estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+    host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|")
 
-### início da leitura ###
+    echo -e "\nSistema:\t$app"
+    echo -e "Revisão:\t$rev"
+    echo -e "Repositório:\t$repo"
+    echo -e "Caminho:\t$raiz"
+    echo -e "Destino:\t$dir_destino"
+    
+    echo $estado > $atividade_dir/progresso_$host.txt							
+    estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+    
+    ### início da leitura ###
+    
+    estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
+    
+    ##### GIT #########	
+    
+    checkout												#ver checkout(): (git clone), cd <repositorio> , git fetch, git checkout...
+    
+    origem="$repo_dir/$nomerepo/$raiz"
+    
+    if [ ! -d "$origem" ]; then										
+    	origem="$repo_dir/$raiz"									#é comum que o usuário informe a pasta do sistema (nomerepo) como parte da raiz.
+    fi
+    
+    if [ ! -d "$origem" ]; then										
+    	echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app."
+    	end
+    fi
+    
+    ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
+    
+    echo -e "\nAcessando o diretório de deploy..."
+    
+    destino="/mnt/${app}_${data}"
+    
+    mkdir $destino || end
+    
+    if [ $os == 'windows' ]; then
+        mount.cifs $dir_destino $destino -o credentials=$credenciais || end 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+    else
+        mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
+    fi
+    
+    ##### DIFF ARQUIVOS #####
+    
+    if [ $modo = 'p' ]; then
+    	rsync -rnic --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
+    else
+    	rsync -rnic --delete --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
+    fi
+    
+    ##### RESUMO DAS MUDANÇAS ######
+    
+    adicionados="$(grep -E "^>f\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
+    excluidos="$(grep -E "^\*deleting .*[^/]$" $atividade_dir/modificacoes_$host.txt | wc -l)"
+    modificados="$(grep -E "^>f[^\+]" $atividade_dir/modificacoes_$host.txt | wc -l)"
+    dir_criado="$(grep -E "^cd\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
+    dir_removido="$(grep -E "^\*deleting .*/$" $atividade_dir/modificacoes_$host.txt | wc -l)"
+    
+    echo -e "\nLog das modificacoes gravado no arquivo modificacoes.txt\n" > $atividade_dir/resumo_$host.txt
+    echo -e "Arquivos adicionados:\t$adicionados " >> $atividade_dir/resumo_$host.txt
+    echo -e "Arquivos excluidos:\t$excluidos" >> $atividade_dir/resumo_$host.txt
+    echo -e "Arquivos modificados:\t$modificados" >> $atividade_dir/resumo_$host.txt
+    echo -e "Diretórios criados:\t$dir_criado" >> $atividade_dir/resumo_$host.txt
+    echo -e "Diretórios removidos:\t$dir_removido" >> $atividade_dir/resumo_$host.txt
+    
+    cat $atividade_dir/resumo_$host.txt
+    
+    estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+    
+    ###### ESCRITA DAS MUDANÇAS EM DISCO ######
+    
+    if $interativo; then
+        echo -e "\nGravar mudanças em disco? (s/n)"
+        read ans
+    fi
+    
+    if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ $interativo -eq 0 ]; then
+    
+    	#### preparação do script de rollback ####
+    
+    	estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
+    	echo -e "\nCriando backup"
+    		
+    	rm -Rf "$bak_dir/${app}_${host}"
+    
+    	bak="$bak_dir/${app}_${host}"
+    
+    	mkdir -p $bak
+    
+    	rsync -rc --inplace $destino/ $bak/ || end
+    
+    	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+    
+    	#### gravação das alterações em disco ####
+    		
+    	estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
+    	echo -e "\nEscrevendo alterações no diretório de destino..."	
+    
+    	if [ $modo = 'p' ]; then
+    		rsync -rc --inplace $origem/ $destino/ || end
+    	else
+    		rsync -rc --delete --inplace $origem/ $destino/ || end
+    	fi
+    
+    	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+    	
+    fi
 
-estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
-
-##### GIT #########	
-
-checkout												#ver checkout(): (git clone), cd <repositorio> , git fetch, git checkout...
-
-origem="$repo_dir/$nomerepo/$raiz"
-
-if [ ! -d "$origem" ]; then										
-	origem="$repo_dir/$raiz"									#é comum que o usuário informe a pasta do sistema (nomerepo) como parte da raiz.
-fi
-
-if [ ! -d "$origem" ]; then										
-	echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app."
-	end
-fi
-
-##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
-
-echo -e "\nAcessando o diretório de deploy..."
-
-destino="/mnt/${app}_${data}"
-
-mkdir $destino || end
-
-if [ $os == 'windows' ]; then
-    mount.cifs $dir_destino $destino -o credentials=$credenciais || end 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
-else
-    mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
-fi
-
-##### DIFF ARQUIVOS #####
-
-if [ $modo = 'p' ]; then
-	rsync -rnic --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
-else
-	rsync -rnic --delete --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
-fi
-
-##### RESUMO DAS MUDANÇAS ######
-
-adicionados="$(grep -E "^>f\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
-excluidos="$(grep -E "^\*deleting .*[^/]$" $atividade_dir/modificacoes_$host.txt | wc -l)"
-modificados="$(grep -E "^>f[^\+]" $atividade_dir/modificacoes_$host.txt | wc -l)"
-dir_criado="$(grep -E "^cd\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
-dir_removido="$(grep -E "^\*deleting .*/$" $atividade_dir/modificacoes_$host.txt | wc -l)"
-
-echo -e "\nLog das modificacoes gravado no arquivo modificacoes.txt\n" > $atividade_dir/resumo_$host.txt
-echo -e "Arquivos adicionados:\t$adicionados " >> $atividade_dir/resumo_$host.txt
-echo -e "Arquivos excluidos:\t$excluidos" >> $atividade_dir/resumo_$host.txt
-echo -e "Arquivos modificados:\t$modificados" >> $atividade_dir/resumo_$host.txt
-echo -e "Diretórios criados:\t$dir_criado" >> $atividade_dir/resumo_$host.txt
-echo -e "Diretórios removidos:\t$dir_removido" >> $atividade_dir/resumo_$host.txt
-
-cat $atividade_dir/resumo_$host.txt
-
-estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
-
-###### ESCRITA DAS MUDANÇAS EM DISCO ######
-
-echo -e "\nGravar mudanças em disco? (s/n)"
-read ans
-
-if [ "$ans" == 's' ] || [ "$ans" == 'S' ]; then
-
-	#### preparação do script de rollback ####
-
-	estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
-	echo -e "\nCriando backup"
-		
-	rm -Rf "$bak_dir/${app}_${host}"
-
-	bak="$bak_dir/${app}_${host}"
-
-	mkdir -p $bak
-
-	rsync -rc --inplace $destino/ $bak/ || end
-
-	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
-
-	#### gravação das alterações em disco ####
-		
-	estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
-	echo -e "\nEscrevendo alterações no diretório de destino..."	
-
-	if [ $modo = 'p' ]; then
-		rsync -rc --inplace $origem/ $destino/ || end
-	else
-		rsync -rc --delete --inplace $origem/ $destino/ || end
-	fi
-
-	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
-	
-fi
+done
 
 end
