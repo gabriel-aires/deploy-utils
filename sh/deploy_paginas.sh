@@ -114,7 +114,7 @@ function clean_locks () {
 
 function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem.
 
-	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
+	if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z $edit ]; then
 		var="$1"
 		msg="$2"
 		edit=0
@@ -144,10 +144,31 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 
 }
 
+function editconf () {
+
+    if [ ! -z "$1" ] && [ ! -z "$2" ] $$ [ ! -z "$3" ] && [ ! -z "$edit" ]; then
+        campo="$1"
+        valor_campo="$2"
+        arquivo_conf="$3"
+            
+        touch $arquivo_conf
+
+	    if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
+	        grep -Exv "^$campo\=.*$" <"$arquivo_conf" >
+	        echo -e "$campo\=\'$valor_campo\'" >> "$arquivo_conf"
+        else
+            test $edit -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
+        fi
+    else
+        echo "Erro. Não foi possível editar o arquivo de configuração." && end
+    fi
+    
+}
+
 function mklist () {
 
 	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
-		lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//' | sed -r 's/^ //' | sed -r 's/ /\n/')
+		lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g')
 		echo "$lista" > $2
 	else
 		end 
@@ -329,41 +350,47 @@ if [ $interativo -eq 1 ] ; then
 		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 		share="$(echo $share | sed -r 's|/$||')"						#remove / no fim do caminho.
 
-		echo '' > $parametros_app/${app}.conf									 
-
-		echo "app=$app" >> $parametros_app/${app}.conf
-		echo "repo=$repo" >> $parametros_app/${app}.conf
-		echo "raiz=$raiz" >> $parametros_app/${app}.conf
+		editconf "app" "$app" "$parametros_app/${app}.conf"
+		editconf "repo" "$repo" "$parametros_app/${app}.conf"
+		editconf "raiz" "$raiz" "$parametros_app/${app}.conf"
 		
 		cat $temp_dir/ambientes | while read env; do
 			if [ "$env" <> "$ambiente"  ]; then
-				echo -e hosts_$env\=\'\' >> $parametros_app/${app}.conf
+			    editconf "hosts_$env" "" "$parametros_app/${app}.conf"
 			else
-				echo -e hosts_$env\="\$hosts_${ambiente}" >> $parametros_app/${app}.conf
+			    lista_hosts="echo \$hosts_${env}"
+        		lista_hosts=$(eval "$lista_hosts")
+                editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"        		
 			fi
 		done
 
-                echo "share=$share" >> $parametros_app/${app}.conf
-                echo "os=$os" >> $parametros_app/${app}.conf
+		editconf "share" "$share" "$parametros_app/${app}.conf"
+		editconf "os" "$os" "$parametros_app/${app}.conf"
+		
+		sort <"$parametros_app/${app}.conf" >
 
 		rm -f $lock_dir/${app}_conf
 	else
 		source "${parametros_app}/${app}.conf" 
                 
 		valid "repo" "\nErro. Informe um caminho válido para o repositório GIT:"
-		test $edit -eq 1 && sed -r "s|^(repo\=).*$|\1$repo|" "${parametros_app}/${app}.conf"
-
+		editconf "repo" "$repo" "$parametros_app/${app}.conf"
+        
 		valid "raiz" "\nErro. Informe um caminho válido para a raiz da aplicação:"
-		test $edit -eq 1 && sed -r "s|^(raiz\=).*$|\1$raiz|" "${parametros_app}/${app}.conf"
+		editconf "raiz" "$raiz" "$parametros_app/${app}.conf"
 
 		valid "hosts_$ambiente" "\nErro. Informe uma lista válida de hosts para deploy, separando-os por espaço ou vírgula:"
-		test $edit -eq 1 && sed -r "s|^(hosts_$ambiente\=).*$|\1\$hosts_${ambiente}|" "${parametros_app}/${app}.conf"
+		lista_hosts="echo \$hosts_${ambiente}"
+        lista_hosts=$(eval "$lista_hosts")
+		editconf "hosts_$ambiente" "$lista_hosts" "$parametros_app/${app}.conf"
 
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
-		test $edit -eq 1 && sed -r "s|^(share\=).*$|\1$share|" "${parametros_app}/${app}.conf"
+		editconf "share" "$share" "$parametros_app/${app}.conf"
 
 		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):"
-		test $edit -eq 1 && sed -r "s|^(os\=).*$|\1$os|" "${parametros_app}/${app}.conf"
+		editconf "os" "$os" "$parametros_app/${app}.conf"
+		
+		sort <"$parametros_app/${app}.conf" >
 	fi
 else													#caso a entrada correspondente ao sistema já esteja preenchida, os parâmetros são obtidos do arquivo $deploy_dir/parametros.txt
         if [ ! -f "${parametros_app}/${app}.conf" ]; then 
