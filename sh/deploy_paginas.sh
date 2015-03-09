@@ -14,7 +14,7 @@ fi
 #### UTILIZAÇÃO: deloy_paginas.sh <aplicação> <revisão> <ambiente> -opções ############
 
 while getopts ":dfh" opcao; do
-	case $opcao in
+	case "$opcao" in
         	d)
             		modo='d'	
             		;;
@@ -112,16 +112,16 @@ function clean_locks () {
 
 function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem.
 
-	if [ ! -z $1 ] && [ ! -z $2 ]; then
-		var=$1
-		msg=$2
+	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
+		var="$1"
+		msg="$2"
 		edit=0
 
 		valor="echo \$${var}"
-		valor="$(eval $($valor))"
+		valor=$(eval $valor)"
 
-		regra="echo \$regex_$var"	
-		regra="$(eval $($regra))"
+		regra="echo \$regex_${valor}"	
+		regra="$(eval $regra)"
 
 		if [ -z $regra ]; then
 			echo "Erro. Não há uma regra para validação da variável $var" && end
