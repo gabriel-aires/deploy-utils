@@ -306,8 +306,6 @@ if [ $interativo -eq 1 ] ; then
 	
 		echo -e "\nFavor informar abaixo os parâmetros da aplicação $app."
 
-		echo '' > $parametros_app/${app}.conf									 
-
 		echo -e "\nInforme o repositorio a ser utilizado:"
 		read -r repo
 		valid "repo" "\nErro. Informe um caminho válido para o repositório GIT:"
@@ -330,7 +328,9 @@ if [ $interativo -eq 1 ] ; then
 	
 		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 		share="$(echo $share | sed -r 's|/$||')"						#remove / no fim do caminho.
-	
+
+		echo '' > $parametros_app/${app}.conf									 
+
 		echo "app=$app" >> $parametros_app/${app}.conf
 		echo "repo=$repo" >> $parametros_app/${app}.conf
 		echo "raiz=$raiz" >> $parametros_app/${app}.conf
