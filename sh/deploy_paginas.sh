@@ -84,7 +84,7 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 function lock () {											#argumentos: nome_trava, mensagem_erro
 
-	if [ ! -z $1 ] && [ ! -z $2 ]; then
+	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
 		if [ -d $temp_dir ] && [ -d $lock_dir ]; then
 			if [ ! -f $temp_dir/locks ]; then
 				touch $temp_dir/locks
@@ -127,7 +127,7 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 
 		if [ -z $regra ]; then
 			echo "Erro. Não há uma regra para validação da variável $var" && end
-		elif $interativo; then
+		elif [ $interativo -eq 1 ]; then
 			while [ -z $(echo $valor | grep -Ex "$regra") ]; do
 				echo -e "$msg"
 				read -r $var
@@ -146,9 +146,9 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 
 function mklist () {
 
-	if [ ! -z $1 ] && [ ! -z $2 ]; then
-		lista=$(echo $1 | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//' | sed -r 's/^ //' | sed -r 's/ /\n/')
-		echo $lista > $2
+	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
+		lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//' | sed -r 's/^ //' | sed -r 's/ /\n/')
+		echo "$lista" > $2
 	else
 		end 
 	fi
@@ -232,7 +232,7 @@ trap "end; exit" SIGQUIT SIGTERM SIGINT SIGHUP						#a função será chamada qu
 
 edit=0
 
-if $interativo; then
+if [ $interativo -eq 1 ]; then
 	clear
 fi
 
@@ -285,7 +285,7 @@ echo "Iniciando processo de deploy..."
 #	modo=$modo_padrao
 #fi
 
-if $interativo ; then
+if [ $interativo -eq 1 ] ; then
 	valid "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas):"
 	valid "rev" "\nInforme a revisão corretamente:"
 	valid "ambiente" "\nInforme o ambiente corretamente:"
@@ -300,7 +300,7 @@ fi
 lock $app "Deploy abortado: há outro deploy da aplicação $app em curso." 
 lock $rev "Deploy abortado: há outro deploy da revisão $rev em curso."
 
-if $interativo ; then
+if [ $interativo -eq 1 ] ; then
 
 	if [ ! -f "${parametros_app}/${app}.conf" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
 	
@@ -475,7 +475,7 @@ cat $temp_dir/dir_destino | while read $dir_destino; do
     
     ###### ESCRITA DAS MUDANÇAS EM DISCO ######
     
-    if $interativo; then
+    if [ $interativo -eq 1 ]; then
         echo -e "\nGravar mudanças em disco? (s/n)"
         read ans
     fi
