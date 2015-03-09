@@ -128,14 +128,14 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 		if [ -z "$regra" ]; then
 			echo "Erro. Não há uma regra para validação da variável $var" && end
 		elif [ "$interativo" -eq 1 ]; then
-			while [ -z $(echo "$valor" | grep -Ex "$regra") ]; do
+			while [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; do
 				echo -e "$msg"
 				read -r $var
 				edit=1
           		valor="echo \$${var}"
         		valor="$(eval $valor)"
 			done
-		elif [ -z $(echo "$valor" | grep -Ex "$regra") ]; then
+		elif [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; then
 			echo -e "$msg" && end
 		fi			
 	else
