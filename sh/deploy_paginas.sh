@@ -13,6 +13,16 @@ fi
 
 #### UTILIZAÇÃO: deloy_paginas.sh <aplicação> <revisão> <ambiente> -opções ############
 
+if [ "$#" -lt 3 ]; then	
+	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <ambiente>"
+	exit 1
+fi
+
+interativo=1
+app=$1
+rev=$2
+ambiente=$3
+
 while getopts ":dfh" opcao; do
 	case "$opcao" in
         	d)
@@ -32,14 +42,6 @@ while getopts ":dfh" opcao; do
 	esac
 done
 
-if [ "$#" -lt 3 ]; then	
-	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <ambiente>"
-	exit 1
-fi
-
-app=$1
-rev=$2
-ambiente=$3
 
 #### Funções ##########
 
@@ -118,9 +120,9 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 		edit=0
 
 		valor="echo \$${var}"
-		valor=$(eval $valor)"
+		valor="$(eval $valor)"
 
-		regra="echo \$regex_${valor}"	
+		regra="echo \$regex_${var}"	
 		regra="$(eval $regra)"
 
 		if [ -z $regra ]; then
@@ -239,28 +241,28 @@ source $deploy_dir/conf/global.conf || exit								#carrega o arquivo de constan
 
 temp_dir="$temp/$pid"
 
-if [ -z $regex_temp_dir ] \
-	|| [ -z $regex_temp_dir ] \
-	|| [ -z $regex_historico_dir ] \
-	|| [ -z $regex_repo_dir ] \
-	|| [ -z $regex_lock_dir ] \
-	|| [ -z $regex_bak_dir ] \
-	|| [ -z $regex_app ] \
-	|| [ -z $regex_rev ] \
-	|| [ -z $regex_chamado ] \
-	|| [ -z $regex_modo ] \
-	|| [ -z $regex_repo ] \
-	|| [ -z $regex_raiz ] \
-	|| [ -z $regex_dir_destino ] \
-	|| [ -z $regex_os ] \
+if [ -z "$regex_temp_dir" ] \
+	|| [ -z "$regex_temp_dir" ] \
+	|| [ -z "$regex_historico_dir" ] \
+	|| [ -z "$regex_repo_dir" ] \
+	|| [ -z "$regex_lock_dir" ] \
+	|| [ -z "$regex_bak_dir" ] \
+	|| [ -z "$regex_app" ] \
+	|| [ -z "$regex_rev" ] \
+	|| [ -z "$regex_chamado" ] \
+	|| [ -z "$regex_modo" ] \
+	|| [ -z "$regex_repo" ] \
+	|| [ -z "$regex_raiz" ] \
+	|| [ -z "$regex_dir_destino" ] \
+	|| [ -z "$regex_os" ] \
 	|| [ -z $(echo $bak_dir | grep -E "$regex_bak_dir") ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $historico_dir | grep -E "$regex_historico_dir") ] \
 	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
-	|| [ -z $modo_padrao ] \
-	|| [ -z $ambientes ] \
-	|| [ -z $interativo ];
+	|| [ -z "$modo_padrao" ] \
+	|| [ -z "$ambientes" ] \
+	|| [ -z "$interativo" ];
 then
     echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
     exit
