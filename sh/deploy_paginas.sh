@@ -357,7 +357,7 @@ if [ $interativo -eq 1 ] ; then
 		test $edit -eq 1 && sed -r "s/^(raiz\=).*$/\1$raiz/" "${parametros_app}/${app}.conf"
 
 		valid "hosts_$ambiente" "\nErro. Informe uma lista válida de hosts para deploy, separando-os por espaço ou vírgula:"
-		test $edit -eq 1 && sed -r s/^(hosts_$ambiente\=).*$/\1"\$hosts_${ambiente}"/ "${parametros_app}/${app}.conf"
+		test $edit -eq 1 && sed -r "s/^(hosts_$ambiente\=).*$/\1\$hosts_${ambiente}/" "${parametros_app}/${app}.conf"
 
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
 		test $edit -eq 1 && sed -r "s/^(share\=).*$/\1$share/" "${parametros_app}/${app}.conf"
