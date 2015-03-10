@@ -419,7 +419,7 @@ cat $temp_dir/hosts_$ambiente | while read $host; do
     dir_destino=$(echo "$dir_destino" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
     nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
     lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."    
-    echo "$dir_destino" > $temp_dir/dir_destino
+    echo "$dir_destino" >> $temp_dir/dir_destino
 done
 
 atividade_dir="$historico_dir/$app/$(date +%F)/$rev_$ambiente"								#Diretório onde serão armazenados os logs do atendimento.
@@ -452,16 +452,15 @@ echo -e "Revisão:\t$rev"
 echo -e "Repositório:\t$repo"
 echo -e "Caminho:\t$raiz"
 
-echo $estado > $atividade_dir/progresso_$host.txt							
-estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+echo $estado > $atividade_dir/progresso.txt							
+estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
     
 ### início da leitura ###
-    
-estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
 
 cat $temp_dir/dir_destino | while read $dir_destino; do
 
     host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|")
+    estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
     
     echo -e "\nIniciando deploy no host $host..."
     echo -e "Diretório de deploy:\t$dir_destino"
