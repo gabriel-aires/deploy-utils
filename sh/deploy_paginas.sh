@@ -154,7 +154,7 @@ function editconf () {
         touch $arquivo_conf
 
 	    if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
-	        grep -Exv "^$campo\=.*$" "$arquivo_conf" > "$arquivo_conf"
+	        sed -i -r "|^$campo\=.*$|d" "$arquivo_conf"
 	        echo "$campo='$valor_campo'" >> "$arquivo_conf"
         else
             test $edit -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
@@ -371,6 +371,8 @@ if [ $interativo -eq 1 ] ; then
 
 		rm -f $lock_dir/${app}_conf
 	else
+	
+		echo -e "\nObtendo parâmetros da aplicação $app..."
 		source "${parametros_app}/${app}.conf" 
                 
 		valid "repo" "\nErro. Informe um caminho válido para o repositório GIT:"
