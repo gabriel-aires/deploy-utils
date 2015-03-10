@@ -405,13 +405,16 @@ else													#caso a entrada correspondente ao sistema já esteja preenchida
                 valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
                 valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
                 valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."
+                
+                lista_hosts="echo \$hosts_${ambiente}"
+                lista_hosts=$(eval "$lista_hosts")   
 	fi
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 lock "${nomerepo}\.git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
 
-mklist "\$hosts_${ambiente}" $temp_dir/hosts_$ambiente
+mklist "$lista_hosts" $temp_dir/hosts_$ambiente
 echo '' > $temp_dir/dir_destino
 
 cat $temp_dir/hosts_$ambiente | while read host; do
