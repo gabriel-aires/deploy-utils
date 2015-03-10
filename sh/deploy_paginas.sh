@@ -25,21 +25,21 @@ ambiente=$3
 
 while getopts ":dfh" opcao; do
 	case "$opcao" in
-        	d)
-            		modo='d'	
-            		;;
-       		f)
-       			interativo=0	
-			;;      
-        	h)
-        		echo "O script requer 3 parâmetros: <aplicação> <revisão> <ambiente>. Utilizar as opções\
-        		    -d para forçar a deleção de arquivos obsoletos e -f para forçar a execução do\
-        		    script de forma não interativa"	&& exit 0
-        		;;      
-       		\?)
-        		echo "-$OPTARG não é uma opção válida ( -d -f -h )." && exit 1
-			;;
-	esac
+            d)
+                modo='d'	
+                ;;
+            f)
+                interativo=0	
+                ;;      
+            h)
+                echo "O script requer 3 parâmetros: <aplicação> <revisão> <ambiente>. Utilizar as opções\
+                    -d para forçar a deleção de arquivos obsoletos e -f para forçar a execução do\
+                    script de forma não interativa"	&& exit 0
+                ;;      
+            \?)
+                echo "-$OPTARG não é uma opção válida ( -d -f -h )." && exit 1
+                ;;
+    esac
 done
 
 
@@ -52,7 +52,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git clone --progress "$repo" "$repo_dir/$nomerepo" || end				#clona o repositório, caso ainda não tenha sido feito.
 	fi
 
-	echo -e "\nObtendo a revisão ${rev}..."
+    echo -e "\nObtendo a revisão ${rev}..."
 
 	cd "$repo_dir/$nomerepo"
 
@@ -132,8 +132,8 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 				echo -e "$msg"
 				read -r $var
 				edit=1
-          		valor="echo \$${var}"
-        		valor="$(eval $valor)"
+                valor="echo \$${var}"
+                valor="$(eval $valor)"
 			done
 		elif [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; then
 			echo -e "$msg" && end
@@ -153,9 +153,9 @@ function editconf () {
             
         touch $arquivo_conf
 
-	    if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
-	        sed -i -r "|^$campo\=.*$|d" "$arquivo_conf"
-	        echo "$campo='$valor_campo'" >> "$arquivo_conf"
+        if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
+            sed -i -r "|^$campo\=.*$|d" "$arquivo_conf"
+            echo "$campo='$valor_campo'" >> "$arquivo_conf"
         else
             test $edit -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
         fi
@@ -358,8 +358,8 @@ if [ $interativo -eq 1 ] ; then
 			if [ "$env" <> "$ambiente"  ]; then
 			    editconf "hosts_$env" "" "$parametros_app/${app}.conf"
 			else
-			    lista_hosts="echo \$hosts_${env}"
-        		lista_hosts=$(eval "$lista_hosts")
+                lista_hosts="echo \$hosts_${env}"
+                lista_hosts=$(eval "$lista_hosts")
                 editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"        		
 			fi
 		done
@@ -394,20 +394,20 @@ if [ $interativo -eq 1 ] ; then
 		
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 	fi
-else													#caso a entrada correspondente ao sistema já esteja preenchida, os parâmetros são obtidos do arquivo $deploy_dir/parametros.txt
-        if [ ! -f "${parametros_app}/${app}.conf" ]; then 
+else
+    if [ ! -f "${parametros_app}/${app}.conf" ]; then 
 		echo "Erro. Não foram encontrados os parâmetros para deploy da aplicação $app. O script deverá ser reexecutado no modo interativo."	
 	else
-                source "${parametros_app}/${app}.conf"
+        source "${parametros_app}/${app}.conf"
 
-                valid "repo" "\nErro. \'$repo\' não é um repositório git válido."
-                valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
-                valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
-                valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
-                valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."
-                
-                lista_hosts="echo \$hosts_${ambiente}"
-                lista_hosts=$(eval "$lista_hosts")   
+        valid "repo" "\nErro. \'$repo\' não é um repositório git válido."
+        valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
+        valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
+        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
+        valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."
+        
+        lista_hosts="echo \$hosts_${ambiente}"
+        lista_hosts=$(eval "$lista_hosts")   
 	fi
 fi
 
@@ -520,33 +520,33 @@ cat $temp_dir/dir_destino | while read dir_destino; do
     
     if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ $interativo -eq 0 ]; then
     
-    	#### preparação do script de rollback ####
-    
-    	estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
-    	echo -e "\nCriando backup"
-    		
-    	rm -Rf "$bak_dir/${app}_${host}"
-    
-    	bak="$bak_dir/${app}_${host}"
-    
-    	mkdir -p $bak
-    
-    	rsync -rc --inplace $destino/ $bak/ || end
-    
-    	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
-    
-    	#### gravação das alterações em disco ####
-    		
-    	estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
-    	echo -e "\nEscrevendo alterações no diretório de destino..."	
-    
-    	if [ $modo = 'p' ]; then
-    		rsync -rc --inplace $origem/ $destino/ || end
-    	else
-    		rsync -rc --delete --inplace $origem/ $destino/ || end
-    	fi
-    
-    	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+        #### preparação do script de rollback ####
+        
+        estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
+        echo -e "\nCriando backup"
+        	
+        rm -Rf "$bak_dir/${app}_${host}"
+        
+        bak="$bak_dir/${app}_${host}"
+        
+        mkdir -p $bak
+        
+        rsync -rc --inplace $destino/ $bak/ || end
+        
+        estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+        
+        #### gravação das alterações em disco ####
+        	
+        estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
+        echo -e "\nEscrevendo alterações no diretório de destino..."	
+        
+        if [ $modo = 'p' ]; then
+        	rsync -rc --inplace $origem/ $destino/ || end
+        else
+        	rsync -rc --delete --inplace $origem/ $destino/ || end
+        fi
+        
+        estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
     	
     fi
 
