@@ -146,7 +146,7 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 
 function editconf () {
 
-    if [ ! -z "$1" ] && [ ! -z "$2" ] $$ [ ! -z "$3" ] && [ ! -z "$edit" ]; then
+    if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$edit" ]; then
         campo="$1"
         valor_campo="$2"
         arquivo_conf="$3"
