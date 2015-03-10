@@ -367,7 +367,7 @@ if [ $interativo -eq 1 ] ; then
 		editconf "share" "$share" "$parametros_app/${app}.conf"
 		editconf "os" "$os" "$parametros_app/${app}.conf"
 		
-		sort <"$parametros_app/${app}.conf" >
+		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 
 		rm -f $lock_dir/${app}_conf
 	else
@@ -390,7 +390,7 @@ if [ $interativo -eq 1 ] ; then
 		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):"
 		editconf "os" "$os" "$parametros_app/${app}.conf"
 		
-		sort <"$parametros_app/${app}.conf" >
+		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 	fi
 else													#caso a entrada correspondente ao sistema já esteja preenchida, os parâmetros são obtidos do arquivo $deploy_dir/parametros.txt
         if [ ! -f "${parametros_app}/${app}.conf" ]; then 
