@@ -155,7 +155,7 @@ function editconf () {
 
 	    if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
 	        grep -Exv "^$campo\=.*$" "$arquivo_conf" > "$arquivo_conf"
-	        echo -e "$campo\=\'$valor_campo\'" >> "$arquivo_conf"
+	        echo "$campo='$valor_campo'" >> "$arquivo_conf"
         else
             test $edit -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
         fi
