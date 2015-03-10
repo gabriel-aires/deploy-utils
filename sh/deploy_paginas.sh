@@ -414,7 +414,7 @@ lock "${nomerepo}\.git" "Deploy abortado: há outro deploy utilizando o reposit�
 mklist "\$hosts_${ambiente}" $temp_dir/hosts_$ambiente
 echo '' > $temp_dir/dir_destino
 
-cat $temp_dir/hosts_$ambiente | while read $host; do
+cat $temp_dir/hosts_$ambiente | while read host; do
     dir_destino="//$host/$share"
     dir_destino=$(echo "$dir_destino" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
     nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
@@ -457,7 +457,7 @@ estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
     
 ### início da leitura ###
 
-cat $temp_dir/dir_destino | while read $dir_destino; do
+cat $temp_dir/dir_destino | while read dir_destino; do
 
     host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|")
     estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
