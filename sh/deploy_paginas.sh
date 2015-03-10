@@ -479,11 +479,6 @@ cat $temp_dir/dir_destino | while read dir_destino; do
         mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
     fi
     
-    if [ $(grep -Ei "^$dir_destino" /proc/mounts | wc -l) -ne 1 ]; then
-        echo "Erro ao acessar o diretório de deploy."
-        end
-    fi
-    
     ##### DIFF ARQUIVOS #####
     
     if [ $modo = 'p' ]; then
@@ -550,6 +545,4 @@ cat $temp_dir/dir_destino | while read dir_destino; do
     	
     fi
 
-done
-
-end
+done && end
