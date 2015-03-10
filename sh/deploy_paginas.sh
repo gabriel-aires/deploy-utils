@@ -415,7 +415,6 @@ nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 lock "${nomerepo}\.git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
 
 mklist "$lista_hosts" $temp_dir/hosts_$ambiente
-echo '' > $temp_dir/dir_destino
 
 cat $temp_dir/hosts_$ambiente | while read host; do
     dir_destino="//$host/$share"
