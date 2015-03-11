@@ -3,6 +3,7 @@
 estado="validacao"
 pid=$$
 data="$(date +%Y%m%d%H%M%S)"
+interativo="true"
 
 ##### Execução somente como usuário root ######
 
@@ -13,34 +14,35 @@ fi
 
 #### UTILIZAÇÃO: deloy_paginas.sh <aplicação> <revisão> <ambiente> -opções ############
 
-if [ "$#" -lt 3 ]; then	
-	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <ambiente>"
-	exit 1
-fi
-
-interativo=1
-app=$1
-rev=$2
-ambiente=$3
-
 while getopts ":dfh" opcao; do
-	case "$opcao" in
+	case $opcao in
             d)
                 modo='d'	
                 ;;
             f)
-                interativo=0	
+                interativo="false"
                 ;;      
             h)
-                echo "O script requer 3 parâmetros: <aplicação> <revisão> <ambiente>. Utilizar as opções\
+                echo "O script requer os seguintes parâmetros: (opções) <aplicação> <revisão> <ambiente>. Utilizar as opções\
                     -d para forçar a deleção de arquivos obsoletos e -f para forçar a execução do\
-                    script de forma não interativa"	&& exit 0
+                    script de forma não interativa" && exit 0
                 ;;      
             \?)
                 echo "-$OPTARG não é uma opção válida ( -d -f -h )." && exit 1
                 ;;
     esac
 done
+
+shift $(($OPTIND-1))
+
+if [ "$#" -lt 3 ]; then	
+	echo "O script requer no mínimo 3 parâmetros: <aplicação> <revisão> <ambiente>"
+	exit 1
+fi
+
+app=$1
+rev=$2
+ambiente=$3
 
 
 #### Funções ##########
@@ -52,7 +54,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git clone --progress "$repo" "$repo_dir/$nomerepo" || end				#clona o repositório, caso ainda não tenha sido feito.
 	fi
 
-    echo -e "\nObtendo a revisão ${rev}..."
+	echo -e "\nObtendo a revisão ${rev}..."
 
 	cd "$repo_dir/$nomerepo"
 
@@ -127,13 +129,13 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 
 		if [ -z "$regra" ]; then
 			echo "Erro. Não há uma regra para validação da variável $var" && end
-		elif [ "$interativo" -eq 1 ]; then
+		elif "$interativo"; then
 			while [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; do
 				echo -e "$msg"
 				read -r $var
 				edit=1
-                valor="echo \$${var}"
-                valor="$(eval $valor)"
+                		valor="echo \$${var}"
+		                valor="$(eval $valor)"
 			done
 		elif [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; then
 			echo -e "$msg" && end
@@ -146,22 +148,22 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 
 function editconf () {
 
-    if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$edit" ]; then
-        campo="$1"
-        valor_campo="$2"
-        arquivo_conf="$3"
+	if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$edit" ]; then
+        	campo="$1"
+        	valor_campo="$2"
+        	arquivo_conf="$3"
             
-        touch $arquivo_conf
+        	touch $arquivo_conf
 
-        if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
-            sed -i -r "|^$campo\=.*$|d" "$arquivo_conf"
-            echo "$campo='$valor_campo'" >> "$arquivo_conf"
-        else
-            test $edit -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
-        fi
-    else
-        echo "Erro. Não foi possível editar o arquivo de configuração." && end
-    fi
+        	if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
+			sed -i -r "/^$campo\=.*$/d" "$arquivo_conf"
+			echo "$campo='$valor_campo'" >> "$arquivo_conf"
+        	else
+			test $edit -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
+        	fi
+	else
+		echo "Erro. Não foi possível editar o arquivo de configuração." && end
+	fi
     
 }
 
@@ -253,7 +255,7 @@ trap "end; exit" SIGQUIT SIGTERM SIGINT SIGHUP						#a função será chamada qu
 
 edit=0
 
-if [ $interativo -eq 1 ]; then
+if $interativo; then
 	clear
 fi
 
@@ -302,11 +304,11 @@ mklist "$ambientes" "$temp_dir/ambientes"
 
 echo "Iniciando processo de deploy..."
 
-#if [ -z "$modo" ]; then
-#	modo=$modo_padrao
-#fi
+if [ -z "$modo" ]; then
+	modo=$modo_padrao
+fi
 
-if [ $interativo -eq 1 ] ; then
+if $interativo; then
 	valid "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas):"
 	valid "rev" "\nInforme a revisão corretamente:"
 	valid "ambiente" "\nInforme o ambiente corretamente:"
@@ -321,7 +323,7 @@ fi
 lock $app "Deploy abortado: há outro deploy da aplicação $app em curso." 
 lock $rev "Deploy abortado: há outro deploy da revisão $rev em curso."
 
-if [ $interativo -eq 1 ] ; then
+if $interativo; then
 
 	if [ ! -f "${parametros_app}/${app}.conf" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
 	
@@ -354,22 +356,23 @@ if [ $interativo -eq 1 ] ; then
 		editconf "repo" "$repo" "$parametros_app/${app}.conf"
 		editconf "raiz" "$raiz" "$parametros_app/${app}.conf"
 		
-		cat $temp_dir/ambientes | while read env; do
-			if [ "$env" <> "$ambiente"  ]; then
-			    editconf "hosts_$env" "" "$parametros_app/${app}.conf"
+		while read env; do
+			if [ "$env" == "$ambiente"  ]; then
+				lista_hosts="echo \$hosts_${env}"
+				lista_hosts=$(eval "$lista_hosts")
+				editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"        		
 			else
-                lista_hosts="echo \$hosts_${env}"
-                lista_hosts=$(eval "$lista_hosts")
-                editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"        		
+				echo "revisao_$env=''" >> "$parametros_app/${app}.conf"
+				echo "hosts_$env=''" >> "$parametros_app/${app}.conf"
+				echo "modo_$env=''" >> "$parametros_app/${app}.conf"
 			fi
-		done
+		done < $temp_dir/ambientes 
 
 		editconf "share" "$share" "$parametros_app/${app}.conf"
 		editconf "os" "$os" "$parametros_app/${app}.conf"
 		
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 
-		rm -f $lock_dir/${app}_conf
 	else
 	
 		echo -e "\nObtendo parâmetros da aplicação $app..."
@@ -383,7 +386,7 @@ if [ $interativo -eq 1 ] ; then
 
 		valid "hosts_$ambiente" "\nErro. Informe uma lista válida de hosts para deploy, separando-os por espaço ou vírgula:"
 		lista_hosts="echo \$hosts_${ambiente}"
-        lista_hosts=$(eval "$lista_hosts")
+		lista_hosts=$(eval "$lista_hosts")
 		editconf "hosts_$ambiente" "$lista_hosts" "$parametros_app/${app}.conf"
 
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
@@ -395,24 +398,24 @@ if [ $interativo -eq 1 ] ; then
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 	fi
 else
-    if [ ! -f "${parametros_app}/${app}.conf" ]; then 
+	if [ ! -f "${parametros_app}/${app}.conf" ]; then 
 		echo "Erro. Não foram encontrados os parâmetros para deploy da aplicação $app. O script deverá ser reexecutado no modo interativo."	
 	else
-        source "${parametros_app}/${app}.conf"
+        	source "${parametros_app}/${app}.conf"
 
-        valid "repo" "\nErro. \'$repo\' não é um repositório git válido."
-        valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
-        valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
-        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
-        valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."
+	        valid "repo" "\nErro. \'$repo\' não é um repositório git válido."
+	        valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
+	        valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
+	        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
+	        valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."
         
-        lista_hosts="echo \$hosts_${ambiente}"
-        lista_hosts=$(eval "$lista_hosts")   
+	        lista_hosts="echo \$hosts_${ambiente}"
+	        lista_hosts=$(eval "$lista_hosts")   
 	fi
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
-lock "${nomerepo}\.git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
+lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
 
 mklist "$lista_hosts" $temp_dir/hosts_$ambiente
 
@@ -459,90 +462,92 @@ estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
     
 ### início da leitura ###
 
-cat $temp_dir/dir_destino | while read dir_destino; do
+while read dir_destino; do
 
-    host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|")
-    estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
+	host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|")
+	estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
     
-    echo -e "\nIniciando deploy no host $host..."
-    echo -e "Diretório de deploy:\t$dir_destino"
+	echo -e "\nIniciando deploy no host $host..."
+	echo -e "Diretório de deploy:\t$dir_destino"
     
-    ##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
+	##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
     
-    destino="/mnt/${app}_${data}"
+	destino="/mnt/${app}_${data}"
     
-    mkdir $destino || end
+	mkdir $destino || end 
     
-    if [ $os == 'windows' ]; then
-        mount.cifs $dir_destino $destino -o credentials=$credenciais || end 				#montagem do compartilhamento de destino (requer pacote cifs-utils)
-    else
-        mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
-    fi
+	if [ $os == 'windows' ]; then
+        	mount.cifs $dir_destino $destino -o credentials=$credenciais || end				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+	else
+        	mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
+	fi
     
-    ##### DIFF ARQUIVOS #####
+	##### DIFF ARQUIVOS #####
     
-    if [ $modo = 'p' ]; then
-    	rsync -rnic --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
-    else
-    	rsync -rnic --delete --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
-    fi
+	if [ "$modo" == "p" ]; then
+		rsync -rnic --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
+	else
+		rsync -rnic --delete --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
+	fi
     
-    ##### RESUMO DAS MUDANÇAS ######
+	##### RESUMO DAS MUDANÇAS ######
     
-    adicionados="$(grep -E "^>f\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
-    excluidos="$(grep -E "^\*deleting .*[^/]$" $atividade_dir/modificacoes_$host.txt | wc -l)"
-    modificados="$(grep -E "^>f[^\+]" $atividade_dir/modificacoes_$host.txt | wc -l)"
-    dir_criado="$(grep -E "^cd\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
-    dir_removido="$(grep -E "^\*deleting .*/$" $atividade_dir/modificacoes_$host.txt | wc -l)"
+	adicionados="$(grep -E "^>f\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
+	excluidos="$(grep -E "^\*deleting .*[^/]$" $atividade_dir/modificacoes_$host.txt | wc -l)"
+	modificados="$(grep -E "^>f[^\+]" $atividade_dir/modificacoes_$host.txt | wc -l)"
+	dir_criado="$(grep -E "^cd\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
+	dir_removido="$(grep -E "^\*deleting .*/$" $atividade_dir/modificacoes_$host.txt | wc -l)"
     
-    echo -e "\nLog das modificacoes gravado no arquivo modificacoes.txt\n" > $atividade_dir/resumo_$host.txt
-    echo -e "Arquivos adicionados:\t$adicionados " >> $atividade_dir/resumo_$host.txt
-    echo -e "Arquivos excluidos:\t$excluidos" >> $atividade_dir/resumo_$host.txt
-    echo -e "Arquivos modificados:\t$modificados" >> $atividade_dir/resumo_$host.txt
-    echo -e "Diretórios criados:\t$dir_criado" >> $atividade_dir/resumo_$host.txt
-    echo -e "Diretórios removidos:\t$dir_removido" >> $atividade_dir/resumo_$host.txt
+	echo -e "\nLog das modificacoes gravado no arquivo modificacoes.txt\n" > $atividade_dir/resumo_$host.txt
+	echo -e "Arquivos adicionados:\t$adicionados " >> $atividade_dir/resumo_$host.txt
+	echo -e "Arquivos excluidos:\t$excluidos" >> $atividade_dir/resumo_$host.txt
+	echo -e "Arquivos modificados:\t$modificados" >> $atividade_dir/resumo_$host.txt
+	echo -e "Diretórios criados:\t$dir_criado" >> $atividade_dir/resumo_$host.txt
+	echo -e "Diretórios removidos:\t$dir_removido" >> $atividade_dir/resumo_$host.txt
     
-    cat $atividade_dir/resumo_$host.txt
+	cat $atividade_dir/resumo_$host.txt
     
-    estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
     
-    ###### ESCRITA DAS MUDANÇAS EM DISCO ######
+	###### ESCRITA DAS MUDANÇAS EM DISCO ######
+
+	if $interativo; then
+		echo -e "\nGravar mudanças em disco? (s/n)"
+		read ans </dev/tty
+	fi
     
-    if [ $interativo -eq 1 ]; then
-        echo -e "\nGravar mudanças em disco? (s/n)"
-        read ans
-    fi
+	if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ "$interativo" == "false" ]; then
     
-    if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ $interativo -eq 0 ]; then
-    
-        #### preparação do script de rollback ####
+		#### preparação do script de rollback ####
         
-        estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
-        echo -e "\nCriando backup"
+		estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
+		echo -e "\nCriando backup"
         	
-        rm -Rf "$bak_dir/${app}_${host}"
+		rm -Rf "$bak_dir/${app}_${host}"
         
-        bak="$bak_dir/${app}_${host}"
+		bak="$bak_dir/${app}_${host}"
         
-        mkdir -p $bak
+		mkdir -p $bak
         
-        rsync -rc --inplace $destino/ $bak/ || end
+		rsync -rc --inplace $destino/ $bak/ || end
         
-        estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+		estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
         
-        #### gravação das alterações em disco ####
+		#### gravação das alterações em disco ####
         	
-        estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
-        echo -e "\nEscrevendo alterações no diretório de destino..."	
+		estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
+		echo -e "\nEscrevendo alterações no diretório de destino..."	
         
-        if [ $modo = 'p' ]; then
-        	rsync -rc --inplace $origem/ $destino/ || end
-        else
-        	rsync -rc --delete --inplace $origem/ $destino/ || end
-        fi
+		if [ "$modo" == "p" ]; then
+        		rsync -rc --inplace $origem/ $destino/ || end
+		else
+			rsync -rc --delete --inplace $origem/ $destino/ || end
+		fi
         
-        estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+		estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
     	
-    fi
+	fi
 
-done && end
+done < $temp_dir/dir_destino 
+
+end
