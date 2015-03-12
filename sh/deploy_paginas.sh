@@ -360,11 +360,19 @@ if $interativo; then
 			if [ "$env" == "$ambiente"  ]; then
 				lista_hosts="echo \$hosts_${env}"
 				lista_hosts=$(eval "$lista_hosts")
-				editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"        		
-			else
+				editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"        	
+
 				echo "revisao_$env=''" >> "$parametros_app/${app}.conf"
-				echo "hosts_$env=''" >> "$parametros_app/${app}.conf"
+				echo "branch_$env=''" >> "$parametros_app/${app}.conf"
 				echo "modo_$env=''" >> "$parametros_app/${app}.conf"
+				echo "auto_$env='0'" >> "$parametros_app/${app}.conf"
+
+			else
+				echo "hosts_$env=''" >> "$parametros_app/${app}.conf"
+				echo "revisao_$env=''" >> "$parametros_app/${app}.conf"
+				echo "branch_$env=''" >> "$parametros_app/${app}.conf"
+				echo "modo_$env=''" >> "$parametros_app/${app}.conf"
+				echo "auto_$env='0'" >> "$parametros_app/${app}.conf"
 			fi
 		done < $temp_dir/ambientes 
 
