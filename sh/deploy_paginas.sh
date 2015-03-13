@@ -4,6 +4,7 @@ estado="validacao"
 pid=$$
 data="$(date +%Y%m%d%H%M%S)"
 interativo="true"
+automatico="false"
 
 ##### Execução somente como usuário root ######
 
