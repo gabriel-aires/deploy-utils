@@ -56,14 +56,68 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git clone --progress "$repo" "$repo_dir/$nomerepo" || end				#clona o repositório, caso ainda não tenha sido feito.
 	fi
 
-	echo -e "\nObtendo a revisão ${rev}..."
-
 	cd "$repo_dir/$nomerepo"
+	git fetch --all --force --quiet || end
 
-	( git fetch --all --force --quiet && git checkout --force --quiet $rev ) || end
+	if $automatico; then
+		
+		valid "revisao_$ambiente" "\nErro. O valor obtido para o parâmetro revisao_$ambiente não é válido. Favor corrigir o arquivo '$parametros_app/$app.conf'."
+		revisao_auto="echo \$revisao_${ambiente}"
+		revisao_auto=$(eval "$revisao_auto")
+
+		valid "branch_$ambiente" "\nErro. O valor obtido para o parâmetro branch_$ambiente não é válido. Favor corrigir o arquivo '$parametros_app/$app.conf'."
+		branch_auto="echo \$branch_${ambiente}"
+		branch_auto=$(eval "$branch_auto")
+
+		git branch -a | grep -v remotes/origin/HEAD | cut -b 3- > $temp_dir/branches
+
+		if [ $(grep -Ei "^remotes/origin/${branch_auto}$" $temp_dir/branches | wc -l) -ne 1 ]; then
+			end
+		fi
+
+		ultimo_commit=''
+
+		case $revisao_auto in
+			tag)
+				git log $branch_auto --oneline | cut -f1 -d ' ' > $temp_dir/commits
+				git tag -l | sort -V > $temp_dir/tags
+
+				while read tag; do
+					
+					commit_tag=$(git log "$tag" --oneline | head -1 | cut -f1 -d ' ')
+					if [ $(grep -Ex "^${commit_tag}$" $temp_dir/commits | wc -l) -eq 1 ]
+						ultimo_commit=$commit_tag
+						ultima_tag=$tag
+					fi
+
+				done < $temp_dir/tags
+				
+				if [ ! -z $ultimo_commit ] && [ ! -z $ultima_tag ]; then
+					echo -e "\nObtendo a revisão $ultimo_commit a partir da tag $ultima_tag."
+					git checkout --force --quiet $ultima_tag || end
+				else
+					echo "Erro ao obter a revisão especificada. Deploy abortado"
+					end
+				fi
+				::	
+			branch)
+				ultimo_commit=$(git log "$branch_auto" --oneline | head -1 | cut -f1 -d ' ')
+				
+				if [ ! -z $ultimo_commit ]; then
+					echo -e "\nObtendo a revisão $ultimo_commit a partir da branch $branch_auto."
+					git checkout --force --quiet $branch_auto || end
+				else
+					echo "Erro ao obter a revisão especificada. Deploy abortado"
+					end
+				fi
+				::
+		esac	
+	else
+		echo -e "\nObtendo a revisão ${rev}..."
+		git checkout --force --quiet $rev || end
+	fi
 
 	cd - &> /dev/null 
-
 }
 
 function clean_temp () {										#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
@@ -313,6 +367,12 @@ fi
 if $interativo; then
 	valid "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas):"
 	valid "rev" "\nInforme a revisão corretamente:"
+	
+	if [ "$rev" == "auto" ]; then
+		echo "Erro. Não é permitido o deploy automático em modo interativo."
+		exit 1
+	fi
+
 	valid "ambiente" "\nInforme o ambiente corretamente:"
 else
 	valid "app" "\nErro. Nome do sistema informado incorratemente."
@@ -323,7 +383,6 @@ fi
 #### Verifica deploys simultâneos e cria lockfiles, conforme necessário ########
 
 lock $app "Deploy abortado: há outro deploy da aplicação $app em curso." 
-lock $rev "Deploy abortado: há outro deploy da revisão $rev em curso."
 
 if $interativo; then
 
@@ -420,7 +479,16 @@ else
 	        valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."
         
 	        lista_hosts="echo \$hosts_${ambiente}"
-	        lista_hosts=$(eval "$lista_hosts")   
+	        lista_hosts=$(eval "$lista_hosts")  
+
+	        auto="echo \$auto_${ambiente}"
+	        auto=$(eval "$auto")  
+
+		if [ "$rev" == "auto" ] && [ "$auto" -eq "1" ]; then
+			automatico="true"
+		else
+			automatico="false"
+		fi
 	fi
 fi
 
@@ -429,13 +497,13 @@ lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositó
 
 mklist "$lista_hosts" $temp_dir/hosts_$ambiente
 
-cat $temp_dir/hosts_$ambiente | while read host; do
+while read host; do
     dir_destino="//$host/$share"
     dir_destino=$(echo "$dir_destino" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
     nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
     lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."    
     echo "$dir_destino" >> $temp_dir/dir_destino
-done
+done < $temp_dir/hosts_$ambiente
 
 atividade_dir="$historico_dir/$app/$(date +%F)/$rev_$ambiente"								#Diretório onde serão armazenados os logs do atendimento.
 if [ -d "${atividade_dir}_PENDENTE" ]; then
@@ -454,7 +522,7 @@ origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
 
 if [ ! -d "$origem" ]; then										
 	origem="$repo_dir/$raiz"									#é comum que o usuário informe a pasta do sistema (nomerepo) como parte da raiz.
-    origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")	
+	origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")	
 fi
 
 if [ ! -d "$origem" ]; then										
