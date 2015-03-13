@@ -1,0 +1,6 @@
+conf/app/**
+bak/**
+log/**
+tmp/**
+repo/**
+
