@@ -117,6 +117,10 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git checkout --force --quiet $rev || end
 	fi
 
+	if [ -f ".gitignore" ]; then
+		cat .gitignore >> $temp_dir/ignore
+	fi
+
 	cd - &> /dev/null 
 }
 
@@ -515,6 +519,8 @@ mkdir -p $atividade_dir
 
 ##### GIT #########	
 
+echo '' > $temp_dir/ignore
+
 checkout												#ver checkout(): (git clone), cd <repositorio> , git fetch, git checkout...
 
 origem="$repo_dir/$nomerepo/$raiz"
@@ -563,9 +569,9 @@ while read dir_destino; do
 	##### DIFF ARQUIVOS #####
     
 	if [ "$modo" == "p" ]; then
-		rsync -rnic --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
+		rsync -rnic --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
 	else
-		rsync -rnic --delete --inplace $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
+		rsync -rnic --delete --inplace $origem/ $destino/ --exclude-from=$temp_dir/ignore > $atividade_dir/modificacoes_$host.txt || end
 	fi
     
 	##### RESUMO DAS MUDANÇAS ######
@@ -617,9 +623,9 @@ while read dir_destino; do
 		echo -e "\nEscrevendo alterações no diretório de destino..."	
         
 		if [ "$modo" == "p" ]; then
-        		rsync -rc --inplace $origem/ $destino/ || end
+        		rsync -rc --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end
 		else
-			rsync -rc --delete --inplace $origem/ $destino/ || end
+			rsync -rc --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end
 		fi
         
 		estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
