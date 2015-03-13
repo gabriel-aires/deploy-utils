@@ -16,21 +16,23 @@ fi
 
 while getopts ":dfh" opcao; do
 	case $opcao in
-            d)
-                modo='d'	
-                ;;
-            f)
-                interativo="false"
-                ;;      
-            h)
-                echo "O script requer os seguintes parâmetros: (opções) <aplicação> <revisão> <ambiente>. Utilizar as opções\
-                    -d para forçar a deleção de arquivos obsoletos e -f para forçar a execução do\
-                    script de forma não interativa" && exit 0
-                ;;      
-            \?)
-                echo "-$OPTARG não é uma opção válida ( -d -f -h )." && exit 1
-                ;;
-    esac
+        	d)
+                	modo='d'	
+			;;
+		f)
+			interativo="false"
+			;;      
+		h)
+			echo -e "O script requer os seguintes parâmetros: (opções) <aplicação> <revisão> <ambiente>."
+			echo -e "Opções:"
+			echo -e "\t-d\thabilitar o modo de deleção de arquivos obsoletos."
+			echo -e "\t-f\tforçar a execução do script de forma não interativa."
+			exit 0
+			;;      
+		\?)
+			echo "-$OPTARG não é uma opção válida ( -d -f -h )." && exit 1
+			;;
+	esac
 done
 
 shift $(($OPTIND-1))
