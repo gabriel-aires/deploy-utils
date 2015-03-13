@@ -118,10 +118,6 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git checkout --force --quiet $rev || end
 	fi
 
-	if [ -f ".gitignore" ]; then
-		cat .gitignore >> $temp_dir/ignore
-	fi
-
 	cd - &> /dev/null 
 }
 
@@ -526,8 +522,6 @@ mkdir -p $atividade_dir
 
 ##### GIT #########	
 
-echo '' > $temp_dir/ignore
-
 checkout												#ver checkout(): (git clone), cd <repositorio> , git fetch, git checkout...
 
 origem="$repo_dir/$nomerepo/$raiz"
@@ -542,6 +536,19 @@ if [ ! -d "$origem" ]; then
 	echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app."
 	end
 fi
+
+###### IGNORE #######
+
+echo '' > $temp_dir/ignore
+
+if [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
+	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/ignore
+	sed -i -r "s|^$raiz/||" $temp_dir/ignore
+elif [ -f "$origem/.gitignore" ]; then
+	grep -Ev "^$|^ |^#" $origem/.gitignore >> $temp_dir/ignore
+fi
+
+sed -i -r "s|^/||" $temp_dir/ignore
 
 echo -e "\nSistema:\t$app"
 echo -e "Revisão:\t$rev"
