@@ -85,7 +85,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 				while read tag; do
 					
 					commit_tag=$(git log "$tag" --oneline | head -1 | cut -f1 -d ' ')
-					if [ $(grep -Ex "^${commit_tag}$" $temp_dir/commits | wc -l) -eq 1 ]
+					if [ $(grep -Ex "^${commit_tag}$" $temp_dir/commits | wc -l) -eq 1 ]; then
 						ultimo_commit=$commit_tag
 						ultima_tag=$tag
 					fi
@@ -99,7 +99,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 					echo "Erro ao obter a revisão especificada. Deploy abortado"
 					end
 				fi
-				::	
+				;;	
 			branch)
 				ultimo_commit=$(git log "$branch_auto" --oneline | head -1 | cut -f1 -d ' ')
 				
@@ -110,7 +110,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 					echo "Erro ao obter a revisão especificada. Deploy abortado"
 					end
 				fi
-				::
+				;;
 		esac	
 	else
 		echo -e "\nObtendo a revisão ${rev}..."
@@ -479,6 +479,7 @@ else
 	        valid "repo" "\nErro. \'$repo\' não é um repositório git válido."
 	        valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
 	        valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
+		valid "auto_$ambiente" "\nErro. Não foi possível ler a flag de deploy automático."
 	        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
 	        valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."
         
@@ -488,8 +489,13 @@ else
 	        auto="echo \$auto_${ambiente}"
 	        auto=$(eval "$auto")  
 
-		if [ "$rev" == "auto" ] && [ "$auto" -eq "1" ]; then
-			automatico="true"
+		if [ "$rev" == "auto" ]; then
+			if [ "$auto" == "1" ]; then
+				automatico="true"
+			else
+				echo "Erro. O deploy automático está desabilitado para a aplicação $app."
+				end
+			fi
 		else
 			automatico="false"
 		fi
