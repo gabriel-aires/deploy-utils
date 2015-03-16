@@ -280,7 +280,7 @@ function end () {
 
 	if [ -z "$sucesso" ]; then
 		sucesso=0
-	elif [ $(echo "$sucesso" | grep -Ex "^[01]$" -ne 1 | wc -l) -ne 1 ]; then
+	elif [ $(echo "$sucesso" | grep -Ex "^[01]$" | wc -l) -ne 1 ]; then
 		sucesso=1
 	fi
 	
