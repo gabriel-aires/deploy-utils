@@ -518,6 +518,11 @@ if $interativo; then
 		lista_hosts="echo \$hosts_${ambiente}"
 		lista_hosts=$(eval "$lista_hosts")
 		editconf "hosts_$ambiente" "$lista_hosts" "$parametros_app/${app}.conf"
+		
+		valid "modo_$ambiente" "\nErro. Informe um modo válido para deploy no ambiente $ambiente [p/d]:"		
+	        modo_app="echo \$modo_${ambiente}"
+	        modo_app=$(eval "$modo_app")
+		editconf "modo_$ambiente" "$modo_app" "$parametros_app/${app}.conf"
 
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
 		editconf "share" "$share" "$parametros_app/${app}.conf"
@@ -537,6 +542,7 @@ else
 	        valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
 	        valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
 		valid "auto_$ambiente" "\nErro. Não foi possível ler a flag de deploy automático."
+		valid "modo_$ambiente" "\nErro. Foi informado um modo inválido para deploy no ambiente $ambiente."		
 	        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
 		valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."       		
  
