@@ -236,6 +236,44 @@ function mklist () {
 
 }
 
+function log () {
+		
+	##### LOG DE DEPLOY #####
+
+	obs_log="$1"
+	
+	horario_log=$(echo "$(date +%Y%m%d%H%M%S)" | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1          \4h\5m\6s           |")
+		
+	tamanho_app=$(echo -n $app | wc -m)
+	app_log=$(echo '                    ' | sed -r "s|^ {$tamanho_app}|$app|")
+
+	rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
+	tamanho_rev=$(echo -n $rev_log | wc -m)
+ 	rev_log=$(echo '                    ' | sed -r "s|^ {$tamanho_rev}|$rev_log|")
+
+	tamanho_ambiente=$(echo -n $ambiente | wc -m) 
+	ambiente_log=$(echo '                    ' | sed -r "s|^ {$tamanho_ambiente}|$ambiente|")
+
+	tamanho_host=$(echo -n $host | wc -m) 
+	host_log=$(echo '                    ' | sed -r "s|^ {$tamanho_host}|$host|")
+	
+	if [ -z "$obs_log" ]; then
+		if [ "$modo" == 'p' ]; then
+			obs_log='Deploy concluído: arquivos obsoletos preservados.'
+		else
+			obs_log='Deploy concluído: arquivos obsoletos deletados.'
+		fi
+	fi
+
+	echo -e "$horario_log$app_log$rev_log$ambiente_log$host_log$obs_log" >> $historico
+
+	cp -f $historico $atividade_dir
+
+	tamanho_horario=$(echo -n "$horario_log" | wc -m) 
+	grep -Ei "^(.){$tamanho_horario}$app" $historico > $historico_dir/$app/deploy.log
+
+}
+
 function end () {
 	
 	wait
@@ -269,33 +307,6 @@ function end () {
 		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
 
 	elif [ "$estado" == 'fim_escrita' ]; then
-		
-		##### LOG DE DEPLOY #####
-	
-		horario_log=$(echo "$(date +%Y%m%d%H%M%S)" | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
-		
-		tamanho_app=$(echo -n $app | wc -m)
-		app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
-
-		rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
-		tamanho_rev=$(echo -n $rev_log | wc -m)
-	 	rev_log=$(echo '                ' | sed -r "s|^ {$tamanho_rev}|$rev_log|")
-
-		tamanho_ambiente=$(echo -n $ambiente | wc -m) 
-		ambiente_log=$(echo '                ' | sed -r "s|^ {$tamanho_ambiente}|$ambiente|")
-		
-		if [ "$modo" == 'p' ]; then
-			obs_log='Arquivos e diretórios obsoletos preservados.'
-		else
-			obs_log='Arquivos e diretórios obsoletos deletados.'
-		fi
-		
-		echo -e "$horario_log$app_log$rev_log$ambiente_log$obs_log" >> $historico
-
-		cp -f $historico $atividade_dir
-
-		tamanho_horario=$(echo -n "$horario_log" | wc -m) 
-		grep -Ei "^(.){$tamanho_horario}$app" $historico > $historico_dir/$app/deploy.log
 		
 		echo "deploy_concluido" >> $atividade_dir/progresso_$host.txt
 		echo -e "\nDeploy concluído."
@@ -643,6 +654,8 @@ while read dir_destino; do
 			rsync -rc --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end
 		fi
         
+		log
+		
 		estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
     	
 	fi
