@@ -528,7 +528,6 @@ else
 	        valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
 		valid "auto_$ambiente" "\nErro. Não foi possível ler a flag de deploy automático."
 	        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
-	        valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."
         
 	        lista_hosts="echo \$hosts_${ambiente}"
 	        lista_hosts=$(eval "$lista_hosts")  
