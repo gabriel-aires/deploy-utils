@@ -2,7 +2,6 @@
 
 estado="validacao"
 pid=$$
-data="$(date +%Y%m%d%H%M%S)"
 interativo="true"
 automatico="false"
 
@@ -271,7 +270,7 @@ function end () {
 		
 		##### LOG DE DEPLOY #####
 	
-		horario_log=$(echo $data | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
+		horario_log=$(echo "$(date +%Y%m%d%H%M%S)" | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1      \4h\5m\6s       |")
 		
 		tamanho_app=$(echo -n $app | wc -m)
 		app_log=$(echo '                ' | sed -r "s|^ {$tamanho_app}|$app|")
@@ -570,7 +569,7 @@ while read dir_destino; do
     
 	##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
     
-	destino="/mnt/${app}_${data}"
+	destino="/mnt/${app}_$(date +%Y%m%d%H%M%S)"
     
 	mkdir $destino || end 
     
