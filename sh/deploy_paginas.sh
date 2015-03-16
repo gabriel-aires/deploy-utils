@@ -128,19 +128,12 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 	
 		if [ -f "$temp_dir/dir_destino" ]; then
 			
-			cp $temp_dir/dir_destino $temp_dir/destino_mnt
-			
-			while read ponto_mnt; do
-
-				grep -E "$ponto_mnt" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
-				sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
-				cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount		#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-
-			done < $temp_dir/destino_mnt
-		
-			wait
-			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir		#já desmontados, os pontos de montagem temporários podem ser apagados.i
-
+			cat $temp_dir/dir_destino | while read ponto_mnt; do
+				limpar="$(grep $ponto_mnt /proc/mounts | cut -f 2 -d ' ')"
+				echo "$limpar" | xargs --no-run-if-empty umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
+				wait
+				echo "$limpar" | xargs --no-run-if-empty rmdir				#já desmontados, os pontos de montagem temporários podem ser apagados.i
+			done
 		fi
 
 		rm -f $temp_dir/*									
@@ -724,6 +717,8 @@ while read dir_destino; do
 		
 		estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
     	
+	else
+		end 1
 	fi
 
 done < $temp_dir/dir_destino 
