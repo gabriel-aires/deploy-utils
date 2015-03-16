@@ -127,12 +127,20 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 		mkdir -p $temp_dir
 	
 		if [ -f "$temp_dir/dir_destino" ]; then
+			
+			cp $temp_dir/dir_destino $temp_dir/destino_mnt
+			
 			while read ponto_mnt; do
+
 				grep -E "$ponto_mnt" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
 				sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
 				cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount		#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-				cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir		#já desmontados, os pontos de montagem temporários podem ser apagados.i
-			done < $temp_dir/dir_destino
+
+			done < $temp_dir/destino_mnt
+		
+			wait
+			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir		#já desmontados, os pontos de montagem temporários podem ser apagados.i
+
 		fi
 
 		rm -f $temp_dir/*									
@@ -397,6 +405,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_repo" ] \
 	|| [ -z "$regex_raiz" ] \
 	|| [ -z "$regex_dir_destino" ] \
+	|| [ -z "$regex_os" ] \
 	|| [ -z $(echo $bak_dir | grep -E "$regex_bak_dir") ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $historico_dir | grep -E "$regex_historico_dir") ] \
@@ -464,7 +473,11 @@ if $interativo; then
 		echo -e "\nInforme o diretório compartilhado para deploy (deve ser o mesmo em todos os hosts)"
 		read -r share
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c )"
-		
+	
+		echo -e "\nInforme o sistema operacional:" 
+		read -r os                          										 
+		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):" 	 
+	
 		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 		share="$(echo $share | sed -r 's|/$||')"						#remove / no fim do caminho.
 
@@ -493,7 +506,8 @@ if $interativo; then
 		done < $temp_dir/ambientes 
 
 		editconf "share" "$share" "$parametros_app/${app}.conf"
-		
+		editconf "os" "$os" "$parametros_app/${app}.conf"		
+
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 
 	else
@@ -515,6 +529,9 @@ if $interativo; then
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
 		editconf "share" "$share" "$parametros_app/${app}.conf"
 
+		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):" 
+		editconf "os" "$os" "$parametros_app/${app}.conf" 
+
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 	fi
 else
@@ -528,7 +545,8 @@ else
 	        valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
 		valid "auto_$ambiente" "\nErro. Não foi possível ler a flag de deploy automático."
 	        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
-        
+		valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."       		
+ 
 	        lista_hosts="echo \$hosts_${ambiente}"
 	        lista_hosts=$(eval "$lista_hosts")  
 
@@ -636,8 +654,12 @@ while read dir_destino; do
     
 	mkdir $destino || end 1
     
-	mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
-    
+	if [ $os == 'windows' ]; then 
+		mount.cifs $dir_destino $destino -o credentials=$credenciais || end 1				#montagem do compartilhamento de destino (requer pacote cifs-utils) 
+	else 
+		mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet) 
+	fi 
+ 
 	##### DIFF ARQUIVOS #####
     
 	if [ "$modo" == "p" ]; then
