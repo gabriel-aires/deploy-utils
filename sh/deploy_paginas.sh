@@ -276,54 +276,97 @@ function log () {
 
 function end () {
 
-	sucesso=$1
+	erro=$1
+	msg_rollback=0
 
-	if [ -z "$sucesso" ]; then
-		sucesso=0
-	elif [ $(echo "$sucesso" | grep -Ex "^[01]$" | wc -l) -ne 1 ]; then
-		sucesso=1
+	if [ -z "$erro" ]; then
+		erro=0
+	elif [ $(echo "$erro" | grep -Ex "^[01]$" | wc -l) -ne 1 ]; then
+		erro=1
+	fi
+	
+	wait
+
+	if [ "$erro" -eq 1 ]; then
+
+		echo -e "\nDeploy abortado."
+
+		if [ -f "$atividade_dir/progresso_$host.txt" ]; then
+
+			host_erro="$host"
+
+			if [ "$estado" == 'backup' ] || [ "$estado" == 'fim_backup' ]; then
+
+				bak="$bak_dir/${app}_${host}"							# necessário garantir que a variável bak esteja setada, pois o script pode ter sido interrompido antes dessa etapa.
+				rm -Rf $bak
+				log "Deploy abortado."
+
+			elif [ "$estado" == 'escrita' ]; then
+
+				echo -e "\nO script foi interrompido durante a escrita. Revertendo alterações..."
+				msg_rollback=1
+				echo "rollback" >> $atividade_dir/progresso_$host.txt
+				rsync -rc --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ 
+				rm -Rf $bak
+				echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
+				log "Deploy interrompido. Backup restaurado."
+
+			else
+				log "Deploy abortado."		
+			fi
+
+			echo "deploy_abortado" >> $atividade_dir/progresso_$host.txt
+			
+			cp $temp_dir/dir_destino $temp_dir/destino						#foi necessário utilizar uma cópia do arquivo, uma vez que este foi utilizado como entrada padrão para o loop de deploy.
+
+			while read destino_deploy; do
+
+				host=$(echo $destino_deploy | sed -r "s|^//([^/]+)/.+$|\1|")
+
+				if [ ! "$host" == "$host_erro" ]; then
+
+					if [ -f "$atividade_dir/progresso_$host.txt" ]; then			# Indica que o processo de deploy já foi iniciado no host
+
+						estado_host=$(tail -1 "$atividade_dir/progresso_$host.txt")
+	
+						if [ "$estado_host" == "fim_escrita" ]; then			# Deploy já concluído no host. Rollback necessário.
+		
+							bak="$bak_dir/${app}_${host}"
+							destino="/mnt/deploy_${app}_${host}"
+
+							if [ "$msg_rollback" -ne 1 ]; then
+								echo -e "\nRevertendo alterações..."
+								msg_rollback=1
+							fi
+
+							echo "rollback" >> $atividade_dir/progresso_$host.txt
+							rsync -rc --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ 
+							rm -Rf $bak
+							echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
+							log "Rollback realizado devido a erro em $host_erro."		
+	
+						fi
+					else
+						log "Deploy abortado devido a erro em $host_erro."
+					fi
+				fi		
+			
+			done < $temp_dir/destino
+
+			if [ "$msg_rollback" -eq 1 ]; then
+				echo -e "\nRollback finalizado."
+			fi
+	
+			mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		fi
 	fi
 	
 	wait
 	
-	if [ "$estado" == 'fim_validacao' ] || [ "$estado" == 'leitura' ] || [ "$estado" == 'fim_leitura' ]; then
-	
-		echo "deploy_abortado" >> $atividade_dir/progresso_$host.txt
-		echo -e "\nDeploy abortado."
-		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
-
-	elif [ "$estado" == 'backup' ] || [ "$estado" == 'fim_backup' ]; then
-
-		rm -Rf $bak
-		
-		echo "deploy_abortado" >> $atividade_dir/progresso_$host.txt
-		echo -e "\nDeploy abortado."
-		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
-
-	elif [ "$estado" == 'escrita' ]; then
-
-		echo -e "\nDeploy interrompido durante a etapa de escrita. Revertendo alterações..."
-		echo "rollback" >> $atividade_dir/progresso_$host.txt
-		
-		rsync -rc --inplace $bak/ $destino/ 
-		
-		rm -Rf $bak
-		
-		echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
-		echo "deploy_abortado" >> $atividade_dir/progresso_$host.txt
-		echo -e "Rollback finalizado."	
-		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
-
-	elif [ "$estado" == 'fim_escrita' ]; then
-		
-		echo "deploy_concluido" >> $atividade_dir/progresso_$host.txt
-		echo -e "\nDeploy concluído."
-	fi
-
 	clean_locks
 	clean_temp
 
-	wait &&	exit $sucesso
+	exit $erro
 }
 
 #### Inicialização #####
@@ -354,7 +397,6 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_repo" ] \
 	|| [ -z "$regex_raiz" ] \
 	|| [ -z "$regex_dir_destino" ] \
-	|| [ -z "$regex_os" ] \
 	|| [ -z $(echo $bak_dir | grep -E "$regex_bak_dir") ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $historico_dir | grep -E "$regex_historico_dir") ] \
@@ -380,10 +422,6 @@ mklist "$ambientes" "$temp_dir/ambientes"
 #### Validação do input do usuário ###### 
 
 echo "Iniciando processo de deploy..."
-
-if [ -z "$modo" ]; then
-	modo=$modo_padrao
-fi
 
 if $interativo; then
 	valid "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas):"
@@ -427,10 +465,6 @@ if $interativo; then
 		read -r share
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c )"
 		
-		echo -e "\nInforme o sistema operacional:"
-		read -r os                          										
-		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):"
-	
 		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 		share="$(echo $share | sed -r 's|/$||')"						#remove / no fim do caminho.
 
@@ -459,7 +493,6 @@ if $interativo; then
 		done < $temp_dir/ambientes 
 
 		editconf "share" "$share" "$parametros_app/${app}.conf"
-		editconf "os" "$os" "$parametros_app/${app}.conf"
 		
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 
@@ -482,9 +515,6 @@ if $interativo; then
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
 		editconf "share" "$share" "$parametros_app/${app}.conf"
 
-		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):"
-		editconf "os" "$os" "$parametros_app/${app}.conf"
-		
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 	fi
 else
@@ -506,6 +536,9 @@ else
 	        auto="echo \$auto_${ambiente}"
 	        auto=$(eval "$auto")  
 
+	        modo_app="echo \$modo_${ambiente}"
+	        modo_app=$(eval "$modo_app")  
+
 		if [ "$rev" == "auto" ]; then
 			if [ "$auto" == "1" ]; then
 				automatico="true"
@@ -516,6 +549,14 @@ else
 		else
 			automatico="false"
 		fi
+	fi
+fi
+
+if [ -z "$modo" ]; then
+	if [ -z "$modo_app" ]; then
+		modo=$modo_padrao
+	else
+		modo=$modo_app
 	fi
 fi
 
@@ -575,14 +616,16 @@ echo -e "Revisão:\t$rev"
 echo -e "Repositório:\t$repo"
 echo -e "Caminho:\t$raiz"
 
-echo $estado > $atividade_dir/progresso.txt							
-estado="fim_$estado" && echo $estado >> $atividade_dir/progresso.txt
+echo $estado > $temp_dir/progresso.txt							
+estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
     
 ### início da leitura ###
 
 while read dir_destino; do
 
 	host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|")
+
+	cat $temp_dir/progresso.txt > $atividade_dir/progresso_$host.txt
 	estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
     
 	echo -e "\nIniciando deploy no host $host..."
@@ -590,15 +633,11 @@ while read dir_destino; do
     
 	##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
     
-	destino="/mnt/${app}_${host}_$(date +%Y%m%d%H%M%S)"
+	destino="/mnt/deploy_${app}_${host}"
     
 	mkdir $destino || end 1
     
-	if [ $os == 'windows' ]; then
-        	mount.cifs $dir_destino $destino -o credentials=$credenciais || end 1				#montagem do compartilhamento de destino (requer pacote cifs-utils)
-	else
-        	mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
-	fi
+	mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
     
 	##### DIFF ARQUIVOS #####
     
@@ -640,11 +679,9 @@ while read dir_destino; do
         
 		estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
 		echo -e "\nCriando backup"
-        	
-		rm -Rf "$bak_dir/${app}_${host}"
         
 		bak="$bak_dir/${app}_${host}"
-        
+       		rm -Rf $bak
 		mkdir -p $bak
         
 		rsync -rc --inplace $destino/ $bak/ || end 1
@@ -669,5 +706,7 @@ while read dir_destino; do
 	fi
 
 done < $temp_dir/dir_destino 
+
+echo "Deploy concluído."
 
 end 0
