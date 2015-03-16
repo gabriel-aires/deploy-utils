@@ -53,11 +53,11 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 
 	if [ ! -d "$repo_dir/$nomerepo/.git" ]; then
 		echo " "
-		git clone --progress "$repo" "$repo_dir/$nomerepo" || end				#clona o repositório, caso ainda não tenha sido feito.
+		git clone --progress "$repo" "$repo_dir/$nomerepo" || end 1				#clona o repositório, caso ainda não tenha sido feito.
 	fi
 
 	cd "$repo_dir/$nomerepo"
-	git fetch --all --force --quiet || end
+	git fetch --all --force --quiet || end 1
 
 	if $automatico; then
 		
@@ -72,7 +72,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git branch -a | grep -v remotes/origin/HEAD | cut -b 3- > $temp_dir/branches
 
 		if [ $(grep -Ei "^remotes/origin/${branch_auto}$" $temp_dir/branches | wc -l) -ne 1 ]; then
-			end
+			end 1
 		fi
 
 		ultimo_commit=''
@@ -94,10 +94,10 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 				
 				if [ ! -z $ultimo_commit ] && [ ! -z $ultima_tag ]; then
 					echo -e "\nObtendo a revisão $ultimo_commit a partir da tag $ultima_tag."
-					git checkout --force --quiet $ultima_tag || end
+					git checkout --force --quiet $ultima_tag || end 1
 				else
 					echo "Erro ao obter a revisão especificada. Deploy abortado"
-					end
+					end 1
 				fi
 				;;	
 			branch)
@@ -105,16 +105,16 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 				
 				if [ ! -z $ultimo_commit ]; then
 					echo -e "\nObtendo a revisão $ultimo_commit a partir da branch $branch_auto."
-					git checkout --force --quiet $branch_auto || end
+					git checkout --force --quiet $branch_auto || end 1
 				else
 					echo "Erro ao obter a revisão especificada. Deploy abortado"
-					end
+					end 1
 				fi
 				;;
 		esac	
 	else
 		echo -e "\nObtendo a revisão ${rev}..."
-		git checkout --force --quiet $rev || end
+		git checkout --force --quiet $rev || end 1
 	fi
 
 	cd - &> /dev/null 
@@ -138,7 +138,7 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 		rm -f $temp_dir/*									
 		rmdir $temp_dir
 	else
-		end
+		end 1
 	fi
 }
 
@@ -150,15 +150,15 @@ function lock () {											#argumentos: nome_trava, mensagem_erro
 				touch $temp_dir/locks
 			fi
 			if [ -f $lock_dir/$1 ]; then
-				echo -e "\n$2" && end
+				echo -e "\n$2" && end 0
 			else
 				touch $lock_dir/$1 && echo "$lock_dir/$1" >> $temp_dir/locks
 			fi
 		else
-			end
+			end 1
 		fi
 	else
-		end
+		end 1
 	fi
 
 }
@@ -186,7 +186,7 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 		regra="$(eval $regra)"
 
 		if [ -z "$regra" ]; then
-			echo "Erro. Não há uma regra para validação da variável $var" && end
+			echo "Erro. Não há uma regra para validação da variável $var" && end 1
 		elif "$interativo"; then
 			while [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; do
 				echo -e "$msg"
@@ -196,10 +196,10 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 		                valor="$(eval $valor)"
 			done
 		elif [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; then
-			echo -e "$msg" && end
+			echo -e "$msg" && end 1
 		fi			
 	else
-		end
+		end 1
 	fi
 
 }
@@ -220,7 +220,7 @@ function editconf () {
 			test $edit -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
         	fi
 	else
-		echo "Erro. Não foi possível editar o arquivo de configuração." && end
+		echo "Erro. Não foi possível editar o arquivo de configuração." && end 1
 	fi
     
 }
@@ -231,7 +231,7 @@ function mklist () {
 		lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g')
 		echo "$lista" > $2
 	else
-		end 
+		end 1
 	fi
 
 }
@@ -275,6 +275,14 @@ function log () {
 }
 
 function end () {
+
+	sucesso=$1
+
+	if [ -z "$sucesso" ]; then
+		sucesso=0
+	elif [ $(echo "$sucesso" | grep -Ex "^[01]$" -ne 1 | wc -l) -ne 1 ]; then
+		sucesso=1
+	fi
 	
 	wait
 	
@@ -315,12 +323,12 @@ function end () {
 	clean_locks
 	clean_temp
 
-	wait &&	exit 0
+	wait &&	exit $sucesso
 }
 
 #### Inicialização #####
 
-trap "end; exit" SIGQUIT SIGTERM SIGINT SIGHUP						#a função será chamada quando o script for finalizado ou interrompido.
+trap "end 1; exit" SIGQUIT SIGTERM SIGINT SIGHUP						#a função será chamada quando o script for finalizado ou interrompido.
 
 edit=0
 
@@ -503,7 +511,7 @@ else
 				automatico="true"
 			else
 				echo "Erro. O deploy automático está desabilitado para a aplicação $app."
-				end
+				end 1
 			fi
 		else
 			automatico="false"
@@ -546,7 +554,7 @@ fi
 
 if [ ! -d "$origem" ]; then										
 	echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app."
-	end
+	end 1
 fi
 
 ###### IGNORE #######
@@ -584,20 +592,20 @@ while read dir_destino; do
     
 	destino="/mnt/${app}_${host}_$(date +%Y%m%d%H%M%S)"
     
-	mkdir $destino || end 
+	mkdir $destino || end 1
     
 	if [ $os == 'windows' ]; then
-        	mount.cifs $dir_destino $destino -o credentials=$credenciais || end				#montagem do compartilhamento de destino (requer pacote cifs-utils)
+        	mount.cifs $dir_destino $destino -o credentials=$credenciais || end 1				#montagem do compartilhamento de destino (requer pacote cifs-utils)
 	else
-        	mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
+        	mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
 	fi
     
 	##### DIFF ARQUIVOS #####
     
 	if [ "$modo" == "p" ]; then
-		rsync -rnic --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end
+		rsync -rnic --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
 	else
-		rsync -rnic --delete --inplace $origem/ $destino/ --exclude-from=$temp_dir/ignore > $atividade_dir/modificacoes_$host.txt || end
+		rsync -rnic --delete --inplace $origem/ $destino/ --exclude-from=$temp_dir/ignore > $atividade_dir/modificacoes_$host.txt || end 1
 	fi
     
 	##### RESUMO DAS MUDANÇAS ######
@@ -639,7 +647,7 @@ while read dir_destino; do
         
 		mkdir -p $bak
         
-		rsync -rc --inplace $destino/ $bak/ || end
+		rsync -rc --inplace $destino/ $bak/ || end 1
         
 		estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
         
@@ -649,9 +657,9 @@ while read dir_destino; do
 		echo -e "\nEscrevendo alterações no diretório de destino..."	
         
 		if [ "$modo" == "p" ]; then
-        		rsync -rc --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end
+        		rsync -rc --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
 		else
-			rsync -rc --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end
+			rsync -rc --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
 		fi
         
 		log
@@ -662,4 +670,4 @@ while read dir_destino; do
 
 done < $temp_dir/dir_destino 
 
-end
+end 0
