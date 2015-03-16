@@ -126,11 +126,13 @@ function clean_temp () {										#cria pasta temporária, remove arquivos, pont
 
 		mkdir -p $temp_dir
 	
-		if [ ! -z "$destino" ]; then
-			grep -E "$destino" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
-			sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
-			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount		#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-			cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir		#já desmontados, os pontos de montagem temporários podem ser apagados.
+		if [ -f "$temp_dir/dir_destino" ]; then
+			while read ponto_mnt; do
+				grep -E "$ponto_mnt" /proc/mounts > $temp_dir/pontos_de_montagem.txt		#os pontos de montagem são obtidos do arquivo /proc/mounts
+				sed -i -r 's|^.*(/mnt/[^ ]+).*$|\1|' $temp_dir/pontos_de_montagem.txt
+				cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty umount		#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
+				cat $temp_dir/pontos_de_montagem.txt | xargs --no-run-if-empty rmdir		#já desmontados, os pontos de montagem temporários podem ser apagados.i
+			done < $temp_dir/dir_destino
 		fi
 
 		rm -f $temp_dir/*									
@@ -569,7 +571,7 @@ while read dir_destino; do
     
 	##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
     
-	destino="/mnt/${app}_$(date +%Y%m%d%H%M%S)"
+	destino="/mnt/${app}_${host}_$(date +%Y%m%d%H%M%S)"
     
 	mkdir $destino || end 
     
