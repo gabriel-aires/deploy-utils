@@ -494,7 +494,15 @@ if $interativo; then
 		echo -e "\nInforme o sistema operacional:" 
 		read -r os                          										 
 		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):" 	 
-	
+
+		if [ -z $modo ]; then
+			echo -e "\nInforme um modo de deploy para o ambiente $ambiente ('d': deletar arquivos obsoletos / 'p': preservar arquivos obsoletos):" 
+			read -r modo_$ambiente
+			valid "modo_$ambiente" "\nErro. Informe um modo de deploy válido para o ambiente $ambiente: p/d"
+		else
+			modo_$ambiente=$modo
+		fi                        										
+
 		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
 		share="$(echo $share | sed -r 's|/$||')"						#remove / no fim do caminho.
 
@@ -506,7 +514,12 @@ if $interativo; then
 			if [ "$env" == "$ambiente"  ]; then
 				lista_hosts="echo \$hosts_${env}"
 				lista_hosts=$(eval "$lista_hosts")
-				editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"        	
+
+				modo="echo \$modo_${env}"
+				modo=$(eval "$modo")
+
+				editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"
+				editconf "modo_$env" "$modo" "$parametros_app/${app}.conf"
 
 				echo "revisao_$env=''" >> "$parametros_app/${app}.conf"
 				echo "branch_$env=''" >> "$parametros_app/${app}.conf"
