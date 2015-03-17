@@ -120,20 +120,16 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 	cd - &> /dev/null 
 }
 
-function clean_temp () {										#cria pasta temporária, remove arquivos, pontos de montagem e links simbólicos temporários
+function clean_temp () {										#cria pasta temporária, remove arquivos e pontos de montagem temporários
 	
 	if [ ! -z $temp_dir ]; then
 
 		mkdir -p $temp_dir
 	
-		if [ -f "$temp_dir/dir_destino" ]; then
-			
-			cat $temp_dir/dir_destino | while read ponto_mnt; do
-				limpar="$(grep $ponto_mnt /proc/mounts | cut -f 2 -d ' ')"
-				echo "$limpar" | xargs --no-run-if-empty umount				#desmonta cada um dos pontos de montagem identificados em $temp_dir/pontos_de_montagem.txt.
-				wait
-				echo "$limpar" | xargs --no-run-if-empty rmdir				#já desmontados, os pontos de montagem temporários podem ser apagados.i
-			done
+		if [ -f "$temp_dir/destino_mnt" ]; then
+			cat $temp_dir/destino_mnt | xargs --no-run-if-empty umount 2> /dev/null
+			wait
+			cat $temp_dir/destino_mnt | xargs --no-run-if-empty rmdir 2> /dev/null			#já desmontados, os pontos de montagem temporários podem ser apagados.i
 		fi
 
 		rm -f $temp_dir/*									
@@ -294,7 +290,7 @@ function end () {
 
 		if [ "$rev" == "rollback" ]; then
 			echo -e "\nErro: rollback interrompido. Favor reexecutar o script."
-			log "Erro durante o rollback. O script deve ser reexecutado."
+			log "Rollback não efetuado. O script deve ser reexecutado."
 		else
 			host_erro="$host"
 
@@ -357,11 +353,11 @@ function end () {
 							fi
 
 							echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
-							log "Rollback realizado devido a erro em $host_erro."		
+							log "Rollback realizado devido a erro ou deploy cancelado em $host_erro."		
 	
 						fi
 					else
-						log "Deploy abortado devido a erro em $host_erro."
+						log "Deploy abortado."
 					fi
 				fi		
 			
@@ -626,7 +622,7 @@ while read host; do
 	echo "$dir_destino" >> $temp_dir/dir_destino
 done < $temp_dir/hosts_$ambiente
 
-atividade_dir="$historico_dir/$app/$(date +%F)/$rev_$ambiente"								#Diretório onde serão armazenados os logs do atendimento.
+atividade_dir="$historico_dir/$app/$(date +%F_%Hh%Mm%Ss)/$rev_$ambiente"								#Diretório onde serão armazenados os logs do atendimento.
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
 	rmdir ${atividade_dir}_PENDENTE
@@ -686,7 +682,7 @@ while read dir_destino; do
 
 	if [ "$rev" == "rollback" ]; then
 		
-		origem=$bak_dir/$app_$host
+		origem=${bak_dir}/${app}_${host}
 
 		echo -e "Diretório de backup:\t$origem"
 
@@ -700,6 +696,7 @@ while read dir_destino; do
 	##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
     
 	destino="/mnt/deploy_${app}_${host}"
+	echo $destino >> $temp_dir/destino_mnt
     
 	mkdir $destino || end 1
     
@@ -785,8 +782,7 @@ while read dir_destino; do
 			end 1
 		fi
 	else
-		echo -e "\nOperação cancelada. O deploy foi realizado anteriormente."
-		end 1
+		echo -e "\nNão há arquivos a serem modificados no host $host."
 	fi
 
 done < $temp_dir/dir_destino 
