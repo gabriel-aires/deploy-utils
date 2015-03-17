@@ -438,6 +438,12 @@ if $interativo; then
 else
 	valid "app" "\nErro. Nome do sistema informado incorratemente."
 	valid "rev" "\nErro. Revisão/tag/branch informada incorretamente."
+
+	if [ "$rev" == "rollback" ]; then
+		echo "Erro. A realição do rollback deve ser feita no modo interativo."
+		exit 1
+	fi
+
 	valid "ambiente" "\n.Erro. Ambiente informado incorretamente."					
 fi
 
@@ -582,11 +588,11 @@ lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositó
 mklist "$lista_hosts" $temp_dir/hosts_$ambiente
 
 while read host; do
-    dir_destino="//$host/$share"
-    dir_destino=$(echo "$dir_destino" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
-    nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
-    lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."    
-    echo "$dir_destino" >> $temp_dir/dir_destino
+	dir_destino="//$host/$share"
+	dir_destino=$(echo "$dir_destino" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
+	nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
+	lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."    
+	echo "$dir_destino" >> $temp_dir/dir_destino
 done < $temp_dir/hosts_$ambiente
 
 atividade_dir="$historico_dir/$app/$(date +%F)/$rev_$ambiente"								#Diretório onde serão armazenados os logs do atendimento.
@@ -597,21 +603,26 @@ fi
 
 mkdir -p $atividade_dir
 
-##### GIT #########	
+echo -e "\nSistema:\t$app"
+echo -e "Revisão:\t$rev"
 
-checkout												#ver checkout(): (git clone), cd <repositorio> , git fetch, git checkout...
+if [ ! "$rev" == "rollback" ]; then
 
-origem="$repo_dir/$nomerepo/$raiz"
-origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
+	##### GIT #########	
+	
+	echo -e "Repositório:\t$repo"
+	echo -e "Caminho:\t$raiz"
+	
+	checkout												#ver checkout(): (git clone), cd <repositorio> , git fetch, git checkout...
 
-if [ ! -d "$origem" ]; then										
-	origem="$repo_dir/$raiz"									#é comum que o usuário informe a pasta do sistema (nomerepo) como parte da raiz.
-	origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")	
-fi
+	origem="$repo_dir/$nomerepo/$raiz"
+	origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
 
-if [ ! -d "$origem" ]; then										
-	echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app."
-	end 1
+	if [ ! -d "$origem" ]; then										
+		echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app."
+		end 1
+	fi
+
 fi
 
 ###### IGNORE #######
@@ -621,16 +632,11 @@ echo '' > $temp_dir/ignore
 if [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/ignore
 	sed -i -r "s|^$raiz/||" $temp_dir/ignore
-elif [ -f "$origem/.gitignore" ]; then
-	grep -Ev "^$|^ |^#" $origem/.gitignore >> $temp_dir/ignore
+elif [ -f "$repo_dir/$nomerepo/$raiz/.gitignore" ] && [ ; then
+	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/$raiz/.gitignore >> $temp_dir/ignore
 fi
 
 sed -i -r "s|^/||" $temp_dir/ignore
-
-echo -e "\nSistema:\t$app"
-echo -e "Revisão:\t$rev"
-echo -e "Repositório:\t$repo"
-echo -e "Caminho:\t$raiz"
 
 echo $estado > $temp_dir/progresso.txt							
 estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
@@ -646,6 +652,19 @@ while read dir_destino; do
     
 	echo -e "\nIniciando deploy no host $host..."
 	echo -e "Diretório de deploy:\t$dir_destino"
+
+	if [ "$rev" == "rollback" ]; then
+		
+		origem=$bak_dir/$app_$host
+
+		echo -e "Diretório de backup:\t$origem"
+
+		if [ ! -d "$origem" ]; then										
+			echo -e "\nErro: não foi encontrado um backup da aplicação $app em $origem."
+			end 1
+		fi
+
+	fi	
     
 	##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
     
@@ -695,19 +714,22 @@ while read dir_destino; do
     
 	if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ "$interativo" == "false" ]; then
     
-		#### preparação do script de rollback ####
-        
-		estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
-		echo -e "\nCriando backup"
-        
-		bak="$bak_dir/${app}_${host}"
-       		rm -Rf $bak
-		mkdir -p $bak
-        
-		rsync -rc --inplace $destino/ $bak/ || end 1
-        
-		estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
-        
+		if [ ! "$rev" == "rollback" ]; then
+
+			#### preparação do backup ####
+	        
+			estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
+			echo -e "\nCriando backup"
+	        
+			bak="$bak_dir/${app}_${host}"
+	       		rm -Rf $bak
+			mkdir -p $bak
+	        
+			rsync -rc --inplace $destino/ $bak/ || end 1
+	        
+			estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+        	fi
+
 		#### gravação das alterações em disco ####
         	
 		estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
