@@ -288,12 +288,14 @@ function end () {
 	
 	wait
 
-	if [ "$erro" -eq 1 ]; then
+	if [ "$erro" -eq 1 ] && [ -f "$atividade_dir/progresso_$host.txt" ]; then
 
 		echo -e "\nDeploy abortado."
 
-		if [ -f "$atividade_dir/progresso_$host.txt" ]; then
-
+		if [ "$rev" == "rollback" ]; then
+			echo -e "\nErro: rollback interrompido. Favor reexecutar o script."
+			log "Erro durante o rollback. O script deve ser reexecutado."
+		else
 			host_erro="$host"
 
 			if [ "$estado" == 'backup' ] || [ "$estado" == 'fim_backup' ]; then
@@ -306,9 +308,15 @@ function end () {
 
 				echo -e "\nO script foi interrompido durante a escrita. Revertendo alterações..."
 				msg_rollback=1
+
 				echo "rollback" >> $atividade_dir/progresso_$host.txt
-				rsync -rc --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ 
-				rm -Rf $bak
+				
+				if [ "$modo" == "p" ]; then
+					rsync -rc --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
+				else
+					rsync -rc --inplace --delete --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
+				fi
+
 				echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
 				log "Deploy interrompido. Backup restaurado."
 
@@ -341,8 +349,13 @@ function end () {
 							fi
 
 							echo "rollback" >> $atividade_dir/progresso_$host.txt
-							rsync -rc --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ 
-							rm -Rf $bak
+				
+							if [ "$modo" == "p" ]; then
+								rsync -rc --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
+							else
+								rsync -rc --inplace --delete --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
+							fi
+
 							echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
 							log "Rollback realizado devido a erro em $host_erro."		
 	
@@ -357,9 +370,10 @@ function end () {
 			if [ "$msg_rollback" -eq 1 ]; then
 				echo -e "\nRollback finalizado."
 			fi
-	
-			mv "$atividade_dir" "${atividade_dir}_PENDENTE"
 		fi
+		
+		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+
 	fi
 	
 	wait
@@ -372,7 +386,11 @@ function end () {
 
 #### Inicialização #####
 
-trap "end 1; exit" SIGQUIT SIGTERM SIGINT SIGHUP						#a função será chamada quando o script for finalizado ou interrompido.
+if [ "$rev" == "rollback" ]; then
+	trap "" SIGQUIT SIGTERM SIGINT SIGHUP						# um rollback não deve ser interrompido pelo usuário.
+else 
+	trap "end 1; exit" SIGQUIT SIGTERM SIGINT SIGHUP				#a função será chamada quando o script for finalizado ou interrompido.
+fi
 
 edit=0
 
@@ -683,7 +701,7 @@ while read dir_destino; do
 	if [ "$modo" == "p" ]; then
 		rsync -rnic --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
 	else
-		rsync -rnic --delete --inplace $origem/ $destino/ --exclude-from=$temp_dir/ignore > $atividade_dir/modificacoes_$host.txt || end 1
+		rsync -rnic --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
 	fi
     
 	##### RESUMO DAS MUDANÇAS ######
@@ -704,48 +722,57 @@ while read dir_destino; do
 	cat $atividade_dir/resumo_$host.txt
     
 	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+	
+	if [ $(( $adicionados + $excluidos + $modificados + $dir_criado + $dir_removido )) -ne 0 ]; then			# O deploy somente será realizado quando a quantidade de modificações for maior que 0.
     
-	###### ESCRITA DAS MUDANÇAS EM DISCO ######
-
-	if $interativo; then
-		echo -e "\nGravar mudanças em disco? (s/n)"
-		read ans </dev/tty
-	fi
-    
-	if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ "$interativo" == "false" ]; then
-    
-		if [ ! "$rev" == "rollback" ]; then
-
-			#### preparação do backup ####
-	        
-			estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
-			echo -e "\nCriando backup"
-	        
-			bak="$bak_dir/${app}_${host}"
-	       		rm -Rf $bak
-			mkdir -p $bak
-	        
-			rsync -rc --inplace $destino/ $bak/ || end 1
-	        
-			estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
-        	fi
-
-		#### gravação das alterações em disco ####
-        	
-		estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
-		echo -e "\nEscrevendo alterações no diretório de destino..."	
-        
-		if [ "$modo" == "p" ]; then
-        		rsync -rc --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
-		else
-			rsync -rc --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
+		###### ESCRITA DAS MUDANÇAS EM DISCO ######
+	
+		if $interativo; then
+			echo -e "\nGravar mudanças em disco? (s/n)"
+			read ans </dev/tty
 		fi
-        
-		log
-		
-		estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
-    	
+	    
+		if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ "$interativo" == "false" ]; then
+	    
+			if [ ! "$rev" == "rollback" ]; then
+	
+				#### preparação do backup ####
+		        
+				estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
+				echo -e "\nCriando backup"
+		        
+				bak="$bak_dir/${app}_${host}"
+		       		rm -Rf $bak
+				mkdir -p $bak
+		        
+				if [ "$modo" == "P" ]; then
+					rsync -rc --inplace --exclude-from=$temp_dir/ignore $destino/ $bak/ || end 1
+				else
+					rsync -rc --inplace --delete --exclude-from=$temp_dir/ignore $destino/ $bak/ || end 1
+				fi
+		        
+				estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+	        	fi
+	
+			#### gravação das alterações em disco ####
+	        	
+			estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
+			echo -e "\nEscrevendo alterações no diretório de destino..."	
+	        
+			if [ "$modo" == "p" ]; then
+	        		rsync -rc --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
+			else
+				rsync -rc --inplace --delete --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
+			fi
+	        
+			log
+			
+			estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+   		else
+			end 1
+		fi
 	else
+		echo -e "\nOperação cancelada. O deploy foi realizado anteriormente."
 		end 1
 	fi
 
