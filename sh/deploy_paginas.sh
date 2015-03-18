@@ -622,7 +622,7 @@ while read host; do
 	echo "$dir_destino" >> $temp_dir/dir_destino
 done < $temp_dir/hosts_$ambiente
 
-atividade_dir="$historico_dir/$app/$(date +%F_%Hh%Mm%Ss)/$rev_$ambiente"								#Diretório onde serão armazenados os logs do atendimento.
+atividade_dir="${historico_dir}/${app}/$(date +%F_%Hh%Mm%Ss)/${rev}_${ambiente}"								#Diretório onde serão armazenados os logs do atendimento.
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
 	rmdir ${atividade_dir}_PENDENTE
