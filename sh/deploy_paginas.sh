@@ -703,9 +703,9 @@ while read dir_destino; do
 	mkdir $destino || end 1
     
 	if [ $os == 'windows' ]; then 
-		mount.cifs $dir_destino $destino -o credentials=$credenciais || end 1				#montagem do compartilhamento de destino (requer pacote cifs-utils) 
+		mount -t cifs $dir_destino $destino -o credentials=$credenciais || end 1				#montagem do compartilhamento de destino (requer pacote cifs-utils) 
 	else 
-		mount.cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet) 
+		mount -t cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet) 
 	fi 
  
 	##### DIFF ARQUIVOS #####

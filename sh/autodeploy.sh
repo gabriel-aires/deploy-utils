@@ -52,7 +52,7 @@ while read ambiente; do
 
 	if [ ! -z "$(cat $temp_dir/lista_aplicacoes)" ];then
         	while read aplicacao; do
-			$deploy_dir/sh/deploy_paginas.sh -f $aplicacao auto $ambiente
+			/bin/bash $deploy_dir/sh/deploy_paginas.sh -f $aplicacao auto $ambiente
 			wait
 			echo -e "\n------------------------------------------------------\n"
 		done < "$temp_dir/lista_aplicacoes"
