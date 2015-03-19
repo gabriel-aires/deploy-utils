@@ -79,7 +79,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 
 		case $revisao_auto in
 			tag)
-				git log $branch_auto --oneline | cut -f1 -d ' ' > $temp_dir/commits
+				git log "origin/$branch_auto" --oneline | cut -f1 -d ' ' > $temp_dir/commits
 				git tag -l | sort -V > $temp_dir/tags
 
 				while read tag; do
@@ -94,18 +94,20 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 				
 				if [ ! -z $ultimo_commit ] && [ ! -z $ultima_tag ]; then
 					echo -e "\nObtendo a revisão $ultimo_commit a partir da tag $ultima_tag."
+					rev=$ultima_tag
 					git checkout --force --quiet $ultima_tag || end 1
 				else
 					echo "Erro ao obter a revisão especificada. Deploy abortado"
 					end 1
 				fi
 				;;	
-			branch)
-				ultimo_commit=$(git log "$branch_auto" --oneline | head -1 | cut -f1 -d ' ')
+			commit)
+				ultimo_commit=$(git log "origin/$branch_auto" --oneline | head -1 | cut -f1 -d ' ')
 				
 				if [ ! -z $ultimo_commit ]; then
 					echo -e "\nObtendo a revisão $ultimo_commit a partir da branch $branch_auto."
-					git checkout --force --quiet $branch_auto || end 1
+					rev=$ultimo_commit
+					git checkout --force --quiet $ultimo_commit || end 1
 				else
 					echo "Erro ao obter a revisão especificada. Deploy abortado"
 					end 1
