@@ -375,6 +375,7 @@ function end () {
 	fi
 	
 	wait
+	sleep 1
 	
 	clean_locks
 	clean_temp

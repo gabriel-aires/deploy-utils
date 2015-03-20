@@ -58,7 +58,7 @@ function end {
 
 }
 
-trap "end 1; exit" SIGQUIT SIGTERM SIGINT SIGHUP
+trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 #### Renovação do ticket kerberos ########
 
