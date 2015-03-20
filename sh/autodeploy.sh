@@ -38,9 +38,31 @@ else
 	mkdir -p $temp_dir
 fi
 
+function end {
+
+	##### Remove lockfile e diretório temporário ao fim da execução #####
+	
+	erro=$1
+	wait
+
+	if [ -d $temp_dir ]; then
+		rm -f $temp_dir/*
+		rmdir $temp_dir
+	fi
+
+	if [ -f $lock_dir/autodeploy ]; then
+		rm -f "$lock_dir/autodeploy" 
+	fi
+
+	exit $erro
+
+}
+
+trap "end 1; exit" SIGQUIT SIGTERM SIGINT SIGHUP
+
 #### Renovação do ticket kerberos ########
 
-kinit -R || exit 1
+kinit -R || end 1
 
 #### Deploy em todos os ambientes ########
 
@@ -62,9 +84,4 @@ while read ambiente; do
 	fi
 done < "$temp_dir/lista_ambientes"
 
-##### Remove lockfile e diretório temporário #####
-
-rm -f $temp_dir/*
-rmdir $temp_dir
-rm -f "$lock_dir/autodeploy"
-exit 0
+end 0
