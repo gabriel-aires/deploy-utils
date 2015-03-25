@@ -310,9 +310,9 @@ function end () {
 				echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
 				if [ "$modo" == "p" ]; then
-					rsync -rcK --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
+					rsync -rc --safe-links --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
 				else
-					rsync -rcK --inplace --delete --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
+					rsync -rc --safe-links --inplace --delete --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
 				fi
 
 				echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
@@ -349,9 +349,9 @@ function end () {
 							echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
 							if [ "$modo" == "p" ]; then
-								rsync -rcK --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
+								rsync -rc --safe-links --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
 							else
-								rsync -rcK --inplace --delete --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
+								rsync -rc --safe-links --inplace --delete --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
 							fi
 
 							echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
@@ -712,9 +712,9 @@ while read dir_destino; do
 	##### DIFF ARQUIVOS #####
     
 	if [ "$modo" == "p" ]; then
-		rsync -rnicK --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
+		rsync -rnic --safe-links --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
 	else
-		rsync -rnicK --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
+		rsync -rnic --safe-links --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
 	fi
     
 	##### RESUMO DAS MUDANÇAS ######
@@ -759,9 +759,9 @@ while read dir_destino; do
 				mkdir -p $bak
 		        
 				if [ "$modo" == "P" ]; then
-					rsync -rcK --inplace --exclude-from=$temp_dir/ignore $destino/ $bak/ || end 1
+					rsync -rc --safe-links --inplace --exclude-from=$temp_dir/ignore $destino/ $bak/ || end 1
 				else
-					rsync -rcK --inplace --delete --exclude-from=$temp_dir/ignore $destino/ $bak/ || end 1
+					rsync -rc --safe-links --inplace --delete --exclude-from=$temp_dir/ignore $destino/ $bak/ || end 1
 				fi
 		        
 				estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
@@ -773,9 +773,9 @@ while read dir_destino; do
 			echo -e "\nEscrevendo alterações no diretório de destino..."	
 	        
 			if [ "$modo" == "p" ]; then
-	        		rsync -rcK --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
+	        		rsync -rc --safe-links --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
 			else
-				rsync -rcK --inplace --delete --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
+				rsync -rc --safe-links --inplace --delete --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
 			fi
 	        
 			log
