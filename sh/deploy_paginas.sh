@@ -309,11 +309,7 @@ function end () {
 
 				echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
-				if [ "$modo" == "p" ]; then
-					rsync -rc --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
-				else
-					rsync -rc --inplace --delete --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
-				fi
+				rsync $rsync_opts $bak/ $destino/ && rm -Rf $bak
 
 				echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
 				log "Deploy interrompido. Backup restaurado."
@@ -348,11 +344,7 @@ function end () {
 
 							echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
-							if [ "$modo" == "p" ]; then
-								rsync -rc --inplace --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
-							else
-								rsync -rc --inplace --delete --exclude-from=$temp_dir/ignore $bak/ $destino/ && rm -Rf $bak
-							fi
+							rsync $rsync_opts $bak/ $destino/ && rm -Rf $bak
 
 							echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
 							log "Rollback realizado devido a erro ou deploy cancelado em $host_erro."		
@@ -422,6 +414,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
 	|| [ -z "$modo_padrao" ] \
+	|| [ -z "$rsync_opts" ] \
 	|| [ -z "$ambientes" ] \
 	|| [ -z "$interativo" ];
 then
@@ -612,6 +605,10 @@ if [ -z "$modo" ]; then
 	fi
 fi
 
+if [ "$modo" == "d" ]; then
+	rsync_opts="$rsync_opts --delete"
+fi
+
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
 
@@ -666,6 +663,8 @@ elif [ -f "$repo_dir/$nomerepo/$raiz/.gitignore" ]; then
 	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/$raiz/.gitignore >> $temp_dir/ignore
 fi
 
+rsync_opts="$rsync_opts --exclude-from=$temp_dir/ignore"
+
 echo $estado > $temp_dir/progresso.txt							
 estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
     
@@ -709,11 +708,7 @@ while read dir_destino; do
  
 	##### DIFF ARQUIVOS #####
     
-	if [ "$modo" == "p" ]; then
-		rsync -rnic --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
-	else
-		rsync -rnic --delete --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
-	fi
+	rsync --dry-run --itemize-changes $rsync_opts $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
     
 	##### RESUMO DAS MUDANÇAS ######
     
@@ -756,11 +751,7 @@ while read dir_destino; do
 		       		rm -Rf $bak
 				mkdir -p $bak
 		        
-				if [ "$modo" == "P" ]; then
-					rsync -rc --inplace --exclude-from=$temp_dir/ignore $destino/ $bak/ || end 1
-				else
-					rsync -rc --inplace --delete --exclude-from=$temp_dir/ignore $destino/ $bak/ || end 1
-				fi
+				rsync $rsync_opts $destino/ $bak/ || end 1
 		        
 				estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
 	        	fi
@@ -770,11 +761,7 @@ while read dir_destino; do
 			estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
 			echo -e "\nEscrevendo alterações no diretório de destino..."	
 	        
-			if [ "$modo" == "p" ]; then
-	        		rsync -rc --inplace --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
-			else
-				rsync -rc --inplace --delete --exclude-from=$temp_dir/ignore $origem/ $destino/ || end 1
-			fi
+			rsync $rsync_opts $origem/ $destino/ || end 1
 	        
 			log
 			
