@@ -280,10 +280,11 @@ function log () {
 	tail --lines=$qtd_log_deploy $historico > $temp_dir/deploy_log_novo
 	tail --lines=$qtd_log_app $historico_dir/$app/deploy.log > $temp_dir/app_log_novo
 
-	echo $mensagem_log >> $temp_dir/deploy_log_novo
-	echo $mensagem_log >> $temp_dir/app_log_novo	
-
-	cp -f $temp_dir/deploy_log_novo $atividade_dir
+	echo -e "$mensagem_log" >> $temp_dir/deploy_log_novo
+	echo -e "$mensagem_log" >> $temp_dir/app_log_novo	
+	
+	cp -f $temp_dir/app_log_novo $atividade_dir/deploy.log
+	cp -f $temp_dir/app_log_novo $historico_dir/$app/deploy.log
 	cp -f $temp_dir/deploy_log_novo $historico	
 
 	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
