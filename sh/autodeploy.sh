@@ -18,8 +18,12 @@ temp_dir="$temp/$pid"
 
 if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_lock_dir" ] \
+	|| [ -z "$regex_historico_dir" ] \
+	|| [ -z "$regex_qtd" ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
+	|| [ -z $(echo $cron_log | grep -E "$regex_historico_dir") ] \
+	|| [ -z $(echo $qtd_log_cron | grep -E "$regex_qtd") ] \
 	|| [ ! -d "$temp" ] \
 	|| [ ! -d "$lock_dir" ] \
 	|| [ ! -d "$parametros_app" ] \
@@ -38,12 +42,27 @@ else
 	mkdir -p $temp_dir
 fi
 
+#### Funções ####
+
+function horario {
+
+	echo $(date "+%F %T"):
+
+}
+
 function end {
 
+
 	##### Remove lockfile e diretório temporário ao fim da execução #####
-	
+
 	erro=$1
 	wait
+
+	if [ "$erro" == "0" ]; then
+		echo -e "$(horario) Rotina concluída com sucesso.\n"
+	else
+		echo -e "$(horario) Rotina concluída com erro.\n"
+	fi
 
 	if [ -d $temp_dir ]; then
 		rm -f $temp_dir/*
@@ -58,30 +77,48 @@ function end {
 
 }
 
+function deploy_auto {
+
+	#### Renovação do ticket kerberos ########
+	
+	kinit -R || end 1
+	
+	#### Deploy em todos os ambientes ########
+	
+	echo "$ambientes" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g'> $temp_dir/lista_ambientes
+	
+	while read ambiente; do
+		grep -REl "^auto_$ambiente='1'$" $parametros_app > $temp_dir/lista_aplicacoes
+		sed -i -r "s|^$parametros_app/(.+)\.conf$|\1|g" $temp_dir/lista_aplicacoes
+	
+		if [ ! -z "$(cat $temp_dir/lista_aplicacoes)" ];then
+	        	while read aplicacao; do
+				horario
+				echo ""
+				/bin/bash $deploy_dir/sh/deploy_paginas.sh -f $aplicacao auto $ambiente
+				wait
+				echo ""
+			done < "$temp_dir/lista_aplicacoes"
+		else
+			echo "$(horario) O deploy automático não foi habilitado no ambiente '$ambiente'"
+			echo ""
+		fi
+	done < "$temp_dir/lista_ambientes"
+
+	end 0
+
+}
+
 trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
-#### Renovação do ticket kerberos ########
+#### Expurgo de logs #####
 
-kinit -R || end 1
+touch $cron_log
 
-#### Deploy em todos os ambientes ########
+tail --lines=$qtd_log_cron $cron_log > $temp_dir/cron_log_novo
+cp -f $temp_dir/cron_log_novo $cron_log
+	
+### Execução da rotina ###
 
-echo "$ambientes" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g'> $temp_dir/lista_ambientes
+deploy_auto >> $cron_log 2>&1
 
-while read ambiente; do
-	grep -REl "^auto_$ambiente='1'$" $parametros_app > $temp_dir/lista_aplicacoes
-	sed -i -r "s|^$parametros_app/(.+)\.conf$|\1|g" $temp_dir/lista_aplicacoes
-
-	if [ ! -z "$(cat $temp_dir/lista_aplicacoes)" ];then
-        	while read aplicacao; do
-			/bin/bash $deploy_dir/sh/deploy_paginas.sh -f $aplicacao auto $ambiente
-			wait
-			echo -e "\n------------------------------------------------------\n"
-		done < "$temp_dir/lista_aplicacoes"
-	else
-		echo "O deploy automático não foi habilitado no ambiente '$ambiente'"
-		echo -e "\n------------------------------------------------------\n"
-	fi
-done < "$temp_dir/lista_ambientes"
-
-end 0

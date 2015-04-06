@@ -141,7 +141,7 @@ function clean_temp () {										#cria pasta temporária, remove arquivos e pon
 	fi
 }
 
-function lock () {											#argumentos: nome_trava, mensagem_erro
+function lock () {											#argumentos: nome_trava, mensagem_erro, (instrução)
 
 	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
 		if [ -d $temp_dir ] && [ -d $lock_dir ]; then
@@ -264,12 +264,29 @@ function log () {
 		fi
 	fi
 
-	echo -e "$horario_log$app_log$rev_log$ambiente_log$host_log$obs_log" >> $historico
+	mensagem_log="$horario_log$app_log$rev_log$ambiente_log$host_log$obs_log"
 
-	cp -f $historico $atividade_dir
+	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
-	tamanho_horario=$(echo -n "$horario_log" | wc -m) 
-	grep -Ei "^(.){$tamanho_horario}$app" $historico > $historico_dir/$app/deploy.log
+	while [ -f "$lock_dir/deploy_log_edit" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
+		sleep 1	
+	done
+
+	touch $lock_dir/deploy_log_edit && echo "$lock_dir/deploy_log_edit" >> $temp_dir/locks
+
+	touch $historico
+	touch $historico_dir/$app/deploy.log
+
+	tail --lines=$qtd_log_deploy $historico > $temp_dir/deploy_log_novo
+	tail --lines=$qtd_log_app $historico_dir/$app/deploy.log > $temp_dir/app_log_novo
+
+	echo $mensagem_log >> $temp_dir/deploy_log_novo
+	echo $mensagem_log >> $temp_dir/app_log_novo	
+
+	cp -f $temp_dir/deploy_log_novo $atividade_dir
+	cp -f $temp_dir/deploy_log_novo $historico	
+
+	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
 
 }
 
@@ -408,11 +425,14 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_raiz" ] \
 	|| [ -z "$regex_dir_destino" ] \
 	|| [ -z "$regex_os" ] \
+	|| [ -z "$regex_qtd" ] \
 	|| [ -z $(echo $bak_dir | grep -E "$regex_bak_dir") ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $historico_dir | grep -E "$regex_historico_dir") ] \
 	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
+	|| [ -z $(echo $qtd_log_app | grep -E "$regex_qtd") ] \
+	|| [ -z $(echo $qtd_log_deploy | grep -E "$regex_qtd") ] \
 	|| [ -z "$modo_padrao" ] \
 	|| [ -z "$rsync_opts" ] \
 	|| [ -z "$ambientes" ] \
@@ -597,18 +617,6 @@ else
 	fi
 fi
 
-if [ -z "$modo" ]; then
-	if [ -z "$modo_app" ]; then
-		modo=$modo_padrao
-	else
-		modo=$modo_app
-	fi
-fi
-
-if [ "$modo" == "d" ]; then
-	rsync_opts="$rsync_opts --delete"
-fi
-
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
 
@@ -622,6 +630,15 @@ while read host; do
 	echo "$dir_destino" >> $temp_dir/dir_destino
 done < $temp_dir/hosts_$ambiente
 
+##### EXPURGO DE LOGS #######
+
+find "${historico_dir}/${app}/" -maxdepth 1 -type d | grep -vx "${historico_dir}/${app}/" | sort > $temp_dir/logs_total
+tail $temp_dir/logs_total --lines=${qtd_log_app} > $temp_dir/logs_ultimos
+grep -vxF --file=$temp_dir/logs_ultimos $temp_dir/logs_total > $temp_dir/logs_expurgo
+cat $temp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
+
+##### CRIAÇÃO DO DIRETÓRIO DE LOG #####
+
 atividade_dir="${historico_dir}/${app}/$(date +%F_%Hh%Mm%Ss)/${rev}_${ambiente}"								#Diretório onde serão armazenados os logs do atendimento.
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
@@ -633,9 +650,23 @@ mkdir -p $atividade_dir
 echo -e "\nSistema:\t$app"
 echo -e "Revisão:\t$rev"
 
-if [ ! "$rev" == "rollback" ]; then
+##### MODO DE DEPLOY #####
 
-	##### GIT #########	
+if [ -z "$modo" ]; then
+	if [ -z "$modo_app" ]; then
+		modo=$modo_padrao
+	else
+		modo=$modo_app
+	fi
+fi
+
+if [ "$modo" == "d" ]; then
+	rsync_opts="$rsync_opts --delete"
+fi
+
+##### GIT #########	
+
+if [ ! "$rev" == "rollback" ]; then
 	
 	echo -e "Repositório:\t$repo"
 	echo -e "Caminho:\t$raiz"
