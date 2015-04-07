@@ -690,10 +690,12 @@ echo '' > $temp_dir/ignore
 
 if [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/ignore
-	sed -i -r "s|^$raiz||" $temp_dir/ignore
+	sed -i -r "s|^/?$raiz|/|" $temp_dir/ignore
 elif [ -f "$repo_dir/$nomerepo/$raiz/.gitignore" ]; then
 	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/$raiz/.gitignore >> $temp_dir/ignore
 fi
+
+sed -i -r 's|/+|/|g' $temp_dir/ignore
 
 rsync_opts="$rsync_opts --exclude-from=$temp_dir/ignore"
 
