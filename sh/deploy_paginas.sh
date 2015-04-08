@@ -504,9 +504,9 @@ if $interativo; then
 		read -r share
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c )"
 	
-		echo -e "\nInforme o sistema operacional:" 
-		read -r os                          										 
-		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):" 	 
+		echo -e "\nInforme o protocolo de segurança do compartilhamento:" 
+		read -r auth                          										 
+		valid "auth" "\nErro. Informe um protocolo válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):"
 
 		if [ -z $modo ]; then
 			echo -e "\nInforme um modo de deploy para o ambiente $ambiente ('d': deletar arquivos obsoletos / 'p': preservar arquivos obsoletos):" 
@@ -549,7 +549,7 @@ if $interativo; then
 		done < $temp_dir/ambientes 
 
 		editconf "share" "$share" "$parametros_app/${app}.conf"
-		editconf "os" "$os" "$parametros_app/${app}.conf"		
+		editconf "auth" "$auth" "$parametros_app/${app}.conf"		
 
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 
@@ -577,8 +577,8 @@ if $interativo; then
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
 		editconf "share" "$share" "$parametros_app/${app}.conf"
 
-		valid "os" "\nErro. Informe um nome válido para o sistema operacional (windows/linux):" 
-		editconf "os" "$os" "$parametros_app/${app}.conf" 
+		valid "auth" "\nErro. Informe um protocolo válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):" 
+		editconf "auth" "$auth" "$parametros_app/${app}.conf" 
 
 		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
 	fi
@@ -594,7 +594,7 @@ else
 		valid "auto_$ambiente" "\nErro. Não foi possível ler a flag de deploy automático."
 		valid "modo_$ambiente" "\nErro. Foi informado um modo inválido para deploy no ambiente $ambiente."		
 	        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
-		valid "os" "\nErro. \'$os\' não é um sistema operacional válido (windows/linux)."       		
+		valid "auth" "\nErro. \'$auth\' não é protocolo de segurança válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):"       		
  
 	        lista_hosts="echo \$hosts_${ambiente}"
 	        lista_hosts=$(eval "$lista_hosts")  
@@ -690,12 +690,10 @@ echo '' > $temp_dir/ignore
 
 if [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/ignore
-	sed -i -r "s|^/?$raiz|/|" $temp_dir/ignore
+	sed -i -r "s|^/?$raiz/|/|" $temp_dir/ignore
 elif [ -f "$repo_dir/$nomerepo/$raiz/.gitignore" ]; then
 	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/$raiz/.gitignore >> $temp_dir/ignore
 fi
-
-sed -i -r 's|/+|/|g' $temp_dir/ignore
 
 rsync_opts="$rsync_opts --exclude-from=$temp_dir/ignore"
 
@@ -734,11 +732,7 @@ while read dir_destino; do
     
 	mkdir $destino || end 1
     
-	if [ $os == 'windows' ]; then 
-		mount -t cifs $dir_destino $destino -o credentials=$credenciais || end 1				#montagem do compartilhamento de destino (requer pacote cifs-utils) 
-	else 
-		mount -t cifs $dir_destino $destino -o credentials=$credenciais,sec=krb5 || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet) 
-	fi 
+	mount -t cifs $dir_destino $destino -o credentials=$credenciais,sec=$auth || end 1 		#montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet) 
  
 	##### DIFF ARQUIVOS #####
     
