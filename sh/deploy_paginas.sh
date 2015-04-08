@@ -408,7 +408,6 @@ if $interativo; then
 fi
 
 deploy_dir="/opt/autodeploy-paginas"										#diretório de instalação.
-temp_dir="$temp/$pid"
 
 if [ "$(grep -v --file=$deploy_dir/conf/global.template $deploy_dir/conf/global.conf | wc -l)" -ne "0" ]; then
 	echo 'O arquivo global.conf não atende ao template correspondente.'
@@ -425,6 +424,8 @@ if [ -f "$deploy_dir/conf/user.conf" ]; then
 		source "$deploy_dir/conf/user.conf" || exit 1
 	fi
 fi
+
+temp_dir="$temp/$pid"
 
 if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_temp_dir" ] \
