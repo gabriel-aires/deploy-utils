@@ -581,10 +581,10 @@ if $interativo; then
 			read -r ans
 
 			if [ "$ans" == "s" ] || [ "$ans" == "S" ]; then
-				grep --file="$deploy_dir/conf/app.template" "${parametros_app}/${app}" > "$temp_dir/app_conf_novo"
-				cp -f "$temp_dir/app_conf_novo" "${parametros_app}/${app}"
+				grep --file="$deploy_dir/conf/app.template" "${parametros_app}/${app}.conf" > "$temp_dir/app_conf_novo"
+				cp -f "$temp_dir/app_conf_novo" "${parametros_app}/${app}.conf"
 				echo -e "\nArquivo ${app}.conf alterado."
-				source "${parametros_app}/${app}"
+				source "${parametros_app}/${app}.conf"
 			else
 				end 1
 			fi
@@ -623,7 +623,7 @@ else
 	        	source "${parametros_app}/${app}.conf"
 		else
 			echo -e "\nErro. Há parâmetros incorretos no arquivo ${parametros_app}/${app}.conf:"
-			grep -v --file=$deploy_dir/conf/app.template ${parametros_app}/${app}.conf 
+			grep -v --file="$deploy_dir/conf/app.template" "${parametros_app}/${app}.conf"
 			end 1
 		fi
 
