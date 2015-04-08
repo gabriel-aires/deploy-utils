@@ -408,9 +408,23 @@ if $interativo; then
 fi
 
 deploy_dir="/opt/autodeploy-paginas"										#diretório de instalação.
-source $deploy_dir/conf/global.conf || exit								#carrega o arquivo de constantes.
-
 temp_dir="$temp/$pid"
+
+if [ "$(grep -v --file=$deploy_dir/conf/global.template $deploy_dir/conf/global.conf | wc -l)" -ne "0" ]; then
+	echo 'O arquivo global.conf não atende ao template correspondente.'
+	exit 1
+fi
+
+source "$deploy_dir/conf/global.conf" || exit 1								#carrega o arquivo de constantes.
+
+if [ -f "$deploy_dir/conf/user.conf" ]; then
+	if [ "$(grep -v --file=$deploy_dir/conf/global.template $deploy_dir/conf/user.conf | wc -l)" -ne "0" ]; then
+		echo 'O arquivo user.conf não atende ao template correspondente.'
+		exit 1
+	else
+		source "$deploy_dir/conf/user.conf" || exit 1
+	fi
+fi
 
 if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_temp_dir" ] \
@@ -425,7 +439,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_repo" ] \
 	|| [ -z "$regex_raiz" ] \
 	|| [ -z "$regex_dir_destino" ] \
-	|| [ -z "$regex_os" ] \
+	|| [ -z "$regex_auth" ] \
 	|| [ -z "$regex_qtd" ] \
 	|| [ -z $(echo $bak_dir | grep -E "$regex_bak_dir") ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
@@ -439,8 +453,8 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$ambientes" ] \
 	|| [ -z "$interativo" ];
 then
-    echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
-    exit
+	echo 'Favor preencher corretamente o arquivo global.conf / user.conf e tentar novamente.'
+	exit 1
 fi
 
 mkdir -p $deploy_dir $temp $historico_dir $repo_dir $lock_dir $parametros_app $bak_dir			#cria os diretórios necessários, caso não existam.
@@ -556,8 +570,25 @@ if $interativo; then
 	else
 	
 		echo -e "\nObtendo parâmetros da aplicação $app..."
-		source "${parametros_app}/${app}.conf" 
-                
+
+		if [ "$(grep -v --file=$deploy_dir/conf/app.template ${parametros_app}/${app}.conf | wc -l)" -eq "0" ]; then		
+	        	source "${parametros_app}/${app}.conf"
+		else
+			echo -e "\nErro. Há parâmetros incorretos no arquivo ${parametros_app}/${app}.conf:"
+			grep -v --file="$deploy_dir/conf/app.template" ${parametros_app}/${app}.conf 
+			echo -e "\nRemover as entradas acima? (s/n)"
+			read -r ans
+
+			if [ "$ans" == "s" ] || [ "$ans" == "S" ]; then
+				grep --file="$deploy_dir/conf/app.template" "${parametros_app}/${app}" > "$temp_dir/app_conf_novo"
+				cp -f "$temp_dir/app_conf_novo" "${parametros_app}/${app}"
+				echo -e "\nArquivo ${app}.conf alterado."
+				source "${parametros_app}/${app}"
+			else
+				end 1
+			fi
+		fi
+
 		valid "repo" "\nErro. Informe um caminho válido para o repositório GIT:"
 		editconf "repo" "$repo" "$parametros_app/${app}.conf"
         
@@ -586,7 +617,14 @@ else
 	if [ ! -f "${parametros_app}/${app}.conf" ]; then 
 		echo "Erro. Não foram encontrados os parâmetros para deploy da aplicação $app. O script deverá ser reexecutado no modo interativo."	
 	else
-        	source "${parametros_app}/${app}.conf"
+
+		if [ "$(grep -v --file=$deploy_dir/conf/app.template ${parametros_app}/${app}.conf | wc -l)" -eq "0" ]; then		
+	        	source "${parametros_app}/${app}.conf"
+		else
+			echo -e "\nErro. Há parâmetros incorretos no arquivo ${parametros_app}/${app}.conf:"
+			grep -v --file=$deploy_dir/conf/app.template ${parametros_app}/${app}.conf 
+			end 1
+		fi
 
 	        valid "repo" "\nErro. \'$repo\' não é um repositório git válido."
 	        valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
