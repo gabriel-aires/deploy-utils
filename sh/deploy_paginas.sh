@@ -327,7 +327,8 @@ function end () {
 
 				echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
-				rsync $rsync_opts $bak/ $destino/ && rm -Rf $bak
+				rsync_cmd="rsync $rsync_opts $bak/ $destino/"
+				eval $rsync_cmd && rm -Rf $bak
 
 				echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
 				log "Deploy interrompido. Backup restaurado."
@@ -362,7 +363,8 @@ function end () {
 
 							echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
-							rsync $rsync_opts $bak/ $destino/ && rm -Rf $bak
+							rsync_cmd="rsync $rsync_opts $bak/ $destino/"
+							eval $rsync_cmd && rm -Rf $bak
 
 							echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
 							log "Rollback realizado devido a erro ou deploy cancelado em $host_erro."		
@@ -745,10 +747,11 @@ elif [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 
 fi
 
-bkp_regras=0														#a flag será alterada tão logo as regras de deploy sejam copiadas para a pasta de backup.
+cp $temp_dir/regras_deploy.txt $atividade_dir/										#a fim de proporcionar transparência ao processo de deploy, as regras de ignore/include são copiadas para o log.
 
+bkp_regras=0														#a flag será alterada tão logo as regras de deploy sejam copiadas para a pasta de backup.
 rsync_opts="$rsync_opts --filter='. $temp_dir/regras_deploy.txt'"
-	
+
 echo $estado > $temp_dir/progresso.txt							
 estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
     
@@ -788,7 +791,8 @@ while read dir_destino; do
  
 	##### DIFF ARQUIVOS #####
     
-	rsync --dry-run --itemize-changes $rsync_opts $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt || end 1
+	rsync_cmd="rsync --dry-run --itemize-changes $rsync_opts $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt"
+	eval $rsync_cmd || end 1
     
 	##### RESUMO DAS MUDANÇAS ######
     
@@ -830,8 +834,9 @@ while read dir_destino; do
 				bak="$bak_dir/${app}_${host}"
 		       		rm -Rf $bak
 				mkdir -p $bak
-	
-				rsync $rsync_opts $destino/ $bak/ || end 1
+				
+				rsync_cmd="rsync $rsync_opts $destino/ $bak/"
+				eval $rsync_cmd || end 1
 	
 				#### backup regras de deploy ###				
 
@@ -848,7 +853,8 @@ while read dir_destino; do
 			estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
 			echo -e "\nEscrevendo alterações no diretório de destino..."	
 	        
-			rsync $rsync_opts $origem/ $destino/ || end 1
+			rsync_cmd="rsync $rsync_opts $origem/ $destino/"
+			eval $rsync_cmd || end 1
 	        
 			log
 			
