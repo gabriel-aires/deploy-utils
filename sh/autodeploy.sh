@@ -79,10 +79,6 @@ function end {
 
 function deploy_auto {
 
-	#### Renovação do ticket kerberos ########
-	
-	kinit -R || end 1
-	
 	#### Deploy em todos os ambientes ########
 	
 	echo "$ambientes" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g'> $temp_dir/lista_ambientes
