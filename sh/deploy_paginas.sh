@@ -730,20 +730,14 @@ echo '' > $temp_dir/regras_deploy.txt
 if [ "$rev" == "rollback" ] && [ -f "${bak_dir}/regras_deploy_$app.txt" ]; then
 
 	cat "${bak_dir}/regras_deploy_$app.txt" >> $temp_dir/regras_deploy.txt
-else
-	if [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
-	
-		grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/regras_deploy.txt
-	
-		if [ ! "$raiz" == "/" ]; then
-			sed -i -r "s|^(! +)?/$raiz(/.+)|\1\2|" $temp_dir/regras_deploy.txt				#padrões de caminho iniciados com / são substituídos.
-			sed -i -r "s|^(! +)?($raiz)(/.+)|\1\2\3\n\1\3|" $temp_dir/regras_deploy.txt			#entradas iniciados sem / são preservadas. Uma linha com a substituição correspondente é acrescentada logo abaixo.
-		fi
 
-	elif [ -f "$repo_dir/$nomerepo/$raiz/.gitignore" ] && [ ! "$raiz" == "/" ]; then
-	
-		grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/$raiz/.gitignore >> $temp_dir/ignore
-	
+elif [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
+
+	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/regras_deploy.txt
+
+	if [ ! "$raiz" == "/" ]; then
+		sed -i -r "s|^(! +)?/$raiz(/.+)|\1\2|" $temp_dir/regras_deploy.txt					#padrões de caminho iniciados com / são substituídos.
+		sed -i -r "s|^(! +)?($raiz)(/.+)|\1\2\3\n\1\3|" $temp_dir/regras_deploy.txt				#entradas iniciados sem / são preservadas. Uma linha com a substituição correspondente é acrescentada logo abaixo.
 	fi
 
 	sed -i -r "s|^(! +)|+ |" $temp_dir/regras_deploy.txt								#um sinal de + (include) é acrescentado ao início das entradas precedidas de "!"

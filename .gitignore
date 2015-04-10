@@ -1,6 +1,7 @@
-conf/app/**
-bak/**
-log/**
-tmp/**
-repo/**
+/conf/user.conf
+/conf/app/**
+/bak/**
+/log/**
+/tmp/**
+/repo/**
 
