@@ -409,15 +409,15 @@ fi
 
 deploy_dir="/opt/autodeploy-paginas"										#diretório de instalação.
 
-if [ "$(grep -v --file=$deploy_dir/conf/global.template $deploy_dir/conf/global.conf | wc -l)" -ne "0" ]; then
+if [ "$(grep -v --file=$deploy_dir/template/global.template $deploy_dir/conf/global.conf | wc -l)" -ne "0" ]; then
 	echo 'O arquivo global.conf não atende ao template correspondente.'
 	exit 1
 fi
 
 source "$deploy_dir/conf/global.conf" || exit 1								#carrega o arquivo de constantes.
 
-if [ -f "$deploy_dir/conf/user.conf" ]; then
-	if [ "$(grep -v --file=$deploy_dir/conf/global.template $deploy_dir/conf/user.conf | wc -l)" -ne "0" ]; then
+if [ -f "$deploy_dir/conf/user.conf" ] && [ -f "$deploy_dir/conf/user.template" ]; then
+	if [ "$(grep -v --file=$deploy_dir/template/user.template $deploy_dir/conf/user.conf | wc -l)" -ne "0" ]; then
 		echo 'O arquivo user.conf não atende ao template correspondente.'
 		exit 1
 	else
@@ -572,16 +572,16 @@ if $interativo; then
 	
 		echo -e "\nObtendo parâmetros da aplicação $app..."
 
-		if [ "$(grep -v --file=$deploy_dir/conf/app.template ${parametros_app}/${app}.conf | wc -l)" -eq "0" ]; then		
+		if [ "$(grep -v --file=$deploy_dir/template/app.template ${parametros_app}/${app}.conf | wc -l)" -eq "0" ]; then		
 	        	source "${parametros_app}/${app}.conf"
 		else
 			echo -e "\nErro. Há parâmetros incorretos no arquivo ${parametros_app}/${app}.conf:"
-			grep -v --file="$deploy_dir/conf/app.template" ${parametros_app}/${app}.conf 
+			grep -v --file="$deploy_dir/template/app.template" "${parametros_app}/${app}.conf"
 			echo -e "\nRemover as entradas acima? (s/n)"
 			read -r ans
 
 			if [ "$ans" == "s" ] || [ "$ans" == "S" ]; then
-				grep --file="$deploy_dir/conf/app.template" "${parametros_app}/${app}.conf" > "$temp_dir/app_conf_novo"
+				grep --file="$deploy_dir/template/app.template" "${parametros_app}/${app}.conf" > "$temp_dir/app_conf_novo"
 				cp -f "$temp_dir/app_conf_novo" "${parametros_app}/${app}.conf"
 				echo -e "\nArquivo ${app}.conf alterado."
 				source "${parametros_app}/${app}.conf"
@@ -619,11 +619,11 @@ else
 		echo "Erro. Não foram encontrados os parâmetros para deploy da aplicação $app. O script deverá ser reexecutado no modo interativo."	
 	else
 
-		if [ "$(grep -v --file=$deploy_dir/conf/app.template ${parametros_app}/${app}.conf | wc -l)" -eq "0" ]; then		
+		if [ "$(grep -v --file=$deploy_dir/template/app.template ${parametros_app}/${app}.conf | wc -l)" -eq "0" ]; then		
 	        	source "${parametros_app}/${app}.conf"
 		else
 			echo -e "\nErro. Há parâmetros incorretos no arquivo ${parametros_app}/${app}.conf:"
-			grep -v --file="$deploy_dir/conf/app.template" "${parametros_app}/${app}.conf"
+			grep -v --file="$deploy_dir/template/app.template" "${parametros_app}/${app}.conf"
 			end 1
 		fi
 
@@ -723,19 +723,38 @@ if [ ! "$rev" == "rollback" ]; then
 
 fi
 
-###### IGNORE #######
+###### REGRAS DE DEPLOY: IGNORE / INCLUDE #######
 
-echo '' > $temp_dir/ignore
+echo '' > $temp_dir/regras_deploy.txt
 
-if [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
-	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/ignore
-	sed -i -r "s|^/?$raiz/|/|" $temp_dir/ignore
-elif [ -f "$repo_dir/$nomerepo/$raiz/.gitignore" ]; then
-	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/$raiz/.gitignore >> $temp_dir/ignore
+if [ "$rev" == "rollback" ] && [ -f "${bak_dir}/regras_deploy_$app.txt" ]; then
+
+	cat "${bak_dir}/regras_deploy_$app.txt" >> $temp_dir/regras_deploy.txt
+else
+	if [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
+	
+		grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/regras_deploy.txt
+	
+		if [ ! "$raiz" == "/" ]; then
+			sed -i -r "s|^(! +)?/$raiz(/.+)|\1\2|" $temp_dir/regras_deploy.txt				#padrões de caminho iniciados com / são substituídos.
+			sed -i -r "s|^(! +)?($raiz)(/.+)|\1\2\3\n\1\3|" $temp_dir/regras_deploy.txt			#entradas iniciados sem / são preservadas. Uma linha com a substituição correspondente é acrescentada logo abaixo.
+		fi
+
+	elif [ -f "$repo_dir/$nomerepo/$raiz/.gitignore" ] && [ ! "$raiz" == "/" ]; then
+	
+		grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/$raiz/.gitignore >> $temp_dir/ignore
+	
+	fi
+
+	sed -i -r "s|^(! +)|+ |" $temp_dir/regras_deploy.txt								#um sinal de + (include) é acrescentado ao início das entradas precedidas de "!"
+	sed -i -r "s|^([^+])|- \1|" $temp_dir/regras_deploy.txt								#um sinal de - (exclude) é acrescentado ao início das demais entradas.	
+
 fi
 
-rsync_opts="$rsync_opts --exclude-from=$temp_dir/ignore"
+bkp_regras=0														#a flag será alterada tão logo as regras de deploy sejam copiadas para a pasta de backup.
 
+rsync_opts="$rsync_opts --filter='. $temp_dir/regras_deploy.txt'"
+	
 echo $estado > $temp_dir/progresso.txt							
 estado="fim_$estado" && echo $estado >> $temp_dir/progresso.txt
     
@@ -817,9 +836,16 @@ while read dir_destino; do
 				bak="$bak_dir/${app}_${host}"
 		       		rm -Rf $bak
 				mkdir -p $bak
-		        
+	
 				rsync $rsync_opts $destino/ $bak/ || end 1
-		        
+	
+				#### backup regras de deploy ###				
+
+				if [ $bkp_regras -eq 0 ]; then
+					cat $temp_dir/regras_deploy.txt > "${bak_dir}/regras_deploy_$app.txt" 
+					bkp_regras=1
+				fi
+	        
 				estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
 	        	fi
 	

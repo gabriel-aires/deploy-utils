@@ -1,0 +1,10 @@
+# Opções de deploy padrão
+
+modo_padrao=
+rsync_opts=
+
+# Expurgo de logs
+
+qtd_log_app=
+qtd_log_deploy=
+qtd_log_cron=
