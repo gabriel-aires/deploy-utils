@@ -1,44 +1,145 @@
-Instruções:
+==========
+Descrição:
+==========
 
-1) O script requer o pacote cifs-utils (instalar com o comando "sudo yum install cifs-utils") para montagem de diretórios compartilhados.
-2) Colocar os arquivos git_deploy.sh e rollback.sh no diretório /usr/local/sbin/
-3) Copiar o arquivo constantes.txt para o diretório /opt/git_deploy/
-4) Criar o arquivo credenciais.txt com as informações a seguir:
+	Script para deploy automatizado de aplicações ASP/PHP versionadas no GIT.
+	
+	Limitações do script:
 
-    user=<conta do AD com privilégios de leitura e escrita nos diretórios das aplicações>
-    pass=<senha>
-    dom=ANATEL
+	* não lida com permissões de arquivos, assumindo que as mesmas foram atribuídas de forma explícita no diretório compartilhado de destino.
+
+	* é voltado ao deploy de aplicações estruturadas em páginas (ex: .asp, .php, .js, .css, etc) que não requerem procedimentos específicos no host de
+	deploy,	como é o caso de outras tecnologias (ex: java - reinicialização de instâncias, limpeza de arquivos temporários, etc).
+
+	* para deploys de pacotes .war, consultar o projeto 'autodeploy-jboss', também versionado no GIT.	
+
+===========
+Instalação:
+===========
+
+1)	A última versão do script pode ser obtida a partir do git. Para a primeira instalação, utilizar o comando abaixo, dentro do diretório /opt:
+
+		'git clone git@git.anatel.gov.br:producao/autodeploy-paginas.git'
+
+	Para atualizar o script, utlizar o comando a seguir;
+
+		'git pull git@git.anatel.gov.br:producao/autodeploy-paginas.git'
+
+1)	Os arquivos no diretório /opt/autodeploy-paginas/sh/ devem possuir permissão de execução pelo usuário root.
+
+2)	O script requer o pacote cifs-utils (instalar com o comando "sudo yum install cifs-utils") para montagem de diretórios compartilhados.
+
+3)	O processo de deploy requer um compartilhamento no(s) host(s) de destino, onde o grupo PRODUCAO possua permissão de escrita. Para mais informações
+	acerca da configuração de um compartilhamento em ambiente linux, veja o módulo anatel_ad, provisionado pelo Puppet.
+
+4)	Para facilitar a utilização do script, pode ser criado um link simbólico chamado 'deploy' no diretório '/usr/local/sbin/', existente na variável $PATH
+	do usuário root. Isso permite a execução do comando 'deploy' a partir de qualquer diretório.
+
+5)	As variáveis de deploy globais foram definidas no arquivo /opt/autodeploy-paginas/conf/global.conf, o qual não deve ser editado diretamente.
+	Eventuais customizações devem ser feitas no arquivo user.conf, observando as restrições do template definido para este arquivo.
+
+6)	Para montar temporariamente os compartilhamentos nos hosts de destinos, o script requer um arquivo (definido em global.conf) contendo as 
+	credenciais do usuário a ser utilizado no processo de deploy, com as informações a seguir:
+
+	user=<conta do AD com privilégios de leitura e escrita nos diretórios das aplicações>
+	pass=<senha>
+	dom=ANATEL
     
-5) Os scripts devem possuir permissão de execução (executar "sudo chmod +x <nomedoarquivo.sh>")
-6) Gerar uma chave pública a ser armazenada no gitlab para o usuário que realizará os deploys (a definir), conforme segue:
+7)	O usuário utilizado para a montagem dos compartilhamentos também necessita de uma chave pública a ser armazenada no gitlab, conforme segue:
 
-    - Executar como root : "ssh-keygen -t rsa -C <nomeusuario@anatel.gov.br>"
-                           "eval $(ssh-agent -s)"
-                           "ssh-add .ssh/id_rsa.pub"
-    - Para ver a chave gerada, executar, no diretório HOME do usuário root: "cat .ssh/id_rsa.pub"
-    - Copiar a chave e inserir no GIT. Caminho: "http://git.anatel.gov.br/profile", "Edit Profile Settings", "SSH Keys", "Add SSH Key".
+	Executar como root :
 
+		'ssh-keygen -t rsa -C <nomeusuario@DOMINIO>'
+                'eval $(ssh-agent -s)'
+                'ssh-add .ssh/id_rsa.pub'
+
+	Para ver a chave gerada, executar, no diretório HOME do usuário root: "cat .ssh/id_rsa.pub"
+	Copiar a chave e inserir no GIT. Caminho: "http://git.anatel.gov.br/profile", "Edit Profile Settings", "SSH Keys", "Add SSH Key".
+
+=========
 Execução:
+=========
 
-Deploy: sudo git_deploy.sh <sistema> <branch, tag ou revisão> <chamado> (modo)
+1) Deploy simplificado:
 
-OBS: 
+	'deploy (opções) <sistema> <branch, tag ou commit> <ambiente>'
 
-a) Os modos de deploys consistem de "p" (preserva arquivos obsoletos no diretório de deploy) e "d" (deleta arquivos obsoletos no diretório de deploy). Este
-    argumento não é obrigatório. Quando não informado, o script utilizará o modo padrão especificado no arquivo /opt/git_deploy/constantes.txt.
+	No primeiro deploy de uma aplicação serão informadas suas variáveis de deploy específicas, que serão gravadas no arquivo 
+	/opt/autodeploy-paginas/conf/app/<nomeaplicacao>.conf, que será carregado e validado automaticamente nos deploys subsequentes. Embora não necessário,
+	cada arquivo <nomeaplicacao>.conf poderá ser editado diretamente pela equipe, conforme sua conveniência.
 
-b) Na primeira execução, será criado o arquivo parâmetros.txt no diretório /opt/git_deploy/. Devem ser informados, a cada primeiro deploy de uma aplicação:
-        
-        - repositório no gitlab (ex: ssh://git.anatel.gov.br:<porta>/<grupo>/<projeto>.git)
-        - diretório raiz da aplicação no repositório  (ex: src/main/asp)
-        - diretório de deploy (ex: \\<host>v$\sistemas_web\intranet\<sistema> )
-        
-Rollback: sudo rollback.sh <sistema>
+	Dados informados de maneira incorreta resultarão em erro, abortando o processo de deploy no modo não interativo (-f). Em modo interativo (padrão),
+	o usuário poderá efetuar a correção dos parâmetros inválidos durante a execução do script.
 
+	Durante o deploy, será observado um dos modos abaixo:
+
+	"p" - (padrão) preserva arquivos obsoletos no diretório de deploy. Somente os arquivos existentes na origem e no destino podem sofrer atualização. *
+	"d" - deleta arquivos obsoletos no diretório de deploy. Toda a árvore de diretórios será sincronizada. *
+
+	* Qualquer que seja o modo de deploy selecionado, a lista de arquivos/diretórios criados. modificados ou deletados será influenciada pelo filtro
+	aplicado ao comando rsync. Por padrão, as entradas ignoradas num arquivo .gitignore existente na raiz de um projeto versionado no git serão
+	igualmente ignoradas durante o processo de deploy.
+
+2) Deploy automático:
+
+	Para habilitar a execução de deploys automáticos, a seguinte entrada deverá ser acrescentada à crontab do usuário root (executar 'crontab -e'):
+
+	# Deploy automático
+	*/5 * * * * /bin/bash /opt/autodeploy-paginas/sh/autodeploy.sh
+
+	Para permitir o deploy automático de uma aplicação em um determinado ambiente, o arquivo <aplicacao>.conf deve ser editado conforme segue:
+
+	* A flag de deploy automático deve ser habilitada.
+
+		auto_<nomeambiente>='1'
+
+	* Selecionar uma branch a partir da qual serão obtidas as revisões para deploy.
+
+		branch_<nomeambiente>='<nomebranch>'
+
+	* Informar como será obtida a última revisão do git.
+
+		revisao_<nomeambiente>='commit'		#caso deseje-se obter o último commit na branch selecionada.
+
+		ou
+
+		revisao_<nomeambiente>='tag'		#caso deseje-se obter a última tag na branch selecionada.
+
+	OBS: para fins de teste, caso deseje-se forçar a execução do deploy de uma aplicação segundo as regras de deploy automático vigentes, executar:
+
+	'deploy -f <nomeaplicacao> auto <nomeambiente>'
+
+	
+3) Rollback:
+
+	'deploy' (opções) <sistema> rollback <ambiente>
+
+	O comando acima efetuará o rollback da aplicação segundo as regras do último deploy realizado. Isso é possível, porque o script sempre guarda
+	um backup local de todo o conteúdo a ser modificado no host de destino durante um deploy, bem como do filtro aplicado ao comando rsync.
+
+	Além da possibilidade de realizar um rollback sob demanda, o script também efetua rollback de maneira automática em todos os hosts cadastrados
+	quando ocorre um erro no deploy após o início da fase de escrita.
+
+
+=====
 Logs:
+=====
 
-São gravados 3 logs:
+	O diretório de logs padrão é '/opt/autodeploy-paginas/log'. São gravados 3 logs:
 
-- hist_deploy.txt (em /opt/git_deploy/)
-- modificacoes.txt (em /opt/git_deploy/chamados/<sistema>/<numchamado.anochamado>)
-- hist_deploy_sistema.txt (além do diretório anterior, em /opt/git_deploy/chamados/<sistema>/)
+	* /opt/autodeploy-paginas/log/deploy.log						- log de deploys geral.
+	* /opt/autodeploy-paginas/log/<nomesistema>/deploy.log					- log de deploys por aplicação.
+	* /opt/autodeploy-paginas/log/cron.log							- contém a saída do comando autodeploy.sh.
+	* /opt/autodeploy-paginas/log/<nomesistema>/<datahora_deploy>/<revisao>_<ambiente>/ 	- diretório com detalhes de cada deploy realizado.
+
+	Todos os logs são automaticamente expurgados conforme as regras definidas no arquivo global.conf ou user.conf.
+
+======
+Autor:
+======
+
+	Gabriel Aires Guedes - airesgabriel@gmail.com
+
+	Atualizado pela última vez em 27/04/2015.
+
+	
