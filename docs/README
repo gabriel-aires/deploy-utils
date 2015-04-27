@@ -13,6 +13,24 @@ Descrição:
 
 	* para deploys de pacotes .war, consultar o projeto 'autodeploy-jboss', também versionado no GIT.	
 
+=============
+Dependências:
+=============
+
+O script de deploy foi testado com os pacotes abaixo.
+
+Pacote		Versão
+----------------------
+
+bash 		4.1.2
+findutils	4.4.2
+grep		2.6.3
+cifs-utils	4.8.1
+git		1.7.1
+rsync		3.0.6
+samba		3.6.23
+sed		4.2.1
+
 ===========
 Instalação:
 ===========
@@ -55,6 +73,10 @@ Instalação:
 
 	Para ver a chave gerada, executar, no diretório HOME do usuário root: "cat .ssh/id_rsa.pub"
 	Copiar a chave e inserir no GIT. Caminho: "http://git.anatel.gov.br/profile", "Edit Profile Settings", "SSH Keys", "Add SSH Key".
+
+
+*	Embora a instalação deva ser realizada preferencialmente num único host, a instalação em várias máquinas é possível, desde que os diretórios
+	de lock, tmp, repo, bak, conf e template estejam num compartilhamento centralizado e acessível a todas as máquinas.
 
 =========
 Execução:
