@@ -674,6 +674,7 @@ done < $temp_dir/hosts_$ambiente
 
 ##### EXPURGO DE LOGS #######
 
+mkdir -p "${historico_dir}/${app}/"
 find "${historico_dir}/${app}/" -maxdepth 1 -type d | grep -vx "${historico_dir}/${app}/" | sort > $temp_dir/logs_total
 tail $temp_dir/logs_total --lines=${qtd_log_app} > $temp_dir/logs_ultimos
 grep -vxF --file=$temp_dir/logs_ultimos $temp_dir/logs_total > $temp_dir/logs_expurgo
