@@ -189,7 +189,7 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 		elif "$interativo"; then
 			while [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; do
 				echo -e "$msg"
-				read -r $var
+				read -p "$var: " -e -r $var
 				edit=1
                 		valor="echo \$${var}"
 		                valor="$(eval $valor)"
@@ -505,36 +505,33 @@ if $interativo; then
 	
 		echo -e "\nFavor informar abaixo os parâmetros da aplicação $app."
 
-		echo -e "\nInforme o repositorio a ser utilizado:"
-		read -r repo
-		valid "repo" "\nErro. Informe um caminho válido para o repositório GIT:"
+		echo -e "\nInforme o repositorio a ser utilizado."
+		read -p "repo: " -e -r repo
+		valid "repo" "\nErro. Informe um caminho válido para o repositório GIT."
 	
-		echo -e "\nInforme o caminho para a raiz da aplicação:"
-		read -r raiz											#utilizar a opção -r para permitir a leitura de contrabarras.
-		valid "raiz" "\nErro. Informe um caminho válido para a raiz da aplicação (substituir '\\' por '/', quando necessário):"
+		echo -e "\nInforme o caminho para a raiz da aplicação."
+		read -p "raiz: " -e -r raiz											#utilizar a opção -r para permitir a leitura de contrabarras.
+		valid "raiz" "\nErro. Informe um caminho válido para a raiz da aplicação (substituir '\\' por '/', quando necessário)."
 
-		echo -e "\nInforme os hosts para deploy da aplicação $app no ambiente de $ambiente (separados por espaço ou vírgula):"
-		read -r hosts_$ambiente
-		valid "hosts_$ambiente" "\nErro. Informe uma lista válida de hosts para deploy, separando-os por espaço ou vírgula:"
+		echo -e "\nInforme os hosts para deploy da aplicação $app no ambiente de $ambiente (separados por espaço ou vírgula)."
+		read -p "hosts_$ambiente: " -e -r hosts_$ambiente
+		valid "hosts_$ambiente" "\nErro. Informe uma lista válida de hosts para deploy, separando-os por espaço ou vírgula."
 
-		echo -e "\nInforme o diretório compartilhado para deploy (deve ser o mesmo em todos os hosts)"
-		read -r share
-		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c )"
+		echo -e "\nInforme o diretório compartilhado para deploy (deve ser o mesmo em todos os hosts)."
+		read -p "share: " -e -r share
+		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c )."
 	
-		echo -e "\nInforme o protocolo de segurança do compartilhamento:" 
-		read -r auth                          										 
-		valid "auth" "\nErro. Informe um protocolo válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):"
+		echo -e "\nInforme o protocolo de segurança do compartilhamento." 
+		read -p "auth: " -e -r auth                          										 
+		valid "auth" "\nErro. Informe um protocolo válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i)."
 
 		if [ -z $modo ]; then
 			echo -e "\nInforme um modo de deploy para o ambiente $ambiente ('d': deletar arquivos obsoletos / 'p': preservar arquivos obsoletos):" 
-			read -r modo_$ambiente
+			read -p "modo_$ambiente: " -e -r modo_$ambiente
 			valid "modo_$ambiente" "\nErro. Informe um modo de deploy válido para o ambiente $ambiente: p/d"
 		else
 			modo_$ambiente=$modo
 		fi                        										
-
-		raiz="$(echo $raiz | sed -r 's|^/||' | sed -r 's|/$||')"					#remove / no início ou fim do caminho.
-		share="$(echo $share | sed -r 's|/$||')"						#remove / no fim do caminho.
 
 		editconf "app" "$app" "$parametros_app/${app}.conf"
 		editconf "repo" "$repo" "$parametros_app/${app}.conf"
@@ -579,8 +576,9 @@ if $interativo; then
 		else
 			echo -e "\nErro. Há parâmetros incorretos no arquivo ${parametros_app}/${app}.conf:"
 			grep -v --file="$deploy_dir/template/app.template" "${parametros_app}/${app}.conf"
-			echo -e "\nRemover as entradas acima? (s/n)"
-			read -r ans
+
+			echo ""
+			read -p "Remover as entradas acima? (s/n): " -e -r ans
 
 			if [ "$ans" == "s" ] || [ "$ans" == "S" ]; then
 				grep --file="$deploy_dir/template/app.template" "${parametros_app}/${app}.conf" > "$temp_dir/app_conf_novo"
@@ -739,8 +737,12 @@ elif [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 	grep -Ev "^$|^ |^#" $repo_dir/$nomerepo/.gitignore >> $temp_dir/regras_deploy.txt
 
 	if [ ! "$raiz" == "/" ]; then
-		sed -i -r "s|^(! +)?/$raiz(/.+)|\1\2|" $temp_dir/regras_deploy.txt					#padrões de caminho iniciados com / são substituídos.
-		sed -i -r "s|^(! +)?($raiz)(/.+)|\1\2\3\n\1\3|" $temp_dir/regras_deploy.txt				#entradas iniciados sem / são preservadas. Uma linha com a substituição correspondente é acrescentada logo abaixo.
+
+		raiz_git=$(echo "$raiz" | sed -r "s|^/||" | sed -r "s|/$||")
+
+		sed -i -r "s|^(! +)?/$raiz_git(/.+)|\1\2|" $temp_dir/regras_deploy.txt					#padrões de caminho iniciados com / são substituídos.
+		sed -i -r "s|^(! +)?($raiz_git)(/.+)|\1\2\3\n\1\3|" $temp_dir/regras_deploy.txt				#entradas iniciados sem / são preservadas. Uma linha com a substituição correspondente é acrescentada logo abaixo.
+
 	fi
 
 	sed -i -r "s|^(! +)|+ |" $temp_dir/regras_deploy.txt								#um sinal de + (include) é acrescentado ao início das entradas precedidas de "!"
@@ -819,8 +821,8 @@ while read dir_destino; do
 		###### ESCRITA DAS MUDANÇAS EM DISCO ######
 	
 		if $interativo; then
-			echo -e "\nGravar mudanças em disco? (s/n)"
-			read ans </dev/tty
+			echo ""
+			read -p "Gravar mudanças em disco? (s/n): " -e -r ans </dev/tty
 		fi
 	    
 		if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ "$interativo" == "false" ]; then
