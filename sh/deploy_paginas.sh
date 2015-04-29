@@ -474,15 +474,15 @@ mklist "$ambientes" "$temp_dir/ambientes"
 echo "Iniciando processo de deploy..."
 
 if $interativo; then
-	valid "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas):"
-	valid "rev" "\nInforme a revisão corretamente:"
+	valid "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas)."
+	valid "rev" "\nInforme a revisão corretamente."
 	
 	if [ "$rev" == "auto" ]; then
 		echo "Erro. Não é permitido o deploy automático em modo interativo."
 		exit 1
 	fi
 
-	valid "ambiente" "\nInforme o ambiente corretamente:"
+	valid "ambiente" "\nInforme o ambiente corretamente."
 else
 	valid "app" "\nErro. Nome do sistema informado incorratemente."
 	valid "rev" "\nErro. Revisão/tag/branch informada incorretamente."
@@ -728,9 +728,9 @@ fi
 
 echo '' > $temp_dir/regras_deploy.txt
 
-if [ "$rev" == "rollback" ] && [ -f "${bak_dir}/regras_deploy_$app.txt" ]; then
+if [ "$rev" == "rollback" ] && [ -f "${bak_dir}/regras_deploy_${app}_${ambiente}.txt" ]; then
 
-	cat "${bak_dir}/regras_deploy_$app.txt" >> $temp_dir/regras_deploy.txt
+	cat "${bak_dir}/regras_deploy_${app}_${ambiente}.txt" >> $temp_dir/regras_deploy.txt
 
 elif [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 
@@ -844,7 +844,7 @@ while read dir_destino; do
 				#### backup regras de deploy ###				
 
 				if [ $bkp_regras -eq 0 ]; then
-					cat $temp_dir/regras_deploy.txt > "${bak_dir}/regras_deploy_$app.txt" 
+					cat $temp_dir/regras_deploy.txt > "${bak_dir}/regras_deploy_${app}_${ambiente}.txt" 
 					bkp_regras=1
 				fi
 	        
