@@ -275,16 +275,16 @@ function log () {
 	touch $lock_dir/deploy_log_edit && echo "$lock_dir/deploy_log_edit" >> $temp_dir/locks
 
 	touch $historico
-	touch $historico_dir/$app/deploy.log
+	touch ${historico_app}/deploy.log
 
 	tail --lines=$qtd_log_deploy $historico > $temp_dir/deploy_log_novo
-	tail --lines=$qtd_log_app $historico_dir/$app/deploy.log > $temp_dir/app_log_novo
+	tail --lines=$qtd_log_app ${historico_app}/deploy.log > $temp_dir/app_log_novo
 
 	echo -e "$mensagem_log" >> $temp_dir/deploy_log_novo
 	echo -e "$mensagem_log" >> $temp_dir/app_log_novo	
 	
 	cp -f $temp_dir/app_log_novo $atividade_dir/deploy.log
-	cp -f $temp_dir/app_log_novo $historico_dir/$app/deploy.log
+	cp -f $temp_dir/app_log_novo ${historico_app}/deploy.log
 	cp -f $temp_dir/deploy_log_novo $historico	
 
 	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
@@ -672,15 +672,17 @@ done < $temp_dir/hosts_$ambiente
 
 ##### EXPURGO DE LOGS #######
 
-mkdir -p "${historico_dir}/${app}/"
-find "${historico_dir}/${app}/" -maxdepth 1 -type d | grep -vx "${historico_dir}/${app}/" | sort > $temp_dir/logs_total
+historico_app="${historico_dir}/sistemas/${app}"
+
+mkdir -p "${historico_app}/"
+find "${historico_app}/" -maxdepth 1 -type d | grep -vx "${historico_app}/" | sort > $temp_dir/logs_total
 tail $temp_dir/logs_total --lines=${qtd_log_app} > $temp_dir/logs_ultimos
 grep -vxF --file=$temp_dir/logs_ultimos $temp_dir/logs_total > $temp_dir/logs_expurgo
 cat $temp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
 
 ##### CRIAÇÃO DO DIRETÓRIO DE LOG #####
 
-atividade_dir="${historico_dir}/${app}/$(date +%F_%Hh%Mm%Ss)/${rev}_${ambiente}"								#Diretório onde serão armazenados os logs do atendimento.
+atividade_dir="${historico_app}/$(date +%F_%Hh%Mm%Ss)/${rev}_${ambiente}"								#Diretório onde serão armazenados os logs do atendimento.
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
 	rmdir ${atividade_dir}_PENDENTE
