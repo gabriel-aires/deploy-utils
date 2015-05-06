@@ -49,6 +49,35 @@ ambiente=$3
 
 #### Funções ##########
 
+function install_dir () {										##### Determina o diretório de instalação do script ####
+
+	if [ -L $0 ]; then
+		caminho_script=$(dirname $(readlink $0))
+	else
+		caminho_script=$(dirname $BASH_SOURCE)
+	fi
+	
+	if [ -z $(echo $caminho_script | grep -Ex "^/.*$") ]; then 					#caminho é relativo
+		
+		if [ "$caminho_script" == "." ]; then
+			caminho_script="$(pwd)"
+		else
+			caminho_script="$(pwd)/$caminho_script"
+	
+			while [ $(echo "$caminho_script" | grep -E "/\./" | wc -l) -ne 0 ]; do   	#substitui /./ por /
+				caminho_script=$(echo "$caminho_script" | sed -r "s|/\./|/|")
+			done
+	
+			while [ $(echo "$caminho_script" | grep -E "/\.\./" | wc -l) -ne 0 ]; do   	#corrige a string caso o script tenha sido chamado a partir de um subdiretório
+				caminho_script=$(echo "$caminho_script" | sed -r "s|[^/]+/\.\./||")
+			done
+		fi
+	fi
+	
+	diretorio_instalacao=$(dirname $caminho_script)
+
+}
+
 function checkout () {											# o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
 	if [ ! -d "$repo_dir/$nomerepo/.git" ]; then
@@ -409,14 +438,23 @@ if $interativo; then
 	clear
 fi
 
-deploy_dir="/opt/autodeploy-paginas"										#diretório de instalação.
+install_dir
+
+if [ -d "$diretorio_instalacao" ] && [ -f "$diretorio_instalacao/conf/global.conf" ]; then
+	deploy_dir="$diretorio_instalacao"
+elif [ -f '/opt/autodeploy-paginas/conf/global.conf' ]; then
+	deploy_dir='/opt/autodeploy-paginas'						#local de instalação padrão
+else
+	echo 'Arquivo global.conf não encontrado.'
+	exit 1
+fi
 
 if [ "$(grep -v --file=$deploy_dir/template/global.template $deploy_dir/conf/global.conf | wc -l)" -ne "0" ]; then
 	echo 'O arquivo global.conf não atende ao template correspondente.'
 	exit 1
 fi
 
-source "$deploy_dir/conf/global.conf" || exit 1								#carrega o arquivo de constantes.
+source "$deploy_dir/conf/global.conf" || exit 1						#carrega o arquivo de constantes.
 
 if [ -f "$deploy_dir/conf/user.conf" ] && [ -f "$deploy_dir/conf/user.template" ]; then
 	if [ "$(grep -v --file=$deploy_dir/template/user.template $deploy_dir/conf/user.conf | wc -l)" -ne "0" ]; then
