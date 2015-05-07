@@ -11,6 +11,46 @@ function log () {
 
 }
 
+function global_log () {
+		
+	##### LOG DE DEPLOYS GLOBAL #####
+
+	obs_log="$1"
+	
+	horario_log=$(echo "$(date +%Y%m%d%H%M%S)" | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1          \4h\5m\6s           |")
+		
+	tamanho_app=$(echo -n $APP | wc -m)
+	app_log=$(echo '                    ' | sed -r "s|^ {$tamanho_app}|$APP|")
+
+	rev_log=$(echo $REV | sed -r "s|^(.........).*$|\1|")
+	tamanho_rev=$(echo -n $rev_log | wc -m)
+ 	rev_log=$(echo '                    ' | sed -r "s|^ {$tamanho_rev}|$rev_log|")
+
+	tamanho_ambiente=$(echo -n $AMBIENTE | wc -m) 
+	ambiente_log=$(echo '                    ' | sed -r "s|^ {$tamanho_ambiente}|$AMBIENTE|")
+
+	tamanho_host=$(echo -n $HOST | wc -m) 
+	host_log=$(echo '                    ' | sed -r "s|^ {$tamanho_host}|$HOST|")
+	
+	mensagem_log="$horario_log$app_log$rev_log$ambiente_log$host_log$obs_log"
+
+	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
+
+	while [ -f "$GLOBAL_LOCK/deploy_log_edit" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
+		sleep 1	
+	done
+
+	touch $GLOBAL_LOCK/deploy_log_edit
+
+	touch $GLOBAL_LOG
+
+	echo -e "$mensagem_log" >> $GLOBAL_LOG
+	
+	rm -f $GLOBAL_LOCK/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
+
+}
+
+
 function end () {
 
 	if [ -d "$TEMP" ]; then
@@ -31,7 +71,9 @@ ARQ_PROPS_LOCAL='/opt/autodeploy-jboss/conf/local.conf'
 TEMP='/opt/autodeploy-jboss/temp'
 LOGS='/opt/autodeploy-jboss/log'
 LOG="$LOGS/deploy-$(date +%F).log"
+GLOBAL_LOG='/mnt/deploy_log/deploy.log'
 LOCK='/var/lock/autodeploy-jboss'
+GLOBAL_LOCK='/var/lock/autodeploy/'
 
 source "$ARQ_PROPS_GLOBAL" || exit 1
 source "$ARQ_PROPS_LOCAL" || exit 1
@@ -167,12 +209,14 @@ else
 	
 		cat $TEMP/war.list | while read PACOTE; do
 
-			WAR=$( echo $PACOTE | sed -r "s|^${ORIGEM}/[^/]+/([^/]+\.[Ww][Aa][Rr])$|\1|" )
-			APP=$( echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
+			WAR=$(basename $PACOTE)
+			REV=$(unzip -p $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s/^[^ ]+ ([^ ]+)$/\1/")
+			APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 			OLD=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war")
 	
 			if [ $( echo $OLD | wc -l ) -ne 1 ] || [ -z $OLD ]; then
 				log "ERRO" "Deploy abortado. Não foi encontrado pacote anterior. O deploy deverá ser feito manualmente."
+				global_log "Deploy abortado. Pacote anterior não encontrado."
 			else
 				log "INFO" "O pacote $OLD será substituído".
 		
@@ -190,6 +234,7 @@ else
 					[ $(grep -Ei "[^#a-z0-9]*start *\(\)" $SCRIPT_INIT | wc -l ) -ne 1 ] || \
 					[ $(grep -Ei "[^#a-z0-9]*stop *\(\)" $SCRIPT_INIT | wc -l ) -ne 1 ]; then
 						log "ERRO" "Não foi encontrado o script de inicialização da instância JBoss. O deploy deverá ser feito manualmente."
+						global_log "Deploy abortado. Script de inicialização não encontrado."
 				else
 					log "INFO" "Instância do JBOSS:     \t$INSTANCIA_JBOSS"
 					log "INFO" "Diretório de deploy:    \t$DIR_DEPLOY"
@@ -202,6 +247,7 @@ else
 
 					if [ $(pgrep -f "jboss.*$INSTANCIA_JBOSS" | wc -l) -ne 0 ]; then
 						log "ERRO" "Não foi possível parar a instância $INSTANCIA_JBOSS do JBOSS. Deploy abortado."
+						global_log "Deploy abortado. Impossível parar a instância."	
 					else
 						rm -f $OLD 
 						mv $PACOTE $DIR_DEPLOY/$APP.war 
@@ -221,8 +267,10 @@ else
 
 						if [ $(pgrep -f "jboss.*$INSTANCIA_JBOSS" | wc -l) -eq 0 ]; then
 					                log "ERRO" "O deploy do arquivo $PACOTE foi concluído, porém não foi possível reiniciar a instância do JBOSS."
+							global_log "Deploy concluído. Erro ao iniciar a instância JBOSS."
 						else
 							log "INFO" "Deploy do arquivo $PACOTE concluído com sucesso!"
+							global_log "Deploy do pacote $PACOTE concluído com sucesso."
 						fi
 					
 					fi
