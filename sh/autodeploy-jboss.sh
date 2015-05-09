@@ -7,6 +7,8 @@
 
 function log () {
 
+	##### LOG DE DEPLOY DETALHADO ####
+
 	echo -e "$(date +"%F %Hh%Mm%Ss") : $HOSTNAME : $1 : $2" 
 
 }
@@ -40,16 +42,82 @@ function global_log () {
 		sleep 1	
 	done
 
-	touch $GLOBAL_LOCK/deploy_log_edit
+	EDIT_LOG=1
+	touch "$GLOBAL_LOCK/deploy_log_edit"
 
 	touch $GLOBAL_LOG
 
 	echo -e "$mensagem_log" >> $GLOBAL_LOG
 	
 	rm -f $GLOBAL_LOCK/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
-
+	EDIT_LOG=0
 }
 
+function jboss_script_init () {
+
+	##### LOCALIZA SCRIPT DE INICIALIZAÇÃO DA INSTÂNCIA JBOSS #####
+	
+	local caminho_jboss=$1
+	local instancia=$2
+	
+	if [ -n "$caminho_jboss" ] && [ -n "$instancia" ] && [ -d  "${caminho_jboss}/server/${instancia}" ]; then
+	
+		unset $SCRIPT_INIT
+		find /etc/init.d/ -type f -iname '*jboss*' > "$TEMP/scripts_jboss.list"
+		
+		#verifica todos os scripts de jboss encontrados em /etc/init.d até localizar o correto.
+		while read script_jboss && [ -z "$SCRIPT_INIT" ]; do
+		
+			#verifica se o script aceita os argumentos 'start' e 'stop'
+			if [ -n $(grep -E "^start\)" "$script_jboss") ] && [ -n $(grep -E "^stop" "$script_jboss") ]; then
+		
+				#retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
+				local linha_script=$(grep -Ex "^[^#]+[\=].*[/\$].+/server/[^/]+/" "$script_jboss" | head -1 )
+				
+				if [ -n "$linha_script" ]; then
+				
+					local jboss_conf=$(echo "$linha_script" | sed -r "s|^.*/server/([^/]+).*$|\1|")
+		
+					#Se a instância estiver definida como uma variável no script, o loop a seguir tenta encontrar o seu valor em até 3 iterações.
+					
+					local var_jboss_conf=$( echo "$jboss_conf" | grep -Ex "^\\$.*$")
+					local i='0'
+					
+					while [ -n "$var_jboss_conf" ] && [ "$i" -lt '3' ]; do														
+					
+						#remove o caractere '$', restando somente o nome da variável
+						var_jboss_conf=$(echo "$var_jboss_conf" | sed -r "|^.||")
+						
+						#encontra a linha onde a variável foi setada e retorna a string após o sinal de "="										
+						jboss_conf=$(grep -Ex "^$var_jboss_conf=" "$script_jboss" | head -1 | sed -r "s|^$var_jboss_conf=([\'\"])?([^ ]+)([\'\"])?.*$|\2|" )
+		
+						#verificar se houve substituição de parâmetros
+						if [ $(echo "$jboss_conf" | grep -Ex "^\\$\{$var_jboss_conf[:=-]+([\'\"])?[A-Za-z0-9\-\_\.]+([\'\"])?\}.*$") ]; then
+							jboss_conf=$(echo "$jboss_conf" | sed -r "s|^\\$\{$var_jboss_conf[\:\=\-\+]+([\'\"])?([\$A-Za-z0-9\-\_\.]+)([\'\"])?\}.*$|\2|")
+						fi
+						
+						#atualiza condições para entrada no loop.
+						var_jboss_conf=$( echo "$jboss_conf" | grep -Ex "^\\$.*$")
+						i=(($i+1))
+						
+					done
+				
+					#verifica se o script encontrado corresponde à instância desejada.
+					if [ -d "${caminho_jboss}/server/${jboss_conf}" ] && [ "$jboss_conf" == "$instancia"]; then
+						SCRIPT_INIT=$script_jboss
+					fi
+					
+				fi
+				
+			fi
+			
+		done < "$TEMP/scripts_jboss.list"
+		
+	else
+		log "ERRO" "Parâmetros incorretos ou instância JBOSS não encontrada."
+	fi
+	
+}
 
 function end () {
 
@@ -61,6 +129,10 @@ function end () {
 		rmdir $LOCK
 	fi
 
+	if [ "$EDIT_LOG" == "1" ]; then
+		rm -f $GLOBAL_LOCK/deploy_log_edit
+	fi
+	
 	exit "$1"
 }
 
@@ -73,7 +145,9 @@ LOGS='/opt/autodeploy-jboss/log'
 LOG="$LOGS/deploy-$(date +%F).log"
 GLOBAL_LOG='/mnt/deploy_log/deploy.log'
 LOCK='/var/lock/autodeploy-jboss'
-GLOBAL_LOCK='/var/lock/autodeploy/'
+GLOBAL_LOCK='/var/lock/autodeploy'
+
+trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
 source "$ARQ_PROPS_GLOBAL" || exit 1
 source "$ARQ_PROPS_LOCAL" || exit 1
@@ -161,21 +235,21 @@ if [ $(cat $TEMP/arq.list | wc -l) -lt 1 ]; then
 else
 	# Caso haja arquivos, verificar se o nome do pacote corresponde ao diretório da aplicação.
 
-	echo '' > $TEMP/remove_incorretos.list
+	echo '' > "$TEMP/remove_incorretos.list"
 
-	cat $TEMP/arq.list | while read l; do
+	cat "$TEMP/arq.list" | while read l; do
 
 		WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
 		APP=$( echo $l | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 	
 		if [ $(echo $WAR | grep -Ei "^$APP" | wc -l) -ne 1 ]; then
-			echo $l >> $TEMP/remove_incorretos.list
+			echo $l >> "$TEMP/remove_incorretos.list"
 		fi
 	done
 	
 	if [ $(cat $TEMP/remove_incorretos.list | wc -l) -gt 0 ]; then
 		log "WARN" "Removendo pacotes em diretórios incorretos..."
-		cat $TEMP/remove_incorretos.list | xargs -r -d "\n" rm -fv
+		cat "$TEMP/remove_incorretos.list" | xargs -r -d "\n" rm -fv
 	fi
 
 	# Caso haja pacotes, deve haver no máximo um pacote por diretório
@@ -228,13 +302,13 @@ else
 				DIR_WORK=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $DIR_WORK)
 				DIR_DATA="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/data"
 				DIR_DATA=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $DIR_DATA)
-				SCRIPT_INIT=$(grep -REil "[^#]*JBOSS[^#\=]*\=[^#]*$INSTANCIA_JBOSS.*$" /etc/init.d)
-
-				if [ $(echo $SCRIPT_INIT | wc -l) -ne 1 ] || \
-					[ $(grep -Ei "[^#a-z0-9]*start *\(\)" $SCRIPT_INIT | wc -l ) -ne 1 ] || \
-					[ $(grep -Ei "[^#a-z0-9]*stop *\(\)" $SCRIPT_INIT | wc -l ) -ne 1 ]; then
-						log "ERRO" "Não foi encontrado o script de inicialização da instância JBoss. O deploy deverá ser feito manualmente."
-						global_log "Deploy abortado. Script de inicialização não encontrado."
+				
+				#tenta localizar o script de inicialização da instância e seta a variável $SCRIPT_INIT, caso tenha sucesso
+				jboss_script_init "$(dirname $CAMINHO_INSTANCIAS_JBOSS)" "$INSTANCIA_JBOSS"
+				
+				if [ -z "$SCRIPT_INIT" ]; then
+					log "ERRO" "Não foi encontrado o script de inicialização da instância JBoss. O deploy deverá ser feito manualmente."
+					global_log "Deploy abortado. Script de inicialização não encontrado."
 				else
 					log "INFO" "Instância do JBOSS:     \t$INSTANCIA_JBOSS"
 					log "INFO" "Diretório de deploy:    \t$DIR_DEPLOY"
