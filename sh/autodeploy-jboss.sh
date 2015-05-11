@@ -5,6 +5,35 @@
 
 ###### FUNÇÕES ######
 
+function install_dir () {										##### Determina o diretório de instalação do script ####
+
+	if [ -L $0 ]; then
+		caminho_script=$(dirname $(readlink $0))
+	else
+		caminho_script=$(dirname $BASH_SOURCE)
+	fi
+	
+	if [ -z $(echo $caminho_script | grep -Ex "^/.*$") ]; then 					#caminho é relativo
+		
+		if [ "$caminho_script" == "." ]; then
+			caminho_script="$(pwd)"
+		else
+			caminho_script="$(pwd)/$caminho_script"
+	
+			while [ $(echo "$caminho_script" | grep -E "/\./" | wc -l) -ne 0 ]; do   	#substitui /./ por /
+				caminho_script=$(echo "$caminho_script" | sed -r "s|/\./|/|")
+			done
+	
+			while [ $(echo "$caminho_script" | grep -E "/\.\./" | wc -l) -ne 0 ]; do   	#corrige a string caso o script tenha sido chamado a partir de um subdiretório
+				caminho_script=$(echo "$caminho_script" | sed -r "s|[^/]+/\.\./||")
+			done
+		fi
+	fi
+	
+	diretorio_instalacao=$(dirname $caminho_script)
+
+}
+
 function log () {
 
 	##### LOG DE DEPLOY DETALHADO ####
@@ -38,18 +67,18 @@ function global_log () {
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
-	while [ -f "$GLOBAL_LOCK/deploy_log_edit" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
+	while [ -f "$GLOBAL_LOCK" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
 		sleep 1	
 	done
 
 	EDIT_LOG=1
-	touch "$GLOBAL_LOCK/deploy_log_edit"
+	touch "$GLOBAL_LOCK"
 
 	touch $GLOBAL_LOG
 
 	echo -e "$mensagem_log" >> $GLOBAL_LOG
 	
-	rm -f $GLOBAL_LOCK/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
+	rm -f $GLOBAL_LOCK 							#remove a trava sobre o arquivo de log tão logo seja possível.
 	EDIT_LOG=0
 }
 
@@ -63,7 +92,7 @@ function jboss_script_init () {
 	if [ -n "$caminho_jboss" ] && [ -n "$instancia" ] && [ -d  "${caminho_jboss}/server/${instancia}" ]; then
 	
 		unset $SCRIPT_INIT
-		find /etc/init.d/ -type f -iname '*jboss*' > "$TEMP/scripts_jboss.list"
+		find /etc/init.d/ -type f -iname '*jboss*' > "$TMP_DIR/scripts_jboss.list"
 		
 		#verifica todos os scripts de jboss encontrados em /etc/init.d até localizar o correto.
 		while read script_jboss && [ -z "$SCRIPT_INIT" ]; do
@@ -111,7 +140,7 @@ function jboss_script_init () {
 				
 			fi
 			
-		done < "$TEMP/scripts_jboss.list"
+		done < "$TMP_DIR/scripts_jboss.list"
 		
 	else
 		log "ERRO" "Parâmetros incorretos ou instância JBOSS não encontrada."
@@ -121,16 +150,16 @@ function jboss_script_init () {
 
 function end () {
 
-	if [ -d "$TEMP" ]; then
-		rm -Rf ${TEMP}/*
+	if [ -d "$TMP_DIR" ]; then
+		rm -Rf ${TMP_DIR}/*
 	fi
 
-	if [ -d "$LOCK" ]; then
-		rmdir $LOCK
+	if [ -f "$LOCK" ]; then
+		rm -f $LOCK
 	fi
 
 	if [ "$EDIT_LOG" == "1" ]; then
-		rm -f $GLOBAL_LOCK/deploy_log_edit
+		rm -f $GLOBAL_LOCK
 	fi
 	
 	exit "$1"
@@ -138,40 +167,36 @@ function end () {
 
 ###### INICIALIZAÇÃO ######
 
-ARQ_PROPS_GLOBAL='/opt/autodeploy-jboss/conf/global.conf'
-ARQ_PROPS_LOCAL='/opt/autodeploy-jboss/conf/local.conf'
-TEMP='/opt/autodeploy-jboss/temp'
-LOGS='/opt/autodeploy-jboss/log'
-LOG="$LOGS/deploy-$(date +%F).log"
-GLOBAL_LOG='/mnt/deploy_log/deploy.log'
-LOCK='/var/lock/autodeploy-jboss'
-GLOBAL_LOCK='/var/lock/autodeploy'
-
 trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
+
+install_dir
+
+ARQ_PROPS_GLOBAL="${diretorio_instalacao}/conf/global.conf"
+ARQ_PROPS_LOCAL="${diretorio_instalacao}/conf/local.conf"
 
 source "$ARQ_PROPS_GLOBAL" || exit 1
 source "$ARQ_PROPS_LOCAL" || exit 1
 
 # cria lock.
 
-if [ -d "$LOCK" ]; then
+if [ -f "$LOCK" ]; then
 	exit 0
 else
-	mkdir $LOCK
+	touch $LOCK
 fi
 
 # limpa diretório temporário.
 
-if [ ! -z "$TEMP" ]; then
-	mkdir -p $TEMP
-	rm -f "$TEMP/*"
+if [ ! -z "$TMP_DIR" ]; then
+	mkdir -p $TMP_DIR
+	rm -f "$TMP_DIR/*"
 fi
 
 # cria pasta de logs / expurga logs de deploy do mês anterior.
 
-if [ ! -z "$LOGS" ]; then
-	mkdir -p $LOGS
-	find $LOGS -type f | grep -v $(date "+%Y-%m") | xargs rm -f
+if [ ! -z "$LOG_DIR" ]; then
+	mkdir -p $LOG_DIR
+	find $LOG_DIR -type f | grep -v $(date "+%Y-%m") | xargs rm -f
 fi
 
 ######## VALIDAÇÃO #########
@@ -228,60 +253,60 @@ find "$DESTINO" -type f | grep -Eixv "^${DESTINO}/[^/]+/[^/]+\.log$" | xargs -r 
 
 log "INFO" "Procurando novos pacotes..."
 
-find "$ORIGEM" -type f > $TEMP/arq.list
+find "$ORIGEM" -type f > $TMP_DIR/arq.list
 
-if [ $(cat $TEMP/arq.list | wc -l) -lt 1 ]; then
+if [ $(cat $TMP_DIR/arq.list | wc -l) -lt 1 ]; then
 	log "INFO" "Não foram encontrados novos pacotes para deploy."
 else
 	# Caso haja arquivos, verificar se o nome do pacote corresponde ao diretório da aplicação.
 
-	echo '' > "$TEMP/remove_incorretos.list"
+	echo '' > "$TMP_DIR/remove_incorretos.list"
 
-	cat "$TEMP/arq.list" | while read l; do
+	cat "$TMP_DIR/arq.list" | while read l; do
 
 		WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
 		APP=$( echo $l | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 	
 		if [ $(echo $WAR | grep -Ei "^$APP" | wc -l) -ne 1 ]; then
-			echo $l >> "$TEMP/remove_incorretos.list"
+			echo $l >> "$TMP_DIR/remove_incorretos.list"
 		fi
 	done
 	
-	if [ $(cat $TEMP/remove_incorretos.list | wc -l) -gt 0 ]; then
+	if [ $(cat $TMP_DIR/remove_incorretos.list | wc -l) -gt 0 ]; then
 		log "WARN" "Removendo pacotes em diretórios incorretos..."
-		cat "$TEMP/remove_incorretos.list" | xargs -r -d "\n" rm -fv
+		cat "$TMP_DIR/remove_incorretos.list" | xargs -r -d "\n" rm -fv
 	fi
 
 	# Caso haja pacotes, deve haver no máximo um pacote por diretório
 
-	find "$ORIGEM" -type f > $TEMP/arq.list
+	find "$ORIGEM" -type f > $TMP_DIR/arq.list
 
-	echo '' > $TEMP/remove_versoes.list
+	echo '' > $TMP_DIR/remove_versoes.list
 
-	cat $TEMP/arq.list | while read l; do
+	cat $TMP_DIR/arq.list | while read l; do
 
 		WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
 		DIR=$( echo $l | sed -r "s|^(${ORIGEM}/[^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 	
 		if [ $( find $DIR -type f | wc -l ) -ne 1 ]; then
-			echo $l >> $TEMP/remove_versoes.list
+			echo $l >> $TMP_DIR/remove_versoes.list
 		fi
 	done
 
-	if [ $(cat $TEMP/remove_versoes.list | wc -l) -gt 0 ]; then
+	if [ $(cat $TMP_DIR/remove_versoes.list | wc -l) -gt 0 ]; then
 		log "WARN" "Removendo pacotes com mais de uma versão..."
-		cat $TEMP/remove_versoes.list | xargs -r -d "\n" rm -fv
+		cat $TMP_DIR/remove_versoes.list | xargs -r -d "\n" rm -fv
 	fi
 
-	find "$ORIGEM" -type f > $TEMP/war.list
+	find "$ORIGEM" -type f > $TMP_DIR/war.list
 
-	if [ $(cat $TEMP/war.list | wc -l) -lt 1 ]; then
+	if [ $(cat $TMP_DIR/war.list | wc -l) -lt 1 ]; then
 		log "INFO" "Não há novos pacotes para deploy."
 	else
 		log "INFO" "Verificação do diretório ${CAMINHO_PACOTES_REMOTO} concluída. Iniciando processo de deploy dos pacotes abaixo."
-		cat $TEMP/war.list 
+		cat $TMP_DIR/war.list 
 	
-		cat $TEMP/war.list | while read PACOTE; do
+		cat $TMP_DIR/war.list | while read PACOTE; do
 
 			WAR=$(basename $PACOTE)
 			REV=$(unzip -p $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s/^[^ ]+ ([^ ]+)$/\1/")
@@ -296,12 +321,12 @@ else
 		
 				DIR_DEPLOY=$(echo $OLD | sed -r "s|^(${CAMINHO_INSTANCIAS_JBOSS}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[Ww][Aa][Rr]$|\1|")
 				INSTANCIA_JBOSS=$(echo $OLD | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
-				DIR_TEMP="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/tmp"
-				DIR_TEMP=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $DIR_TEMP)
-				DIR_WORK="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/work"
-				DIR_WORK=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $DIR_WORK)
-				DIR_DATA="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/data"
-				DIR_DATA=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $DIR_DATA)
+				JBOSS_TEMP="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/tmp"
+				JBOSS_TEMP=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $JBOSS_TEMP)
+				JBOSS_WORK="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/work"
+				JBOSS_WORK=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $JBOSS_WORK)
+				JBOSS_DATA="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/data"
+				JBOSS_DATA=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $JBOSS_DATA)
 				
 				#tenta localizar o script de inicialização da instância e seta a variável $SCRIPT_INIT, caso tenha sucesso
 				jboss_script_init "$(dirname $CAMINHO_INSTANCIAS_JBOSS)" "$INSTANCIA_JBOSS"
@@ -327,20 +352,20 @@ else
 						mv $PACOTE $DIR_DEPLOY/$APP.war 
 						chown jboss:jboss $DIR_DEPLOY/$APP.war 
 				
-						if [ -d "$DIR_TEMP" ]; then
-							rm -Rf $DIR_TEMP/* 
-					        fi
-						if [ -d "$DIR_WORK" ]; then
-				        	       	rm -Rf $DIR_WORK/* 
-					        fi
-						if [ -d "$DIR_DATA" ]; then
-					                rm -Rf $DIR_TEMP/* 
+						if [ -d "$JBOSS_TEMP" ]; then
+							rm -Rf $JBOSS_TEMP/* 
+						fi
+						if [ -d "$JBOSS_WORK" ]; then
+							rm -Rf $JBOSS_WORK/* 
+						fi
+						if [ -d "$JBOSS_DATA" ]; then
+							rm -Rf $JBOSS_DATA/* 
 						fi
 		 
 						eval $INICIAR_INSTANCIA && wait				
 
 						if [ $(pgrep -f "jboss.*$INSTANCIA_JBOSS" | wc -l) -eq 0 ]; then
-					                log "ERRO" "O deploy do arquivo $PACOTE foi concluído, porém não foi possível reiniciar a instância do JBOSS."
+							log "ERRO" "O deploy do arquivo $PACOTE foi concluído, porém não foi possível reiniciar a instância do JBOSS."
 							global_log "Deploy concluído. Erro ao iniciar a instância JBOSS."
 						else
 							log "INFO" "Deploy do arquivo $PACOTE concluído com sucesso!"
@@ -359,9 +384,9 @@ fi
 log "INFO" "Copiando logs de deploy e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
 echo ''
 
-find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > $TEMP/app.list
+find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > $TMP_DIR/app.list
 
-cat $TEMP/app.list | while read APP; do
+cat $TMP_DIR/app.list | while read APP; do
 
 	LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${APP}/log/server.log" 2> /dev/null)
 	CAMINHO_APP=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" 2> /dev/null)
