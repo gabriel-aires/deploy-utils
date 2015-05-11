@@ -1,2 +1,1 @@
-/conf/local.d/*
-! /conf/local.d/.gitignore
+/conf/local.d/*.conf
