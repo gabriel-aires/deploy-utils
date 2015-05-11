@@ -1,0 +1,15 @@
+### Definir abaixo as constantes do ambiente
+
+### compartilhamentos para obtenção de pacotes, cópia de logs jboss:
+CAMINHO_PACOTES_REMOTO=
+CAMINHO_LOGS_REMOTO=
+
+### caminho para log de deploys global:
+GLOBAL_LOCK=
+GLOBAL_LOG=
+
+### diretórios/arquivos utilizados no processo de deploy jboss:
+TMP_DIR=
+LOG_DIR=
+LOG=
+LOCK=

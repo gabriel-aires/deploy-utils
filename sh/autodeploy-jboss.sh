@@ -175,6 +175,14 @@ ARQ_PROPS_GLOBAL="${diretorio_instalacao}/conf/global.conf"
 DIR_PROPS_LOCAL="${diretorio_instalacao}/conf/local.d"
 ARQ_PROPS_LOCAL=$(find "$DIR_PROPS_LOCAL" -type f -iname "*.conf")
 
+# Verifica se o arquivo global.conf atende ao template correspondente.
+
+if [ "$(grep -v --file=${diretorio_instalacao}/template/global.template $ARQ_PROPS_GLOBAL | wc -l)" -ne "0" ]; then
+	exit 1
+fi
+
+# Carrega constantes.
+
 source "$ARQ_PROPS_GLOBAL" || exit 1
 
 # cria lock.
@@ -203,6 +211,14 @@ else
 fi
 
 echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
+
+	# Verifica se o arquivo atende ao template correspondente.
+
+	if [ "$(grep -v --file=${diretorio_instalacao}/template/local.template $LOCAL_CONF | wc -l)" -ne "0" ]; then
+		continue
+	fi
+
+	# Carrega parâmetros referentes os ambiente JBOSS.
 
 	source "$LOCAL_CONF" || continue	
 	rm -f "$TMP_DIR/*"
