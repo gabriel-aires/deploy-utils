@@ -286,7 +286,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	
 		echo '' > "$TMP_DIR/remove_incorretos.list"
 	
-		cat "$TMP_DIR/arq.list" | while read l; do
+		while read l; do
 	
 			WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
 			APP=$( echo $l | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
@@ -294,7 +294,8 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 			if [ $(echo $WAR | grep -Ei "^$APP" | wc -l) -ne 1 ]; then
 				echo $l >> "$TMP_DIR/remove_incorretos.list"
 			fi
-		done
+			
+		done < "$TMP_DIR/arq.list"
 		
 		if [ $(cat $TMP_DIR/remove_incorretos.list | wc -l) -gt 0 ]; then
 			log "WARN" "Removendo pacotes em diretórios incorretos..."
@@ -307,7 +308,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	
 		echo '' > $TMP_DIR/remove_versoes.list
 	
-		cat $TMP_DIR/arq.list | while read l; do
+		while read l; do
 	
 			WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
 			DIR=$( echo $l | sed -r "s|^(${ORIGEM}/[^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
@@ -315,7 +316,8 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 			if [ $( find $DIR -type f | wc -l ) -ne 1 ]; then
 				echo $l >> $TMP_DIR/remove_versoes.list
 			fi
-		done
+			
+		done < "$TMP_DIR/arq.list"
 	
 		if [ $(cat $TMP_DIR/remove_versoes.list | wc -l) -gt 0 ]; then
 			log "WARN" "Removendo pacotes com mais de uma versão..."
@@ -330,7 +332,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 			log "INFO" "Verificação do diretório ${CAMINHO_PACOTES_REMOTO} concluída. Iniciando processo de deploy dos pacotes abaixo."
 			cat $TMP_DIR/war.list 
 		
-			cat $TMP_DIR/war.list | while read PACOTE; do
+			while read PACOTE; do
 	
 				WAR=$(basename $PACOTE)
 				REV=$(unzip -p $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s/^[^ ]+ ([^ ]+)$/\1/")
@@ -345,7 +347,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 				
 				else
 				
-					cat "$TMP_DIR/old.list" | while read OLD; do
+					while read OLD; do
 					
 						log "INFO" "O pacote $OLD será substituído".
 				
@@ -403,51 +405,55 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 								fi
 							
 							fi
+							
 						fi
-					done
+						
+					done < "$TMP_DIR/old.list"
 					
 					rm -f $PACOTE
 					
 				fi
-			done
+				
+			done < "$TMP_DIR/war.list"
+			
 		fi
+		
 	fi
 	
 	######## LOGS #########
 	
-	log "INFO" "Copiando logs de deploy e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
+	log "INFO" "Copiando logs da rotina e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
 	echo ''
 	
-	find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > $TMP_DIR/app.list
+	find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > "$TMP_DIR/app_destino.list"
 	
-	cat $TMP_DIR/app.list | while read APP; do
+	while read APP; do
 	
-		LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${APP}/log/server.log" 2> /dev/null)
-		CAMINHO_APP=$(find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" 2> /dev/null)
+		echo '' > "$TMP_DIR/app_origem.list"
+		find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/app_origem.list" 2> /dev/null
 	
-		if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
-	
-			cp -f $LOG_APP "$DESTINO/$APP/server.log"
-			cp -f $LOG "$DESTINO/$APP/deploy.log"
-	
-		elif [ $( echo $CAMINHO_APP | wc -l ) -eq 1 ]; then
-	
-			INSTANCIA_JBOSS=$(echo $CAMINHO_APP | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
-			LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log" 2> /dev/null)
+		if [ $(cat "$TMP_DIR/app_origem.list" | wc -l) -ne 0 ]; then
 		
-			if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
-	
-				cp -f $LOG_APP "$DESTINO/$APP/server.log"
-				cp -f $LOG "$DESTINO/$APP/deploy.log"
-	
-			else
-				log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $APP."
-			fi		
+			while read "CAMINHO_APP"; do
+				
+				INSTANCIA_JBOSS=$(echo $CAMINHO_APP | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
+				LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log" 2> /dev/null)
+				
+				if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
+					cp -f $LOG_APP "$DESTINO/$APP/server_${INSTANCIA_JBOSS}.log"
+					cp -f $LOG "$DESTINO/$APP/cron.log"
+				else
+					log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $APP."
+				fi		
+
+			done < "$TMP_DIR/app_origem.list"
+		
 		else
 			log "ERRO" "A aplicação $APP não foi encontrada."
 		fi
 	
-	done
+	done < "$TMP_DIR/app_destino.list"
+	
 done
 
 end "0"
