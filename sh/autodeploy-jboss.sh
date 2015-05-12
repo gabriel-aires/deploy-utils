@@ -98,7 +98,7 @@ function jboss_script_init () {
 		while read script_jboss && [ -z "$SCRIPT_INIT" ]; do
 		
 			#verifica se o script aceita os argumentos 'start' e 'stop'
-			if [ -n $(grep -E "^start\)" "$script_jboss") ] && [ -n $(grep -E "^stop" "$script_jboss") ]; then
+			if [ -n $(grep -E "^start\)" "$script_jboss") ] && [ -n $(grep -E "^stop\)" "$script_jboss") ]; then
 		
 				#retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
 				local linha_script=$(grep -Ex "^[^#]+[\=].*[/\$].+/server/[^/]+/" "$script_jboss" | head -1 )
