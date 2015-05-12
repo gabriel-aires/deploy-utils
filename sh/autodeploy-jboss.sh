@@ -127,7 +127,7 @@ function jboss_script_init () {
 						
 						#atualiza condições para entrada no loop.
 						var_jboss_conf=$( echo "$jboss_conf" | grep -Ex "^\\$.*$")
-						i=(($i+1))
+						(($i++))
 						
 					done
 				
