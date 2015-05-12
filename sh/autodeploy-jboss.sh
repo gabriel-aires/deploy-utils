@@ -99,11 +99,11 @@ function jboss_script_init () {
 		while read script_jboss && [ -z "$SCRIPT_INIT" ]; do
 		
 			#verifica se o script aceita os argumentos 'start' e 'stop'
-			if [ -n $(grep -E "^start\)" "$script_jboss") ] && [ -n $(grep -E "^stop\)" "$script_jboss") ]; then
+			if [ -n $(grep -E "^start\)" "$script_jboss" | head -1) ] && [ -n $(grep -E "^stop\)" "$script_jboss" | head -1) ]; then
 		
 				#retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
-				local linha_script=$(grep -Ex "^[^#]+[\=].*[/\$].+/server/[^/]+/" "$script_jboss" | head -1 )
-				
+				local linha_script=$(grep -Ex "^[^#]+[\=].*[/\$].+/server/[^/]+/.*$" "$script_jboss" | head -1 )
+	
 				if [ -n "$linha_script" ]; then
 				
 					local jboss_conf=$(echo "$linha_script" | sed -r "s|^.*/server/([^/]+).*$|\1|")
@@ -133,7 +133,7 @@ function jboss_script_init () {
 					done
 				
 					#verifica se o script encontrado corresponde à instância desejada.
-					if [ -d "${caminho_jboss}/server/${jboss_conf}" ] && [ "$jboss_conf" == "$instancia"]; then
+					if [ -d "${caminho_jboss}/server/${jboss_conf}" ] && [ "$jboss_conf" == "$instancia" ]; then
 						SCRIPT_INIT=$script_jboss
 					fi
 					
@@ -398,11 +398,11 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 								eval $INICIAR_INSTANCIA && wait				
 		
 								if [ $(pgrep -f "jboss.*$INSTANCIA_JBOSS" | wc -l) -eq 0 ]; then
-									log "ERRO" "O deploy do arquivo $PACOTE foi concluído, porém não foi possível reiniciar a instância do JBOSS."
+									log "ERRO" "O deploy do arquivo $WAR foi concluído, porém não foi possível reiniciar a instância do JBOSS."
 									global_log "Deploy concluído. Erro ao iniciar a instância $INSTANCIA_JBOSS."
 								else
-									log "INFO" "Deploy do arquivo $PACOTE concluído com sucesso!"
-									global_log "Deploy do pacote $PACOTE concluído com sucesso na instância $INSTANCIA_JBOSS."
+									log "INFO" "Deploy do arquivo $WAR concluído com sucesso!"
+									global_log "Deploy do pacote $WAR concluído com sucesso na instância $INSTANCIA_JBOSS."
 								fi
 							
 							fi
