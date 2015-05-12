@@ -60,8 +60,9 @@ function global_log () {
 	tamanho_ambiente=$(echo -n $AMBIENTE | wc -m) 
 	ambiente_log=$(echo '                    ' | sed -r "s|^ {$tamanho_ambiente}|$AMBIENTE|")
 
-	tamanho_host=$(echo -n $HOSTNAME | wc -m) 
-	host_log=$(echo '                    ' | sed -r "s|^ {$tamanho_host}|$HOSTNAME|")
+	host_log=$(echo $HOSTNAME | sed -r "s/^([^\.]+)\..*$/\1/")
+	tamanho_host=$(echo -n $host_log | wc -m) 
+	host_log=$(echo '                    ' | sed -r "s|^ {$tamanho_host}|$host_log|")
 	
 	mensagem_log="$horario_log$app_log$rev_log$ambiente_log$host_log$obs_log"
 
@@ -335,7 +336,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 			while read PACOTE; do
 	
 				WAR=$(basename $PACOTE)
-				REV=$(unzip -p $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s/^[^ ]+ ([^ ]+)$/\1/")
+				REV=$(unzip -p -a $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
 				APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 				
 				find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/old.list"
