@@ -116,7 +116,7 @@ function jboss_script_init () {
 					while [ -n "$var_jboss_conf" ] && [ "$i" -lt '3' ]; do														
 					
 						#remove o caractere '$', restando somente o nome da variável
-						var_jboss_conf=$(echo "$var_jboss_conf" | sed -r "|^.||")
+						var_jboss_conf=$(echo "$var_jboss_conf" | sed -r "s|^.||")
 						
 						#encontra a linha onde a variável foi setada e retorna a string após o sinal de "="										
 						jboss_conf=$(grep -Ex "^$var_jboss_conf=" "$script_jboss" | head -1 | sed -r "s|^$var_jboss_conf=([\'\"])?([^ ]+)([\'\"])?.*$|\2|" )
