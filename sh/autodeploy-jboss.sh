@@ -247,8 +247,8 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	ORIGEM="${ORIGEM_PACOTES}/${AMBIENTE}/${ACESSO}/JBOSS_${VERSAO_JBOSS}"
 	DESTINO="${DESTINO_LOGS}/${AMBIENTE}/${ACESSO}/JBOSS_${VERSAO_JBOSS}"
 	
-	ORIGEM=$(find "$ORIGEM_PACOTES" -ipath "$ORIGEM")
-	DESTINO=$(find "$DESTINO_LOGS" -ipath "$DESTINO")
+	ORIGEM=$(find "$ORIGEM_PACOTES" -iwholename "$ORIGEM")
+	DESTINO=$(find "$DESTINO_LOGS" -iwholename "$DESTINO")
 	
 	if [ $( echo "$ORIGEM" | wc -w ) -ne 1 ] || [ $( echo "$DESTINO" | wc -w ) -ne 1 ]; then
 		log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
@@ -355,11 +355,11 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 						DIR_DEPLOY=$(echo $OLD | sed -r "s|^(${CAMINHO_INSTANCIAS_JBOSS}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[Ww][Aa][Rr]$|\1|")
 						INSTANCIA_JBOSS=$(echo $OLD | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
 						JBOSS_TEMP="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/tmp"
-						JBOSS_TEMP=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $JBOSS_TEMP)
+						JBOSS_TEMP=$(find $CAMINHO_INSTANCIAS_JBOSS -iwholename $JBOSS_TEMP)
 						JBOSS_WORK="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/work"
-						JBOSS_WORK=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $JBOSS_WORK)
+						JBOSS_WORK=$(find $CAMINHO_INSTANCIAS_JBOSS -iwholename $JBOSS_WORK)
 						JBOSS_DATA="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/data"
-						JBOSS_DATA=$(find $CAMINHO_INSTANCIAS_JBOSS -ipath $JBOSS_DATA)
+						JBOSS_DATA=$(find $CAMINHO_INSTANCIAS_JBOSS -iwholename $JBOSS_DATA)
 						
 						#tenta localizar o script de inicialização da instância e seta a variável $SCRIPT_INIT, caso tenha sucesso
 						jboss_script_init "$(dirname $CAMINHO_INSTANCIAS_JBOSS)" "$INSTANCIA_JBOSS"
