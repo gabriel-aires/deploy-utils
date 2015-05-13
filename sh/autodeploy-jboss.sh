@@ -92,7 +92,7 @@ function jboss_script_init () {
 	
 	if [ -n "$caminho_jboss" ] && [ -n "$instancia" ] && [ -d  "${caminho_jboss}/server/${instancia}" ]; then
 	
-		unset $SCRIPT_INIT
+		unset SCRIPT_INIT
 		find /etc/init.d/ -type f -iname '*jboss*' > "$TMP_DIR/scripts_jboss.list"
 		
 		#verifica todos os scripts de jboss encontrados em /etc/init.d até localizar o correto.
