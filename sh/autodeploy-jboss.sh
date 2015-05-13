@@ -119,7 +119,7 @@ function jboss_script_init () {
 						var_jboss_conf=$(echo "$var_jboss_conf" | sed -r "s|^.||")
 						
 						#encontra a linha onde a variável foi setada e retorna a string após o sinal de "="										
-						jboss_conf=$(grep -Ex "^$var_jboss_conf=" "$script_jboss" | head -1 | sed -r "s|^$var_jboss_conf=([\'\"])?([^ ]+)([\'\"])?.*$|\2|" )
+						jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed -r "s|^$var_jboss_conf=([\'\"])?([^ ]+)([\'\"])?.*$|\2|" )
 		
 						#verificar se houve substituição de parâmetros
 						if [ $(echo "$jboss_conf" | grep -Ex "^\\$\{$var_jboss_conf[:=-]+([\'\"])?[A-Za-z0-9\-\_\.]+([\'\"])?\}.*$") ]; then
