@@ -379,7 +379,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 		
 							if [ $(pgrep -f "jboss.*$INSTANCIA_JBOSS" | wc -l) -ne 0 ]; then
 								log "ERRO" "Não foi possível parar a instância $INSTANCIA_JBOSS do JBOSS. Deploy abortado."
-								global_log "Deploy abortado. Impossível parar a instância."	
+								global_log "Deploy abortado. Impossível parar a instância $INSTANCIA_JBOSS."	
 							else
 								rm -f $OLD 
 								cp $PACOTE $DIR_DEPLOY/$APP.war 
