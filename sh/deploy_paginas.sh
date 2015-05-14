@@ -80,6 +80,8 @@ function install_dir () {										##### Determina o diretório de instalação 
 
 function checkout () {											# o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
+	git config --global core.autocrlf true								# converte os caracteres de controle nos finais de linha para o padrão correto.
+
 	if [ ! -d "$repo_dir/$nomerepo/.git" ]; then
 		echo " "
 		git clone --progress "$repo" "$repo_dir/$nomerepo" || end 1				#clona o repositório, caso ainda não tenha sido feito.
