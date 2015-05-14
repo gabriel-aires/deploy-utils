@@ -316,9 +316,9 @@ function log () {
 	cp -f $temp_dir/app_log_novo ${historico_app}/deploy.log
 	cp -f $temp_dir/deploy_log_novo $historico	
 
-	unix2dos $atividade_dir/* > /dev/null
-	unix2dos ${historico_app}/deploy.log > /dev/null
-	unix2dos $historico > /dev/null
+	unix2dos $atividade_dir/* > /dev/null 2>&1
+	unix2dos ${historico_app}/deploy.log > /dev/null 2>&1
+	unix2dos $historico > /dev/null 2>&1
 
 	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
 
@@ -778,7 +778,7 @@ if [ "$rev" == "rollback" ] && [ -f "${bak_dir}/regras_deploy_${app}_${ambiente}
 
 elif [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 
-	dos2unix -n $repo_dir/$nomerepo/.gitignore $temp_dir/gitignore_unix > /dev/null				# garante que o arquivo .gitignore seja interpretado corretamente. (converte CRLF em LF)
+	dos2unix -n $repo_dir/$nomerepo/.gitignore $temp_dir/gitignore_unix > /dev/null 2>&1				# garante que o arquivo .gitignore seja interpretado corretamente. (converte CRLF em LF)
 
 	grep -Ev "^$|^ |^#" $temp_dir/gitignore_unix >> $temp_dir/regras_deploy.txt
 

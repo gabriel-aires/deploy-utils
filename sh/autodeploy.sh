@@ -73,7 +73,7 @@ function end {
 		rm -f "$lock_dir/autodeploy" 
 	fi
 
-	unix2dos $cron_log > /dev/null
+	unix2dos $cron_log > /dev/null 2>&1
 
 	exit $erro
 
