@@ -163,7 +163,7 @@ function clean_temp () {										#cria pasta temporária, remove arquivos e pon
 			cat $temp_dir/destino_mnt | xargs --no-run-if-empty rmdir 2> /dev/null			#já desmontados, os pontos de montagem temporários podem ser apagados.i
 		fi
 
-		rm -f $temp_dir/*									
+		rm -f $temp_dir/*
 		rmdir $temp_dir
 	else
 		end 1
@@ -778,9 +778,9 @@ if [ "$rev" == "rollback" ] && [ -f "${bak_dir}/regras_deploy_${app}_${ambiente}
 
 elif [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 
-	dos2unix -n $repo_dir/$nomerepo/.gitignore $temp_dir/.gitignore_unix > /dev/null				# garante que o arquivo .gitignore seja interpretado corretamente. (converte CRLF em LF)
+	dos2unix -n $repo_dir/$nomerepo/.gitignore $temp_dir/gitignore_unix > /dev/null				# garante que o arquivo .gitignore seja interpretado corretamente. (converte CRLF em LF)
 
-	grep -Ev "^$|^ |^#" $temp_dir/.gitignore_unix >> $temp_dir/regras_deploy.txt
+	grep -Ev "^$|^ |^#" $temp_dir/gitignore_unix >> $temp_dir/regras_deploy.txt
 
 	if [ ! "$raiz" == "/" ]; then
 
