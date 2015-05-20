@@ -434,7 +434,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	log "INFO" "Copiando logs da rotina e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
 	echo ''
 	
-	find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > "$TMP_DIR/app_destino.list"
+	find "$DESTINO/" -type d | sed -r "s|^${DESTINO}/||g" > "$TMP_DIR/app_destino.list"
 	
 	while read APP; do
 	
