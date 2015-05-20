@@ -98,8 +98,11 @@ function jboss_script_init () {
 		#verifica todos os scripts de jboss encontrados em /etc/init.d até localizar o correto.
 		while read script_jboss && [ -z "$SCRIPT_INIT" ]; do
 		
-			#verifica se o script aceita os argumentos 'start' e 'stop'
-			if [ -n $(grep -E "^start\)" "$script_jboss" | head -1) ] && [ -n $(grep -E "^stop\)" "$script_jboss" | head -1) ]; then
+			#verifica se o script corresponde à instalação correta do JBOSS e se aceita os argumentos 'start' e 'stop'
+			if [ -n $(grep -E "^([^[:graph:]])+?start ?\)?" "$script_jboss" | head -1) ] \
+			    && [ -n $(grep -E "^([^[:graph:]])+?stop ?\)?" "$script_jboss" | head -1) ] \
+			    && [ -n $(grep -F "$caminho_jboss" "$script_jboss" | head -1) ];
+            then
 		
 				#retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
 				local linha_script=$(grep -Ex "^[^#]+[\=].*[/\$].+/server/[^/]+/.*$" "$script_jboss" | head -1 )
