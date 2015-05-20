@@ -433,7 +433,12 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	
 	log "INFO" "Copiando logs da rotina e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
 
-	find "$DESTINO/" -type d | sed -r "s|^${DESTINO}/||g" > "$TMP_DIR/app_destino.list"
+    if [ $(ls $DESTINO/ | wc -l) -ne 0 ]; then
+    	find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > "$TMP_DIR/app_destino.list"
+    else
+        log "ERRO" "Não foram encontrados os diretórios das aplicações em $DESTINO"
+        continue
+    fi
 	
 	while read APP; do
 	
