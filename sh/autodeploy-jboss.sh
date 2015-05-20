@@ -477,7 +477,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
     	done < "$TMP_DIR/app_destino.list"
 	
     else
-        "ERRO" "Não foram encontrados os diretórios das aplicações em $DESTINO"
+        log "ERRO" "Não foram encontrados os diretórios das aplicações em $DESTINO"
     fi
 	
 done
