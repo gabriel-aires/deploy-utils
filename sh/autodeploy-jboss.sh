@@ -258,7 +258,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	ORIGEM=$(find "$ORIGEM_PACOTES" -iwholename "$ORIGEM" 2> /dev/null)
 	DESTINO=$(find "$DESTINO_LOGS" -iwholename "$DESTINO" 2> /dev/null)
 	
-	if [ $( echo "$ORIGEM" | wc -w ) -ne 1 ] || [ ! -d "$ORIGEM" ] || [ $( echo "$DESTINO" | wc -w ) -ne 1 ] || [ ! -d "$DESTINO"]; then
+	if [ $( echo "$ORIGEM" | wc -w ) -ne 1 ] || [ ! -d "$ORIGEM" ] || [ $( echo "$DESTINO" | wc -w ) -ne 1 ] || [ ! -d "$DESTINO" ]; then
 		log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
 		continue
 	fi
