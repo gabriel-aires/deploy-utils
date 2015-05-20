@@ -432,13 +432,13 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	######## LOGS #########
 	
 	log "INFO" "Copiando logs da rotina e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
-	echo ''
-	
+
 	find "$DESTINO/" -type d | sed -r "s|^${DESTINO}/||g" > "$TMP_DIR/app_destino.list"
 	
 	while read APP; do
 	
-		echo '' > "$TMP_DIR/app_origem.list"
+        rm -f "$TMP_DIR/app_origem.list"
+		touch "$TMP_DIR/app_origem.list"
 		find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/app_origem.list" 2> /dev/null
 	
 		if [ $(cat "$TMP_DIR/app_origem.list" | wc -l) -ne 0 ]; then
