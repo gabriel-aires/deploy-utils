@@ -439,7 +439,7 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
     	find ${DESTINO}/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
     	
     	# garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
-    	find "${DESTINO}/* -type d | grep -Ei "^${DESTINO}/[^/]+/[^/]+" | xargs -r -d "\n" rm -Rfv
+    	find ${DESTINO}/* -type d | grep -Ei "^${DESTINO}/[^/]+/[^/]+" | xargs -r -d "\n" rm -Rfv
     	
     	# eliminar arquivos em local incorreto ou com extensão diferente de .war / .log
     	find "$DESTINO" -type f | grep -Eixv "^${DESTINO}/[^/]+/[^/]+\.log$" | xargs -r -d "\n" rm -fv
