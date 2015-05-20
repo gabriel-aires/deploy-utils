@@ -100,9 +100,9 @@ function jboss_script_init () {
 		
 			#verifica se o script corresponde à instalação correta do JBOSS e se aceita os argumentos 'start' e 'stop'
 			if [ -n $(grep -E "^([^[:graph:]])+?start ?\)?" "$script_jboss" | head -1) ] \
-			    && [ -n $(grep -E "^([^[:graph:]])+?stop ?\)?" "$script_jboss" | head -1) ] \
-			    && [ -n $(grep -F "$caminho_jboss" "$script_jboss" | head -1) ];
-            then
+    			&& [ -n $(grep -E "^([^[:graph:]])+?stop ?\)?" "$script_jboss" | head -1) ] \
+    			&& [ -n $(grep -F "$caminho_jboss" "$script_jboss" | head -1) ];
+			then
 		
 				#retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
 				local linha_script=$(grep -Ex "^[^#]+[\=].*[/\$].+/server/[^/]+/.*$" "$script_jboss" | head -1 )
@@ -229,7 +229,12 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	
 	######## VALIDAÇÃO #########
 	
-	if [ -z "$CAMINHO_INSTANCIAS_JBOSS" ] || [ -z "$VERSAO_JBOSS" ] || [ -z "$ACESSO" ] || [ -z "$AMBIENTE" ]; then
+	if [ -z $(echo "$CAMINHO_INSTANCIAS_JBOSS" | grep -Ex "^/.+/server$") ] \
+	    || [ ! -d "$CAMINHO_INSTANCIAS_JBOSS" ] \
+	    || [ -z $(echo "$VERSAO_JBOSS" | grep -Ex "^[1-9]$") ] \
+	    || [ -z $(echo "$IDENTIFICACAO" | grep -Ex "^[a-zA-Z0-9_]+$") ] \
+	    || [ -z $(echo "$AMBIENTE" | grep -Ex "^[a-zA-Z]+$") ];
+	then
 		log "ERRO" "Parâmetros incorretos no arquivo '${ARQ_PROPS_LOCAL}'."
 		continue
 	elif [ -z "$CAMINHO_PACOTES_REMOTO" ] || [ -z "$CAMINHO_LOGS_REMOTO" ]; then
@@ -247,8 +252,8 @@ echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 		continue
 	fi
 	
-	ORIGEM="${ORIGEM_PACOTES}/${AMBIENTE}/${ACESSO}/JBOSS_${VERSAO_JBOSS}"
-	DESTINO="${DESTINO_LOGS}/${AMBIENTE}/${ACESSO}/JBOSS_${VERSAO_JBOSS}"
+	ORIGEM="${ORIGEM_PACOTES}/${AMBIENTE}/${IDENTIFICACAO}/JBOSS_${VERSAO_JBOSS}"
+	DESTINO="${DESTINO_LOGS}/${AMBIENTE}/${IDENTIFICACAO}/JBOSS_${VERSAO_JBOSS}"
 	
 	ORIGEM=$(find "$ORIGEM_PACOTES" -iwholename "$ORIGEM")
 	DESTINO=$(find "$DESTINO_LOGS" -iwholename "$DESTINO")
