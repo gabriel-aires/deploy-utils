@@ -171,6 +171,11 @@ function end () {
 
 function jboss_instances () {
 
+	if [ ! -d "$CAMINHO_PACOTES_REMOTO" ] || [ ! -d "$CAMINHO_LOGS_REMOTO" ]; then
+		log "ERRO" "Parâmetros incorretos no arquivo '${ARQ_PROPS_GLOBAL}'."
+		end "1"
+	fi
+		
 	echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	
 		# Verifica se o arquivo atende ao template correspondente.
@@ -194,26 +199,15 @@ function jboss_instances () {
 		then
 			log "ERRO" "Parâmetros incorretos no arquivo '${ARQ_PROPS_LOCAL}'."
 			continue
-		elif [ -z "$CAMINHO_PACOTES_REMOTO" ] || [ -z "$CAMINHO_LOGS_REMOTO" ]; then
-			log "ERRO" "Parâmetros incorretos no arquivo '${ARQ_PROPS_GLOBAL}'."
-			continue
 		fi
-		
+
 		# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
 		
-		ORIGEM_PACOTES=$( mount | grep -i "$CAMINHO_PACOTES_REMOTO" | sed -r "s|^${CAMINHO_PACOTES_REMOTO} on ([^ ]+) .*$|\1|" ) 
-		DESTINO_LOGS=$( mount | grep -i "$CAMINHO_LOGS_REMOTO" | sed -r "s|^${CAMINHO_LOGS_REMOTO} on ([^ ]+) .*$|\1|" ) 
+		ORIGEM="${CAMINHO_PACOTES_REMOTO}/${AMBIENTE}/${IDENTIFICACAO}/JBOSS_${VERSAO_JBOSS}"
+		DESTINO="${CAMINHO_LOGS_REMOTO}/${AMBIENTE}/${IDENTIFICACAO}/JBOSS_${VERSAO_JBOSS}"
 		
-		if [ -z "$ORIGEM_PACOTES" ] || [ -z "$DESTINO_LOGS" ]; then
-			log "ERRO" "Endereço para obtenção de pacotes / gravação de logs inacessível. Verificar arquivo $ARQ_PROPS_GLOBAL"
-			continue
-		fi
-		
-		ORIGEM="${ORIGEM_PACOTES}/${AMBIENTE}/${IDENTIFICACAO}/JBOSS_${VERSAO_JBOSS}"
-		DESTINO="${DESTINO_LOGS}/${AMBIENTE}/${IDENTIFICACAO}/JBOSS_${VERSAO_JBOSS}"
-		
-		ORIGEM=$(find "$ORIGEM_PACOTES" -iwholename "$ORIGEM" 2> /dev/null)
-		DESTINO=$(find "$DESTINO_LOGS" -iwholename "$DESTINO" 2> /dev/null)
+		ORIGEM=$(find "$CAMINHO_PACOTES_REMOTO" -iwholename "$ORIGEM" 2> /dev/null)
+		DESTINO=$(find "$CAMINHO_LOGS_REMOTO" -iwholename "$DESTINO" 2> /dev/null)
 		
 		if [ $( echo "$ORIGEM" | wc -w ) -ne 1 ] || [ ! -d "$ORIGEM" ] || [ $( echo "$DESTINO" | wc -w ) -ne 1 ] || [ ! -d "$DESTINO" ]; then
 			log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
