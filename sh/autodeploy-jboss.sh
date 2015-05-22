@@ -125,7 +125,7 @@ function jboss_script_init () {
 						jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed -r 's|"||g' | sed -r "s|^$var_jboss_conf='?([^ ]+)'?.*$|\1|" )
 		
 						#verificar se houve substituição de parâmetros
-						if [ -n $(echo "$jboss_conf" | sed -r 's|"||g' | grep -Ex "^\\$\{$var_jboss_conf[\:\=\-\+]+'?[A-Za-z0-9\-\_\.]+'?\}.*$") ]; then
+						if [ $(echo "$jboss_conf" | sed -r 's|"||g' | sed -r "s|\{|¨|" | sed -r "s|\}.*$|¨|" | grep -Ex "^\\$¨$var_jboss_conf[\:\=\-\+]+'?[A-Za-z0-9\-\_\.]+'?¨.*$" | wc -l) -ne 0 ]; then
 							jboss_conf=$(echo "$jboss_conf" | sed -r "s|^.||" | sed -r "s|\{||" | sed -r "s|\}.*$||" | sed 's|"||g' | sed "s|'||g" | sed -r "s|$var_jboss_conf[:=\-]+||")
 						fi
 						
