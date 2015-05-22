@@ -99,9 +99,9 @@ function jboss_script_init () {
 		while read script_jboss && [ -z "$SCRIPT_INIT" ]; do
 		
 			#verifica se o script corresponde à instalação correta do JBOSS e se aceita os argumentos 'start' e 'stop'
-			if [ -n "$(grep -E ^([^[:graph:]])+?start[^A-Za-z0-9_\-]? $script_jboss | head -1)" ] \
-	    			&& [ -n "$(grep -E ^([^[:graph:]])+?stop[^A-Za-z0-9_\-]? $script_jboss | head -1)" ] \
-    				&& [ -n "$(grep -F $caminho_jboss $script_jboss | head -1)" ];
+			if [ -n "$(grep -E '^([^[:graph:]])+?start[^A-Za-z0-9_\-]?' "$script_jboss" | head -1)" ] \
+				&& [ -n "$(grep -E '^([^[:graph:]])+?stop[^A-Za-z0-9_\-]?' "$script_jboss" | head -1)" ] \
+				&& [ -n "$(grep -F "$caminho_jboss" "$script_jboss" | head -1)" ];
 			then
 		
 				#retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
@@ -125,8 +125,8 @@ function jboss_script_init () {
 						jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed -r 's|"||g' | sed -r "s|^$var_jboss_conf='?([^ ]+)'?.*$|\1|" )
 		
 						#verificar se houve substituição de parâmetros
-						if [ $(echo "$jboss_conf" | sed -r 's|"||g' | grep -Ex "^\\$\{$var_jboss_conf[:=-]+'?[A-Za-z0-9\-\_\.]+'?\}.*$") ]; then
-							jboss_conf=$(echo "$jboss_conf" | sed -r 's|"||g' | sed -r "s|^\\$\{$var_jboss_conf[\:\=\-\+]+'?([\$A-Za-z0-9\-\_\.]+)'?\}.*$|\1|")
+						if [ -n $(echo "$jboss_conf" | sed -r 's|"||g' | grep -Ex "^\\$\{$var_jboss_conf[\:\=\-\+]+'?[A-Za-z0-9\-\_\.]+'?\}.*$") ]; then
+							jboss_conf=$(echo "$jboss_conf" | sed -r "s|^.||" | sed -r "s|\{||" | sed -r "s|\}.*$||" | sed 's|"||g' | sed "s|'||g" | sed -r "s|$var_jboss_conf[:=\-]+||")
 						fi
 						
 						#atualiza condições para entrada no loop.
@@ -332,7 +332,7 @@ function jboss_instances () {
 		    					
 		    							eval $PARAR_INSTANCIA && wait
 		    		
-		    							if [ $(pgrep -f "jboss.*$INSTANCIA_JBOSS" | wc -l) -ne 0 ]; then
+		    							if [ $(pgrep -f "$(dirname $CAMINHO_INSTANCIAS_JBOSS).*-c $INSTANCIA_JBOSS" | wc -l) -ne 0 ]; then
 		    								log "ERRO" "Não foi possível parar a instância $INSTANCIA_JBOSS do JBOSS. Deploy abortado."
 		    								global_log "Deploy abortado. Impossível parar a instância $INSTANCIA_JBOSS."	
 		    							else
@@ -352,7 +352,7 @@ function jboss_instances () {
 		    				 
 		    								eval $INICIAR_INSTANCIA && wait				
 		    		
-		    								if [ $(pgrep -f "jboss.*$INSTANCIA_JBOSS" | wc -l) -eq 0 ]; then
+		    								if [ $(pgrep -f "$(dirname $CAMINHO_INSTANCIAS_JBOSS).*-c $INSTANCIA_JBOSS" | wc -l) -eq 0 ]; then
 		    									log "ERRO" "O deploy do arquivo $WAR foi concluído, porém não foi possível reiniciar a instância do JBOSS."
 		    									global_log "Deploy concluído. Erro ao iniciar a instância $INSTANCIA_JBOSS."
 		    								else
