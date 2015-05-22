@@ -99,9 +99,9 @@ function jboss_script_init () {
 		while read script_jboss && [ -z "$SCRIPT_INIT" ]; do
 		
 			#verifica se o script corresponde à instalação correta do JBOSS e se aceita os argumentos 'start' e 'stop'
-			if [ -n $(grep -E "^([^[:graph:]])+?start[^A-Za-z0-9_\-]?" "$script_jboss" | head -1) ] \
-	    			&& [ -n $(grep -E "^([^[:graph:]])+?stop[^A-Za-z0-9_\-]?" "$script_jboss" | head -1) ] \
-    				&& [ -n $(grep -F "$caminho_jboss" "$script_jboss" | head -1) ];
+			if [ -n "$(grep -E ^([^[:graph:]])+?start[^A-Za-z0-9_\-]? $script_jboss | head -1)" ] \
+	    			&& [ -n "$(grep -E ^([^[:graph:]])+?stop[^A-Za-z0-9_\-]? $script_jboss | head -1)" ] \
+    				&& [ -n "$(grep -F $caminho_jboss $script_jboss | head -1)" ];
 			then
 		
 				#retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
