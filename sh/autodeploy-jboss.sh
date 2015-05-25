@@ -121,12 +121,12 @@ function jboss_script_init () {
 						#remove o caractere '$', restando somente o nome da variável
 						var_jboss_conf=$(echo "$var_jboss_conf" | sed -r "s|^.||")
 						
-						#encontra a linha onde a variável foi setada e retorna a string após o sinal de "="										
-						jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed -r 's|"||g' | sed -r "s|^$var_jboss_conf='?([^ ]+)'?.*$|\1|" )
+						#encontra a linha onde a variável foi setada e retorna a string após o caractere =, sem aspas									
+						jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed 's|"||g' | sed "s|'||g" | sed -r "s|^$var_jboss_conf=([^ ]+).*$|\1|" )
 		
 						#verificar se houve substituição de parâmetros
-						if [ $(echo "$jboss_conf" | sed -r 's|"||g' | sed -r "s|\{|¨|" | sed -r "s|\}.*$|¨|" | grep -Ex "^\\$¨$var_jboss_conf[\:\=\-\+]+'?[A-Za-z0-9\-\_\.]+'?¨.*$" | wc -l) -ne 0 ]; then
-							jboss_conf=$(echo "$jboss_conf" | sed -r "s|^.||" | sed -r "s|\{||" | sed -r "s|\}.*$||" | sed 's|"||g' | sed "s|'||g" | sed -r "s|$var_jboss_conf[:=\-]+||")
+						if [ $(echo "$jboss_conf" | sed 's|}|¨|' | sed 's|{|¨|' | grep -Ex "^\\$¨$var_jboss_conf[:=\-]+(\\$)?[A-Za-z0-9_]+¨.*$" | wc -l) -ne 0 ]; then
+							jboss_conf=$(echo "$jboss_conf" | sed 's|^..||' | sed 's|}.*$||' | sed -r "s|$var_jboss_conf[:=\-]+||")
 						fi
 						
 						#atualiza condições para entrada no loop.
