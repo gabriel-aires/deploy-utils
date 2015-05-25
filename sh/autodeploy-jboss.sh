@@ -78,6 +78,7 @@ function global_log () {
 	touch $GLOBAL_LOG
 
 	echo -e "$mensagem_log" >> $GLOBAL_LOG
+	unix2dos $GLOBAL_LOG > /dev/null 2>&1
 	
 	rm -f $GLOBAL_LOCK 							#remove a trava sobre o arquivo de log tão logo seja possível.
 	EDIT_LOG=0
@@ -415,6 +416,8 @@ function jboss_instances () {
 		    				if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
 		    					cp -f $LOG_APP "$DESTINO/$APP/server_${INSTANCIA_JBOSS}.log"
 		    					cp -f $LOG "$DESTINO/$APP/cron.log"
+							unix2dos "$DESTINO/$APP/server_${INSTANCIA_JBOSS}.log" > /dev/null 2>&1
+							unix2dos "$DESTINO/$APP/cron.log" > /dev/null 2>&1
 		    				else
 		    					log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $APP."
 		    				fi		
