@@ -462,6 +462,8 @@ source "$ARQ_PROPS_GLOBAL" || exit 1
 
 # cria lock.
 
+mkdir -p $(dirname "$LOCK")
+
 if [ -f "$LOCK" ]; then
 	exit 0
 else
