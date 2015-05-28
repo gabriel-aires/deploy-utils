@@ -1,47 +1,22 @@
 ----------------------
-OBSERVAÇÕES:
-----------------------
-
-(TODO)
-
-----------------------
 MANUAL DE IMPLANTAÇÃO:
 ----------------------
 
-1) O procedimento de deploy automático de aplicações *.war requer um compartilhamento acessível a todas as máquinas Linux que rodam servidores de aplicação JBOSS.
-A estrutura de diretórios deve seguir a forma //(HOST)/(DIRETÓRIO_COMPARTILHADO)/(ambiente)/(servidor_aplicação)_(versao)/(classificação)/(aplicação)/(deploy|log), conforme exemplo abaixo:
+1) O procedimento de deploy automático de aplicações *.war requer um compartilhamento acessível a todas as máquinas Linux que rodam servidores de aplicação JBOSS. A estrutura de diretórios deve seguir a forma //(HOST)/(DIRETÓRIO_COMPARTILHADO)/(ambiente)/(servidor_aplicação)_(versao)/(classificação)/(aplicação)/(deploy|log), conforme exemplo abaixo:
 
 COMPARTILHAMENTO
-. . +--DESENVOLVIMENTO
-. . | . . +--JBOSS_4
-. . | . . | . . +--INTERNET
-. . | . . | . . | . . +--APLICACAO_1
-. . | . . | . . | . . | . . +--DEPLOY
-. . | . . | . . | . . | . . +--LOG
-. . | . . | . . | . . *--APLICACAO_2
-. . | . . | . . | . . *--APLICACAO_3
-. . | . . | . . *--INTRANET
-. . | . . *--JBOSS_5
-. . | . . *--JBOSS_8
-. . *--HOMOLOGACAO
-. . *--PRODUCAO      
+. . +-----DESENVOLVIMENTO
+. . | . . +-----JBOSS_4
+. . | . . | . . +-----INTERNET
+. . | . . | . . | . . +-----APLICACAO_1
+. . | . . | . . | . . | . . +-----DEPLOY
+. . | . . | . . | . . | . . +-----LOG
+. . | . . | . . | . . *-----APLICACAO_2
+. . | . . | . . | . . *-----APLICACAO_3
+. . | . . | . . *-----INTRANET
+. . | . . *-----JBOSS_5
+. . | . . *-----JBOSS_8
+. . *-----HOMOLOGACAO
+. . *-----PRODUCAO      
 
-2) Clonar o repositório dentro do diretório /opt/:
-
-git clone http://git.anatel.gov.br/airesgabriel/autodeploy-jboss.git
-
-3) Para todas as máquinas, os caminhos "//SERVIDOR/COMPARTILHAMENTO/DEPLOY" e "//SERVIDOR/COMPARTILHAMENTO/LOGS" deverão ser informados no arquivo /opt/autodeploy-jboss/conf/global.conf . Também devem ser criadas as respectivas entradas em /etc/fstab para montagem automática durante o boot.
-
-4) Os parâmetros inerentes a cada máquina devem ser editados no arquivo /opt/autodeploy-jboss/conf/local.conf .
-
-5) Conceder permissão de execução ao script com "chmod +x /opt/autodeploy-jboss/sh/autodeploy-jboss.sh" e adicioná-lo à crontab do usuário root, conforme segue:
-
-crontab -e
-
-(adicionar a entrada abaixo no arquivo aberto para edição)
-
-# Realiza deploy de novos pacotes e disponibiliza logs das instâncias JBOSS.
-
-DATA_LOG=date +%F
-
-*/5 * * * * bash /opt/autodeploy-jboss/sh/autodeploy-jboss.sh >> /opt/autodeploy-jboss/log/deploy-$($DATA_LOG).log 2>&1
+2) Incluir a classe anatel_jboss::autodeploy para o host desejado, adicionando os respectivos arquivos de configuração dentro da pasta autodeploy_conf/$HOSTNAME/
