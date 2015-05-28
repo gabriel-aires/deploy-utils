@@ -2,76 +2,29 @@
 OBSERVAÇÕES:
 ----------------------
 
-O script de deploy ainda não está pronto para o ambiente de produção. No momento ele só funciona num cenário onde:
-
-* NÃO há alta disponibilidade.
-* cada máquina roda APENAS UMA versão do JBoss.
-* cada máquina atende ao ambiente de internet OU intranet EXCLUSIVAMENTE.
-
-Qualquer alteração nestas condições deverá, necessariamente, ensejar uma modificação no script e/ou na estrutura de diretórios onde os pacotes serão disponibilizados.
+(TODO)
 
 ----------------------
 MANUAL DE IMPLANTAÇÃO:
 ----------------------
 
-1) O procedimento de deploy automático de aplicações *.war requer um compartilhamento acessível a todas as máquinas Linux que rodam servidores de aplicação JBOSS. A estrutura de diretórios deve seguir a forma abaixo:
+1) O procedimento de deploy automático de aplicações *.war requer um compartilhamento acessível a todas as máquinas Linux que rodam servidores de aplicação JBOSS.
+A estrutura de diretórios deve seguir a forma //(HOST)/(DIRETÓRIO_COMPARTILHADO)/(ambiente)/(servidor_aplicação)_(versao)/(classificação)/(aplicação)/(deploy|log), conforme exemplo abaixo:
 
-//SERVIDOR/COMPARTILHAMENTO/
-
-       |
-       |
-       |
-       +-------DEPLOY
-       |       |
-       |       |
-       |       |
-       |       +-------DESENVOLVIMENTO
-       |       |       |
-       |       |       |
-       |       |       |
-       |       |       +-------INTERNET
-       |       |       |       |
-       |       |       |       |
-       |       |       |       |                    
-       |       |       |       +-------JBOSS_4
-       |       |       |       |       |
-       |       |       |       |       |
-       |       |       |       |       |                                        
-       |       |       |       |       +-------APLICAÇÃO
-       |       |       |       |       |
-       |       |       |       |       |
-       |       |       |       |       |                                        
-       |       |       |       |       +------APLICAÇÃO
-       |       |       |       |       |
-       |       |       |       |       |
-       |       |       |       |       |                                        
-       |       |       |       |       +------ (...)                
-       |       |       |       |
-       |       |       |       |
-       |       |       |       |                                        
-       |       |       |       +------JBOSS_5
-       |       |       |       |
-       |       |       |       |        (...)    
-       |       |       |       |                                        
-       |       |       |       +------JBOSS_7
-       |       |       |
-       |       |       |                (...)
-       |       |       |                                        
-       |       |       +------INTRANET                        
-       |       |                    
-       |       |                (...)        
-       |       |                        
-       |       +------HOMOLOGAÇÃO
-       |       |
-       |       |        (...)
-       |       |                                        
-       |       +------TESTES                
-       |
-       |                (...)
-       |                                        
-       +------LOGS
-
-                (...)            
+COMPARTILHAMENTO
+. . +--DESENVOLVIMENTO
+. . | . . +--JBOSS_4
+. . | . . | . . +--INTERNET
+. . | . . | . . | . . +--APLICACAO_1
+. . | . . | . . | . . | . . +--DEPLOY
+. . | . . | . . | . . | . . +--LOG
+. . | . . | . . | . . *--APLICACAO_2
+. . | . . | . . | . . *--APLICACAO_3
+. . | . . | . . *--INTRANET
+. . | . . *--JBOSS_5
+. . | . . *--JBOSS_8
+. . *--HOMOLOGACAO
+. . *--PRODUCAO      
 
 2) Clonar o repositório dentro do diretório /opt/:
 
