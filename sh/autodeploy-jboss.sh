@@ -170,6 +170,69 @@ function end () {
 	exit "$1"
 }
 
+function set_dir () {
+
+	# Encontra os diretórios de origem/destino com base na hierarquia definida em global.conf. IMPORTANTE: TODOS os parâmetros de configuração devem ser validados previamente.
+
+	local dir_acima=$1
+	local set_var=$2
+
+	unset $2
+
+	local fim=0
+	local n=1
+	local var_n="DIR_$n"
+
+	if [ "$(eval "echo \$$var_n")" == '$' ];then
+		fim=1
+	else
+ 		local dir_n="$(eval "echo \$$var_n")"
+		local nivel=1
+	fi
+
+	while [ "$fim" -eq '0' ]; do
+
+		dir_acima=$dir_acima/$dir_n
+
+		((n++))
+		var_n="DIR_$n"
+
+		if [ "$(eval "echo \$$var_n")" == '$' ];then
+			fim=1
+		else
+			dir_n="$(eval "echo \$$var_n")"
+			((nivel++))
+		fi
+
+	done
+
+	if [ "$nivel" == "$QTD_DIR" ]; then
+		set_var="$set_var=$(find / -iwholename "$dir_acima" 2> /dev/null)"
+		eval $set_var
+	else
+		log "ERRO" "Parâmetros incorretos no arquivo '$LOCAL_CONF'."
+		continue
+	fi
+
+}
+
+chk_dir () {
+	
+	local raiz="$1"
+
+        log "INFO" "Verificando a consistência da estrutura de diretórios em $raiz.."
+
+    	# eliminar da estrutura de diretórios subjacente os arquivos e subpastas cujos nomes contenham espaços.
+    	find $raiz/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
+
+    	# garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
+    	find $raiz/* -type d | grep -Ei "^$raiz/[^/]+/[^/]+" | grep -Eixv "^$raiz/[^/]+/deploy$|^$raiz/[^/]+/log$" | xargs -r -d "\n" rm -Rfv
+		
+    	# eliminar arquivos em local incorreto ou com extensão diferente de .war / .log
+    	find "$raiz" -type f | grep -Eixv "^$raiz/[^/]+/deploy/[^/]+\.war$|^$raiz/[^/]+/log/[^/]+\.log$" | xargs -r -d "\n" rm -fv
+
+}
+
 function jboss_instances () {
 
 	if [ ! -d "$CAMINHO_PACOTES_REMOTO" ] || [ ! -d "$CAMINHO_LOGS_REMOTO" ]; then
@@ -179,36 +242,25 @@ function jboss_instances () {
 		
 	echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
 	
-		# Verifica se o arquivo atende ao template correspondente.
-	
-		if [ "$(grep -v --file=${diretorio_instalacao}/template/local.template $LOCAL_CONF | wc -l)" -ne "0" ]; then
-			continue
-		fi
-	
-		# Carrega parâmetros referentes os ambiente JBOSS.
-	
-		source "$LOCAL_CONF" || continue	
-		rm -f "$TMP_DIR/*"
+		# Valida e carrega parâmetros referentes ao ambiente JBOSS.
 		
-		######## VALIDAÇÃO #########
-		
-		if [ -z $(echo "$CAMINHO_INSTANCIAS_JBOSS" | grep -Ex "^/.+/server$") ] \
-			|| [ ! -d "$CAMINHO_INSTANCIAS_JBOSS" ] \
-			|| [ -z $(echo "$VERSAO_JBOSS" | grep -Ex "^[1-9]$") ] \
-			|| [ -z $(echo "$IDENTIFICACAO" | grep -Ex "^[a-zA-Z0-9_]+$") ] \
-			|| [ -z $(echo "$AMBIENTE" | grep -Ex "^[a-zA-Z]+$") ];
+		cat $LOCAL_CONF | grep -E "DIR_.+='.+'" | sed 's/"//g' | sed "s/'//g" | sed -r "s|^[^ ]+=([^ ]+)$|\^\1=|" > $TMP_DIR/parametros_obrigatorios
+	
+		if [ $(cat $LOCAL_CONF | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^CAMINHO_INSTANCIAS_JBOSS='?/.+/server'?$" | wc -l) -ne "1" ] \
+			|| [ $(cat $LOCAL_CONF | sed 's|"||g' | grep -Ev "^CAMINHO_INSTANCIAS_JBOSS=|^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_]+'?$" | wc -l) -ne "0" ] \
+			|| [ $(cat $LOCAL_CONF | sed 's|"||g' | grep -Ev "^CAMINHO_INSTANCIAS_JBOSS=|^#|^$" | grep -Ev --file=$TMP_DIR/parametros_obrigatorios | wc -l) -ne "0" ];
 		then
-			log "ERRO" "Parâmetros incorretos no arquivo '${ARQ_PROPS_LOCAL}'."
+			log "ERRO" "Parâmetros incorretos no arquivo '$LOCAL_CONF'."
 			continue
+		else
+			source "$LOCAL_CONF" || continue	
+			rm -f "$TMP_DIR/*"
 		fi
 
 		# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
 		
-		ORIGEM="${CAMINHO_PACOTES_REMOTO}/${AMBIENTE}/${IDENTIFICACAO}/JBOSS_${VERSAO_JBOSS}"
-		DESTINO="${CAMINHO_LOGS_REMOTO}/${AMBIENTE}/${IDENTIFICACAO}/JBOSS_${VERSAO_JBOSS}"
-		
-		ORIGEM=$(find "$CAMINHO_PACOTES_REMOTO" -iwholename "$ORIGEM" 2> /dev/null)
-		DESTINO=$(find "$CAMINHO_LOGS_REMOTO" -iwholename "$DESTINO" 2> /dev/null)
+		set_dir "$CAMINHO_PACOTES_REMOTO" 'ORIGEM'
+		set_dir "$CAMINHO_LOGS_REMOTO" 'DESTINO'
 		
 		if [ $( echo "$ORIGEM" | wc -w ) -ne 1 ] || [ ! -d "$ORIGEM" ] || [ $( echo "$DESTINO" | wc -w ) -ne 1 ] || [ ! -d "$DESTINO" ]; then
 			log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
@@ -217,36 +269,28 @@ function jboss_instances () {
 		
 		if [ $(ls "${ORIGEM}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 	
-		        log "INFO" "Verificando a consistência da estrutura de diretórios em ${CAMINHO_PACOTES_REMOTO}..."
-		
-		    	# eliminar da estrutura de diretórios subjacente os arquivos e subpastas cujos nomes contenham espaços.
-		    	find ${ORIGEM}/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
-		
-		    	# garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
-		    	find ${ORIGEM}/* -type d | grep -Ei "^${ORIGEM}/[^/]+/[^/]+" | xargs -r -d "\n" rm -Rfv
-		
-		    	# eliminar arquivos em local incorreto ou com extensão diferente de .war / .log
-		    	find "$ORIGEM" -type f | grep -Eixv "^${ORIGEM}/[^/]+/[^/]+\.war$" | xargs -r -d "\n" rm -fv
-		
+			chk_dir ${ORIGEM}		
+
 		    	######## DEPLOY #########
 		    	
 		    	# Verificar se há arquivos para deploy.
 		    	
 		    	log "INFO" "Procurando novos pacotes..."
 		    	
-		    	find "$ORIGEM" -type f > $TMP_DIR/arq.list
+		    	find "$ORIGEM" -type f -iname "*.war" > $TMP_DIR/arq.list
 		    	
 	    		if [ $(cat $TMP_DIR/arq.list | wc -l) -lt 1 ]; then
 		    		log "INFO" "Não foram encontrados novos pacotes para deploy."
 		    	else
 		    		# Caso haja arquivos, verificar se o nome do pacote corresponde ao diretório da aplicação.
 		    	
-		    		echo '' > "$TMP_DIR/remove_incorretos.list"
+		    		rm -f "$TMP_DIR/remove_incorretos.list"
+				touch "$TMP_DIR/remove_incorretos.list"
 		    	
 		    		while read l; do
 		    	
-		    			WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
-		    			APP=$( echo $l | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
+		    			WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy]/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
+		    			APP=$( echo $l | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 		    		
 		    			if [ $(echo $WAR | grep -Ei "^$APP" | wc -l) -ne 1 ]; then
 		    				echo $l >> "$TMP_DIR/remove_incorretos.list"
@@ -261,14 +305,15 @@ function jboss_instances () {
 		    	
 		    		# Caso haja pacotes, deve haver no máximo um pacote por diretório
 		    	
-		    		find "$ORIGEM" -type f > $TMP_DIR/arq.list
+		    		find "$ORIGEM" -type f -iname "*.war" > $TMP_DIR/arq.list
 		    	
-		    		echo '' > $TMP_DIR/remove_versoes.list
+				rm -f "$TMP_DIR/remove_versoes.list"
+				touch "$TMP_DIR/remove_versoes.list"
 		    	
 		    		while read l; do
 		    	
-	    				WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
-		    			DIR=$( echo $l | sed -r "s|^(${ORIGEM}/[^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
+	    				WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy]/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
+		    			DIR=$( echo $l | sed -r "s|^(${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 		    		
 		    			if [ $( find $DIR -type f | wc -l ) -ne 1 ]; then
 		    				echo $l >> $TMP_DIR/remove_versoes.list
@@ -281,7 +326,7 @@ function jboss_instances () {
 		    			cat $TMP_DIR/remove_versoes.list | xargs -r -d "\n" rm -fv
 		    		fi
 		    	
-	    			find "$ORIGEM" -type f > $TMP_DIR/war.list
+	    			find "$ORIGEM" -type f -iname "*.war" > $TMP_DIR/war.list
 			    	
 		    		if [ $(cat $TMP_DIR/war.list | wc -l) -lt 1 ]; then
 	    				log "INFO" "Não há novos pacotes para deploy."
@@ -293,7 +338,7 @@ function jboss_instances () {
 		    	
 		    				WAR=$(basename $PACOTE)
 		    				REV=$(unzip -p -a $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
-		    				APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[^/]+\.[Ww][Aa][Rr]$|\1|" )
+		    				APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 	    					
 		    				find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/old.list"
 		    		
@@ -385,48 +430,47 @@ function jboss_instances () {
 		
 		if [ $(ls "${DESTINO}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 		
-			log "INFO" "Verificando a consistência da estrutura de diretórios em ${CAMINHO_LOGS_REMOTO}..."
-		
-	    		# eliminar da estrutura de diretórios subjacente os arquivos e subpastas cujos nomes contenham espaços.
-		    	find ${DESTINO}/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
-		    	
-		    	# garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
-		    	find ${DESTINO}/* -type d | grep -Ei "^${DESTINO}/[^/]+/[^/]+" | xargs -r -d "\n" rm -Rfv
-		    	
-		    	# eliminar arquivos em local incorreto ou com extensão diferente de .war / .log
-		    	find "$DESTINO" -type f | grep -Eixv "^${DESTINO}/[^/]+/[^/]+\.log$" | xargs -r -d "\n" rm -fv
-			
+			if [ "$ORIGEM" != "$DESTINO" ]; then
+				chk_dir "$DESTINO"
+			fi		
+
 		    	log "INFO" "Copiando logs da rotina e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
 		    
-		        find $DESTINO/* -type d | sed -r "s|^${DESTINO}/||g" > "$TMP_DIR/app_destino.list"
+		        find $DESTINO/* -type d | sed -r "s|^${DESTINO}/([^/]+)/[Ll][Oo][Gg]/|\1|g" > "$TMP_DIR/app_destino.list"
 		
 	    		while read APP; do
 		    	
-				rm -f "$TMP_DIR/app_origem.list"
-		    		touch "$TMP_DIR/app_origem.list"
-		    		find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/app_origem.list" 2> /dev/null
-    		
-		    		if [ $(cat "$TMP_DIR/app_origem.list" | wc -l) -ne 0 ]; then
-		    		
-		    			while read "CAMINHO_APP"; do
-		    				
-		    				INSTANCIA_JBOSS=$(echo $CAMINHO_APP | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
-		    				LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log" 2> /dev/null)
-		    				
-		    				if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
-		    					cp -f $LOG_APP "$DESTINO/$APP/server_${INSTANCIA_JBOSS}.log"
-		    					cp -f $LOG "$DESTINO/$APP/cron.log"
-							unix2dos "$DESTINO/$APP/server_${INSTANCIA_JBOSS}.log" > /dev/null 2>&1
-							unix2dos "$DESTINO/$APP/cron.log" > /dev/null 2>&1
-		    				else
-		    					log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $APP."
-		    				fi		
-		    
-		    			done < "$TMP_DIR/app_origem.list"
-		    		
-		    		else
-		    			log "ERRO" "A aplicação $APP não foi encontrada."
-		    		fi
+				DESTINO_LOG=$(find "$DESTINO/$APP/" -type d -iname 'log' 2> /dev/null)
+				
+				if [ $(echo $DESTINO_LOG | wc -l) -eq 1 ]; then
+	
+					rm -f "$TMP_DIR/app_origem.list"
+			    		find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/app_origem.list" 2> /dev/null
+	    		
+			    		if [ $(cat "$TMP_DIR/app_origem.list" | wc -l) -ne 0 ]; then
+			    		
+			    			while read "CAMINHO_APP"; do
+			    				
+			    				INSTANCIA_JBOSS=$(echo $CAMINHO_APP | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
+			    				LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log" 2> /dev/null)
+			    				
+			    				if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
+			    					cp -f $LOG_APP "$DESTINO_LOG/server_${INSTANCIA_JBOSS}.log"
+			    					cp -f $LOG "$DESTINO_LOG/cron.log"
+								unix2dos "$DESTINO_LOG/server_${INSTANCIA_JBOSS}.log" > /dev/null 2>&1
+								unix2dos "$DESTINO_LOG/cron.log" > /dev/null 2>&1
+			    				else
+			    					log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $APP."
+			    				fi		
+			    
+			    			done < "$TMP_DIR/app_origem.list"
+			    		
+			    		else
+			    			log "ERRO" "A aplicação $APP não foi encontrada."
+			    		fi
+				else
+					log "ERRO" "O diretório para cópia de logs da aplicação $APP não foi encontrado".
+				fi
 	    	
     			done < "$TMP_DIR/app_destino.list"
 		
@@ -452,7 +496,10 @@ ARQ_PROPS_LOCAL=$(find "$DIR_PROPS_LOCAL" -type f -iname "*.conf")
 
 # Verifica se o arquivo global.conf atende ao template correspondente.
 
-if [ "$(grep -v --file=${diretorio_instalacao}/template/global.template $ARQ_PROPS_GLOBAL | wc -l)" -ne "0" ]; then
+if [ ! -f "$ARQ_PROPS_GLOBAL" ] \
+	|| [ "$(grep -v --file=${diretorio_instalacao}/template/global.template $ARQ_PROPS_GLOBAL | wc -l)" -ne "0" ] \
+	|| [ $(cat $ARQ_PROPS_GLOBAL | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^DIR_.+='?AMBIENTE'?$" | wc -l) -ne "1" ];
+then
 	exit 1
 fi
 
