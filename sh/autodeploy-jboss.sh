@@ -496,7 +496,7 @@ install_dir
 ARQ_PROPS_GLOBAL="${diretorio_instalacao}/conf/global.conf"
 DIR_PROPS_LOCAL="${diretorio_instalacao}/conf/local.d"
 ARQ_PROPS_LOCAL=$(find "$DIR_PROPS_LOCAL" -type f -iname "*.conf" -print)
-ARQ_PROPS_LOCAL=$(echo "$ARQ_PROPS_LOCAL" | sed -r "s% +%|%g" | sed -r "s%(.)$%\1|%")
+ARQ_PROPS_LOCAL=$(echo "$ARQ_PROPS_LOCAL" | sed -r "s%(.)$%\1|%g")
 
 # Verifica se o arquivo global.conf atende ao template correspondente.
 
