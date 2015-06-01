@@ -174,19 +174,21 @@ function set_dir () {
 
 	# Encontra os diretórios de origem/destino com base na hierarquia definida em global.conf. IMPORTANTE: TODOS os parâmetros de configuração devem ser validados previamente.
 
-	local dir_acima=$1
-	local set_var=$2
+	local raiz="$1"
+	local dir_acima="$raiz"
+	local set_var="$2"
 
-	unset $2
+	unset "$2"
 
 	local fim=0
 	local n=1
 	local var_n="DIR_$n"
 
-	if [ "$(eval "echo \$$var_n")" == '$' ];then
+	if [ "$(eval "echo \$$var_n")" == '' ];then
 		fim=1
 	else
  		local dir_n="$(eval "echo \$$var_n")"
+		dir_n="$(eval "echo \$$dir_n")"
 		local nivel=1
 	fi
 
@@ -197,17 +199,18 @@ function set_dir () {
 		((n++))
 		var_n="DIR_$n"
 
-		if [ "$(eval "echo \$$var_n")" == '$' ];then
+		if [ "$(eval "echo \$$var_n")" == '' ];then
 			fim=1
 		else
 			dir_n="$(eval "echo \$$var_n")"
+			dir_n="$(eval "echo \$$dir_n")"
 			((nivel++))
 		fi
 
 	done
 
 	if [ "$nivel" == "$QTD_DIR" ]; then
-		set_var="$set_var=$(find / -iwholename "$dir_acima" 2> /dev/null)"
+		set_var="$set_var=$(find "$raiz" -iwholename "$dir_acima" 2> /dev/null)"
 		eval $set_var
 	else
 		log "ERRO" "Parâmetros incorretos no arquivo '$LOCAL_CONF'."
@@ -244,7 +247,7 @@ function jboss_instances () {
 	
 		# Valida e carrega parâmetros referentes ao ambiente JBOSS.
 		
-		cat $LOCAL_CONF | grep -E "DIR_.+='.+'" | sed 's/"//g' | sed "s/'//g" | sed -r "s|^[^ ]+=([^ ]+)$|\^\1=|" > $TMP_DIR/parametros_obrigatorios
+		cat $ARQ_PROPS_GLOBAL | grep -E "DIR_.+='.+'" | sed 's/"//g' | sed "s/'//g" | sed -r "s|^[^ ]+=([^ ]+)$|\^\1=|" > $TMP_DIR/parametros_obrigatorios
 	
 		if [ $(cat $LOCAL_CONF | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^CAMINHO_INSTANCIAS_JBOSS='?/.+/server'?$" | wc -l) -ne "1" ] \
 			|| [ $(cat $LOCAL_CONF | sed 's|"||g' | grep -Ev "^CAMINHO_INSTANCIAS_JBOSS=|^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_]+'?$" | wc -l) -ne "0" ] \
@@ -436,8 +439,8 @@ function jboss_instances () {
 
 		    	log "INFO" "Copiando logs da rotina e das instâncias JBOSS em ${CAMINHO_INSTANCIAS_JBOSS}..."
 		    
-		        find $DESTINO/* -type d | sed -r "s|^${DESTINO}/([^/]+)/[Ll][Oo][Gg]/|\1|g" > "$TMP_DIR/app_destino.list"
-		
+		        find $DESTINO/* -type d -iname 'log' | sed -r "s|^${DESTINO}/([^/]+)/[Ll][Oo][Gg]|\1|g" > "$TMP_DIR/app_destino.list"
+			
 	    		while read APP; do
 		    	
 				DESTINO_LOG=$(find "$DESTINO/$APP/" -type d -iname 'log' 2> /dev/null)
