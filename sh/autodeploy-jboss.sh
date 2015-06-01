@@ -242,8 +242,8 @@ function jboss_instances () {
 		log "ERRO" "Parâmetros incorretos no arquivo '${ARQ_PROPS_GLOBAL}'."
 		end "1"
 	fi
-		
-	echo $ARQ_PROPS_LOCAL | while read LOCAL_CONF; do
+
+	echo $ARQ_PROPS_LOCAL | while read -d '|' LOCAL_CONF; do
 	
 		# Valida e carrega parâmetros referentes ao ambiente JBOSS.
 		
@@ -495,7 +495,8 @@ install_dir
 
 ARQ_PROPS_GLOBAL="${diretorio_instalacao}/conf/global.conf"
 DIR_PROPS_LOCAL="${diretorio_instalacao}/conf/local.d"
-ARQ_PROPS_LOCAL=$(find "$DIR_PROPS_LOCAL" -type f -iname "*.conf")
+ARQ_PROPS_LOCAL=$(find "$DIR_PROPS_LOCAL" -type f -iname "*.conf" -print)
+ARQ_PROPS_LOCAL=$(echo "$ARQ_PROPS_LOCAL" | sed -r "s% +%|%g" | sed -r "s%(.)$%\1|%")
 
 # Verifica se o arquivo global.conf atende ao template correspondente.
 
