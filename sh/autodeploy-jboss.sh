@@ -232,7 +232,7 @@ chk_dir () {
     	find $raiz/* -type d | grep -Ei "^$raiz/[^/]+/[^/]+" | grep -Eixv "^$raiz/[^/]+/deploy$|^$raiz/[^/]+/log$" | xargs -r -d "\n" rm -Rfv
 		
     	# eliminar arquivos em local incorreto ou com extensão diferente de .war / .log
-    	find "$raiz" -type f | grep -Eixv "^$raiz/[^/]+/deploy/[^/]+\.war$|^$raiz/[^/]+/log/[^/]+\.log$" | xargs -r -d "\n" rm -fv
+    	find "$raiz" -type f | grep -Eixv "^$raiz/[^/]+/deploy/[^/]+\.war$|^$raiz/[^/]+/log/[^/]+\.log$|^$raiz/[^/]+/log/[^/]+\.zip$" | xargs -r -d "\n" rm -fv
 
 }
 
@@ -256,6 +256,7 @@ function jboss_instances () {
 			log "ERRO" "Parâmetros incorretos no arquivo '$LOCAL_CONF'."
 			continue
 		else
+			dos2unix "$LOCAL_CONF" > /dev/null 2>&1
 			source "$LOCAL_CONF" || continue	
 			rm -f "$TMP_DIR/*"
 		fi
@@ -458,6 +459,7 @@ function jboss_instances () {
 			    				LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log" 2> /dev/null)
 			    				
 			    				if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
+								cd $(dirname $LOG_APP); zip -rql1 ${DESTINO_LOG}/${INSTANCIA_JBOSS}.zip *; cd - > /dev/null
 			    					cp -f $LOG_APP "$DESTINO_LOG/server_${INSTANCIA_JBOSS}.log"
 			    					cp -f $LOG "$DESTINO_LOG/cron.log"
 								unix2dos "$DESTINO_LOG/server_${INSTANCIA_JBOSS}.log" > /dev/null 2>&1
@@ -509,6 +511,7 @@ fi
 
 # Carrega constantes.
 
+dos2unix "$ARQ_PROPS_GLOBAL" > /dev/null 2>&1
 source "$ARQ_PROPS_GLOBAL" || exit 1
 
 # cria lock.
