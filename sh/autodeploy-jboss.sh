@@ -249,6 +249,8 @@ function jboss_instances () {
 		
 		cat $ARQ_PROPS_GLOBAL | grep -E "DIR_.+='.+'" | sed 's/"//g' | sed "s/'//g" | sed -r "s|^[^ ]+=([^ ]+)$|\^\1=|" > $TMP_DIR/parametros_obrigatorios
 	
+		dos2unix "$LOCAL_CONF" > /dev/null 2>&1
+
 		if [ $(cat $LOCAL_CONF | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^CAMINHO_INSTANCIAS_JBOSS='?/.+/server'?$" | wc -l) -ne "1" ] \
 			|| [ $(cat $LOCAL_CONF | sed 's|"||g' | grep -Ev "^CAMINHO_INSTANCIAS_JBOSS=|^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_]+'?$" | wc -l) -ne "0" ] \
 			|| [ $(cat $LOCAL_CONF | sed 's|"||g' | grep -Ev "^CAMINHO_INSTANCIAS_JBOSS=|^#|^$" | grep -Ev --file=$TMP_DIR/parametros_obrigatorios | wc -l) -ne "0" ];
@@ -256,7 +258,6 @@ function jboss_instances () {
 			log "ERRO" "Parâmetros incorretos no arquivo '$LOCAL_CONF'."
 			continue
 		else
-			dos2unix "$LOCAL_CONF" > /dev/null 2>&1
 			source "$LOCAL_CONF" || continue	
 			rm -f "$TMP_DIR/*"
 		fi
@@ -502,8 +503,13 @@ ARQ_PROPS_LOCAL=$(echo "$ARQ_PROPS_LOCAL" | sed -r "s%(.)$%\1|%g")
 
 # Verifica se o arquivo global.conf atende ao template correspondente.
 
-if [ ! -f "$ARQ_PROPS_GLOBAL" ] \
-	|| [ "$(grep -v --file=${diretorio_instalacao}/template/global.template $ARQ_PROPS_GLOBAL | wc -l)" -ne "0" ] \
+if [ -f "$ARQ_PROPS_GLOBAL" ]; then
+	dos2unix "$ARQ_PROPS_GLOBAL" > /dev/null 2>&1
+else
+	exit 1
+fi
+
+if [ "$(grep -v --file=${diretorio_instalacao}/template/global.template $ARQ_PROPS_GLOBAL | wc -l)" -ne "0" ] \
 	|| [ $(cat $ARQ_PROPS_GLOBAL | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^DIR_.+='?AMBIENTE'?$" | wc -l) -ne "1" ];
 then
 	exit 1
@@ -511,7 +517,6 @@ fi
 
 # Carrega constantes.
 
-dos2unix "$ARQ_PROPS_GLOBAL" > /dev/null 2>&1
 source "$ARQ_PROPS_GLOBAL" || exit 1
 
 # cria lock.
@@ -545,4 +550,8 @@ fi
 
 # Executa deploys e copia logs das instâncias jboss
 
-jboss_instances >> $LOG 2>&1
+if [ $(echo "$ARQ_PROPS_LOCAL" | wc -w) -ne 0 ]; then
+	jboss_instances >> $LOG 2>&1
+else
+	exit 1
+fi
