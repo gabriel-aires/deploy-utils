@@ -121,7 +121,7 @@ function jboss_script_init () {
 				
 					case $teste_script in
 						1) local jboss_conf=$(echo "$linha_script" | sed -r "s|^.*/server/([^/]+).*$|\1|");;
-						2) local jboss_conf=$(echo "$linha_script" | sed -r "s|^[^JBOSS_CONF=([[:graph:]]+).*$|\1|");;
+						2) local jboss_conf=$(echo "$linha_script" | sed -r "s|^JBOSS_CONF=([[:graph:]]+).*$|\1|");;
 					esac
 		
 					#Se a instância estiver definida como uma variável no script, o loop a seguir tenta encontrar o seu valor em até 3 iterações.
