@@ -134,12 +134,12 @@ function jboss_script_init () {
 						#remove o caractere '$', restando somente o nome da variável
 						var_jboss_conf=$(echo "$var_jboss_conf" | sed -r "s|^.||")
 						
-						#encontra a linha onde a variável foi setada e retorna a string após o caractere =, sem aspas									
-						jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed 's|"||g' | sed "s|'||g" | sed -r "s|^$var_jboss_conf=([[:graph:]]+).*$|\1|" )
-		
 						#verificar se houve substituição de parâmetros
 						if [ $(echo "$jboss_conf" | sed 's|}|¨|' | sed 's|{|¨|' | grep -Ex "^\\$¨$var_jboss_conf[:=\-]+(\\$)?[A-Za-z0-9_]+¨.*$" | wc -l) -ne 0 ]; then
 							jboss_conf=$(echo "$jboss_conf" | sed 's|^..||' | sed 's|}.*$||' | sed -r "s|$var_jboss_conf[:=\-]+||")
+						else
+							#encontra a linha onde a variável foi setada e retorna a string após o caractere =, sem aspas									
+							jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed 's|"||g' | sed "s|'||g" | sed -r "s|^$var_jboss_conf=([[:graph:]]+).*$|\1|" )
 						fi
 						
 						#atualiza condições para entrada no loop.
