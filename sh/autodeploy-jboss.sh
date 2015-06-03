@@ -401,7 +401,7 @@ function jboss_instances () {
 		    							else
 		    								rm -f $OLD 
 		    								cp $PACOTE $DIR_DEPLOY/$(echo $APP | tr '[:upper:]' '[:lower:]').war 
-		    								chown jboss:jboss $DIR_DEPLOY/$APP.war 
+		    								chown -R jboss:jboss $DIR_DEPLOY/ 
 		    						
 		    								if [ -d "$JBOSS_TEMP" ]; then
 		    									rm -Rf $JBOSS_TEMP/* 
