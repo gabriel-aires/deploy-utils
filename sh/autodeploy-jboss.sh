@@ -113,7 +113,7 @@ function jboss_script_init () {
 				#teste 2: retorna a primeira linha do tipo "JBOSS_CONF=..."
 
 				if [ -z "$linha_script" ]; then					
-					linha_script=$(grep -Ex "^JBOSS_CONF=.*$" | head -1 )
+					linha_script=$(grep -Ex "^JBOSS_CONF=.*$" "$script_jboss" | head -1 )
 					teste_script=2
 				fi
 	
