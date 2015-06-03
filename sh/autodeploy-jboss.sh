@@ -400,7 +400,7 @@ function jboss_instances () {
 		    								global_log "Deploy abortado. Impossível parar a instância $INSTANCIA_JBOSS."	
 		    							else
 		    								rm -f $OLD 
-		    								cp $PACOTE $DIR_DEPLOY/$APP.war 
+		    								cp $PACOTE $DIR_DEPLOY/$(echo $APP | tr '[:upper:]' '[:lower:]').war 
 		    								chown jboss:jboss $DIR_DEPLOY/$APP.war 
 		    						
 		    								if [ -d "$JBOSS_TEMP" ]; then
