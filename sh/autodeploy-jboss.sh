@@ -105,12 +105,24 @@ function jboss_script_init () {
 				&& [ -n "$(grep -F "$caminho_jboss" "$script_jboss" | head -1)" ];
 			then
 		
-				#retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
+				#teste 1: retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
+
 				local linha_script=$(grep -Ex "^[^#]+[\=].*[/\$].+/server/[^/]+/.*$" "$script_jboss" | head -1 )
+				local teste_script=1
+
+				#teste 2: retorna a primeira linha do tipo "JBOSS_CONF=..."
+
+				if [ -z "$linha_script" ]; then					
+					linha_script=$(grep -Ex "^JBOSS_CONF=.*$" | head -1 )
+					teste_script=2
+				fi
 	
 				if [ -n "$linha_script" ]; then
 				
-					local jboss_conf=$(echo "$linha_script" | sed -r "s|^.*/server/([^/]+).*$|\1|")
+					case $teste_script in
+						1) local jboss_conf=$(echo "$linha_script" | sed -r "s|^.*/server/([^/]+).*$|\1|");;
+						2) local jboss_conf=$(echo "$linha_script" | sed -r "s|^[^JBOSS_CONF=([[:graph:]]+).*$|\1|");;
+					esac
 		
 					#Se a instância estiver definida como uma variável no script, o loop a seguir tenta encontrar o seu valor em até 3 iterações.
 					
