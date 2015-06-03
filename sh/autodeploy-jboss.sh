@@ -105,15 +105,15 @@ function jboss_script_init () {
 				&& [ -n "$(grep -F "$caminho_jboss" "$script_jboss" | head -1)" ];
 			then
 		
-				#teste 1: retorna a primeira linha do tipo $JBOSS_HOME/server/$JBOSS_CONF
+				#teste 1: retorna a primeira linha do tipo .../server/...
 
 				local linha_script=$(grep -Ex "^[^#]+[\=].*[/\$].+/server/[^/]+/.*$" "$script_jboss" | head -1 )
 				local teste_script=1
 
-				#teste 2: retorna a primeira linha do tipo "JBOSS_CONF=..."
+				#teste 2: retorna a primeira linha onde foi utilizada a variável $JBOSS_CONF
 
 				if [ -z "$linha_script" ]; then					
-					linha_script=$(grep -Ex "^JBOSS_CONF=.*$" "$script_jboss" | head -1 )
+					linha_script=$(grep -Ex '^.*\$JBOSS_CONF.*$' "$script_jboss" | head -1 )
 					teste_script=2
 				fi
 	
@@ -121,7 +121,7 @@ function jboss_script_init () {
 				
 					case $teste_script in
 						1) local jboss_conf=$(echo "$linha_script" | sed -r "s|^.*/server/([^/]+).*$|\1|");;
-						2) local jboss_conf=$(echo "$linha_script" | sed -r "s|^JBOSS_CONF=([[:graph:]]+).*$|\1|");;
+						2) local jboss_conf='$JBOSS_CONF';;
 					esac
 		
 					#Se a instância estiver definida como uma variável no script, o loop a seguir tenta encontrar o seu valor em até 3 iterações.
@@ -133,13 +133,13 @@ function jboss_script_init () {
 					
 						#remove o caractere '$', restando somente o nome da variável
 						var_jboss_conf=$(echo "$var_jboss_conf" | sed -r "s|^.||")
-						
+							
+						#encontra a linha onde a variável foi setada e retorna a string após o caractere =, sem aspas									
+						jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed 's|"||g' | sed "s|'||g" | sed -r "s|^$var_jboss_conf=([[:graph:]]+).*$|\1|" )
+					
 						#verificar se houve substituição de parâmetros
 						if [ $(echo "$jboss_conf" | sed 's|}|¨|' | sed 's|{|¨|' | grep -Ex "^\\$¨$var_jboss_conf[:=\-]+(\\$)?[A-Za-z0-9_]+¨.*$" | wc -l) -ne 0 ]; then
 							jboss_conf=$(echo "$jboss_conf" | sed 's|^..||' | sed 's|}.*$||' | sed -r "s|$var_jboss_conf[:=\-]+||")
-						else
-							#encontra a linha onde a variável foi setada e retorna a string após o caractere =, sem aspas									
-							jboss_conf=$(grep -Ex "^$var_jboss_conf=.*$" "$script_jboss" | head -1 | sed 's|"||g' | sed "s|'||g" | sed -r "s|^$var_jboss_conf=([[:graph:]]+).*$|\1|" )
 						fi
 						
 						#atualiza condições para entrada no loop.
