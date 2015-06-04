@@ -78,6 +78,24 @@ Instalação:
 *	Embora a instalação deva ser realizada preferencialmente num único host, a instalação em várias máquinas é possível, desde que os diretórios
 	de lock, tmp, repo, bak, conf e template estejam num compartilhamento centralizado e acessível a todas as máquinas.
 
+============
+Configuração
+============
+
+1) APENAS PARA 0S HOSTS LINUX: o primeiro deploy de uma aplicação requer um compartilhamento no host de destino onde o usuário deploy@anatel.gov.br possua permissão de escrita.
+Com esse objetivo, deve-se incluir no puppet o módulo "anatel_ad" para host em questão, de modo que a máquina passe a visualizar os grupos do Active Directory. Em seguida,
+deve-se logar no host como root e, após a execução do agente do puppet, executar os comandos "kinit usuário" e net ads join -U "usuario@anatel.gov.br", reiniciando o serviço winbind
+em seguida. O procedimento terá sucesso caso o comando "wbinfo -u" consiga retornar os usuários do AD. Em seguida, basta editar o arquivo /etc/samba/include.conf,
+onde são definidos os compartilhamentos e as permissões, utilizando como template o arquivo /etc/samba/include.conf.example. Reiniciar o serviço smb e averiguar se o compartilhamento foi
+disponibilizado corretamente.
+
+2) APENAS PARA OS HOSTS WINDOWS: Normalmente já existe um compartilhamento chamado sistemas$ em cada host windows, basta confirmar se o usuário deploy possui permissão de escrita no
+contexto desse diretório.
+
+3) Logs, Lockfiles, arquivos de configuração e templates podem ser acessados através dos compartilhamentos existentes em \\cetaskspdin01.
+
+OBS: o usuário deploy@anatel.gov.br faz parte do grupo de rede 'PRODUCAO'.
+
 =========
 Execução:
 =========
@@ -134,7 +152,7 @@ Execução:
 	
 3) Rollback:
 
-	'deploy' (opções) <sistema> rollback <ambiente>
+	'deploy (opções) <sistema> rollback <ambiente>'
 
 	O comando acima efetuará o rollback da aplicação segundo as regras do último deploy realizado. Isso é possível, porque o script sempre guarda
 	um backup local de todo o conteúdo a ser modificado no host de destino durante um deploy, bem como do filtro aplicado ao comando rsync.
@@ -156,12 +174,39 @@ Logs:
 
 	Todos os logs são automaticamente expurgados conforme as regras definidas no arquivo global.conf ou user.conf.
 
+================
+Troubleshooting:
+================
+
+1) Caso o repositório git de uma aplicação mude de URL, impedindo o seu deploy, adotar o seguinte procedimento:
+
+    - comentar a entrada correspondente ao agendamento de deploys automáticos na crontab do usuário root.
+    - certificar-se de que não há deploys em andamento.
+    - remover o diretório /opt/autodeploy-paginas/repo/<aplicacao>
+    - alterar a url do repositório no campo correspondente do arquivo \\cetaskspdin01\app_conf\<aplicacao>.conf
+    - descomentar o agendamento de deploys automáticos na crontab.
+    - reexecutar o deploy da aplicação.
+
+2) Caso o script não possua permissão para clonar ou fazer checkout do repositório remoto de uma aplicação:
+
+    - solicitar à equipe de arquitetura que conceda permissão de leitura no repositório ao usuário 'deploy@anatel.gov.br'
+    - reexecutar o deploy da aplicação.
+
+3) Caso o deploy falhe durante a etapa de escrita, é possível que o rsync esteja tentando escrever em algum arquivo/diretório somente leitura:
+
+    - Ajustar permissões no diretório de destino.
+    - Reexecutar deploy.
+    
+4) Deploys com mais de 50 modificações em hosts WINDOWS devem ser abortados no período diurno ou vespertino.
+
+    - Executar deploy após as 19h para não impactar a replicação dos arquivos.
+
 ======
 Autor:
 ======
 
 	Gabriel Aires Guedes - airesgabriel@gmail.com
 
-	Atualizado pela última vez em 27/04/2015.
+	Atualizado pela última vez em 04/06/2015.
 
 	
