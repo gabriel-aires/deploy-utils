@@ -850,14 +850,23 @@ while read dir_destino; do
 	modificados="$(grep -E "^>f[^\+]" $atividade_dir/modificacoes_$host.txt | wc -l)"
 	dir_criado="$(grep -E "^cd\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
 	dir_removido="$(grep -E "^\*deleting .*/$" $atividade_dir/modificacoes_$host.txt | wc -l)"
-    
-	echo -e "\nLog das modificacoes gravado no arquivo modificacoes.txt\n" > $atividade_dir/resumo_$host.txt
-	echo -e "Arquivos adicionados:\t$adicionados " >> $atividade_dir/resumo_$host.txt
-	echo -e "Arquivos excluidos:\t$excluidos" >> $atividade_dir/resumo_$host.txt
-	echo -e "Arquivos modificados:\t$modificados" >> $atividade_dir/resumo_$host.txt
-	echo -e "Diretórios criados:\t$dir_criado" >> $atividade_dir/resumo_$host.txt
-	echo -e "Diretórios removidos:\t$dir_removido" >> $atividade_dir/resumo_$host.txt
-    
+
+	total_arq=$(( $adicionados + $excluidos + $modificados ))
+	total_dir=$(( $dir_criado + $dir_removido ))
+	total_del=$(( $excluidos + dir_removido ))
+ 
+	echo -e "Log das modificacoes gravado no arquivo modificacoes_$host.txt\n" > $atividade_dir/resumo_$host.txt
+	echo -e "Arquivos adicionados ............... $adicionados " >> $atividade_dir/resumo_$host.txt
+	echo -e "Arquivos excluidos ................. $excluidos" >> $atividade_dir/resumo_$host.txt
+	echo -e "Arquivos modificados ............... $modificados" >> $atividade_dir/resumo_$host.txt
+	echo -e "Diretórios criados ................. $dir_criado" >> $atividade_dir/resumo_$host.txt
+	echo -e "Diretórios removidos ............... $dir_removido" >> $atividade_dir/resumo_$host.txt
+	echo -e "" >> $atividade_dir/resumo_$host.txt
+	echo -e "Total de operações de arquivos ..... $total_arq" >> $atividade_dir/resumo_$host.txt
+	echo -e "Total de operações de diretórios ... $total_dir" >> $atividade_dir/resumo_$host.txt
+	echo -e "Total de operações de exclusão ..... $total_del" >> $atividade_dir/resumo_$host.txt
+	
+	echo ""
 	cat $atividade_dir/resumo_$host.txt
     
 	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
