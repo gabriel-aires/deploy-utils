@@ -355,6 +355,12 @@ function end () {
 
 			elif [ "$estado" == 'escrita' ]; then
 
+                if [ -n $(grep -REil '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log) ]; then
+                    grep -REi '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log > $atividade_dir/permission_denied_$host.txt
+                    sed -i -r 's|^rsync: open \"([^\"]+)\" failed: Permission denied|\1|' $atividade_dir/permission_denied_$host.txt
+                    sed -i -r "s|^$destino|$dir_destino|" $atividade_dir/permission_denied_$host.txt
+                fi
+
 				echo -e "\nO script foi interrompido durante a escrita. Revertendo alterações..."
 				msg_rollback=1
 
@@ -912,8 +918,8 @@ while read dir_destino; do
 			echo -e "\nEscrevendo alterações no diretório de destino..."	
 	        
 			rsync_cmd="rsync $rsync_opts $origem/ $destino/"
-			eval $rsync_cmd || end 1
-	        
+			eval $rsync_cmd 2> $atividade_dir/rsync_$host.log || end 1
+
 			log
 			
 			estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
