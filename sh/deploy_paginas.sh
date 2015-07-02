@@ -357,8 +357,9 @@ function end () {
 
                 if [ -n $(grep -REil '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log) ]; then
                     grep -REi '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log > $atividade_dir/permission_denied_$host.txt
-                    sed -i -r 's|^rsync: open \"([^\"]+)\" failed: Permission denied|\1|' $atividade_dir/permission_denied_$host.txt
+                    sed -i -r 's|^[^\"]+\"([^\"]+)\"[^\"]+$|\1|' $atividade_dir/permission_denied_$host.txt
                     sed -i -r "s|^$destino|$dir_destino|" $atividade_dir/permission_denied_$host.txt
+                    sed -i -r "s|/|\\|g" $atividade_dir/permission_denied_$host.txt                    
                 fi
 
 				echo -e "\nO script foi interrompido durante a escrita. Revertendo alterações..."
