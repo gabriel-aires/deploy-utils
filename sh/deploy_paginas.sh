@@ -323,7 +323,7 @@ function log () {
 function end () {
 
 	erro=$1
-	msg_rollback=0
+	qtd_rollback=0
 
 	if [ -z "$erro" ]; then
 		erro=0
@@ -358,13 +358,13 @@ function end () {
                     sed -i -r 's|/|\\|g' $atividade_dir/permission_denied_$host.txt                    
                 fi
 
-				echo -e "\nO script foi interrompido durante a escrita. Revertendo alterações..."
-				msg_rollback=1
-
+				echo -e "\nO script foi interrompido durante a escrita. Revertendo alterações no host $host..."
+				echo $host >> $temp_dir/hosts_rollback
+				
 				echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
 				rsync_cmd="rsync $rsync_opts $bak/ $destino/"
-				eval $rsync_cmd && rm -Rf $bak
+				eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
 				echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
 				log "Deploy interrompido. Backup restaurado."
@@ -392,15 +392,13 @@ function end () {
 							bak="$bak_dir/${app}_${host}"
 							destino="/mnt/deploy_${app}_${host}"
 
-							if [ "$msg_rollback" -ne 1 ]; then
-								echo -e "\nRevertendo alterações..."
-								msg_rollback=1
-							fi
+							echo -e "\nRevertendo alterações no host $host..."
+				            echo $host >> $temp_dir/hosts_rollback							
 
 							echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
 							rsync_cmd="rsync $rsync_opts $bak/ $destino/"
-							eval $rsync_cmd && rm -Rf $bak
+							eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
 							echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
 							log "Rollback realizado devido a erro ou deploy cancelado em $host_erro."		
@@ -413,8 +411,10 @@ function end () {
 			
 			done < $temp_dir/destino
 
-			if [ "$msg_rollback" -eq 1 ]; then
+			if [ "$qtd_rollback" -eq $(cat $temp_dir/hosts_rollback | wc -l) ]; then
 				echo -e "\nRollback finalizado."
+			else
+			    echo -e "\nErro. O rollback não foi efetuado em todos os servidores do pool da aplicação $app."
 			fi
 		fi
 		
