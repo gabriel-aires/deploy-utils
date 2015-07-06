@@ -316,10 +316,6 @@ function log () {
 	cp -f $temp_dir/app_log_novo ${historico_app}/deploy.log
 	cp -f $temp_dir/deploy_log_novo $historico	
 
-	unix2dos $atividade_dir/* > /dev/null 2>&1
-	unix2dos ${historico_app}/deploy.log > /dev/null 2>&1
-	unix2dos $historico > /dev/null 2>&1
-
 	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
 
 }
