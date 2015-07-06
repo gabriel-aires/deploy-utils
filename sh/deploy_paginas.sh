@@ -411,10 +411,12 @@ function end () {
 			
 			done < $temp_dir/destino
 
-			if [ "$qtd_rollback" -eq $(cat $temp_dir/hosts_rollback | wc -l) ]; then
-				echo -e "\nRollback finalizado."
-			else
-			    echo -e "\nErro. O rollback não foi efetuado em todos os servidores do pool da aplicação $app."
+            if [ -f $temp_dir/hosts_rollback ]; then
+			    if [ "$qtd_rollback" -eq $(cat $temp_dir/hosts_rollback | wc -l) ]; then
+			    	echo -e "\nRollback finalizado."
+		    	else
+	    		    echo -e "\nErro. O rollback não foi concluído em todos os servidores do pool da aplicação $app."
+    			fi
 			fi
 		fi
 		
