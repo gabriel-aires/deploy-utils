@@ -264,27 +264,44 @@ function mklist () {
 
 }
 
+function html () {
+
+	arquivo_entrada=$1
+	arquivo_saida=$2
+
+	echo '\
+<html>\
+	<head>\
+		<title>Deploy log</title>\
+	</head>\
+	<body>\
+		<h1>Deploy log</h1>\
+		<table cellpadding=5 width=100% style="text-align:center;background:black">\
+' > $arquivo_saida
+
+	sed -r 's|^(.)|<tr style="text-align:center;color:black;background:white"><td>\1|' $arquivo_entrada > $temp_dir/html
+	sed -i -r "s|(.)$|</td></tr>|" $temp_dir/html
+	sed -i -r "s|','|</td><td>|g" $temp_dir/html
+
+
+	cat $temp_dir/html >> $arquivo_saida
+
+	echo '\
+		</table>\
+	</body>\
+<\html>\
+' >> $arquivo_saida
+
+}
+
 function log () {
 		
 	##### LOG DE DEPLOY #####
 
 	obs_log="$1"
 	
-	horario_log=$(echo "$(date +%Y%m%d%H%M%S)" | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1          \4h\5m\6s           |")
+	horario_log=$(echo $data_deploy | sed -r "s|^(....)-(..)-(..)_(.........)$|'\3/\2/\1';'\4'|")
 		
-	tamanho_app=$(echo -n $app | wc -m)
-	app_log=$(echo '                    ' | sed -r "s|^ {$tamanho_app}|$app|")
-
-	rev_log=$(echo $rev | sed -r "s|^(.........).*$|\1|")
-	tamanho_rev=$(echo -n $rev_log | wc -m)
- 	rev_log=$(echo '                    ' | sed -r "s|^ {$tamanho_rev}|$rev_log|")
-
-	tamanho_ambiente=$(echo -n $ambiente | wc -m) 
-	ambiente_log=$(echo '                    ' | sed -r "s|^ {$tamanho_ambiente}|$ambiente|")
-
-	tamanho_host=$(echo -n $host | wc -m) 
-	host_log=$(echo '                    ' | sed -r "s|^ {$tamanho_host}|$host|")
-	
 	if [ -z "$obs_log" ]; then
 		if [ "$modo" == 'p' ]; then
 			obs_log='Deploy concluído: arquivos obsoletos preservados.'
@@ -293,7 +310,7 @@ function log () {
 		fi
 	fi
 
-	mensagem_log="$horario_log$app_log$rev_log$ambiente_log$host_log$obs_log"
+	mensagem_log="'$horario_log';'$app';'$rev';'$ambiente';'$host';'$obs_log';"
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
@@ -315,6 +332,10 @@ function log () {
 	cp -f $temp_dir/app_log_novo $atividade_dir/deploy.log
 	cp -f $temp_dir/app_log_novo ${historico_app}/deploy.log
 	cp -f $temp_dir/deploy_log_novo $historico	
+
+	html "$atividade_dir/deploy.log" "$atividade_dir/deploy_log.html"
+	html "$historico_app/deploy.log" "$atividade_dir/deploy_log.html"
+	html "$historico" "$historico_dir/deploy_log.html"
 
 	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
 
@@ -729,7 +750,10 @@ cat $temp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
 
 ##### CRIAÇÃO DO DIRETÓRIO DE LOG #####
 
-atividade_dir="${historico_app}/$(date +%F_%Hh%Mm%Ss)/${rev}_${ambiente}"								#Diretório onde serão armazenados os logs do atendimento.
+data_deploy=$(date +%F_%Hh%Mm%Ss)								
+info_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g")				
+atividade_dir="${historico_app}/${info_deploy}"								#Diretório onde serão armazenados os logs do atendimento.
+
 if [ -d "${atividade_dir}_PENDENTE" ]; then
 	rm -f ${atividade_dir}_PENDENTE/*
 	rmdir ${atividade_dir}_PENDENTE
