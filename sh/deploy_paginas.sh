@@ -351,12 +351,12 @@ function end () {
 
 			elif [ "$estado" == 'escrita' ]; then
 
-                if [ -n $(grep -REil '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log) ]; then
-                    grep -REi '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log > $atividade_dir/permission_denied_$host.txt
-                    sed -i -r 's|^[^\"]+\"([^\"]+)\"[^\"]+$|\1:|' $atividade_dir/permission_denied_$host.txt
-                    sed -i -r "s|^$destino|$dir_destino|" $atividade_dir/permission_denied_$host.txt
-                    sed -i -r 's|/|\\|g' $atividade_dir/permission_denied_$host.txt                    
-                fi
+				if [ -n $(grep -REil '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log) ]; then
+					grep -REi '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log > $atividade_dir/permission_denied_$host.txt
+					sed -i -r 's|^[^\"]+\"([^\"]+)\"[^\"]+$|\1:|' $atividade_dir/permission_denied_$host.txt
+					sed -i -r "s|^$destino|$dir_destino|" $atividade_dir/permission_denied_$host.txt
+					sed -i -r 's|/|\\|g' $atividade_dir/permission_denied_$host.txt                    
+				fi
 
 				echo -e "\nO script foi interrompido durante a escrita. Revertendo alterações no host $host..."
 				echo $host >> $temp_dir/hosts_rollback
@@ -393,7 +393,7 @@ function end () {
 							destino="/mnt/deploy_${app}_${host}"
 
 							echo -e "\nRevertendo alterações no host $host..."
-				            echo $host >> $temp_dir/hosts_rollback							
+							echo $host >> $temp_dir/hosts_rollback							
 
 							echo "rollback" >> $atividade_dir/progresso_$host.txt
 				
@@ -411,12 +411,12 @@ function end () {
 			
 			done < $temp_dir/destino
 
-            if [ -f $temp_dir/hosts_rollback ]; then
-			    if [ "$qtd_rollback" -eq $(cat $temp_dir/hosts_rollback | wc -l) ]; then
-			    	echo -e "\nRollback finalizado."
-		    	else
-	    		    echo -e "\nErro. O rollback não foi concluído em todos os servidores do pool da aplicação $app."
-    			fi
+			if [ -f $temp_dir/hosts_rollback ]; then
+				if [ "$qtd_rollback" -eq $(cat $temp_dir/hosts_rollback | wc -l) ]; then
+					echo -e "\nRollback finalizado."
+				else
+					echo -e "\nErro. O rollback não foi concluído em todos os servidores do pool da aplicação $app."
+				fi
 			fi
 		fi
 		
