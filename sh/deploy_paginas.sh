@@ -269,28 +269,14 @@ function html () {
 	arquivo_entrada=$1
 	arquivo_saida=$2
 
-	echo '\
-<html>\
-	<head>\
-		<title>Deploy log</title>\
-	</head>\
-	<body>\
-		<h1>Deploy log</h1>\
-		<table cellpadding=5 width=100% style="text-align:center;background:black">\
-' > $arquivo_saida
+	cat $html_dir/begin.html > $arquivo_saida
 
-	sed -r 's|^(.)|<tr style="text-align:center;color:black;background:white"><td>\1|' $arquivo_entrada > $temp_dir/html
-	sed -i -r "s|(.)$|</td></tr>|" $temp_dir/html
-	sed -i -r "s|','|</td><td>|g" $temp_dir/html
-
+	sed -r 's|^(.)|\t\t\t<tr style="text-align:center;color:black;background:white"><td>|' $arquivo_entrada > $temp_dir/html
+	sed -i -r "s|(..)$|</td></tr>|" $temp_dir/html
+	sed -i -r "s|';'|</td><td>|g" $temp_dir/html
 
 	cat $temp_dir/html >> $arquivo_saida
-
-	echo '\
-		</table>\
-	</body>\
-<\html>\
-' >> $arquivo_saida
+	cat $html_dir/end.html >> $arquivo_saida
 
 }
 
@@ -300,7 +286,7 @@ function log () {
 
 	obs_log="$1"
 	
-	horario_log=$(echo $data_deploy | sed -r "s|^(....)-(..)-(..)_(.........)$|'\3/\2/\1';'\4'|")
+	horario_log=$(echo $data_deploy | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1';'\4|")
 		
 	if [ -z "$obs_log" ]; then
 		if [ "$modo" == 'p' ]; then
@@ -334,7 +320,7 @@ function log () {
 	cp -f $temp_dir/deploy_log_novo $historico	
 
 	html "$atividade_dir/deploy.log" "$atividade_dir/deploy_log.html"
-	html "$historico_app/deploy.log" "$atividade_dir/deploy_log.html"
+	html "$historico_app/deploy.log" "$historico_app/deploy_log.html"
 	html "$historico" "$historico_dir/deploy_log.html"
 
 	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
@@ -503,6 +489,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_repo_dir" ] \
 	|| [ -z "$regex_lock_dir" ] \
 	|| [ -z "$regex_bak_dir" ] \
+	|| [ -z "$regex_html_dir" ] \
 	|| [ -z "$regex_app" ] \
 	|| [ -z "$regex_rev" ] \
 	|| [ -z "$regex_chamado" ] \
@@ -513,6 +500,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_auth" ] \
 	|| [ -z "$regex_qtd" ] \
 	|| [ -z $(echo $bak_dir | grep -E "$regex_bak_dir") ] \
+	|| [ -z $(echo $html_dir | grep -E "$regex_html_dir") ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $historico_dir | grep -E "$regex_historico_dir") ] \
 	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
