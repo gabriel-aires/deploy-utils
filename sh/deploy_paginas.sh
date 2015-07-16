@@ -274,7 +274,7 @@ function html () {
 	tail --lines=$qtd_log_html $arquivo_entrada > $temp_dir/html
 
 	sed -i -r "s|;$|</td></tr>|" $temp_dir/html
-	sed -i -r "s|';'|</td><td>|g" $temp_dir/html
+	sed -i -r "s|;|</td><td>|g" $temp_dir/html
 	sed -i -r 's|^(.)|\t\t\t<tr style="text-align:center;color:black;background:white"><td>\1|' $temp_dir/html
 
 	cat $temp_dir/html >> $arquivo_saida
@@ -508,6 +508,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
 	|| [ -z $(echo $qtd_log_app | grep -E "$regex_qtd") ] \
+	|| [ -z $(echo $qtd_log_html | grep -E "$regex_qtd") ] \
 	|| [ -z $(echo $qtd_log_deploy | grep -E "$regex_qtd") ] \
 	|| [ -z "$modo_padrao" ] \
 	|| [ -z "$rsync_opts" ] \
@@ -734,7 +735,7 @@ historico_app="${historico_dir}/sistemas/${app}"
 
 mkdir -p "${historico_app}/"
 find "${historico_app}/" -maxdepth 1 -type d | grep -vx "${historico_app}/" | sort > $temp_dir/logs_total
-tail $temp_dir/logs_total --lines=${qtd_log_app} > $temp_dir/logs_ultimos
+tail $temp_dir/logs_total --lines=${qtd_log_html} > $temp_dir/logs_ultimos
 grep -vxF --file=$temp_dir/logs_ultimos $temp_dir/logs_total > $temp_dir/logs_expurgo
 cat $temp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
 
