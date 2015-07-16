@@ -271,9 +271,11 @@ function html () {
 
 	cat $html_dir/begin.html > $arquivo_saida
 
-	sed -r 's|^(.)|\t\t\t<tr style="text-align:center;color:black;background:white"><td>|' $arquivo_entrada > $temp_dir/html
-	sed -i -r "s|(..)$|</td></tr>|" $temp_dir/html
+	tail --lines=$qtd_log_html $arquivo_entrada > $temp_dir/html
+
+	sed -i -r "s|;$|</td></tr>|" $temp_dir/html
 	sed -i -r "s|';'|</td><td>|g" $temp_dir/html
+	sed -i -r 's|^(.)|\t\t\t<tr style="text-align:center;color:black;background:white"><td>\1|' $temp_dir/html
 
 	cat $temp_dir/html >> $arquivo_saida
 	cat $html_dir/end.html >> $arquivo_saida
@@ -296,7 +298,7 @@ function log () {
 		fi
 	fi
 
-	mensagem_log="'$horario_log';'$app';'$rev';'$ambiente';'$host';'$obs_log';"
+	mensagem_log="$horario_log;$app;$rev;$ambiente;$host;$obs_log;"
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
@@ -307,20 +309,20 @@ function log () {
 	touch $lock_dir/deploy_log_edit && echo "$lock_dir/deploy_log_edit" >> $temp_dir/locks
 
 	touch $historico
-	touch ${historico_app}/deploy.log
+	touch ${historico_app}/deploy_log.csv
 
 	tail --lines=$qtd_log_deploy $historico > $temp_dir/deploy_log_novo
-	tail --lines=$qtd_log_app ${historico_app}/deploy.log > $temp_dir/app_log_novo
+	tail --lines=$qtd_log_app ${historico_app}/deploy_log.csv > $temp_dir/app_log_novo
 
 	echo -e "$mensagem_log" >> $temp_dir/deploy_log_novo
 	echo -e "$mensagem_log" >> $temp_dir/app_log_novo	
 	
-	cp -f $temp_dir/app_log_novo $atividade_dir/deploy.log
-	cp -f $temp_dir/app_log_novo ${historico_app}/deploy.log
+	cp -f $temp_dir/app_log_novo $atividade_dir/deploy_log.csv
+	cp -f $temp_dir/app_log_novo ${historico_app}/deploy_log.csv
 	cp -f $temp_dir/deploy_log_novo $historico	
 
-	html "$atividade_dir/deploy.log" "$atividade_dir/deploy_log.html"
-	html "$historico_app/deploy.log" "$historico_app/deploy_log.html"
+	html "$atividade_dir/deploy_log.csv" "$atividade_dir/deploy_log.html"
+	html "$historico_app/deploy_log.csv" "$historico_app/deploy_log.html"
 	html "$historico" "$historico_dir/deploy_log.html"
 
 	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
