@@ -288,7 +288,7 @@ function log () {
 
 	obs_log="$1"
 	
-	horario_log=$(echo $data_deploy | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1';'\4|")
+	horario_log=$(echo $data_deploy | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1;\4|")
 		
 	if [ -z "$obs_log" ]; then
 		if [ "$modo" == 'p' ]; then
