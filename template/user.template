@@ -8,3 +8,17 @@ rsync_opts=
 qtd_log_app=
 qtd_log_deploy=
 qtd_log_cron=
+qtd_log_html=
+
+# HTML
+
+html_title=
+html_header=
+html_table_style=
+html_th_style=
+html_tr_style_default=
+html_tr_style_warning=
+
+# Expressões inválidas
+
+not_regex_.*=

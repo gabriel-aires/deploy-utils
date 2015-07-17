@@ -191,7 +191,7 @@ function check_downgrade () {
 	git tag > $temp_dir/git_tag_app
 	git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $temp_dir/git_log_app
 
-	ultimo_deploy_app=$(grep -Eix '^([^;]+;){6}deploy concluído.*$' ${historico_app}/deploy_log.csv | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
+	ultimo_deploy_app=$(grep -Eix "^([^;]+;){6}$mensagem_sucesso.*$" ${historico_app}/deploy_log.csv | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
 	
 	if [ -n "$ultimo_deploy_app" ]; then
 
@@ -346,17 +346,27 @@ function html () {
 	arquivo_entrada=$1
 	arquivo_saida=$2
 
-	cat $html_dir/begin.html > $arquivo_saida
+	tail --lines=$qtd_log_html $arquivo_entrada > $temp_dir/html_tr
 
-	tail --lines=$qtd_log_html $arquivo_entrada > $temp_dir/html
+	sed -i -r 's|^(.)|-\1|' $temp_dir/html_tr
+	sed -i -r "s|^-(([^;]+;){6}$mensagem_sucesso.*)$|+\1|" $temp_dir/hmtl_tr
+	sed -i -r 's|;$|</td></tr>|' $temp_dir/html_tr
+	sed -i -r 's|;|</td><td>|g' $temp_dir/html_tr
+	sed -i -r 's|^-|\t\t\t<tr style="@@html_tr_style_warning@@"><td>|' $temp_dir/html_tr
+	sed -i -r 's|^+|\t\t\t<tr style="@@html_tr_style_default@@"><td>|' $temp_dir/html_tr
+	
+	cat $html_dir/begin.html > $temp_dir/html
+	cat $temp_dir/html_tr >> $temp_dir/html
+	cat $html_dir/end.html >> $temp_dir/html
 
-	sed -i -r "s|;$|</td></tr>|" $temp_dir/html
-	sed -i -r "s|;|</td><td>|g" $temp_dir/html
-	sed -i -r 's|^(.)|\t\t\t<tr style="text-align:center;color:black;background:white"><td>\1|' $temp_dir/html
+	sed -i -r "s|@@html_title@@|$html_title|" $temp_dir/html
+	sed -i -r "s|@@html_header@@|$html_header|" $temp_dir/html
+	sed -i -r "s|@@html_table_style@@|$html_table_style|" $temp_dir/html
+	sed -i -r "s|@@html_th_style@@|$html_th_style|" $temp_dir/html
+	sed -i -r "s|@@html_tr_style_default@@|$html_tr_style_default|" $temp_dir/html
+	sed -i -r "s|@@html_tr_style_warning@@|$html_tr_style_warning|" $temp_dir/html
 
-	cat $temp_dir/html >> $arquivo_saida
-	cat $html_dir/end.html >> $arquivo_saida
-
+	cp -f $temp_dir/html $arquivo_saida
 }
 
 function log () {
@@ -370,9 +380,9 @@ function log () {
 	if [ -z "$obs_log" ]; then
 		
 		if [ "$modo" == 'p' ]; then
-			obs_log='Deploy concluído: arquivos obsoletos preservados.'
+			obs_log="$mensagem_sucesso. Arquivos obsoletos preservados."
 		else
-			obs_log='Deploy concluído: arquivos obsoletos deletados.'
+			obs_log="$mensagem_sucesso. arquivos obsoletos deletados."
 		fi
 	fi
 
@@ -594,6 +604,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z $(echo $qtd_log_app | grep -E "$regex_qtd") ] \
 	|| [ -z $(echo $qtd_log_html | grep -E "$regex_qtd") ] \
 	|| [ -z $(echo $qtd_log_deploy | grep -E "$regex_qtd") ] \
+	|| [ -z "$mensagem_sucesso" ] \
 	|| [ -z "$modo_padrao" ] \
 	|| [ -z "$rsync_opts" ] \
 	|| [ -z "$ambientes" ] \
@@ -1032,6 +1043,6 @@ while read dir_destino; do
 done < $temp_dir/dir_destino 
 
 paint 'fg' 'green'
-echo "Deploy concluído."
+echo "$mensagem_sucesso"
 
 end 0
