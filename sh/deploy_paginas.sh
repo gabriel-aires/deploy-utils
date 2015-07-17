@@ -208,7 +208,9 @@ function check_downgrade () {
 		fi
 
 		if $downgrade; then
+			paint 'bg' 'red' && paint 'fg' 'yellow'
 			echo -e "\nAVISO!\tFoi detectado um deploy anterior de uma revisão mais recente: $ultimo_deploy_app"
+			paint 'default'
 		fi
 	fi	
 
@@ -269,6 +271,9 @@ function clean_locks () {
 function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem.
 
 	if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z $edit ]; then
+
+		paint 'fg' 'yellow'
+
 		var="$1"
 		msg="$2"
 		edit=0
@@ -294,7 +299,10 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 			done
 		elif [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; then
 			echo -e "$msg" && end 1
-		fi			
+		fi
+
+		paint 'default'		
+
 	else
 		end 1
 	fi
@@ -360,6 +368,7 @@ function log () {
 	horario_log=$(echo $data_deploy | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1;\4|")
 		
 	if [ -z "$obs_log" ]; then
+		
 		if [ "$modo" == 'p' ]; then
 			obs_log='Deploy concluído: arquivos obsoletos preservados.'
 		else
@@ -400,6 +409,8 @@ function log () {
 
 function end () {
 
+	paint 'default'
+
 	erro=$1
 	qtd_rollback=0
 
@@ -412,6 +423,8 @@ function end () {
 	wait
 
 	if [ "$erro" -eq 1 ] && [ -f "$atividade_dir/progresso_$host.txt" ]; then
+
+		paint 'fg' 'yellow'
 
 		echo -e "\nDeploy abortado."
 
@@ -507,6 +520,8 @@ function end () {
 	
 	clean_locks
 	clean_temp
+
+	paint 'default'
 
 	exit $erro
 }
@@ -1016,6 +1031,7 @@ while read dir_destino; do
 
 done < $temp_dir/dir_destino 
 
+paint 'fg' 'green'
 echo "Deploy concluído."
 
 end 0
