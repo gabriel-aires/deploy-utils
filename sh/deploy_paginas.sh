@@ -148,7 +148,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git checkout --force --quiet $rev || end 1
 	fi
 
-	if [ -z $(git branch | grep -x '* (no branch)' ) ];
+	if [ -z $(git branch | grep -x '* (no branch)' ) ]; then
 		echo -e "\nDeploys a partir do nome de uma branch são proibidos, pois prejudicam a rastreabilidade do processo. Deploy abortado"
 		end 1
 	fi
@@ -170,7 +170,7 @@ function check_downgrade () {
 
 	ultimo_deploy_app=$(grep -Eix '^([^;]+;){6}deploy concluído.*$' ${historico_app}/deploy_log.csv | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
 	
-	if [ -n "$ultimo_deploy_app" ];
+	if [ -n "$ultimo_deploy_app" ]; then
 
 		local rev_check=$(echo $ultimo_deploy_app | sed -r "s|\.|\\\.|g")
 	
