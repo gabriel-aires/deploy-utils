@@ -148,7 +148,7 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git checkout --force --quiet $rev || end 1
 	fi
 
-	if [ -z $(git branch | grep -x '* (no branch)' ) ]; then
+	if [ -z "$(git branch | grep -x '* (no branch)' )" ]; then
 		echo -e "\nDeploys a partir do nome de uma branch são proibidos, pois prejudicam a rastreabilidade do processo. Deploy abortado"
 		end 1
 	fi
