@@ -208,8 +208,8 @@ function check_downgrade () {
 		fi
 
 		if $downgrade; then
-			paint 'bg' 'red' && paint 'fg' 'yellow'
-			echo -e "\nAVISO!\tFoi detectado um deploy anterior de uma revisão mais recente: $ultimo_deploy_app"
+			paint 'bg' 'red' && paint 'fg' 'black'
+			echo -e "\nAVISO! Foi detectado um deploy anterior de uma revisão mais recente: $ultimo_deploy_app"
 			paint 'default'
 		fi
 	fi	
