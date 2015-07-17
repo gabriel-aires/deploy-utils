@@ -175,11 +175,11 @@ function check_downgrade () {
 		local rev_check=$(echo $ultimo_deploy_app | sed -r "s|\.|\\\.|g")
 	
 		if [ -n $(grep -Ex "^$rev_check$" $temp_dir/git_tag_app) ]; then 			# a revisão é uma tag
-			if [ -z $(grep -Ex "^[a-f0-9]+\.\.$rev_check$" $temp_dir/git_log) ]; then	# a tag é posterior à revisão para a qual foi solicitado o deploy
+			if [ -z $(grep -Ex "^[a-f0-9]+\.\.$rev_check$" $temp_dir/git_log_app) ]; then	# a tag é posterior à revisão para a qual foi solicitado o deploy
 				downgrade=true
 			fi
 		else 											# a revisão é um hash
-			if [ -z $(grep -Ex "^$rev_check.*" $temp_dir/git_log) ]; then			# o hash é posterior à revisão para a qual foi solicitado o deploy
+			if [ -z $(grep -Ex "^$rev_check.*" $temp_dir/git_log_app) ]; then			# o hash é posterior à revisão para a qual foi solicitado o deploy
 				downgrade=true
 			fi
 		fi
