@@ -419,6 +419,7 @@ function log () {
 
 function end () {
 
+	trap "" SIGQUIT SIGTERM SIGINT SIGHUP
 	paint 'default'
 
 	erro=$1
