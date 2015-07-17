@@ -561,15 +561,15 @@ else
 	exit 1
 fi
 
-if [ "$(grep -v --file=$deploy_dir/template/global.template $deploy_dir/conf/global.conf | wc -l)" -ne "0" ]; then
+if [ "$(grep -v --file=$deploy_dir/template/global.template $deploy_dir/conf/global.conf | grep -v '^$' | wc -l)" -ne "0" ]; then
 	echo 'O arquivo global.conf não atende ao template correspondente.'
 	exit 1
 fi
 
 source "$deploy_dir/conf/global.conf" || exit 1						#carrega o arquivo de constantes.
 
-if [ -f "$deploy_dir/conf/user.conf" ] && [ -f "$deploy_dir/conf/user.template" ]; then
-	if [ "$(grep -v --file=$deploy_dir/template/user.template $deploy_dir/conf/user.conf | wc -l)" -ne "0" ]; then
+if [ -f "$deploy_dir/conf/user.conf" ] && [ -f "$deploy_dir/template/user.template" ]; then
+	if [ "$(grep -v --file=$deploy_dir/template/user.template $deploy_dir/conf/user.conf | grep -v '^$' | wc -l)" -ne "0" ]; then
 		echo 'O arquivo user.conf não atende ao template correspondente.'
 		exit 1
 	else
