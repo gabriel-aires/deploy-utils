@@ -148,8 +148,51 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 		git checkout --force --quiet $rev || end 1
 	fi
 
+	if [ -z $(git branch | grep -x '* (no branch)' ) ];
+		echo -e "\nDeploys a partir do nome de uma branch são proibidos, pois prejudicam a rastreabilidade do processo. Deploy abortado"
+		end 1
+	fi
+
 	cd - &> /dev/null 
 }
+
+
+function check_downgrade () {
+
+	### alerta downgrade ###
+	
+	cd $origem
+
+	downgrade=false
+	
+	git tag > $temp_dir/git_tag_app
+	git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $temp_dir/git_log_app
+
+	ultimo_deploy_app=$(grep -Eix '^([^;]+;){6}deploy concluído.*$' ${historico_app}/deploy_log.csv | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
+	
+	if [ -n "$ultimo_deploy_app" ];
+
+		local rev_check=$(echo $ultimo_deploy_app | sed -r "s|\.|\\\.|g")
+	
+		if [ -n $(grep -Ex "^$rev_check$" $temp_dir/git_tag_app) ]; then 			# a revisão é uma tag
+			if [ -z $(grep -Ex "^[a-f0-9]+\.\.$rev_check$" $temp_dir/git_log) ]; then	# a tag é posterior à revisão para a qual foi solicitado o deploy
+				downgrade=true
+			fi
+		else 											# a revisão é um hash
+			if [ -z $(grep -Ex "^$rev_check.*" $temp_dir/git_log) ]; then			# o hash é posterior à revisão para a qual foi solicitado o deploy
+				downgrade=true
+			fi
+		fi
+
+		if $downgrade; then
+			echo -e "\nAVISO!\tFoi detectado um deploy anterior de uma revisão mais recente: $ultimo_deploy_app"
+		fi
+	fi	
+
+	cd - &> /dev/null
+
+}
+
 
 function clean_temp () {										#cria pasta temporária, remove arquivos e pontos de montagem temporários
 	
@@ -213,17 +256,20 @@ function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem
 		regra="echo \$regex_${var}"	
 		regra="$(eval $regra)"
 
+		regra_inversa="echo \$not_regex_${var}"
+		regra_inversa="$(eval ${regra_inversa})"
+
 		if [ -z "$regra" ]; then
 			echo "Erro. Não há uma regra para validação da variável $var" && end 1
 		elif "$interativo"; then
-			while [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; do
+			while [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; do
 				echo -e "$msg"
 				read -p "$var: " -e -r $var
 				edit=1
                 		valor="echo \$${var}"
 		                valor="$(eval $valor)"
 			done
-		elif [ $(echo "$valor" | grep -Ex "$regra" | wc -l) -eq 0 ]; then
+		elif [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; then
 			echo -e "$msg" && end 1
 		fi			
 	else
@@ -782,10 +828,11 @@ if [ ! "$rev" == "rollback" ]; then
 	origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
 
 	if [ ! -d "$origem" ]; then										
-		echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app."
+		echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app/$app.conf."
 		end 1
+	else
+		check_downgrade
 	fi
-
 fi
 
 ###### REGRAS DE DEPLOY: IGNORE / INCLUDE #######
