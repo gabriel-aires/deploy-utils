@@ -348,12 +348,12 @@ function html () {
 
 	tail --lines=$qtd_log_html $arquivo_entrada > $temp_dir/html_tr
 
-	sed -i -r 's|^(.)|-\1|' $temp_dir/html_tr
-	sed -i -r "s|^-(([^;]+;){6}$mensagem_sucesso.*)$|+\1|" $temp_dir/hmtl_tr
+	sed -i -r 's|^(.)|\-\1|' $temp_dir/html_tr
+	sed -i -r "s|^\-(([^;]+;){6}$mensagem_sucesso.*)$|\+\1|" $temp_dir/html_tr
 	sed -i -r 's|;$|</td></tr>|' $temp_dir/html_tr
 	sed -i -r 's|;|</td><td>|g' $temp_dir/html_tr
-	sed -i -r 's|^-|\t\t\t<tr style="@@html_tr_style_warning@@"><td>|' $temp_dir/html_tr
-	sed -i -r 's|^+|\t\t\t<tr style="@@html_tr_style_default@@"><td>|' $temp_dir/html_tr
+	sed -i -r 's|^\-|\t\t\t<tr style="@@html_tr_style_warning@@"><td>|' $temp_dir/html_tr
+	sed -i -r 's|^\+|\t\t\t<tr style="@@html_tr_style_default@@"><td>|' $temp_dir/html_tr
 	
 	cat $html_dir/begin.html > $temp_dir/html
 	cat $temp_dir/html_tr >> $temp_dir/html
