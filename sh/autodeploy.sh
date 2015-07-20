@@ -22,7 +22,6 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_qtd" ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
-	|| [ -z $(echo $cron_log | grep -E "$regex_log_dir") ] \
 	|| [ -z $(echo $qtd_log_cron | grep -E "$regex_qtd") ] \
 	|| [ ! -d "$temp" ] \
 	|| [ ! -d "$lock_dir" ] \
@@ -73,7 +72,7 @@ function end {
 		rm -f "$lock_dir/autodeploy" 
 	fi
 
-	unix2dos $cron_log > /dev/null 2>&1
+	unix2dos $log_dir/$cron_log > /dev/null 2>&1
 
 	exit $erro
 
@@ -111,12 +110,12 @@ trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 #### Expurgo de logs #####
 
-touch $cron_log
+touch $log_dir/$cron_log
 
-tail --lines=$qtd_log_cron $cron_log > $temp_dir/cron_log_novo
-cp -f $temp_dir/cron_log_novo $cron_log
+tail --lines=$qtd_log_cron $log_dir/$cron_log > $temp_dir/cron_log_novo
+cp -f $temp_dir/cron_log_novo $log_dir/$cron_log
 	
 ### Execução da rotina ###
 
-deploy_auto >> $cron_log 2>&1
+deploy_auto >> $log_dir/$cron_log 2>&1
 
