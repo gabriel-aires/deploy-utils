@@ -18,15 +18,15 @@ temp_dir="$temp/$pid"
 
 if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_lock_dir" ] \
-	|| [ -z "$regex_historico_dir" ] \
+	|| [ -z "$regex_log_dir" ] \
 	|| [ -z "$regex_qtd" ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
-	|| [ -z $(echo $cron_log | grep -E "$regex_historico_dir") ] \
+	|| [ -z $(echo $cron_log | grep -E "$regex_log_dir") ] \
 	|| [ -z $(echo $qtd_log_cron | grep -E "$regex_qtd") ] \
 	|| [ ! -d "$temp" ] \
 	|| [ ! -d "$lock_dir" ] \
-	|| [ ! -d "$parametros_app" ] \
+	|| [ ! -d "$conf_app_dir" ] \
 	|| [ -z "$ambientes" ];
 then
 	echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
@@ -86,8 +86,8 @@ function deploy_auto {
 	echo "$ambientes" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g'> $temp_dir/lista_ambientes
 	
 	while read ambiente; do
-		grep -REl "^auto_$ambiente='1'$" $parametros_app > $temp_dir/lista_aplicacoes
-		sed -i -r "s|^$parametros_app/(.+)\.conf$|\1|g" $temp_dir/lista_aplicacoes
+		grep -REl "^auto_$ambiente='1'$" $conf_app_dir > $temp_dir/lista_aplicacoes
+		sed -i -r "s|^$conf_app_dir/(.+)\.conf$|\1|g" $temp_dir/lista_aplicacoes
 	
 		if [ ! -z "$(cat $temp_dir/lista_aplicacoes)" ];then
 	        	while read aplicacao; do

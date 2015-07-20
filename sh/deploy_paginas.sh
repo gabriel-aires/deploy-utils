@@ -115,11 +115,11 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 
 	if $automatico; then
 		
-		valid "revisao_$ambiente" "\nErro. O valor obtido para o parâmetro revisao_$ambiente não é válido. Favor corrigir o arquivo '$parametros_app/$app.conf'."
+		valid "revisao_$ambiente" "\nErro. O valor obtido para o parâmetro revisao_$ambiente não é válido. Favor corrigir o arquivo '$conf_app_dir/$app.conf'."
 		revisao_auto="echo \$revisao_${ambiente}"
 		revisao_auto=$(eval "$revisao_auto")
 
-		valid "branch_$ambiente" "\nErro. O valor obtido para o parâmetro branch_$ambiente não é válido. Favor corrigir o arquivo '$parametros_app/$app.conf'."
+		valid "branch_$ambiente" "\nErro. O valor obtido para o parâmetro branch_$ambiente não é válido. Favor corrigir o arquivo '$conf_app_dir/$app.conf'."
 		branch_auto="echo \$branch_${ambiente}"
 		branch_auto=$(eval "$branch_auto")
 
@@ -193,7 +193,7 @@ function check_downgrade () {
 	git tag > $temp_dir/git_tag_app
 	git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $temp_dir/git_log_app
 
-	ultimo_deploy_app=$(grep -Eix "^([^;]+;){6}$mensagem_sucesso.*$" ${historico_app}/deploy_log.csv | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
+	ultimo_deploy_app=$(grep -Eix "^([^;]+;){6}$mensagem_sucesso.*$" ${log_app}/deploy_log.csv | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
 	
 	if [ -n "$ultimo_deploy_app" ]; then
 
@@ -392,30 +392,28 @@ function log () {
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
-	while [ -f "$lock_dir/deploy_log_edit" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
+	while [ -f "$lock_dir/$deploy_log_lock" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
 		sleep 1	
 	done
 
-	touch $lock_dir/deploy_log_edit && echo "$lock_dir/deploy_log_edit" >> $temp_dir/locks
+	touch $lock_dir/$deploy_log_lock && echo "$lock_dir/$deploy_log_lock" >> $temp_dir/locks
 
-	touch $historico
-	touch ${historico_app}/deploy_log.csv
+	touch $log_dir/$deploy_log_csv
+	touch ${log_app}/$deploy_log_csv
 
-	tail --lines=$qtd_log_deploy $historico > $temp_dir/deploy_log_novo
-	tail --lines=$qtd_log_app ${historico_app}/deploy_log.csv > $temp_dir/app_log_novo
+	tail --lines=$qtd_log_deploy $log_dir/$deploy_log_csv > $temp_dir/deploy_log_novo
+	tail --lines=$qtd_log_app ${log_app}/$deploy_log_csv > $temp_dir/app_log_novo
 
 	echo -e "$mensagem_log" >> $temp_dir/deploy_log_novo
 	echo -e "$mensagem_log" >> $temp_dir/app_log_novo	
 	
-	cp -f $temp_dir/app_log_novo $atividade_dir/deploy_log.csv
-	cp -f $temp_dir/app_log_novo ${historico_app}/deploy_log.csv
-	cp -f $temp_dir/deploy_log_novo $historico	
+	cp -f $temp_dir/app_log_novo ${log_app}/$deploy_log_csv
+	cp -f $temp_dir/deploy_log_novo $log_dir/$deploy_log_csv	
 
-	html "$atividade_dir/deploy_log.csv" "$atividade_dir/deploy_log.html"
-	html "$historico_app/deploy_log.csv" "$historico_app/deploy_log.html"
-	html "$historico" "$historico_dir/deploy_log.html"
+	html "${log_app}/$deploy_log_csv" "${log_app}/$deploy_log_html"
+	html "$log_dir/$deploy_log_csv" "$log_dir/$deploy_log_html"
 
-	rm -f $lock_dir/deploy_log_edit 							#remove a trava sobre o arquivo de log tão logo seja possível.
+	rm -f $lock_dir/$deploy_log_lock 							#remove a trava sobre o arquivo de log tão logo seja possível
 
 }
 
@@ -435,7 +433,7 @@ function end () {
 	
 	wait
 
-	if [ "$erro" -eq 1 ] && [ -f "$atividade_dir/progresso_$host.txt" ]; then
+	if [ "$erro" -eq 1 ] && [ -f "$info_dir/progresso_$host.txt" ]; then
 
 		paint 'fg' 'yellow'
 
@@ -455,29 +453,29 @@ function end () {
 
 			elif [ "$estado" == 'escrita' ]; then
 
-				if [ -n $(grep -REil '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log) ]; then
-					grep -REi '^rsync: open \"[^\"]+\" failed: Permission denied' $atividade_dir/rsync_$host.log > $atividade_dir/permission_denied_$host.txt
-					sed -i -r 's|^[^\"]+\"([^\"]+)\"[^\"]+$|\1:|' $atividade_dir/permission_denied_$host.txt
-					sed -i -r "s|^$destino|$dir_destino|" $atividade_dir/permission_denied_$host.txt
-					sed -i -r 's|/|\\|g' $atividade_dir/permission_denied_$host.txt                    
+				if [ -n $(grep -REil '^rsync: open \"[^\"]+\" failed: Permission denied' $info_dir/rsync_$host.log) ]; then
+					grep -REi '^rsync: open \"[^\"]+\" failed: Permission denied' $info_dir/rsync_$host.log > $info_dir/permission_denied_$host.txt
+					sed -i -r 's|^[^\"]+\"([^\"]+)\"[^\"]+$|\1:|' $info_dir/permission_denied_$host.txt
+					sed -i -r "s|^$destino|$dir_destino|" $info_dir/permission_denied_$host.txt
+					sed -i -r 's|/|\\|g' $info_dir/permission_denied_$host.txt                    
 				fi
 
 				echo -e "\nO script foi interrompido durante a escrita. Revertendo alterações no host $host..."
 				echo $host >> $temp_dir/hosts_rollback
 				
-				echo "rollback" >> $atividade_dir/progresso_$host.txt
+				echo "rollback" >> $info_dir/progresso_$host.txt
 				
 				rsync_cmd="rsync $rsync_opts $bak/ $destino/"
 				eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
-				echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
+				echo "fim_rollback" >> $info_dir/progresso_$host.txt
 				log "Deploy interrompido. Backup restaurado."
 
 			else
 				log "Deploy abortado."		
 			fi
 
-			echo "deploy_abortado" >> $atividade_dir/progresso_$host.txt
+			echo "deploy_abortado" >> $info_dir/progresso_$host.txt
 			
 			cp $temp_dir/dir_destino $temp_dir/destino						#foi necessário utilizar uma cópia do arquivo, uma vez que este foi utilizado como entrada padrão para o loop de deploy.
 
@@ -487,9 +485,9 @@ function end () {
 
 				if [ ! "$host" == "$host_erro" ]; then
 
-					if [ -f "$atividade_dir/progresso_$host.txt" ]; then			# Indica que o processo de deploy já foi iniciado no host
+					if [ -f "$info_dir/progresso_$host.txt" ]; then			# Indica que o processo de deploy já foi iniciado no host
 
-						estado_host=$(tail -1 "$atividade_dir/progresso_$host.txt")
+						estado_host=$(tail -1 "$info_dir/progresso_$host.txt")
 	
 						if [ "$estado_host" == "fim_escrita" ]; then			# Deploy já concluído no host. Rollback necessário.
 		
@@ -499,12 +497,12 @@ function end () {
 							echo -e "\nRevertendo alterações no host $host..."
 							echo $host >> $temp_dir/hosts_rollback							
 
-							echo "rollback" >> $atividade_dir/progresso_$host.txt
+							echo "rollback" >> $info_dir/progresso_$host.txt
 				
 							rsync_cmd="rsync $rsync_opts $bak/ $destino/"
 							eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
-							echo "fim_rollback" >> $atividade_dir/progresso_$host.txt
+							echo "fim_rollback" >> $info_dir/progresso_$host.txt
 							log "Rollback realizado devido a erro ou deploy cancelado em $host_erro."		
 	
 						fi
@@ -524,7 +522,7 @@ function end () {
 			fi
 		fi
 		
-		mv "$atividade_dir" "${atividade_dir}_PENDENTE"
+		mv "$info_dir" "${info_dir}_PENDENTE"
 
 	fi
 	
@@ -584,7 +582,7 @@ temp_dir="$temp/$pid"
 
 if [ -z "$regex_temp_dir" ] \
 	|| [ -z "$regex_temp_dir" ] \
-	|| [ -z "$regex_historico_dir" ] \
+	|| [ -z "$regex_log_dir" ] \
 	|| [ -z "$regex_repo_dir" ] \
 	|| [ -z "$regex_lock_dir" ] \
 	|| [ -z "$regex_bak_dir" ] \
@@ -601,7 +599,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z $(echo $bak_dir | grep -E "$regex_bak_dir") ] \
 	|| [ -z $(echo $html_dir | grep -E "$regex_html_dir") ] \
 	|| [ -z $(echo $temp_dir | grep -E "$regex_temp_dir") ] \
-	|| [ -z $(echo $historico_dir | grep -E "$regex_historico_dir") ] \
+	|| [ -z $(echo $log_dir | grep -E "$regex_log_dir") ] \
 	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
 	|| [ -z $(echo $qtd_log_app | grep -E "$regex_qtd") ] \
@@ -617,10 +615,10 @@ then
 	exit 1
 fi
 
-mkdir -p $deploy_dir $temp $historico_dir $repo_dir $lock_dir $parametros_app $bak_dir			#cria os diretórios necessários, caso não existam.
+mkdir -p $deploy_dir $temp $log_dir ${log_app_dir} $repo_dir $lock_dir $conf_app_dir $bak_dir			#cria os diretórios necessários, caso não existam.
 
-if [ ! -e "$historico" ]; then										#cria arquivo de histórico, caso não exista.
-	touch $historico	
+if [ ! -e "$log_dir/$deploy_log_csv" ]; then										#cria arquivo de histórico, caso não exista.
+	touch $log_dir/$deploy_log_csv	
 fi
 
 clean_temp && mkdir -p $temp_dir
@@ -658,7 +656,7 @@ lock $app "Deploy abortado: há outro deploy da aplicação $app em curso."
 
 if $interativo; then
 
-	if [ ! -f "${parametros_app}/${app}.conf" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
+	if [ ! -f "${conf_app_dir}/${app}.conf" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
 	
 		echo -e "\nFavor informar abaixo os parâmetros da aplicação $app."
 
@@ -690,9 +688,9 @@ if $interativo; then
 			modo_$ambiente=$modo
 		fi                        										
 
-		editconf "app" "$app" "$parametros_app/${app}.conf"
-		editconf "repo" "$repo" "$parametros_app/${app}.conf"
-		editconf "raiz" "$raiz" "$parametros_app/${app}.conf"
+		editconf "app" "$app" "$conf_app_dir/${app}.conf"
+		editconf "repo" "$repo" "$conf_app_dir/${app}.conf"
+		editconf "raiz" "$raiz" "$conf_app_dir/${app}.conf"
 		
 		while read env; do
 			if [ "$env" == "$ambiente"  ]; then
@@ -702,85 +700,85 @@ if $interativo; then
 				modo="echo \$modo_${env}"
 				modo=$(eval "$modo")
 
-				editconf "hosts_$env" "$lista_hosts" "$parametros_app/${app}.conf"
-				editconf "modo_$env" "$modo" "$parametros_app/${app}.conf"
+				editconf "hosts_$env" "$lista_hosts" "$conf_app_dir/${app}.conf"
+				editconf "modo_$env" "$modo" "$conf_app_dir/${app}.conf"
 
-				echo "revisao_$env=''" >> "$parametros_app/${app}.conf"
-				echo "branch_$env=''" >> "$parametros_app/${app}.conf"
-				echo "modo_$env=''" >> "$parametros_app/${app}.conf"
-				echo "auto_$env='0'" >> "$parametros_app/${app}.conf"
+				echo "revisao_$env=''" >> "$conf_app_dir/${app}.conf"
+				echo "branch_$env=''" >> "$conf_app_dir/${app}.conf"
+				echo "modo_$env=''" >> "$conf_app_dir/${app}.conf"
+				echo "auto_$env='0'" >> "$conf_app_dir/${app}.conf"
 
 			else
-				echo "hosts_$env=''" >> "$parametros_app/${app}.conf"
-				echo "revisao_$env=''" >> "$parametros_app/${app}.conf"
-				echo "branch_$env=''" >> "$parametros_app/${app}.conf"
-				echo "modo_$env=''" >> "$parametros_app/${app}.conf"
-				echo "auto_$env='0'" >> "$parametros_app/${app}.conf"
+				echo "hosts_$env=''" >> "$conf_app_dir/${app}.conf"
+				echo "revisao_$env=''" >> "$conf_app_dir/${app}.conf"
+				echo "branch_$env=''" >> "$conf_app_dir/${app}.conf"
+				echo "modo_$env=''" >> "$conf_app_dir/${app}.conf"
+				echo "auto_$env='0'" >> "$conf_app_dir/${app}.conf"
 			fi
 		done < $temp_dir/ambientes 
 
-		editconf "share" "$share" "$parametros_app/${app}.conf"
-		editconf "auth" "$auth" "$parametros_app/${app}.conf"		
+		editconf "share" "$share" "$conf_app_dir/${app}.conf"
+		editconf "auth" "$auth" "$conf_app_dir/${app}.conf"		
 
-		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
+		sort "$conf_app_dir/${app}.conf" -o "$conf_app_dir/${app}.conf"
 
 	else
 	
 		echo -e "\nObtendo parâmetros da aplicação $app..."
 
-		if [ "$(grep -v --file=$deploy_dir/template/app.template ${parametros_app}/${app}.conf | wc -l)" -eq "0" ]; then		
-	        	source "${parametros_app}/${app}.conf"
+		if [ "$(grep -v --file=$deploy_dir/template/app.template ${conf_app_dir}/${app}.conf | wc -l)" -eq "0" ]; then		
+	        	source "${conf_app_dir}/${app}.conf"
 		else
-			echo -e "\nErro. Há parâmetros incorretos no arquivo ${parametros_app}/${app}.conf:"
-			grep -v --file="$deploy_dir/template/app.template" "${parametros_app}/${app}.conf"
+			echo -e "\nErro. Há parâmetros incorretos no arquivo ${conf_app_dir}/${app}.conf:"
+			grep -v --file="$deploy_dir/template/app.template" "${conf_app_dir}/${app}.conf"
 
 			echo ""
 			read -p "Remover as entradas acima? (s/n): " -e -r ans
 
 			if [ "$ans" == "s" ] || [ "$ans" == "S" ]; then
-				grep --file="$deploy_dir/template/app.template" "${parametros_app}/${app}.conf" > "$temp_dir/app_conf_novo"
-				cp -f "$temp_dir/app_conf_novo" "${parametros_app}/${app}.conf"
+				grep --file="$deploy_dir/template/app.template" "${conf_app_dir}/${app}.conf" > "$temp_dir/app_conf_novo"
+				cp -f "$temp_dir/app_conf_novo" "${conf_app_dir}/${app}.conf"
 				echo -e "\nArquivo ${app}.conf alterado."
-				source "${parametros_app}/${app}.conf"
+				source "${conf_app_dir}/${app}.conf"
 			else
 				end 1
 			fi
 		fi
 
 		valid "repo" "\nErro. Informe um caminho válido para o repositório GIT:"
-		editconf "repo" "$repo" "$parametros_app/${app}.conf"
+		editconf "repo" "$repo" "$conf_app_dir/${app}.conf"
         
 		valid "raiz" "\nErro. Informe um caminho válido para a raiz da aplicação:"
-		editconf "raiz" "$raiz" "$parametros_app/${app}.conf"
+		editconf "raiz" "$raiz" "$conf_app_dir/${app}.conf"
 
 		valid "hosts_$ambiente" "\nErro. Informe uma lista válida de hosts para deploy, separando-os por espaço ou vírgula:"
 		lista_hosts="echo \$hosts_${ambiente}"
 		lista_hosts=$(eval "$lista_hosts")
-		editconf "hosts_$ambiente" "$lista_hosts" "$parametros_app/${app}.conf"
+		editconf "hosts_$ambiente" "$lista_hosts" "$conf_app_dir/${app}.conf"
 		
 		valid "modo_$ambiente" "\nErro. Informe um modo válido para deploy no ambiente $ambiente [p/d]:"		
 	        modo_app="echo \$modo_${ambiente}"
 	        modo_app=$(eval "$modo_app")
-		editconf "modo_$ambiente" "$modo_app" "$parametros_app/${app}.conf"
+		editconf "modo_$ambiente" "$modo_app" "$conf_app_dir/${app}.conf"
 
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
-		editconf "share" "$share" "$parametros_app/${app}.conf"
+		editconf "share" "$share" "$conf_app_dir/${app}.conf"
 
 		valid "auth" "\nErro. Informe um protocolo válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):" 
-		editconf "auth" "$auth" "$parametros_app/${app}.conf" 
+		editconf "auth" "$auth" "$conf_app_dir/${app}.conf" 
 
-		sort "$parametros_app/${app}.conf" -o "$parametros_app/${app}.conf"
+		sort "$conf_app_dir/${app}.conf" -o "$conf_app_dir/${app}.conf"
 	fi
 else
-	if [ ! -f "${parametros_app}/${app}.conf" ]; then 
+	if [ ! -f "${conf_app_dir}/${app}.conf" ]; then 
 		echo "Erro. Não foram encontrados os parâmetros para deploy da aplicação $app. O script deverá ser reexecutado no modo interativo."	
 	else
 
-		if [ "$(grep -v --file=$deploy_dir/template/app.template ${parametros_app}/${app}.conf | wc -l)" -eq "0" ]; then		
-	        	source "${parametros_app}/${app}.conf"
+		if [ "$(grep -v --file=$deploy_dir/template/app.template ${conf_app_dir}/${app}.conf | wc -l)" -eq "0" ]; then		
+	        	source "${conf_app_dir}/${app}.conf"
 		else
-			echo -e "\nErro. Há parâmetros incorretos no arquivo ${parametros_app}/${app}.conf:"
-			grep -v --file="$deploy_dir/template/app.template" "${parametros_app}/${app}.conf"
+			echo -e "\nErro. Há parâmetros incorretos no arquivo ${conf_app_dir}/${app}.conf:"
+			grep -v --file="$deploy_dir/template/app.template" "${conf_app_dir}/${app}.conf"
 			end 1
 		fi
 
@@ -829,10 +827,10 @@ done < $temp_dir/hosts_$ambiente
 
 ##### EXPURGO DE LOGS #######
 
-historico_app="${historico_dir}/sistemas/${app}"
+log_app="${log_app_dir}/${app}"
 
-mkdir -p "${historico_app}/"
-find "${historico_app}/" -maxdepth 1 -type d | grep -vx "${historico_app}/" | sort > $temp_dir/logs_total
+mkdir -p "${log_app}/"
+find "${log_app}/" -maxdepth 1 -type d | grep -vx "${log_app}/" | sort > $temp_dir/logs_total
 tail $temp_dir/logs_total --lines=${qtd_log_html} > $temp_dir/logs_ultimos
 grep -vxF --file=$temp_dir/logs_ultimos $temp_dir/logs_total > $temp_dir/logs_expurgo
 cat $temp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
@@ -840,15 +838,15 @@ cat $temp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
 ##### CRIAÇÃO DO DIRETÓRIO DE LOG #####
 
 data_deploy=$(date +%F_%Hh%Mm%Ss)								
-info_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g")				
-atividade_dir="${historico_app}/${info_deploy}"								#Diretório onde serão armazenados os logs do atendimento.
+id_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g")				
+info_dir="${log_app}/${id_deploy}"								#Diretório onde serão armazenados os logs do atendimento.
 
-if [ -d "${atividade_dir}_PENDENTE" ]; then
-	rm -f ${atividade_dir}_PENDENTE/*
-	rmdir ${atividade_dir}_PENDENTE
+if [ -d "${info_dir}_PENDENTE" ]; then
+	rm -f ${info_dir}_PENDENTE/*
+	rmdir ${info_dir}_PENDENTE
 fi
 
-mkdir -p $atividade_dir
+mkdir -p $info_dir
 
 echo -e "\nSistema:\t$app"
 echo -e "Revisão:\t$rev"
@@ -880,7 +878,7 @@ if [ ! "$rev" == "rollback" ]; then
 	origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
 
 	if [ ! -d "$origem" ]; then										
-		echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $parametros_app/$app.conf."
+		echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $conf_app_dir/$app.conf."
 		end 1
 	else
 		check_downgrade
@@ -915,7 +913,7 @@ elif [ -f "$repo_dir/$nomerepo/.gitignore" ]; then
 
 fi
 
-cp $temp_dir/regras_deploy.txt $atividade_dir/										#a fim de proporcionar transparência ao processo de deploy, as regras de ignore/include são copiadas para o log.
+cp $temp_dir/regras_deploy.txt $info_dir/										#a fim de proporcionar transparência ao processo de deploy, as regras de ignore/include são copiadas para o log.
 
 bkp_regras=0														#a flag será alterada tão logo as regras de deploy sejam copiadas para a pasta de backup.
 rsync_opts="$rsync_opts --filter='. $temp_dir/regras_deploy.txt'"
@@ -929,8 +927,8 @@ while read dir_destino; do
 
 	host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|")
 
-	cat $temp_dir/progresso.txt > $atividade_dir/progresso_$host.txt
-	estado="leitura" && echo $estado >> $atividade_dir/progresso_$host.txt
+	cat $temp_dir/progresso.txt > $info_dir/progresso_$host.txt
+	estado="leitura" && echo $estado >> $info_dir/progresso_$host.txt
     
 	echo -e "\nIniciando deploy no host $host..."
 	echo -e "Diretório de deploy:\t$dir_destino"
@@ -959,36 +957,36 @@ while read dir_destino; do
  
 	##### DIFF ARQUIVOS #####
     
-	rsync_cmd="rsync --dry-run --itemize-changes $rsync_opts $origem/ $destino/ > $atividade_dir/modificacoes_$host.txt"
+	rsync_cmd="rsync --dry-run --itemize-changes $rsync_opts $origem/ $destino/ > $info_dir/modificacoes_$host.txt"
 	eval $rsync_cmd || end 1
     
 	##### RESUMO DAS MUDANÇAS ######
     
-	adicionados="$(grep -E "^>f\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
-	excluidos="$(grep -E "^\*deleting .*[^/]$" $atividade_dir/modificacoes_$host.txt | wc -l)"
-	modificados="$(grep -E "^>f[^\+]" $atividade_dir/modificacoes_$host.txt | wc -l)"
-	dir_criado="$(grep -E "^cd\+" $atividade_dir/modificacoes_$host.txt | wc -l)"
-	dir_removido="$(grep -E "^\*deleting .*/$" $atividade_dir/modificacoes_$host.txt | wc -l)"
+	adicionados="$(grep -E "^>f\+" $info_dir/modificacoes_$host.txt | wc -l)"
+	excluidos="$(grep -E "^\*deleting .*[^/]$" $info_dir/modificacoes_$host.txt | wc -l)"
+	modificados="$(grep -E "^>f[^\+]" $info_dir/modificacoes_$host.txt | wc -l)"
+	dir_criado="$(grep -E "^cd\+" $info_dir/modificacoes_$host.txt | wc -l)"
+	dir_removido="$(grep -E "^\*deleting .*/$" $info_dir/modificacoes_$host.txt | wc -l)"
 
 	total_arq=$(( $adicionados + $excluidos + $modificados ))
 	total_dir=$(( $dir_criado + $dir_removido ))
 	total_del=$(( $excluidos + dir_removido ))
  
-	echo -e "Log das modificacoes gravado no arquivo modificacoes_$host.txt\n" > $atividade_dir/resumo_$host.txt
-	echo -e "Arquivos adicionados ............... $adicionados " >> $atividade_dir/resumo_$host.txt
-	echo -e "Arquivos excluidos ................. $excluidos" >> $atividade_dir/resumo_$host.txt
-	echo -e "Arquivos modificados ............... $modificados" >> $atividade_dir/resumo_$host.txt
-	echo -e "Diretórios criados ................. $dir_criado" >> $atividade_dir/resumo_$host.txt
-	echo -e "Diretórios removidos ............... $dir_removido" >> $atividade_dir/resumo_$host.txt
-	echo -e "" >> $atividade_dir/resumo_$host.txt
-	echo -e "Total de operações de arquivos ..... $total_arq" >> $atividade_dir/resumo_$host.txt
-	echo -e "Total de operações de diretórios ... $total_dir" >> $atividade_dir/resumo_$host.txt
-	echo -e "Total de operações de exclusão ..... $total_del" >> $atividade_dir/resumo_$host.txt
+	echo -e "Log das modificacoes gravado no arquivo modificacoes_$host.txt\n" > $info_dir/resumo_$host.txt
+	echo -e "Arquivos adicionados ............... $adicionados " >> $info_dir/resumo_$host.txt
+	echo -e "Arquivos excluidos ................. $excluidos" >> $info_dir/resumo_$host.txt
+	echo -e "Arquivos modificados ............... $modificados" >> $info_dir/resumo_$host.txt
+	echo -e "Diretórios criados ................. $dir_criado" >> $info_dir/resumo_$host.txt
+	echo -e "Diretórios removidos ............... $dir_removido" >> $info_dir/resumo_$host.txt
+	echo -e "" >> $info_dir/resumo_$host.txt
+	echo -e "Total de operações de arquivos ..... $total_arq" >> $info_dir/resumo_$host.txt
+	echo -e "Total de operações de diretórios ... $total_dir" >> $info_dir/resumo_$host.txt
+	echo -e "Total de operações de exclusão ..... $total_del" >> $info_dir/resumo_$host.txt
 	
 	echo ""
-	cat $atividade_dir/resumo_$host.txt
+	cat $info_dir/resumo_$host.txt
     
-	estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+	estado="fim_$estado" && echo $estado >> $info_dir/progresso_$host.txt
 	
 	if [ $(( $adicionados + $excluidos + $modificados + $dir_criado + $dir_removido )) -ne 0 ]; then			# O deploy somente será realizado quando a quantidade de modificações for maior que 0.
     
@@ -1005,7 +1003,7 @@ while read dir_destino; do
 	
 				#### preparação do backup ####
 		        
-				estado="backup" && echo $estado >> $atividade_dir/progresso_$host.txt
+				estado="backup" && echo $estado >> $info_dir/progresso_$host.txt
 				echo -e "\nCriando backup"
 		        
 				bak="$bak_dir/${app}_${host}"
@@ -1022,20 +1020,20 @@ while read dir_destino; do
 					bkp_regras=1
 				fi
 	        
-				estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+				estado="fim_$estado" && echo $estado >> $info_dir/progresso_$host.txt
 	        	fi
 	
 			#### gravação das alterações em disco ####
 	        	
-			estado="escrita" && echo $estado >> $atividade_dir/progresso_$host.txt
+			estado="escrita" && echo $estado >> $info_dir/progresso_$host.txt
 			echo -e "\nEscrevendo alterações no diretório de destino..."	
 	        
 			rsync_cmd="rsync $rsync_opts $origem/ $destino/"
-			eval $rsync_cmd 2> $atividade_dir/rsync_$host.log || end 1
+			eval $rsync_cmd 2> $info_dir/rsync_$host.log || end 1
 
 			log
 			
-			estado="fim_$estado" && echo $estado >> $atividade_dir/progresso_$host.txt
+			estado="fim_$estado" && echo $estado >> $info_dir/progresso_$host.txt
    		else
 			end 1
 		fi
