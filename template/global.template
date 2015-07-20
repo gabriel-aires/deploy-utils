@@ -1,16 +1,19 @@
 # Caminhos para diretórios e arquivos utilizados no processo de deploy.
 temp=
 bak_dir=
-historico_dir=
+log_dir=
+log_app_dir=
 repo_dir=
 lock_dir=
 html_dir=
-parametros_app=
-historico=
+conf_app_dir=
 cron_log=
+deploy_log_csv=
+deploy_log_html=
+deploy_log_lock=
 credenciais=
-ambientes=
 # Opções de deploy padrão
+ambientes=
 mensagem_sucesso=
 modo_padrao=
 rsync_opts=
@@ -29,7 +32,7 @@ html_tr_style_warning=
 # Expressões de validação de diretórios utilizados no processo de deploy
 regex_temp_dir=
 regex_bak_dir=
-regex_historico_dir=
+regex_log_dir=
 regex_repo_dir=
 regex_lock_dir=
 # Expressões de validação de parâmetros das aplicações
