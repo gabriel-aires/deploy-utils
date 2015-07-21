@@ -48,23 +48,10 @@ function global_log () {
 
 	obs_log="$1"
 	
-	horario_log=$(echo "$(date +%Y%m%d%H%M%S)" | sed -r "s|^(....)(..)(..)(..)(..)(..)$|\3/\2/\1          \4h\5m\6s           |")
+	horario_log=$(echo "$(date +%F_%Hh%Mm%Ss)" | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1;\4|")
 		
-	tamanho_app=$(echo -n $APP | wc -m)
-	app_log=$(echo '                    ' | sed -r "s|^ {$tamanho_app}|$APP|")
-
-	rev_log=$(echo $REV | sed -r "s|^(.........).*$|\1|")
-	tamanho_rev=$(echo -n $rev_log | wc -m)
- 	rev_log=$(echo '                    ' | sed -r "s|^ {$tamanho_rev}|$rev_log|")
-
-	tamanho_ambiente=$(echo -n $AMBIENTE | wc -m) 
-	ambiente_log=$(echo '                    ' | sed -r "s|^ {$tamanho_ambiente}|$AMBIENTE|")
-
-	host_log=$(echo $HOSTNAME | sed -r "s/^([^\.]+)\..*$/\1/")
-	tamanho_host=$(echo -n $host_log | wc -m) 
-	host_log=$(echo '                    ' | sed -r "s|^ {$tamanho_host}|$host_log|")
-	
-	mensagem_log="$horario_log$app_log$rev_log$ambiente_log$host_log$obs_log"
+	mensagem_log="$horario_log;$app;$rev;$ambiente;$host;$obs_log;"
+	mensagem_log="$(echo "$mensagem_log" | tr '[:upper:]' '[:lower:]')"
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
@@ -78,7 +65,6 @@ function global_log () {
 	touch $GLOBAL_LOG
 
 	echo -e "$mensagem_log" >> $GLOBAL_LOG
-	unix2dos $GLOBAL_LOG > /dev/null 2>&1
 	
 	rm -f $GLOBAL_LOCK 							#remove a trava sobre o arquivo de log tão logo seja possível.
 	EDIT_LOG=0
@@ -417,10 +403,10 @@ function jboss_instances () {
 		    		
 		    								if [ $(pgrep -f "$(dirname $CAMINHO_INSTANCIAS_JBOSS).*-c $INSTANCIA_JBOSS" | wc -l) -eq 0 ]; then
 		    									log "ERRO" "O deploy do arquivo $WAR foi concluído, porém não foi possível reiniciar a instância do JBOSS."
-		    									global_log "Deploy concluído. Erro ao iniciar a instância $INSTANCIA_JBOSS."
+		    									global_log "Deploy não concluído. Erro ao reiniciar a instância $INSTANCIA_JBOSS."
 		    								else
 		    									log "INFO" "Deploy do arquivo $WAR concluído com sucesso!"
-		    									global_log "Deploy do pacote $WAR concluído com sucesso na instância $INSTANCIA_JBOSS."
+		    									global_log "Deploy concluído com sucesso na instância $INSTANCIA_JBOSS."
 		    								fi
 		    							
 	    								fi
