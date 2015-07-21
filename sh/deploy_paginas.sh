@@ -343,34 +343,6 @@ function mklist () {
 
 }
 
-function html () {
-
-	arquivo_entrada=$1
-	arquivo_saida=$2
-
-	tail --lines=$qtd_log_html $arquivo_entrada > $temp_dir/html_tr
-
-	sed -i -r 's|^(.)|\-\1|' $temp_dir/html_tr
-	sed -i -r "s|^\-(([^;]+;){6}$mensagem_sucesso.*)$|\+\1|" $temp_dir/html_tr
-	sed -i -r 's|;$|</td></tr>|' $temp_dir/html_tr
-	sed -i -r 's|;|</td><td>|g' $temp_dir/html_tr
-	sed -i -r 's|^\-|\t\t\t<tr style="@@html_tr_style_warning@@"><td>|' $temp_dir/html_tr
-	sed -i -r 's|^\+|\t\t\t<tr style="@@html_tr_style_default@@"><td>|' $temp_dir/html_tr
-	
-	cat $html_dir/begin.html > $temp_dir/html
-	cat $temp_dir/html_tr >> $temp_dir/html
-	cat $html_dir/end.html >> $temp_dir/html
-
-	sed -i -r "s|@@html_title@@|$html_title|" $temp_dir/html
-	sed -i -r "s|@@html_header@@|$html_header|" $temp_dir/html
-	sed -i -r "s|@@html_table_style@@|$html_table_style|" $temp_dir/html
-	sed -i -r "s|@@html_th_style@@|$html_th_style|" $temp_dir/html
-	sed -i -r "s|@@html_tr_style_default@@|$html_tr_style_default|" $temp_dir/html
-	sed -i -r "s|@@html_tr_style_warning@@|$html_tr_style_warning|" $temp_dir/html
-
-	cp -f $temp_dir/html $arquivo_saida
-}
-
 function log () {
 		
 	##### LOG DE DEPLOY #####
@@ -409,9 +381,6 @@ function log () {
 	
 	cp -f $temp_dir/app_log_novo ${log_app}/$deploy_log_csv
 	cp -f $temp_dir/deploy_log_novo $log_dir/$deploy_log_csv	
-
-	html "${log_app}/$deploy_log_csv" "${log_app}/$deploy_log_html"
-	html "$log_dir/$deploy_log_csv" "$log_dir/$deploy_log_html"
 
 	rm -f $lock_dir/$deploy_log_lock 							#remove a trava sobre o arquivo de log tão logo seja possível
 
