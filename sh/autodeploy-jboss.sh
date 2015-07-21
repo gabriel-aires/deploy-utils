@@ -49,9 +49,11 @@ function global_log () {
 	obs_log="$1"
 	
 	horario_log=$(echo "$(date +%F_%Hh%Mm%Ss)" | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1;\4|")
-		
-	mensagem_log="$horario_log;$app;$rev;$ambiente;$host;$obs_log;"
-	mensagem_log="$(echo "$mensagem_log" | tr '[:upper:]' '[:lower:]')"
+	app_log="$(echo "$APP" | tr '[:upper:]' '[:lower:]')"
+	ambiente_log="$(echo "$AMBIENTE" | tr '[:upper:]' '[:lower:]')"
+	host_log="$(echo "$HOSTNAME" | sed -r "s/^([^\.]+)\..*$/\1/" | tr '[:upper:]' '[:lower:]')"
+	
+	mensagem_log="$horario_log;$app_log;$REV;$ambiente_log;$host_log;$obs_log;"
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
@@ -340,8 +342,12 @@ function jboss_instances () {
 		    			while read PACOTE; do
 		    	
 		    				WAR=$(basename $PACOTE)
-		    				REV=$(unzip -p -a $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
 		    				APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|" )
+		    				REV=$(unzip -p -a $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
+						
+						if [ -z "$REV" ]; then
+							REV="N/A"
+						fi
 	    					
 		    				find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/old.list"
 		    		
