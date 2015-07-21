@@ -176,6 +176,7 @@ if [ -z "$regex_temp_dir" ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
 	|| [ -z $(echo $html_dir | grep -E "$regex_html_dir") ] \ 
 	|| [ -z $(echo $qtd_log_cron | grep -E "$regex_qtd") ] \
+	|| [ -z $(echo $qtd_log_html | grep -E "$regex_qtd") ] \
 	|| [ -z "$ambientes" ] \
 	|| [ ! -d "$html_dir" ];
 then
