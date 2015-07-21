@@ -849,7 +849,7 @@ if [ ! "$rev" == "rollback" ]; then
 	if [ ! -d "$origem" ]; then										
 		echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $conf_app_dir/$app.conf."
 		end 1
-	else
+	elif [ ! "$rev" == "auto" ]; then
 		check_downgrade
 	fi
 fi
