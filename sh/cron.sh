@@ -136,6 +136,8 @@ function end {
 
 	##### Remove lockfile e diretório temporário ao fim da execução #####
 
+	trap "" SIGQUIT SIGTERM SIGINT SIGHUP
+
 	erro=$1
 	wait
 
