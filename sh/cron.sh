@@ -47,32 +47,6 @@ function horario () {
 
 }
 
-function deploy_auto () {
-
-	#### Deploy em todos os ambientes ########
-	
-	echo "$ambientes" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g'> $temp_dir/lista_ambientes
-	
-	while read ambiente; do
-		grep -REl "^auto_$ambiente='1'$" $conf_app_dir > $temp_dir/lista_aplicacoes
-		sed -i -r "s|^$conf_app_dir/(.+)\.conf$|\1|g" $temp_dir/lista_aplicacoes
-	
-		if [ ! -z "$(cat $temp_dir/lista_aplicacoes)" ];then
-	        	while read aplicacao; do
-				horario
-				echo ""
-				/bin/bash $deploy_dir/sh/deploy_paginas.sh -f $aplicacao auto $ambiente
-				wait
-				echo ""
-			done < "$temp_dir/lista_aplicacoes"
-		else
-			echo "$(horario) O deploy automático não foi habilitado no ambiente '$ambiente'"
-			echo ""
-		fi
-	done < "$temp_dir/lista_ambientes"
-
-}
-
 function html () {
 
 	arquivo_entrada=$1
@@ -103,6 +77,59 @@ function html () {
 	cp -f $temp_dir/html $arquivo_saida
 
 	cd - &> /dev/null
+}
+
+function deploy_auto () {
+
+	#### Expurgo de logs #####
+
+	touch $log_dir/$cron_log
+
+	tail --lines=$qtd_log_cron $log_dir/$cron_log > $temp_dir/cron_log_novo
+	cp -f $temp_dir/cron_log_novo $log_dir/$cron_log
+	
+	#### Deploy em todos os ambientes ########
+	
+	echo "$ambientes" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g'> $temp_dir/lista_ambientes
+	
+	while read ambiente; do
+		grep -REl "^auto_$ambiente='1'$" $conf_app_dir > $temp_dir/lista_aplicacoes
+		sed -i -r "s|^$conf_app_dir/(.+)\.conf$|\1|g" $temp_dir/lista_aplicacoes
+	
+		if [ ! -z "$(cat $temp_dir/lista_aplicacoes)" ];then
+	        	while read aplicacao; do
+				horario
+				echo ""
+				/bin/bash $deploy_dir/sh/deploy_paginas.sh -f $aplicacao auto $ambiente
+				wait
+				echo ""
+			done < "$temp_dir/lista_aplicacoes"
+		else
+			echo "$(horario) O deploy automático não foi habilitado no ambiente '$ambiente'"
+			echo ""
+		fi
+	done < "$temp_dir/lista_ambientes"
+
+	### Geração de logs em formato html ###
+
+	while [ -f "$lock_dir/$deploy_log_lock" ]; do
+		sleep 1
+	done
+	
+	edit_log=true
+	touch $lock_dir/$deploy_log_lock
+	
+	find "$log_dir/" -maxdepth 3 -type f -name "$deploy_log_csv" > $temp_dir/logs_csv
+	
+	while read log_csv; do
+		html $log_csv $deploy_log_html || end 1
+	done < $temp_dir/logs_csv
+	
+	rm -f $lock_dir/$deploy_log_lock
+	edit_log=false
+	
+	end 0
+
 }
 
 function end {
@@ -197,33 +224,7 @@ fi
 
 trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
-#### Expurgo de logs #####
-
-touch $log_dir/$cron_log
-
-tail --lines=$qtd_log_cron $log_dir/$cron_log > $temp_dir/cron_log_novo
-cp -f $temp_dir/cron_log_novo $log_dir/$cron_log
-	
 ### Execução da rotina de deploy ###
 
 deploy_auto >> $log_dir/$cron_log 2>&1
 
-### Geração de logs em formato html ###
-
-while [ -f "$lock_dir/$deploy_log_lock" ]; do
-	sleep 1
-done
-
-edit_log=true
-touch $lock_dir/$deploy_log_lock
-
-find "$log_dir/" -type f -name "$deploy_log_csv" > $temp_dir/logs_csv
-
-while read log_csv; do
-	html $log_csv $deploy_log_html || end 1
-done < $temp_dir/logs_csv
-
-rm -f $lock_dir/$deploy_log_lock
-edit_log=false
-
-end 0
