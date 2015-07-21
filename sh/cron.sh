@@ -102,7 +102,7 @@ function html () {
 
 	cp -f $temp_dir/html $arquivo_saida
 
-	cd -
+	cd - &> /dev/null
 }
 
 function end {
