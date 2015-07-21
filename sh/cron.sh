@@ -220,7 +220,7 @@ touch $lock_dir/$deploy_log_lock
 find "$log_dir/" -type f -name "$deploy_log_csv" > $temp_dir/logs_csv
 
 while read log_csv; do
-	html log_csv $deploy_log_html || end 1
+	html $log_csv $deploy_log_html || end 1
 done < $temp_dir/logs_csv
 
 rm -f $lock_dir/$deploy_log_lock
