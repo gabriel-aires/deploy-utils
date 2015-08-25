@@ -57,18 +57,26 @@ function global_log () {
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
-	while [ -f "$GLOBAL_LOCK" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
+	while [ -f "${CAMINHO_LOCK_REMOTO}/$ARQ_LOCK_HISTORICO" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
 		sleep 1	
 	done
 
 	EDIT_LOG=1
-	touch "$GLOBAL_LOCK"
+	touch "${CAMINHO_LOCK_REMOTO}/$ARQ_LOCK_HISTORICO"
 
-	touch $GLOBAL_LOG
+	touch ${CAMINHO_HISTORICO_REMOTO}/$ARQ_HISTORICO
+	touch ${LOG_APP}/$ARQ_HISTORICO
 
-	echo -e "$mensagem_log" >> $GLOBAL_LOG
+	tail --lines=$QTD_LOG_DEPLOY ${CAMINHO_LOCK_REMOTO}/$ARQ_HISTORICO > $TMP_DIR/deploy_log_novo
+	tail --lines=$QTD_LOG_APP ${LOG_APP}/$ARQ_HISTORICO > $TMP_DIR/app_log_novo
+
+	echo -e "$mensagem_log" >> $TMP_DIR/deploy_log_novo
+	echo -e "$mensagem_log" >> $TMP_DIR/app_log_novo
 	
-	rm -f $GLOBAL_LOCK 							#remove a trava sobre o arquivo de log tão logo seja possível.
+	cp -f $TMP_DIR/deploy_log_novo ${CAMINHO_HISTORICO_REMOTO}/$ARQ_HISTORICO
+	cp -f $TMP_DIR/app_log_novo ${LOG_APP}/$ARQ_HISTORICO
+
+	rm -f ${CAMINHO_LOCK_REMOTO}/$ARQ_LOCK_HISTORICO 							#remove a trava sobre o arquivo de log tão logo seja possível.
 	EDIT_LOG=0
 }
 
@@ -164,7 +172,7 @@ function end () {
 	fi
 
 	if [ "$EDIT_LOG" == "1" ]; then
-		rm -f $GLOBAL_LOCK
+		rm -f ${CAMINHO_LOCK_REMOTO}/$ARQ_LOCK_HISTORICO
 	fi
 	
 	exit "$1"
@@ -348,13 +356,28 @@ function jboss_instances () {
 						if [ -z "$REV" ]; then
 							REV="N/A"
 						fi
-	    					
+						
+						LOG_APP=${CAMINHO_HISTORICO_SISTEMAS_REMOTO}/$(echo ${APP} | tr '[:upper:]' '[:lower:]')					
+	    					DATA_DEPLOY=$(date +%F_%Hh%Mm%Ss)
+						ID_DEPLOY=$(echo ${DATA_DEPLOY}_${REV}_${AMBIENTE} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
+						INFO_DIR=${LOG_APP}/${ID_DEPLOY}
+
+						mkdir -p $LOG_APP $INFO_DIR
+						
+						#expurgo de logs
+						find "${LOG_APP}/" -maxdepth 1 -type d | grep -vx "${LOG_APP}/" | sort > $TMP_DIR/logs_total
+						tail $TMP_DIR/logs_total --lines=${QTD_LOG_HTML} > $TMP_DIR/logs_ultimos
+						grep -vxF --file=$TMP_DIR/logs_ultimos $TMP_DIR/logs_total > $TMP_DIR/logs_expurgo
+						cat $TMP_DIR/logs_expurgo | xargs --no-run-if-empty rm -Rf
+
+						QTD_LOG_INICIO=$(cat $LOG | wc -l)	
+
 		    				find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/old.list"
 		    		
 		    				if [ $( cat "$TMP_DIR/old.list" | wc -l ) -eq 0 ]; then
 		    				
 		    					log "ERRO" "Deploy abortado. Não foi encontrado pacote anterior. O deploy deverá ser feito manualmente."
-		    					global_log "Deploy abortado. Pacote anterior não encontrado."
+		    					mensagem_historico="Deploy abortado. Pacote anterior não encontrado."
 		    				
 	    					else
 		    				
@@ -376,7 +399,7 @@ function jboss_instances () {
 		    						
 		    						if [ -z "$SCRIPT_INIT" ]; then
 		    							log "ERRO" "Não foi encontrado o script de inicialização da instância JBoss. O deploy deverá ser feito manualmente."
-		    							global_log "Deploy abortado. Script de inicialização não encontrado."
+		    							mensagem_historico="Deploy abortado. Script de inicialização não encontrado."
 		    						else
 		    							log "INFO" "Instância do JBOSS:     \t$INSTANCIA_JBOSS"
 		    							log "INFO" "Diretório de deploy:    \t$DIR_DEPLOY"
@@ -389,7 +412,7 @@ function jboss_instances () {
 		    		
 		    							if [ $(pgrep -f "$(dirname $CAMINHO_INSTANCIAS_JBOSS).*-c $INSTANCIA_JBOSS" | wc -l) -ne 0 ]; then
 		    								log "ERRO" "Não foi possível parar a instância $INSTANCIA_JBOSS do JBOSS. Deploy abortado."
-		    								global_log "Deploy abortado. Impossível parar a instância $INSTANCIA_JBOSS."	
+		    								mensagem_historico="Deploy abortado. Impossível parar a instância $INSTANCIA_JBOSS."	
 		    							else
 		    								rm -f $OLD 
 		    								cp $PACOTE $DIR_DEPLOY/$(echo $APP | tr '[:upper:]' '[:lower:]').war 
@@ -409,10 +432,10 @@ function jboss_instances () {
 		    		
 		    								if [ $(pgrep -f "$(dirname $CAMINHO_INSTANCIAS_JBOSS).*-c $INSTANCIA_JBOSS" | wc -l) -eq 0 ]; then
 		    									log "ERRO" "O deploy do arquivo $WAR foi concluído, porém não foi possível reiniciar a instância do JBOSS."
-		    									global_log "Deploy não concluído. Erro ao reiniciar a instância $INSTANCIA_JBOSS."
+		    									mensagem_historico="Deploy não concluído. Erro ao reiniciar a instância $INSTANCIA_JBOSS."
 		    								else
 		    									log "INFO" "Deploy do arquivo $WAR concluído com sucesso!"
-		    									global_log "Deploy concluído com sucesso na instância $INSTANCIA_JBOSS."
+		    									mensagem_historico="Deploy concluído com sucesso na instância $INSTANCIA_JBOSS."
 		    								fi
 		    							
 	    								fi
@@ -424,7 +447,13 @@ function jboss_instances () {
 		    					rm -f $PACOTE
 		    					
 		    				fi
-		    				
+
+						QTD_LOG_FIM=$(cat $LOG | wc -l)
+						QTD_INFO_DEPLOY=$(( $QTD_LOG_FIM - $QTD_LOG_INICIO ))
+													
+						tail -n $(QTD_INFO_DEPLOY) $LOG > $INFO_DIR/deploy.log
+		    				global_log "$mensagem_historico"
+					
 		    			done < "$TMP_DIR/war.list"
 		    			
 		    		fi
