@@ -67,7 +67,7 @@ function global_log () {
 	touch ${CAMINHO_HISTORICO_REMOTO}/$ARQ_HISTORICO
 	touch ${LOG_APP}/$ARQ_HISTORICO
 
-	tail --lines=$QTD_LOG_DEPLOY ${CAMINHO_LOCK_REMOTO}/$ARQ_HISTORICO > $TMP_DIR/deploy_log_novo
+	tail --lines=$QTD_LOG_DEPLOY ${CAMINHO_HISTORICO_REMOTO}/$ARQ_HISTORICO > $TMP_DIR/deploy_log_novo
 	tail --lines=$QTD_LOG_APP ${LOG_APP}/$ARQ_HISTORICO > $TMP_DIR/app_log_novo
 
 	echo -e "$mensagem_log" >> $TMP_DIR/deploy_log_novo
@@ -451,7 +451,7 @@ function jboss_instances () {
 						QTD_LOG_FIM=$(cat $LOG | wc -l)
 						QTD_INFO_DEPLOY=$(( $QTD_LOG_FIM - $QTD_LOG_INICIO ))
 													
-						tail -n $(QTD_INFO_DEPLOY) $LOG > $INFO_DIR/deploy.log
+						tail -n ${QTD_INFO_DEPLOY} $LOG > $INFO_DIR/deploy.log
 		    				global_log "$mensagem_historico"
 					
 		    			done < "$TMP_DIR/war.list"
