@@ -377,7 +377,7 @@ function jboss_instances () {
 		    				if [ $( cat "$TMP_DIR/old.list" | wc -l ) -eq 0 ]; then
 		    				
 		    					log "ERRO" "Deploy abortado. Não foi encontrado pacote anterior. O deploy deverá ser feito manualmente."
-		    					mensagem_historico="Deploy abortado. Pacote anterior não encontrado."
+		    					global_log "Deploy abortado. Pacote anterior não encontrado."
 		    				
 	    					else
 		    				
@@ -399,7 +399,7 @@ function jboss_instances () {
 		    						
 		    						if [ -z "$SCRIPT_INIT" ]; then
 		    							log "ERRO" "Não foi encontrado o script de inicialização da instância JBoss. O deploy deverá ser feito manualmente."
-		    							mensagem_historico="Deploy abortado. Script de inicialização não encontrado."
+		    							global_log "Deploy abortado. Script de inicialização não encontrado."
 		    						else
 		    							log "INFO" "Instância do JBOSS:     \t$INSTANCIA_JBOSS"
 		    							log "INFO" "Diretório de deploy:    \t$DIR_DEPLOY"
@@ -412,7 +412,7 @@ function jboss_instances () {
 		    		
 		    							if [ $(pgrep -f "$(dirname $CAMINHO_INSTANCIAS_JBOSS).*-c $INSTANCIA_JBOSS" | wc -l) -ne 0 ]; then
 		    								log "ERRO" "Não foi possível parar a instância $INSTANCIA_JBOSS do JBOSS. Deploy abortado."
-		    								mensagem_historico="Deploy abortado. Impossível parar a instância $INSTANCIA_JBOSS."	
+		    								global_log "Deploy abortado. Impossível parar a instância $INSTANCIA_JBOSS."	
 		    							else
 		    								rm -f $OLD 
 		    								cp $PACOTE $DIR_DEPLOY/$(echo $APP | tr '[:upper:]' '[:lower:]').war 
@@ -432,10 +432,10 @@ function jboss_instances () {
 		    		
 		    								if [ $(pgrep -f "$(dirname $CAMINHO_INSTANCIAS_JBOSS).*-c $INSTANCIA_JBOSS" | wc -l) -eq 0 ]; then
 		    									log "ERRO" "O deploy do arquivo $WAR foi concluído, porém não foi possível reiniciar a instância do JBOSS."
-		    									mensagem_historico="Deploy não concluído. Erro ao reiniciar a instância $INSTANCIA_JBOSS."
+		    									global_log "Deploy não concluído. Erro ao reiniciar a instância $INSTANCIA_JBOSS."
 		    								else
 		    									log "INFO" "Deploy do arquivo $WAR concluído com sucesso!"
-		    									mensagem_historico="Deploy concluído com sucesso na instância $INSTANCIA_JBOSS."
+		    									global_log "Deploy concluído com sucesso na instância $INSTANCIA_JBOSS."
 		    								fi
 		    							
 	    								fi
@@ -452,7 +452,6 @@ function jboss_instances () {
 						QTD_INFO_DEPLOY=$(( $QTD_LOG_FIM - $QTD_LOG_INICIO ))
 													
 						tail -n ${QTD_INFO_DEPLOY} $LOG > $INFO_DIR/deploy.log
-		    				global_log "$mensagem_historico"
 					
 		    			done < "$TMP_DIR/war.list"
 		    			
