@@ -352,6 +352,7 @@ function jboss_instances () {
 		    				WAR=$(basename $PACOTE)
 		    				APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|" )
 		    				REV=$(unzip -p -a $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
+						HOST=$(echo $HOSTNAME | cut -f1 -d '.')
 						
 						if [ -z "$REV" ]; then
 							REV="N/A"
@@ -451,7 +452,7 @@ function jboss_instances () {
 						QTD_LOG_FIM=$(cat $LOG | wc -l)
 						QTD_INFO_DEPLOY=$(( $QTD_LOG_FIM - $QTD_LOG_INICIO ))
 													
-						tail -n ${QTD_INFO_DEPLOY} $LOG > $INFO_DIR/deploy.log
+						tail -n ${QTD_INFO_DEPLOY} $LOG > $INFO_DIR/deploy_${HOST}.log
 					
 		    			done < "$TMP_DIR/war.list"
 		    			
