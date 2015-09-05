@@ -290,7 +290,7 @@ function jboss_instances () {
 		    	
 		    	log "INFO" "Procurando novos pacotes..."
 		    	
-		    	find "$ORIGEM" -type f -iname "*.war" > $TMP_DIR/arq.list
+		    	find "$ORIGEM" -type f -regextype posix-extended -iregex "^.*.war$|^.*.ear$" > $TMP_DIR/arq.list
 		    	
 	    		if [ $(cat $TMP_DIR/arq.list | wc -l) -lt 1 ]; then
 		    		log "INFO" "Não foram encontrados novos pacotes para deploy."
@@ -302,8 +302,8 @@ function jboss_instances () {
 		    	
 		    		while read l; do
 		    	
-		    			WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy]/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
-		    			APP=$( echo $l | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|" )
+		    			WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy]/([^/]+)\.[EeWw][Aa][Rr]$|\1|" )
+		    			APP=$( echo $l | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|" )
 		    		
 		    			if [ $(echo $WAR | grep -Ei "^$APP" | wc -l) -ne 1 ]; then
 		    				echo $l >> "$TMP_DIR/remove_incorretos.list"
@@ -318,15 +318,15 @@ function jboss_instances () {
 		    	
 		    		# Caso haja pacotes, deve haver no máximo um pacote por diretório
 		    	
-		    		find "$ORIGEM" -type f -iname "*.war" > $TMP_DIR/arq.list
+		    		find "$ORIGEM" -type f -regextype posix-extended -iregex "^.*.war$|^.*.ear$" > $TMP_DIR/arq.list
 		    	
 				rm -f "$TMP_DIR/remove_versoes.list"
 				touch "$TMP_DIR/remove_versoes.list"
 		    	
 		    		while read l; do
 		    	
-	    				WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy]/([^/]+)\.[Ww][Aa][Rr]$|\1|" )
-		    			DIR=$( echo $l | sed -r "s|^(${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[Ww][Aa][Rr]$|\1|" )
+	    				WAR=$( echo $l | sed -r "s|^${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy]/([^/]+)\.[EeWw][Aa][Rr]$|\1|" )
+		    			DIR=$( echo $l | sed -r "s|^(${ORIGEM}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[EeWw][Aa][Rr]$|\1|" )
 		    		
 		    			if [ $( find $DIR -type f | wc -l ) -ne 1 ]; then
 		    				echo $l >> $TMP_DIR/remove_versoes.list
@@ -339,7 +339,7 @@ function jboss_instances () {
 		    			cat $TMP_DIR/remove_versoes.list | xargs -r -d "\n" rm -fv
 		    		fi
 		    	
-	    			find "$ORIGEM" -type f -iname "*.war" > $TMP_DIR/war.list
+	    			find "$ORIGEM" -type f -regextype posix-extended -iregex ".*.war$|.*.ear$" > $TMP_DIR/war.list
 			    	
 		    		if [ $(cat $TMP_DIR/war.list | wc -l) -lt 1 ]; then
 	    				log "INFO" "Não há novos pacotes para deploy."
@@ -350,7 +350,7 @@ function jboss_instances () {
 		    			while read PACOTE; do
 		    	
 		    				WAR=$(basename $PACOTE)
-		    				APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|" )
+		    				APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|" )
 		    				REV=$(unzip -p -a $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
 						HOST=$(echo $HOSTNAME | cut -f1 -d '.')
 						
@@ -373,7 +373,7 @@ function jboss_instances () {
 
 						QTD_LOG_INICIO=$(cat $LOG | wc -l)	
 
-		    				find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/old.list"
+		    				find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.[ew]ar" > "$TMP_DIR/old.list"
 		    		
 		    				if [ $( cat "$TMP_DIR/old.list" | wc -l ) -eq 0 ]; then
 		    				
@@ -386,8 +386,8 @@ function jboss_instances () {
 		    					
 		    						log "INFO" "O pacote $OLD será substituído".
 	    					
-		    						DIR_DEPLOY=$(echo $OLD | sed -r "s|^(${CAMINHO_INSTANCIAS_JBOSS}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[Ww][Aa][Rr]$|\1|")
-		    						INSTANCIA_JBOSS=$(echo $OLD | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
+		    						DIR_DEPLOY=$(echo $OLD | sed -r "s|^(${CAMINHO_INSTANCIAS_JBOSS}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[EeWw][Aa][Rr]$|\1|")
+		    						INSTANCIA_JBOSS=$(echo $OLD | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|")
 		    						JBOSS_TEMP="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/tmp"
 		    						JBOSS_TEMP=$(find $CAMINHO_INSTANCIAS_JBOSS -iwholename $JBOSS_TEMP)
 		    						JBOSS_WORK="$CAMINHO_INSTANCIAS_JBOSS/$INSTANCIA_JBOSS/work"
@@ -483,13 +483,13 @@ function jboss_instances () {
 				if [ $(echo $DESTINO_LOG | wc -l) -eq 1 ]; then
 	
 					rm -f "$TMP_DIR/app_origem.list"
-			    		find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.war" > "$TMP_DIR/app_origem.list" 2> /dev/null
+			    		find $CAMINHO_INSTANCIAS_JBOSS -type f -regextype posix-extended -iregex "$CAMINHO_INSTANCIAS_JBOSS/[^/]+/deploy/$APP\.[ew]ar" > "$TMP_DIR/app_origem.list" 2> /dev/null
 	    		
 			    		if [ $(cat "$TMP_DIR/app_origem.list" | wc -l) -ne 0 ]; then
 			    		
 			    			while read "CAMINHO_APP"; do
 			    				
-			    				INSTANCIA_JBOSS=$(echo $CAMINHO_APP | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[Ww][Aa][Rr]$|\1|")
+			    				INSTANCIA_JBOSS=$(echo $CAMINHO_APP | sed -r "s|^${CAMINHO_INSTANCIAS_JBOSS}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|")
 			    				LOG_APP=$(find "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}" -iwholename "${CAMINHO_INSTANCIAS_JBOSS}/${INSTANCIA_JBOSS}/log/server.log" 2> /dev/null)
 			    				
 			    				if [ $(echo $LOG_APP | wc -l) -eq 1 ]; then
