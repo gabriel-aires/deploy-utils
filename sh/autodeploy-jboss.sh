@@ -339,7 +339,7 @@ function jboss_instances () {
 		    			cat $TMP_DIR/remove_versoes.list | xargs -r -d "\n" rm -fv
 		    		fi
 		    	
-	    			find "$ORIGEM" -type f -regextype posix-extended -iregex ".*.war$|.*.ear$" > $TMP_DIR/war.list
+	    			find "$ORIGEM" -type f -regextype posix-extended -iregex "^.*.war$|^.*.ear$" > $TMP_DIR/war.list
 			    	
 		    		if [ $(cat $TMP_DIR/war.list | wc -l) -lt 1 ]; then
 	    				log "INFO" "Não há novos pacotes para deploy."
