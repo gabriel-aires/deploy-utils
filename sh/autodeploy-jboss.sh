@@ -239,8 +239,8 @@ chk_dir () {
     	# garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
     	find $raiz/* -type d | grep -Ei "^$raiz/[^/]+/[^/]+" | grep -Eixv "^$raiz/[^/]+/deploy$|^$raiz/[^/]+/log$" | xargs -r -d "\n" rm -Rfv
 		
-    	# eliminar arquivos em local incorreto ou com extensão diferente de .war / .log
-    	find "$raiz" -type f | grep -Eixv "^$raiz/[^/]+/deploy/[^/]+\.war$|^$raiz/[^/]+/log/[^/]+\.log$|^$raiz/[^/]+/log/[^/]+\.zip$" | xargs -r -d "\n" rm -fv
+    	# eliminar arquivos em local incorreto ou com extensão diferente de .war / .ear / .log
+    	find "$raiz" -type f | grep -Eixv "^$raiz/[^/]+/deploy/[^/]+\.[ew]ar$|^$raiz/[^/]+/log/[^/]+\.log$|^$raiz/[^/]+/log/[^/]+\.zip$" | xargs -r -d "\n" rm -fv
 
 }
 
