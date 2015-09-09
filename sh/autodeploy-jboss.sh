@@ -350,6 +350,7 @@ function jboss_instances () {
 		    			while read PACOTE; do
 		    	
 		    				WAR=$(basename $PACOTE)
+						EXT=$(echo $WAR | sed -r "s|^.*\.([^\.]+)$|\1|")
 		    				APP=$(echo $PACOTE | sed -r "s|^${ORIGEM}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|" )
 		    				REV=$(unzip -p -a $PACOTE META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
 						HOST=$(echo $HOSTNAME | cut -f1 -d '.')
@@ -416,7 +417,7 @@ function jboss_instances () {
 		    								global_log "Deploy abortado. Impossível parar a instância $INSTANCIA_JBOSS."	
 		    							else
 		    								rm -f $OLD 
-		    								cp $PACOTE $DIR_DEPLOY/$(echo $APP | tr '[:upper:]' '[:lower:]').war 
+		    								cp $PACOTE $DIR_DEPLOY/$(echo $APP | tr '[:upper:]' '[:lower:]').$EXT 
 		    								chown -R jboss:jboss $DIR_DEPLOY/ 
 		    						
 		    								if [ -d "$JBOSS_TEMP" ]; then
