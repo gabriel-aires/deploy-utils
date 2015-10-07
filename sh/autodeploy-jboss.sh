@@ -558,7 +558,7 @@ source "$ARQ_PROPS_GLOBAL" || exit 1
 mkdir -p $(dirname "$LOCK")
 
 if [ -f "$LOCK" ]; then
-    if [ "$(pgrep -f $0 | wc -l)" -eq 1 ]; then
+    if [ "$(pgrep -f $0)" == "$$" ]; then
         echo "A tarefa não está em execução, mas um arquivo de trava foi identificado: $LOCK"
         exit 1
     else
