@@ -167,10 +167,6 @@ function end () {
 		rm -Rf ${TMP_DIR}/*
 	fi
 
-	if [ -f "$LOCK" ]; then
-		rm -f $LOCK
-	fi
-
 	if [ "$EDIT_LOG" == "1" ]; then
 		rm -f ${CAMINHO_LOCK_REMOTO}/$ARQ_LOCK_HISTORICO
 	fi
@@ -553,20 +549,11 @@ fi
 
 source "$ARQ_PROPS_GLOBAL" || exit 1
 
-# cria lock.
+# Se houver mais de um PID referente ao script, a tarefa já está em andamento.
 
-mkdir -p $(dirname "$LOCK")
-
-if [ -f "$LOCK" ]; then
-    if [ "$(pgrep -f $0)" == "$$" ]; then
-        echo "A tarefa não está em execução, mas um arquivo de trava foi identificado: $LOCK"
-        exit 1
-    else
-        echo "Tarefa em andamento... Aguarde."
-        exit 0
-    fi
-else
-	touch $LOCK
+if [ "$(pgrep -f $0)" != "$$" ]; then
+    echo "Tarefa em andamento... Aguarde."
+    exit 0
 fi
 
 # cria diretório temporário.
