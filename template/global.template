@@ -54,22 +54,27 @@ regex_share=
 regex_branch_desenvolvimento=
 regex_branch_teste=
 regex_branch_homologacao=
+regex_branch_sustentacao=
 regex_branch_producao=
 regex_revisao_desenvolvimento=
 regex_revisao_teste=
 regex_revisao_homologacao=
+regex_revisao_sustentacao=
 regex_revisao_producao=
 regex_modo_desenvolvimento=
 regex_modo_teste=
 regex_modo_homologacao=
+regex_modo_sustentacao=
 regex_modo_producao=
 regex_auto_desenvolvimento=
 regex_auto_teste=
 regex_auto_homologacao=
+regex_auto_sustentacao=
 regex_auto_producao=
 regex_hosts_desenvolvimento=
 regex_hosts_teste=
 regex_hosts_homologacao=
+regex_hosts_sustentacao=
 regex_hosts_producao=
 # Expressões inválidas
 not_regex_
