@@ -1,7 +1,0 @@
-/conf/user.conf
-/conf/app/**
-/bak/**
-/log/**
-/tmp/**
-/repo/**
-

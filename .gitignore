@@ -1,0 +1,9 @@
+/src/server/conf/user.conf
+/src/server/conf/global.conf
+/src/server/conf/app/**
+/src/server/bak/**
+/src/server/log/**
+/src/server/tmp/**
+/src/server/repo/**
+/src/client/log/**
+/src/client/conf/local.d/**
