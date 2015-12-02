@@ -1,0 +1,212 @@
+==========
+Descrição:
+==========
+
+	Script para deploy automatizado de aplicações ASP/PHP versionadas no GIT.
+	
+	Limitações do script:
+
+	* não lida com permissões de arquivos, assumindo que as mesmas foram atribuídas de forma explícita no diretório compartilhado de destino.
+
+	* é voltado ao deploy de aplicações estruturadas em páginas (ex: .asp, .php, .js, .css, etc) que não requerem procedimentos específicos no host de
+	deploy,	como é o caso de outras tecnologias (ex: java - reinicialização de instâncias, limpeza de arquivos temporários, etc).
+
+	* para deploys de pacotes .war, consultar o projeto 'autodeploy-jboss', também versionado no GIT.	
+
+=============
+Dependências:
+=============
+
+O script de deploy foi testado com os pacotes abaixo.
+
+Pacote		Versão
+----------------------
+
+bash 		4.1.2
+findutils	4.4.2
+grep		2.6.3
+cifs-utils	4.8.1
+git		1.7.1
+rsync		3.0.6
+samba		3.6.23
+sed		4.2.1
+
+===========
+Instalação:
+===========
+
+1)	A última versão do script pode ser obtida a partir do git. Para a primeira instalação, utilizar o comando abaixo, dentro do diretório /opt:
+
+		'git clone git@git.anatel.gov.br:producao/autodeploy-paginas.git'
+
+	Para atualizar o script, utlizar o comando a seguir;
+
+		'git pull git@git.anatel.gov.br:producao/autodeploy-paginas.git'
+
+1)	Os arquivos no diretório /opt/autodeploy-paginas/sh/ devem possuir permissão de execução pelo usuário root.
+
+2)	O script requer o pacote cifs-utils (instalar com o comando "sudo yum install cifs-utils") para montagem de diretórios compartilhados.
+
+3)	O processo de deploy requer um compartilhamento no(s) host(s) de destino, onde o grupo PRODUCAO possua permissão de escrita. Para mais informações
+	acerca da configuração de um compartilhamento em ambiente linux, veja o módulo anatel_ad, provisionado pelo Puppet.
+
+4)	Para facilitar a utilização do script, pode ser criado um link simbólico chamado 'deploy' no diretório '/usr/local/sbin/', existente na variável $PATH
+	do usuário root. Isso permite a execução do comando 'deploy' a partir de qualquer diretório.
+
+5)	As variáveis de deploy globais foram definidas no arquivo /opt/autodeploy-paginas/conf/global.conf, o qual não deve ser editado diretamente.
+	Eventuais customizações devem ser feitas no arquivo user.conf, observando as restrições do template definido para este arquivo.
+
+6)	Para montar temporariamente os compartilhamentos nos hosts de destinos, o script requer um arquivo (definido em global.conf) contendo as 
+	credenciais do usuário a ser utilizado no processo de deploy, com as informações a seguir:
+
+	user=<conta do AD com privilégios de leitura e escrita nos diretórios das aplicações>
+	pass=<senha>
+	dom=ANATEL
+    
+7)	O usuário utilizado para a montagem dos compartilhamentos também necessita de uma chave pública a ser armazenada no gitlab, conforme segue:
+
+	Executar como root :
+
+		'ssh-keygen -t rsa -C <nomeusuario@DOMINIO>'
+                'eval $(ssh-agent -s)'
+                'ssh-add .ssh/id_rsa.pub'
+
+	Para ver a chave gerada, executar, no diretório HOME do usuário root: "cat .ssh/id_rsa.pub"
+	Copiar a chave e inserir no GIT. Caminho: "http://git.anatel.gov.br/profile", "Edit Profile Settings", "SSH Keys", "Add SSH Key".
+
+
+*	Embora a instalação deva ser realizada preferencialmente num único host, a instalação em várias máquinas é possível, desde que os diretórios
+	de lock, tmp, repo, bak, conf e template estejam num compartilhamento centralizado e acessível a todas as máquinas.
+
+============
+Configuração
+============
+
+1) APENAS PARA 0S HOSTS LINUX: o primeiro deploy de uma aplicação requer um compartilhamento no host de destino onde o usuário deploy@anatel.gov.br possua permissão de escrita.
+Com esse objetivo, deve-se incluir no puppet o módulo "anatel_ad" para host em questão, de modo que a máquina passe a visualizar os grupos do Active Directory. Em seguida,
+deve-se logar no host como root e, após a execução do agente do puppet, executar os comandos "kinit usuário" e net ads join -U "usuario@anatel.gov.br", reiniciando o serviço winbind
+em seguida. O procedimento terá sucesso caso o comando "wbinfo -u" consiga retornar os usuários do AD. Em seguida, basta editar o arquivo /etc/samba/include.conf,
+onde são definidos os compartilhamentos e as permissões, utilizando como template o arquivo /etc/samba/include.conf.example. Reiniciar o serviço smb e averiguar se o compartilhamento foi
+disponibilizado corretamente.
+
+2) APENAS PARA OS HOSTS WINDOWS: Normalmente já existe um compartilhamento chamado sistemas$ em cada host windows, basta confirmar se o usuário deploy possui permissão de escrita no
+contexto desse diretório.
+
+3) Logs, Lockfiles, arquivos de configuração e templates podem ser acessados através dos compartilhamentos existentes em \\cetaskspdin01.
+
+OBS: o usuário deploy@anatel.gov.br faz parte do grupo de rede 'PRODUCAO'.
+
+=========
+Execução:
+=========
+
+1) Deploy simplificado:
+
+	'deploy (opções) <sistema> <branch, tag ou commit> <ambiente>'
+
+	No primeiro deploy de uma aplicação serão informadas suas variáveis de deploy específicas, que serão gravadas no arquivo 
+	/opt/autodeploy-paginas/conf/app/<nomeaplicacao>.conf, que será carregado e validado automaticamente nos deploys subsequentes. Embora não necessário,
+	cada arquivo <nomeaplicacao>.conf poderá ser editado diretamente pela equipe, conforme sua conveniência.
+
+	Dados informados de maneira incorreta resultarão em erro, abortando o processo de deploy no modo não interativo (-f). Em modo interativo (padrão),
+	o usuário poderá efetuar a correção dos parâmetros inválidos durante a execução do script.
+
+	Durante o deploy, será observado um dos modos abaixo:
+
+	"p" - (padrão) preserva arquivos obsoletos no diretório de deploy. Somente os arquivos existentes na origem e no destino podem sofrer atualização. *
+	"d" - deleta arquivos obsoletos no diretório de deploy. Toda a árvore de diretórios será sincronizada. *
+
+	* Qualquer que seja o modo de deploy selecionado, a lista de arquivos/diretórios criados. modificados ou deletados será influenciada pelo filtro
+	aplicado ao comando rsync. Por padrão, as entradas ignoradas num arquivo .gitignore existente na raiz de um projeto versionado no git serão
+	igualmente ignoradas durante o processo de deploy.
+
+2) Deploy automático:
+
+	Para habilitar a execução de deploys automáticos, a seguinte entrada deverá ser acrescentada à crontab do usuário root (executar 'crontab -e'):
+
+	# Deploy automático
+	*/5 * * * * /bin/bash /opt/autodeploy-paginas/sh/autodeploy.sh
+
+	Para permitir o deploy automático de uma aplicação em um determinado ambiente, o arquivo <aplicacao>.conf deve ser editado conforme segue:
+
+	* A flag de deploy automático deve ser habilitada.
+
+		auto_<nomeambiente>='1'
+
+	* Selecionar uma branch a partir da qual serão obtidas as revisões para deploy.
+
+		branch_<nomeambiente>='<nomebranch>'
+
+	* Informar como será obtida a última revisão do git.
+
+		revisao_<nomeambiente>='commit'		#caso deseje-se obter o último commit na branch selecionada.
+
+		ou
+
+		revisao_<nomeambiente>='tag'		#caso deseje-se obter a última tag na branch selecionada.
+
+	OBS: para fins de teste, caso deseje-se forçar a execução do deploy de uma aplicação segundo as regras de deploy automático vigentes, executar:
+
+	'deploy -f <nomeaplicacao> auto <nomeambiente>'
+
+	
+3) Rollback:
+
+	'deploy (opções) <sistema> rollback <ambiente>'
+
+	O comando acima efetuará o rollback da aplicação segundo as regras do último deploy realizado. Isso é possível, porque o script sempre guarda
+	um backup local de todo o conteúdo a ser modificado no host de destino durante um deploy, bem como do filtro aplicado ao comando rsync.
+
+	Além da possibilidade de realizar um rollback sob demanda, o script também efetua rollback de maneira automática em todos os hosts cadastrados
+	quando ocorre um erro no deploy após o início da fase de escrita.
+
+
+=====
+Logs:
+=====
+
+	O diretório de logs padrão é '/opt/autodeploy-paginas/log'. São gravados 3 logs:
+
+	* /opt/autodeploy-paginas/log/deploy.log						- log de deploys geral.
+	* /opt/autodeploy-paginas/log/<nomesistema>/deploy.log					- log de deploys por aplicação.
+	* /opt/autodeploy-paginas/log/cron.log							- contém a saída do comando autodeploy.sh.
+	* /opt/autodeploy-paginas/log/<nomesistema>/<datahora_deploy>/<revisao>_<ambiente>/ 	- diretório com detalhes de cada deploy realizado.
+
+	Todos os logs são automaticamente expurgados conforme as regras definidas no arquivo global.conf ou user.conf.
+
+================
+Troubleshooting:
+================
+
+1) Caso o repositório git de uma aplicação mude de URL, impedindo o seu deploy, adotar o seguinte procedimento:
+
+    - comentar a entrada correspondente ao agendamento de deploys automáticos na crontab do usuário root.
+    - certificar-se de que não há deploys em andamento.
+    - remover o diretório /opt/autodeploy-paginas/repo/<aplicacao>
+    - alterar a url do repositório no campo correspondente do arquivo \\cetaskspdin01\app_conf\<aplicacao>.conf
+    - descomentar o agendamento de deploys automáticos na crontab.
+    - reexecutar o deploy da aplicação.
+
+2) Caso o script não possua permissão para clonar ou fazer checkout do repositório remoto de uma aplicação:
+
+    - solicitar à equipe de arquitetura que conceda permissão de leitura no repositório ao usuário 'deploy@anatel.gov.br'
+    - reexecutar o deploy da aplicação.
+
+3) Caso o deploy falhe durante a etapa de escrita, é possível que o rsync esteja tentando escrever em algum arquivo/diretório somente leitura:
+
+    - Ajustar permissões no diretório de destino.
+    - Reexecutar deploy.
+    
+4) Deploys com mais de 50 modificações em hosts WINDOWS devem ser abortados no período diurno ou vespertino.
+
+    - Executar deploy após as 19h para não impactar a replicação dos arquivos.
+
+======
+Autor:
+======
+
+	Gabriel Aires Guedes - airesgabriel@gmail.com
+
+	Atualizado pela última vez em 04/06/2015.
+
+	
