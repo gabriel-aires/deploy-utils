@@ -1,0 +1,163 @@
+---------
+DESCRIÇÃO
+---------
+
+Este script destina-se a automatizar atividades corriqueiras relativas à gestão de servidores de aplicação JBOSS, tal qual o deploy de pacotes .war e a disponibilização de logs das instâncias.
+
+------------
+DEPENDÊNCIAS
+------------
+
+A instalação, configuração, atualização e agendamento do script é realizada de forma automática pelo agente do puppet, que deve estar habilitado na máquina (checar status do serviço com o comando "service puppet status" ou "/etc/init.d/puppet status". Para uma relação completa dos pacotes necessários, referir-se ao arquivo /etc/puppet/environments/production/modules/anatel_jboss/manifests/autodeploy.pp, no servidor puppet.anatel.gov.br.
+
+----------
+INSTALAÇÃO
+----------
+
+OBS: Os procedimentos de 3 a 7 são desnecessários para uma instalação limpa, e somente fazem sentido para máquinas onde uma versão anterior do script já havia sido instalada de forma manual. TODAS as demais etapas são obrigatórias.
+
+####### ACESSAR O HOST ######
+
+1) Acessar o host onde será realizada a instalação via ssh (ssh usuário@hostname), por meio do Putty ou MobaXterm.
+
+2) Logar-se como administrador (sudo -i).
+
+####### OPCIONAL: REPARAÇÃO DE INSTALAÇÃO ANTERIOR #######
+
+3) Listar os pontos de montagem (mount) e desmontar somente aqueles que possuem relação com o script de deploy. Ex: (umount /mnt/JBOSS_*; umount /mnt/deploy_*).
+
+4) Remover os diretórios correspondentes aos pontos de montagem desativados no passo anterior. Ex: (rmdir /mnt/JBOSS_*; rmdir /mnt/deploy_*).
+
+5) Abrir o arquivo /etc/fstab (vim /etc/fstab) para edição e remover as linhas correspondentes aos pontos de montagem desmontados no passo 3 (pressionar 'Esc' para sair do modo de inserção, caso ativado; posicionar o cursor sobre a linha desejada; pressionar a tecla 'd' duas vezes para remover a linha; para salvar, executar ':wq').
+
+6) Listar os agendamentos na crontab do usuário root (crontab -l) e, se necessário, remover eventuais entradas referentes à execução do arquivo autodeploy-jboss.sh (crontab -e). A edição da crontab é análoga ao processo descrito no passo 5.
+
+7) Remover o diretório /opt/autodeploy-jboss (rm -Rf /opt/autodeploy-jboss).
+
+####### INSTALAÇÃO LIMPA ########
+
+8) Identificar o diretório que contém as instâncias JBOSS e anotar seu caminho completo. Ex: /opt/jboss/server (utilizar o comando 'cd <diretório>' para navegar nos diretórios e 'ls -al' para listar seu conteúdo). IMPORTANTE: caso exista no diretório /opt um link simbólico para a instalação do JBOSS, utilizá-lo no lugar do caminho real. Isso é necessário, porque o script de inicialização de cada instância normalmente utiliza este caminho para definir a variável $JBOSS_HOME.
+
+9) Dentro do diretório mencionado no passo 8: acessar a pasta 'deploy' de cada instância em uso e listar os sistemas já instalados (ls *.war). Anotar o nome de todos as aplicações de interesse rodando naquela instalação do JBOSS.
+
+10) Repetir as etapa 8 e 9 para todas as outras versões do JBOSS instaladas na máquina, caso existam.
+
+11) Fazer logoff do host ( pressionar 'ctrl + d' duas vezes).
+
+12) De volta ao Windows, acessar o endereço de rede \\cetaskspdin01\jboss_conf através do Windows Explorer. Dentro do compartilhamento, deve ser criado um novo diretório com o nome do host onde será feita a instalação.
+
+13) Copiar o arquivo \\cetaskspdin01\jboss_template\local.template para o diretório criado no passo anterior, renomeando o novo arquivo segundo o servidor de aplicação JBOSS existente no host da instalação (ex: jboss4.conf).
+
+14) Repetir o passo 13 para todas as outras versões do JBOSS instaladas no host em questão.
+
+15) Editar cada arquivo *.conf, preenchendo cada campo conforme o exemplo abaixo:
+
+	Ex: \\cetaskspdin01\jboss_conf\cejb4ds01\
+	
+		Arquivo jboss4.conf:
+		--------------------
+		# Definir abaixo os parâmetros da instalação JBOSS:
+		
+		# Caminho para os diretórios de configuração das instâncias JBOSS. Ex: /opt/jboss/server (o caminho não deve terminar em "/" )
+		CAMINHO_INSTANCIAS_JBOSS='/opt/jboss/server'
+		
+		# Versão do Jboss. Ex: 4, 5
+		VERSAO_JBOSS='JBOSS_4'
+		
+		# Ex: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc																			
+		IDENTIFICACAO='INTRANET'
+		
+		# Tipo de ambiente. Ex: DESENVOLVIMENTO, HOMOLOGAÇÃO, TESTES										
+		AMBIENTE='DESENVOLVIMENTO'
+		
+		------------------
+	
+	OBS: 
+	
+	- O caminho para as instâncias do jboss deve ser informado utilizando o padrão de diretórios do Linux (diretórios separados por '/' em vez de '\'), não obstante a observação constante da etapa 8.
+	- Os campos subsequentes devem corresponder a uma estrutura de diretórios no compartilhamento \\wifspdin01\jboss_linux$ (maiores esclarecimentos no passo a seguir).
+	- Os valores de cada campo devem ser informados sem espaços ou caracteres especiais. O uso das aspas simples é recomendado.
+	- Não deve haver espaços entre o nome do parâmetro, o sinal de igual, e o valor (ex: PARAMETRO='VALOR')
+	- Atenção ao campo VERSAO_JBOSS, seu valor deve ser 'JBOSS_<NÚMERO>', visando facilitar a navegação na estrutura de diretórios correspondente.
+	- O campo IDENTIFICAÇÃO deve ser preenchido de forma que o conjunto "AMBIENTE+VERSAO_JBOSS+IDENTIFICACAO" seja único para cada host. A utilização dos valores INTRANET ou INTERNET é suficiente para a grande maioria dos casos, mas um valor alternativo poderá ser informado, afim de evitar confusões. Ex: a identificação de um host que atenda tanto à internet quanto à intranet poderá ser INTRANET_INTERNET; dois hosts que atendam a internet em alta disponibilidade poderão se chamar INTERNET_1 e INTERNET_2, respectivamente.
+
+16) O procedimento de disponibilização de logs e deploy automatizado de aplicações *.war requer um compartilhamento acessível a todas as máquinas Linux que rodam servidores de aplicação JBOSS. Devem ser criadas pastas de deploy e log para cada aplicação, segundo uma hierarquia de diretórios na forma //(host)/(compartilhamento)/(ambiente)/(servidor_aplicação)_(versao)/(classificação)/(aplicação)/(deploy|log). O referido compartilhamento foi disponibilizado no host WINDOWS wifspdin01, possibilitando a gestão granular das permissões de pasta, conforme exemplo abaixo:
+
+	Compartilhamento \\wifspdin01\jboss_linux$\
+	-------------------------------------------
+
+		. . +-----desenvolvimento
+		. . | . . +-----jboss_4
+		. . | . . | . . +-----internet
+		. . | . . | . . | . . +-----aplicacao_1
+		. . | . . | . . | . . | . . +-----deploy
+		. . | . . | . . | . . | . . +-----log
+		. . | . . | . . | . . *-----aplicacao_2
+		. . | . . | . . | . . *-----aplicacao_3
+		. . | . . | . . *-----intranet
+		. . | . . *-----jboss_5
+		. . | . . *-----jboss_8
+		. . *-----homologacao
+		. . *-----producao   
+
+	------------------------------------------
+
+Dessa maneira, deverão ser criados nesse compartilhamento os diretórios especificados no arquivo .conf do passo anterior, observando a hierarquia acima. Em seguida, ao fim da cadeia de diretórios recém criadas, incluir um diretório correspondente a cada aplicação elencada na etapa 9. Dentro de cada diretório de aplicação, deve haver uma pasta 'deploy' e uma pasta 'log'.
+
+17) Acessar o host 'puppet' via ssh (ssh usuario@puppet), através do Putty ou MobaXterm.
+
+18) Logar-se como root (sudo -i).
+
+19) Acessar o diretório /etc/puppet/environments/production/manifests (cd /etc/puppet/environments/production/manifests) e listar seu conteúdo (ls).
+
+20) Incluir a classe anatel_jboss::autodeploy: identificar o arquivo .pp correspondente ao host em questão e abrí-lo para edição (vim nomearquivo.pp). Ex node_jboss4.pp
+
+21) Entrar em modo de inserção (pressionar a tecla 'i') e digitar a linha "include anatel_jboss::autodeploy" na seção correspondente do arquivo. Ex:
+
+	Arquivo node_jboss4.pp
+	-----------------------
+	
+	node "cejb4ds01" {
+	
+	        include linux_server
+	        include anatel_jboss::autodeploy
+	
+	}
+	
+	-----------------------
+
+22) Salvar arquivo (pressionar 'Esc' para sair do modo de inserção, executar ':wq')
+
+23) Fazer logoff (pressionar 'ctrl+d' duas vezes).
+
+24) Aguardar até 10 minutos para execução do agente do puppet no host em questão ou acessá-lo como root e forçar sua execução com o comando 'puppet agent -t'.
+
+----------
+UTILIZAÇÃO
+----------
+
+1) Deploys:
+
+	- Para realizar deploy de uma aplicação em um host, basta copiar um pacote .war para a pasta 'deploy' correspondente na árvore de diretórios do compartilhamento \\wifspdin01\jboss_linux$.
+	- O deploy somente pode ser realizado caso já exista uma versão anterior do mesmo pacote no servidor.
+	- O deploy é realizado em todas as instâncias onde o pacote já esteja sendo executado.
+	- Fases do deploy: a) localiza-se o script de inicialização da(s) instância(s) correta(s) em /etc/init.d; b) parar instância(s); c) remover conteúdo das pastas tmp, work e data; d) copiar novo pacote, atribuindo o owner jboss.jboss; e) iniciar instância.
+
+2) Logs:
+
+	- Para visualizar os logs do script de deploy e/ou do servidor de aplicação JBOSS num determinado host, deve-se acessar a pasta 'log' correspondente no compartilhamento \\wifspdin01\jboss_linux$
+	- cron.log: log de execução do script autodeploy-jboss.sh . Deve ser acessado pelo usuário após a execução de um deploy para verificar o sucesso do procedimento.
+	- server_<instancia>.log: log da instância jboss correspondente ao dia atual.
+	- <instancia>.zip: conteúdo de toda a pasta log de uma instância JBoss.
+
+3) Permissões:
+
+	- Recomenda-se que todos os grupo do Active Directory cujos membros necessitem de acesso ao compartilhamento possuam permissão de leitura somente na pasta correpondente ao ambiente de seu interesse.
+	- Preferencialmente, quebrar a herança de permissões somente no fim da cadeia de diretórios, afim de permitir a gravação de arquivos .war dentro dos diretórios 'deploy'. O ideal é que as permissões de escrita sejam concedidas somente para estas pastas.
+
+---------
+
+Autor: Gabriel Aires Guedes
+Email: airesgabriel@anatel.gov.br
+
+04/06/2015.
