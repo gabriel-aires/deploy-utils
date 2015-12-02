@@ -1,2 +1,4 @@
-*.sh	eol=lf
-
+*.conf      eol=lf
+*.html      eol=lf
+*.sh        eol=lf
+*.template  eol=lf
