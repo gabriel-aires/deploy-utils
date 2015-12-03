@@ -255,9 +255,9 @@ function jboss_instances () {
 
 		dos2unix "$local_conf" > /dev/null 2>&1
 
-		if [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^CAMINHO_INSTANCIAS_JBOSS='?/.+/server'?$" | wc -l) -ne "1" ] \
-			|| [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^CAMINHO_INSTANCIAS_JBOSS=|^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_]+'?$" | wc -l) -ne "0" ] \
-			|| [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^CAMINHO_INSTANCIAS_JBOSS=|^#|^$" | grep -Ev --file=$tmp_dir/parametros_obrigatorios | wc -l) -ne "0" ];
+		if [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^caminho_instancias_jboss='?/.+/server'?$" | wc -l) -ne "1" ] \
+			|| [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^caminho_instancias_jboss=|^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_]+'?$" | wc -l) -ne "0" ] \
+			|| [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^caminho_instancias_jboss=|^#|^$" | grep -Ev --file=$tmp_dir/parametros_obrigatorios | wc -l) -ne "0" ];
 		then
 			log "ERRO" "Parâmetros incorretos no arquivo '$local_conf'."
 			continue
