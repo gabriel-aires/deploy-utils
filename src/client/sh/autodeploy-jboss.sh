@@ -268,8 +268,8 @@ function jboss_instances () {
 
 		# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
 
-		set_dir "$caminho_pacotes_remoto" 'ORIGEM'
-		set_dir "$caminho_logs_remoto" 'DESTINO'
+		set_dir "$caminho_pacotes_remoto" 'origem'
+		set_dir "$caminho_logs_remoto" 'destino'
 
 		if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
 			log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
