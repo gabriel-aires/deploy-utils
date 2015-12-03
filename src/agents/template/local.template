@@ -1,13 +1,19 @@
-# Definir abaixo os parâmetros da instalação JBOSS:
-
-# Caminho para os diretórios de configuração das instâncias JBOSS. Ex: /opt/jboss/server (o caminho não deve terminar em "/" )
-caminho_instancias_jboss=
-
-# Versão do Jboss. Ex: 4, 5
-versao_jboss=
-
-# Ex: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc
-identificacao=
-
-# Tipo de ambiente. Ex: DESENVOLVIMENTO, HOMOLOGAÇÃO, TESTES
+# -----------------------------------------------------------------------------------------------------
+# Definir abaixo os parâmetros do servidor de aplicação:
+# -----------------------------------------------------------------------------------------------------
+#
+# Variáveis utilizadas pelo agente de deploy. Ex: caminho_instancias_jboss , wildfly_server_groups, etc.
+# A expressão regular abaixo deve ser substituída pelas variáveis necessárias
+#
+[a-z]+(_?[a-z0-9])*=
+#
+# -----------------------------------------------------------------------------------------------------
+# Local a ser monitorado no repositório de pacotes. Cada variável corresponde a um nível de diretório.
+# -----------------------------------------------------------------------------------------------------
+#
+# ambiente: PRODUCAO, SUSTENTACAO, TESTE, DESENVOLVIMENTO, HOMOLOGACAO
 ambiente=
+# servidor_aplicacao: JBOSS_4, JBOSS_5, WILDFLY_8, etc
+servidor_aplicacao=
+# identificacao: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc
+identificacao=
