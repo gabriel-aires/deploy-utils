@@ -1,13 +1,13 @@
 # Definir abaixo os parâmetros da instalação JBOSS:
 
 # Caminho para os diretórios de configuração das instâncias JBOSS. Ex: /opt/jboss/server (o caminho não deve terminar em "/" )
-CAMINHO_INSTANCIAS_JBOSS=
+caminho_instancias_jboss=
 
 # Versão do Jboss. Ex: 4, 5
-VERSAO_JBOSS=
+versao_jboss=
 
-# Ex: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc																			
-IDENTIFICACAO=
+# Ex: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc
+identificacao=
 
-# Tipo de ambiente. Ex: DESENVOLVIMENTO, HOMOLOGAÇÃO, TESTES										
-AMBIENTE=
+# Tipo de ambiente. Ex: DESENVOLVIMENTO, HOMOLOGAÇÃO, TESTES
+ambiente=

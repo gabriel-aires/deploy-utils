@@ -1,30 +1,30 @@
 ### Definir abaixo as constantes do ambiente
 
 ### compartilhamentos para obtenção de pacotes e disponbilização de logs (os caminhos podem ser iguais):
-CAMINHO_PACOTES_REMOTO=
-CAMINHO_LOGS_REMOTO=
+caminho_pacotes_remoto=
+caminho_logs_remoto=
 
 ### hierarquização dos diretórios
 
-QTD_DIR=
+qtd_dir=
 
-DIR_1=
-DIR_2=
-DIR_3=
-DIR_4=
-DIR_5=
-DIR_6=
-DIR_7=
-DIR_8=
-DIR_9=
-DIR_10=
+dir_1=
+dir_2=
+dir_3=
+dir_4=
+dir_5=
+dir_6=
+dir_7=
+dir_8=
+dir_9=
+dir_10=
 
 ### caminho para log de deploys global:
-GLOBAL_LOCK=
-GLOBAL_LOG=
+global_lock=
+global_log=
 
 ### diretórios/arquivos utilizados no processo de deploy jboss:
-TMP_DIR=
-LOG_DIR=
-LOG=
-LOCK=
+tmp_dir=
+log_dir=
+log=
+lock=
