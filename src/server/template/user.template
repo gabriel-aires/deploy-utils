@@ -2,10 +2,10 @@
 modo_padrao=
 rsync_opts=
 # Expurgo de logs
-qtd_log_app=
-qtd_log_deploy=
-qtd_log_cron=
-qtd_log_html=
+history_app_size=
+history_global_size=
+log_cron_size=
+history_html_size=
 # HTML
 html_title=
 html_header=

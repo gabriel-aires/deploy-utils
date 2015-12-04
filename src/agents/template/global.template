@@ -1,8 +1,11 @@
 ### Definir abaixo as constantes do ambiente
 
 ### compartilhamentos para obtenção de pacotes e disponbilização de logs (os caminhos podem ser iguais):
-caminho_pacotes_remoto=
-caminho_logs_remoto=
+remote_pkg_dir_tree=
+remote_log_dir_tree=
+remote_lock_dir=
+remote_history_dir=
+remote_history_app_parent_dir=
 
 ### hierarquização dos diretórios
 
@@ -11,17 +14,23 @@ qtd_dir=
 dir_1=
 dir_2=
 dir_3=
-dir_4=
-dir_5=
-dir_6=
-dir_7=
-dir_8=
-dir_9=
-dir_10=
+#dir_4=''
+#dir_5=''
+#dir_6=''
+#dir_7=''
+#dir_8=''
+#dir_9=''
+#dir_10=''
+#...
 
 ### caminho para log de deploys global:
-global_lock=
-global_log=
+history_lock_file=
+history_csv_file=
+
+### expurgo de logs
+history_global_size=
+history_app_size=
+history_html_size=
 
 ### diretórios/arquivos utilizados no processo de deploy jboss:
 tmp_dir=

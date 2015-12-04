@@ -2,7 +2,7 @@
 
 # As funções abaixo devem ser carregadas antes da execução de qualquer script.
 
-function install_dir () {										##### Determina o diretório de instalação do script ####
+function find_install_dir () {										##### Determina o diretório de instalação do script ####
 
     local caminho_script
 
@@ -29,7 +29,7 @@ function install_dir () {										##### Determina o diretório de instalação 
 		fi
 	fi
 
-	diretorio_instalacao=$(dirname $caminho_script)
+	install_dir=$(dirname $caminho_script)
 
 }
 
@@ -53,25 +53,25 @@ function write_history () {
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
-	while [ -f "${caminho_lock_remoto}/$arq_lock_historico" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
+	while [ -f "${remote_lock_dir}/$history_lock_file" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
 		sleep 1
 	done
 
 	edit_log=1
-	touch "${caminho_lock_remoto}/$arq_lock_historico"
+	touch "${remote_lock_dir}/$history_lock_file"
 
-	touch ${caminho_historico_remoto}/$arq_historico
-	touch ${log_app}/$arq_historico
+	touch ${remote_history_dir}/$history_csv_file
+	touch ${remote_history_app_dir}/$history_csv_file
 
-	tail --lines=$qtd_log_deploy ${caminho_historico_remoto}/$arq_historico > $tmp_dir/deploy_log_novo
-	tail --lines=$qtd_log_app ${log_app}/$arq_historico > $tmp_dir/app_log_novo
+	tail --lines=$history_global_size ${remote_history_dir}/$history_csv_file > $tmp_dir/deploy_log_new
+	tail --lines=$history_app_size ${remote_history_app_dir}/$history_csv_file > $tmp_dir/app_log_new
 
-	echo -e "$mensagem_log" >> $tmp_dir/deploy_log_novo
-	echo -e "$mensagem_log" >> $tmp_dir/app_log_novo
+	echo -e "$mensagem_log" >> $tmp_dir/deploy_log_new
+	echo -e "$mensagem_log" >> $tmp_dir/app_log_new
 
-	cp -f $tmp_dir/deploy_log_novo ${caminho_historico_remoto}/$arq_historico
-	cp -f $tmp_dir/app_log_novo ${log_app}/$arq_historico
+	cp -f $tmp_dir/deploy_log_new ${remote_history_dir}/$history_csv_file
+	cp -f $tmp_dir/app_log_new ${remote_history_app_dir}/$history_csv_file
 
-	rm -f ${caminho_lock_remoto}/$arq_lock_historico 							#remove a trava sobre o arquivo de log tão logo seja possível.
+	rm -f ${remote_lock_dir}/$history_lock_file 							#remove a trava sobre o arquivo de log tão logo seja possível.
 	edit_log=0
 }

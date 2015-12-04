@@ -30,7 +30,7 @@ function install_dir () {										##### Determina o diretório de instalação 
 		fi
 	fi
 
-	diretorio_instalacao=$(dirname $caminho_script)
+	install_dir=$(dirname $caminho_script)
 
 }
 
@@ -57,26 +57,26 @@ function global_log () {
 
 	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
-	while [ -f "${caminho_lock_remoto}/$arq_lock_historico" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
+	while [ -f "${remote_lock_dir}/$history_lock_file" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
 		sleep 1
 	done
 
 	edit_log=1
-	touch "${caminho_lock_remoto}/$arq_lock_historico"
+	touch "${remote_lock_dir}/$history_lock_file"
 
-	touch ${caminho_historico_remoto}/$arq_historico
-	touch ${log_app}/$arq_historico
+	touch ${remote_history_dir}/$history_csv_file
+	touch ${remote_history_app_dir}/$history_csv_file
 
-	tail --lines=$qtd_log_deploy ${caminho_historico_remoto}/$arq_historico > $tmp_dir/deploy_log_novo
-	tail --lines=$qtd_log_app ${log_app}/$arq_historico > $tmp_dir/app_log_novo
+	tail --lines=$history_global_size ${remote_history_dir}/$history_csv_file > $tmp_dir/deploy_log_new
+	tail --lines=$history_app_size ${remote_history_app_dir}/$history_csv_file > $tmp_dir/app_log_new
 
-	echo -e "$mensagem_log" >> $tmp_dir/deploy_log_novo
-	echo -e "$mensagem_log" >> $tmp_dir/app_log_novo
+	echo -e "$mensagem_log" >> $tmp_dir/deploy_log_new
+	echo -e "$mensagem_log" >> $tmp_dir/app_log_new
 
-	cp -f $tmp_dir/deploy_log_novo ${caminho_historico_remoto}/$arq_historico
-	cp -f $tmp_dir/app_log_novo ${log_app}/$arq_historico
+	cp -f $tmp_dir/deploy_log_new ${remote_history_dir}/$history_csv_file
+	cp -f $tmp_dir/app_log_new ${remote_history_app_dir}/$history_csv_file
 
-	rm -f ${caminho_lock_remoto}/$arq_lock_historico 							#remove a trava sobre o arquivo de log tão logo seja possível.
+	rm -f ${remote_lock_dir}/$history_lock_file 							#remove a trava sobre o arquivo de log tão logo seja possível.
 	edit_log=0
 }
 
@@ -168,7 +168,7 @@ function end () {
 	fi
 
 	if [ "$edit_log" == "1" ]; then
-		rm -f ${caminho_lock_remoto}/$arq_lock_historico
+		rm -f ${remote_lock_dir}/$history_lock_file
 	fi
 
 	exit "$1"
@@ -242,7 +242,7 @@ chk_dir () {
 
 function jboss_instances () {
 
-	if [ ! -d "$caminho_pacotes_remoto" ] || [ ! -d "$caminho_logs_remoto" ]; then
+	if [ ! -d "$remote_pkg_dir_tree" ] || [ ! -d "$remote_log_dir_tree" ]; then
 		log "ERRO" "Parâmetros incorretos no arquivo '${arq_props_global}'."
 		end "1"
 	fi
@@ -268,8 +268,8 @@ function jboss_instances () {
 
 		# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
 
-		set_dir "$caminho_pacotes_remoto" 'origem'
-		set_dir "$caminho_logs_remoto" 'destino'
+		set_dir "$remote_pkg_dir_tree" 'origem'
+		set_dir "$remote_log_dir_tree" 'destino'
 
 		if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
 			log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
@@ -340,7 +340,7 @@ function jboss_instances () {
 		    		if [ $(cat $tmp_dir/war.list | wc -l) -lt 1 ]; then
 	    				log "INFO" "Não há novos pacotes para deploy."
 		    		else
-		    			log "INFO" "Verificação do diretório ${caminho_pacotes_remoto} concluída. Iniciando processo de deploy dos pacotes abaixo."
+		    			log "INFO" "Verificação do diretório ${remote_pkg_dir_tree} concluída. Iniciando processo de deploy dos pacotes abaixo."
 		    			cat $tmp_dir/war.list
 
 		    			while read pacote; do
@@ -355,16 +355,16 @@ function jboss_instances () {
 							rev="N/A"
 						fi
 
-						log_app=${caminho_historico_sistemas_remoto}/$(echo ${app} | tr '[:upper:]' '[:lower:]')
+						remote_history_app_dir=${remote_history_app_parent_dir}/$(echo ${app} | tr '[:upper:]' '[:lower:]')
 	    					data_deploy=$(date +%F_%Hh%Mm%Ss)
 						id_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
-						info_dir=${log_app}/${id_deploy}
+						deploy_log_dir=${remote_history_app_dir}/${id_deploy}
 
-						mkdir -p $log_APP $info_dir
+						mkdir -p $log_APP $deploy_log_dir
 
 						#expurgo de logs
-						find "${log_app}/" -maxdepth 1 -type d | grep -vx "${log_app}/" | sort > $tmp_dir/logs_total
-						tail $tmp_dir/logs_total --lines=${qtd_log_html} > $tmp_dir/logs_ultimos
+						find "${remote_history_app_dir}/" -maxdepth 1 -type d | grep -vx "${remote_history_app_dir}/" | sort > $tmp_dir/logs_total
+						tail $tmp_dir/logs_total --lines=${history_html_size} > $tmp_dir/logs_ultimos
 						grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
 						cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
 
@@ -449,7 +449,7 @@ function jboss_instances () {
 						qtd_log_fim=$(cat $log | wc -l)
 						qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
 
-						tail -n ${qtd_info_deploy} $log > $info_dir/deploy_${host}.log
+						tail -n ${qtd_info_deploy} $log > $deploy_log_dir/deploy_${host}.log
 
 		    			done < "$tmp_dir/war.list"
 
@@ -487,11 +487,11 @@ function jboss_instances () {
 			    			while read caminho_app; do
 
 			    				instancia_jboss=$(echo $caminho_app | sed -r "s|^${caminho_instancias_jboss}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|")
-			    				log_app=$(find "${caminho_instancias_jboss}/${instancia_jboss}" -iwholename "${caminho_instancias_jboss}/${instancia_jboss}/log/server.log" 2> /dev/null)
+			    				server_log=$(find "${caminho_instancias_jboss}/${instancia_jboss}" -iwholename "${caminho_instancias_jboss}/${instancia_jboss}/log/server.log" 2> /dev/null)
 
-			    				if [ $(echo $log_APP | wc -l) -eq 1 ]; then
-									cd $(dirname $log_APP); zip -rql1 ${destino_log}/${instancia_jboss}.zip *; cd - > /dev/null
-			    					cp -f $log_APP "$destino_log/server_${instancia_jboss}.log"
+			    				if [ $(echo $server_log | wc -l) -eq 1 ]; then
+									cd $(dirname $server_log); zip -rql1 ${destino_log}/${instancia_jboss}.zip *; cd - > /dev/null
+			    					cp -f $server_log "$destino_log/server_${instancia_jboss}.log"
 			    					cp -f $log "$destino_log/cron.log"
 									unix2dos "$destino_log/server_${instancia_jboss}.log" > /dev/null 2>&1
 									unix2dos "$destino_log/cron.log" > /dev/null 2>&1
@@ -524,10 +524,10 @@ function jboss_instances () {
 
 trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
-install_dir
+find_install_dir
 
-arq_props_global="${diretorio_instalacao}/conf/global.conf"
-dir_props_local="${diretorio_instalacao}/conf/local.d"
+arq_props_global="${install_dir}/conf/global.conf"
+dir_props_local="${install_dir}/conf/local.d"
 arq_props_local=$(find "$dir_props_local" -type f -iname "*.conf" -print)
 arq_props_local=$(echo "$arq_props_local" | sed -r "s%(.)$%\1|%g")
 
@@ -539,7 +539,7 @@ else
 	exit 1
 fi
 
-if [ "$(grep -v --file=${diretorio_instalacao}/template/global.template $arq_props_global | wc -l)" -ne "0" ] \
+if [ "$(grep -v --file=${install_dir}/template/global.template $arq_props_global | wc -l)" -ne "0" ] \
 	|| [ $(cat $arq_props_global | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^DIR_.+='?AMBIENTE'?$" | wc -l) -ne "1" ];
 then
 	exit 1
