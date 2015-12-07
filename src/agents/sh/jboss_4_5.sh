@@ -2,6 +2,7 @@
 #
 # Script para automatização dos deploys e disponibilização de logs do ambiente JBOSS / Linux.
 #
+source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 ###### FUNÇÕES ######
 
