@@ -2,9 +2,9 @@
 modo_padrao=
 rsync_opts=
 # Expurgo de logs
-history_app_size=
-history_global_size=
-log_cron_size=
+app_history_size=
+global_history_size=
+cron_log_size=
 history_html_size=
 # HTML
 html_title=

@@ -84,18 +84,18 @@ function deploy_auto () {
 
 	#### Expurgo de logs #####
 
-	touch $history_dir/$cron_log
+	touch $history_dir/$cron_log_file
 
-	tail --lines=$log_cron_size $history_dir/$cron_log > $tmp_dir/cron_log_new
-	cp -f $tmp_dir/cron_log_new $history_dir/$cron_log
+	tail --lines=$cron_log_size $history_dir/$cron_log_file > $tmp_dir/cron_log_new
+	cp -f $tmp_dir/cron_log_new $history_dir/$cron_log_file
 
 	#### Deploy em todos os ambientes ########
 
 	echo "$ambientes" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g'> $tmp_dir/lista_ambientes
 
 	while read ambiente; do
-		grep -REl "^auto_$ambiente='1'$" $conf_app_dir > $tmp_dir/lista_aplicacoes
-		sed -i -r "s|^$conf_app_dir/(.+)\.conf$|\1|g" $tmp_dir/lista_aplicacoes
+		grep -REl "^auto_$ambiente='1'$" $app_conf_dir > $tmp_dir/lista_aplicacoes
+		sed -i -r "s|^$app_conf_dir/(.+)\.conf$|\1|g" $tmp_dir/lista_aplicacoes
 
 		if [ ! -z "$(cat $tmp_dir/lista_aplicacoes)" ];then
 	        	while read aplicacao; do
@@ -161,7 +161,7 @@ function end {
 		rm -f "$lock_dir/$deploy_log_edit"
 	fi
 
-	unix2dos $history_dir/$cron_log > /dev/null 2>&1
+	unix2dos $history_dir/$cron_log_file > /dev/null 2>&1
 
 	exit $erro
 
@@ -201,7 +201,7 @@ if [ -z "$regex_tmp_dir" ] \
 	|| [ -z $(echo $tmp_dir | grep -E "$regex_tmp_dir") ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
 	|| [ -z $(echo $html_dir | grep -E "$regex_html_dir") ] \
-	|| [ -z $(echo $log_cron_size | grep -E "$regex_qtd") ] \
+	|| [ -z $(echo $cron_log_size | grep -E "$regex_qtd") ] \
 	|| [ -z $(echo $history_html_size | grep -E "$regex_qtd") ] \
 	|| [ -z "$ambientes" ] \
 	|| [ ! -d "$html_dir" ];
@@ -210,7 +210,7 @@ then
 	exit 1
 fi
 
-mkdir -p $work_dir $lock_dir $history_dir $history_app_parent_dir $conf_app_dir
+mkdir -p $work_dir $lock_dir $history_dir $app_history_dir_tree $app_conf_dir
 
 #### Cria lockfile e diretório temporário #########
 
@@ -225,4 +225,4 @@ trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 ### Execução da rotina de deploy ###
 
-deploy_auto >> $history_dir/$cron_log 2>&1
+deploy_auto >> $history_dir/$cron_log_file 2>&1

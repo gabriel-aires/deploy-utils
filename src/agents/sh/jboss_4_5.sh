@@ -66,16 +66,16 @@ function global_log () {
 	touch "${remote_lock_dir}/$history_lock_file"
 
 	touch ${remote_history_dir}/$history_csv_file
-	touch ${remote_history_app_dir}/$history_csv_file
+	touch ${remote_app_history_dir}/$history_csv_file
 
-	tail --lines=$history_global_size ${remote_history_dir}/$history_csv_file > $tmp_dir/deploy_log_new
-	tail --lines=$history_app_size ${remote_history_app_dir}/$history_csv_file > $tmp_dir/app_log_new
+	tail --lines=$global_history_size ${remote_history_dir}/$history_csv_file > $tmp_dir/deploy_log_new
+	tail --lines=$app_history_size ${remote_app_history_dir}/$history_csv_file > $tmp_dir/app_log_new
 
 	echo -e "$mensagem_log" >> $tmp_dir/deploy_log_new
 	echo -e "$mensagem_log" >> $tmp_dir/app_log_new
 
 	cp -f $tmp_dir/deploy_log_new ${remote_history_dir}/$history_csv_file
-	cp -f $tmp_dir/app_log_new ${remote_history_app_dir}/$history_csv_file
+	cp -f $tmp_dir/app_log_new ${remote_app_history_dir}/$history_csv_file
 
 	rm -f ${remote_lock_dir}/$history_lock_file 							#remove a trava sobre o arquivo de log tão logo seja possível.
 	edit_log=0
@@ -356,15 +356,15 @@ function jboss_instances () {
 							rev="N/A"
 						fi
 
-						remote_history_app_dir=${remote_history_app_parent_dir}/$(echo ${app} | tr '[:upper:]' '[:lower:]')
+						remote_app_history_dir=${remote_app_history_dir_tree}/$(echo ${app} | tr '[:upper:]' '[:lower:]')
 	    					data_deploy=$(date +%F_%Hh%Mm%Ss)
 						id_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
-						deploy_log_dir=${remote_history_app_dir}/${id_deploy}
+						deploy_log_dir=${remote_app_history_dir}/${id_deploy}
 
 						mkdir -p $log_APP $deploy_log_dir
 
 						#expurgo de logs
-						find "${remote_history_app_dir}/" -maxdepth 1 -type d | grep -vx "${remote_history_app_dir}/" | sort > $tmp_dir/logs_total
+						find "${remote_app_history_dir}/" -maxdepth 1 -type d | grep -vx "${remote_app_history_dir}/" | sort > $tmp_dir/logs_total
 						tail $tmp_dir/logs_total --lines=${history_html_size} > $tmp_dir/logs_ultimos
 						grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
 						cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf

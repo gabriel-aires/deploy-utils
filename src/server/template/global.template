@@ -2,12 +2,12 @@
 work_dir=
 bak_dir=
 history_dir=
-history_app_parent_dir=
+app_history_dir_tree=
 repo_dir=
 lock_dir=
 html_dir=
-conf_app_dir=
-cron_log=
+app_conf_dir=
+cron_log_file=
 history_csv_file=
 history_html_file=
 history_lock_file=
@@ -18,9 +18,9 @@ mensagem_sucesso=
 modo_padrao=
 rsync_opts=
 # Expurgo de logs
-history_app_size=
-history_global_size=
-log_cron_size=
+app_history_size=
+global_history_size=
+cron_log_size=
 history_html_size=
 # HTML
 html_title=

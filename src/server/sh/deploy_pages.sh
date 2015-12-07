@@ -116,11 +116,11 @@ function checkout () {											# o comando cd precisa estar encapsulado para f
 
 	if $automatico; then
 
-		valid "revisao_$ambiente" "\nErro. O valor obtido para o parâmetro revisao_$ambiente não é válido. Favor corrigir o arquivo '$conf_app_dir/$app.conf'."
+		valid "revisao_$ambiente" "\nErro. O valor obtido para o parâmetro revisao_$ambiente não é válido. Favor corrigir o arquivo '$app_conf_dir/$app.conf'."
 		revisao_auto="echo \$revisao_${ambiente}"
 		revisao_auto=$(eval "$revisao_auto")
 
-		valid "branch_$ambiente" "\nErro. O valor obtido para o parâmetro branch_$ambiente não é válido. Favor corrigir o arquivo '$conf_app_dir/$app.conf'."
+		valid "branch_$ambiente" "\nErro. O valor obtido para o parâmetro branch_$ambiente não é válido. Favor corrigir o arquivo '$app_conf_dir/$app.conf'."
 		branch_auto="echo \$branch_${ambiente}"
 		branch_auto=$(eval "$branch_auto")
 
@@ -194,7 +194,7 @@ function check_downgrade () {
 	git tag > $tmp_dir/git_tag_app
 	git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $tmp_dir/git_log_app
 
-	ultimo_deploy_app=$(grep -Eix "^([^;]+;){6}$mensagem_sucesso.*$" ${history_app_dir}/$history_csv_file | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
+	ultimo_deploy_app=$(grep -Eix "^([^;]+;){6}$mensagem_sucesso.*$" ${app_history_dir}/$history_csv_file | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
 
 	if [ -n "$ultimo_deploy_app" ]; then
 
@@ -372,15 +372,15 @@ function log () {
 	touch $lock_dir/$history_lock_file && echo "$lock_dir/$history_lock_file" >> $tmp_dir/locks
 
 	touch $history_dir/$history_csv_file
-	touch ${history_app_dir}/$history_csv_file
+	touch ${app_history_dir}/$history_csv_file
 
-	tail --lines=$history_global_size $history_dir/$history_csv_file > $tmp_dir/deploy_log_new
-	tail --lines=$history_app_size ${history_app_dir}/$history_csv_file > $tmp_dir/app_log_new
+	tail --lines=$global_history_size $history_dir/$history_csv_file > $tmp_dir/deploy_log_new
+	tail --lines=$app_history_size ${app_history_dir}/$history_csv_file > $tmp_dir/app_log_new
 
 	echo -e "$mensagem_log" >> $tmp_dir/deploy_log_new
 	echo -e "$mensagem_log" >> $tmp_dir/app_log_new
 
-	cp -f $tmp_dir/app_log_new ${history_app_dir}/$history_csv_file
+	cp -f $tmp_dir/app_log_new ${app_history_dir}/$history_csv_file
 	cp -f $tmp_dir/deploy_log_new $history_dir/$history_csv_file
 
 	rm -f $lock_dir/$history_lock_file 							#remove a trava sobre o arquivo de log tão logo seja possível
@@ -568,9 +568,9 @@ if [ -z "$regex_tmp_dir" ] \
 	|| [ -z $(echo $history_dir | grep -E "$regex_history_dir") ] \
 	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
 	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
-	|| [ -z $(echo $history_app_size | grep -E "$regex_qtd") ] \
+	|| [ -z $(echo $app_history_size | grep -E "$regex_qtd") ] \
 	|| [ -z $(echo $history_html_size | grep -E "$regex_qtd") ] \
-	|| [ -z $(echo $history_global_size | grep -E "$regex_qtd") ] \
+	|| [ -z $(echo $global_history_size | grep -E "$regex_qtd") ] \
 	|| [ -z "$mensagem_sucesso" ] \
 	|| [ -z "$modo_padrao" ] \
 	|| [ -z "$rsync_opts" ] \
@@ -581,7 +581,7 @@ then
 	exit 1
 fi
 
-mkdir -p $install_dir $work_dir $history_dir ${history_app_parent_dir} $repo_dir $lock_dir $conf_app_dir $bak_dir			#cria os diretórios necessários, caso não existam.
+mkdir -p $install_dir $work_dir $history_dir ${app_history_dir_tree} $repo_dir $lock_dir $app_conf_dir $bak_dir			#cria os diretórios necessários, caso não existam.
 
 if [ ! -e "$history_dir/$history_csv_file" ]; then										#cria arquivo de histórico, caso não exista.
 	touch $history_dir/$history_csv_file
@@ -622,7 +622,7 @@ lock $app "Deploy abortado: há outro deploy da aplicação $app em curso."
 
 if $interativo; then
 
-	if [ ! -f "${conf_app_dir}/${app}.conf" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
+	if [ ! -f "${app_conf_dir}/${app}.conf" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
 
 		echo -e "\nFavor informar abaixo os parâmetros da aplicação $app."
 
@@ -654,9 +654,9 @@ if $interativo; then
 			modo_$ambiente=$modo
 		fi
 
-		editconf "app" "$app" "$conf_app_dir/${app}.conf"
-		editconf "repo" "$repo" "$conf_app_dir/${app}.conf"
-		editconf "raiz" "$raiz" "$conf_app_dir/${app}.conf"
+		editconf "app" "$app" "$app_conf_dir/${app}.conf"
+		editconf "repo" "$repo" "$app_conf_dir/${app}.conf"
+		editconf "raiz" "$raiz" "$app_conf_dir/${app}.conf"
 
 		while read env; do
 			if [ "$env" == "$ambiente"  ]; then
@@ -666,85 +666,85 @@ if $interativo; then
 				modo="echo \$modo_${env}"
 				modo=$(eval "$modo")
 
-				editconf "hosts_$env" "$lista_hosts" "$conf_app_dir/${app}.conf"
-				editconf "modo_$env" "$modo" "$conf_app_dir/${app}.conf"
+				editconf "hosts_$env" "$lista_hosts" "$app_conf_dir/${app}.conf"
+				editconf "modo_$env" "$modo" "$app_conf_dir/${app}.conf"
 
-				echo "revisao_$env=''" >> "$conf_app_dir/${app}.conf"
-				echo "branch_$env=''" >> "$conf_app_dir/${app}.conf"
-				echo "modo_$env=''" >> "$conf_app_dir/${app}.conf"
-				echo "auto_$env='0'" >> "$conf_app_dir/${app}.conf"
+				echo "revisao_$env=''" >> "$app_conf_dir/${app}.conf"
+				echo "branch_$env=''" >> "$app_conf_dir/${app}.conf"
+				echo "modo_$env=''" >> "$app_conf_dir/${app}.conf"
+				echo "auto_$env='0'" >> "$app_conf_dir/${app}.conf"
 
 			else
-				echo "hosts_$env=''" >> "$conf_app_dir/${app}.conf"
-				echo "revisao_$env=''" >> "$conf_app_dir/${app}.conf"
-				echo "branch_$env=''" >> "$conf_app_dir/${app}.conf"
-				echo "modo_$env=''" >> "$conf_app_dir/${app}.conf"
-				echo "auto_$env='0'" >> "$conf_app_dir/${app}.conf"
+				echo "hosts_$env=''" >> "$app_conf_dir/${app}.conf"
+				echo "revisao_$env=''" >> "$app_conf_dir/${app}.conf"
+				echo "branch_$env=''" >> "$app_conf_dir/${app}.conf"
+				echo "modo_$env=''" >> "$app_conf_dir/${app}.conf"
+				echo "auto_$env='0'" >> "$app_conf_dir/${app}.conf"
 			fi
 		done < $tmp_dir/ambientes
 
-		editconf "share" "$share" "$conf_app_dir/${app}.conf"
-		editconf "auth" "$auth" "$conf_app_dir/${app}.conf"
+		editconf "share" "$share" "$app_conf_dir/${app}.conf"
+		editconf "auth" "$auth" "$app_conf_dir/${app}.conf"
 
-		sort "$conf_app_dir/${app}.conf" -o "$conf_app_dir/${app}.conf"
+		sort "$app_conf_dir/${app}.conf" -o "$app_conf_dir/${app}.conf"
 
 	else
 
 		echo -e "\nObtendo parâmetros da aplicação $app..."
 
-		if [ "$(grep -v --file=$install_dir/template/app.template ${conf_app_dir}/${app}.conf | wc -l)" -eq "0" ]; then
-	        	source "${conf_app_dir}/${app}.conf"
+		if [ "$(grep -v --file=$install_dir/template/app.template ${app_conf_dir}/${app}.conf | wc -l)" -eq "0" ]; then
+	        	source "${app_conf_dir}/${app}.conf"
 		else
-			echo -e "\nErro. Há parâmetros incorretos no arquivo ${conf_app_dir}/${app}.conf:"
-			grep -v --file="$install_dir/template/app.template" "${conf_app_dir}/${app}.conf"
+			echo -e "\nErro. Há parâmetros incorretos no arquivo ${app_conf_dir}/${app}.conf:"
+			grep -v --file="$install_dir/template/app.template" "${app_conf_dir}/${app}.conf"
 
 			echo ""
 			read -p "Remover as entradas acima? (s/n): " -e -r ans
 
 			if [ "$ans" == "s" ] || [ "$ans" == "S" ]; then
-				grep --file="$install_dir/template/app.template" "${conf_app_dir}/${app}.conf" > "$tmp_dir/app_conf_new"
-				cp -f "$tmp_dir/app_conf_new" "${conf_app_dir}/${app}.conf"
+				grep --file="$install_dir/template/app.template" "${app_conf_dir}/${app}.conf" > "$tmp_dir/app_conf_new"
+				cp -f "$tmp_dir/app_conf_new" "${app_conf_dir}/${app}.conf"
 				echo -e "\nArquivo ${app}.conf alterado."
-				source "${conf_app_dir}/${app}.conf"
+				source "${app_conf_dir}/${app}.conf"
 			else
 				end 1
 			fi
 		fi
 
 		valid "repo" "\nErro. Informe um caminho válido para o repositório GIT:"
-		editconf "repo" "$repo" "$conf_app_dir/${app}.conf"
+		editconf "repo" "$repo" "$app_conf_dir/${app}.conf"
 
 		valid "raiz" "\nErro. Informe um caminho válido para a raiz da aplicação:"
-		editconf "raiz" "$raiz" "$conf_app_dir/${app}.conf"
+		editconf "raiz" "$raiz" "$app_conf_dir/${app}.conf"
 
 		valid "hosts_$ambiente" "\nErro. Informe uma lista válida de hosts para deploy, separando-os por espaço ou vírgula:"
 		lista_hosts="echo \$hosts_${ambiente}"
 		lista_hosts=$(eval "$lista_hosts")
-		editconf "hosts_$ambiente" "$lista_hosts" "$conf_app_dir/${app}.conf"
+		editconf "hosts_$ambiente" "$lista_hosts" "$app_conf_dir/${app}.conf"
 
 		valid "modo_$ambiente" "\nErro. Informe um modo válido para deploy no ambiente $ambiente [p/d]:"
 	        modo_app="echo \$modo_${ambiente}"
 	        modo_app=$(eval "$modo_app")
-		editconf "modo_$ambiente" "$modo_app" "$conf_app_dir/${app}.conf"
+		editconf "modo_$ambiente" "$modo_app" "$app_conf_dir/${app}.conf"
 
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
-		editconf "share" "$share" "$conf_app_dir/${app}.conf"
+		editconf "share" "$share" "$app_conf_dir/${app}.conf"
 
 		valid "auth" "\nErro. Informe um protocolo válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):"
-		editconf "auth" "$auth" "$conf_app_dir/${app}.conf"
+		editconf "auth" "$auth" "$app_conf_dir/${app}.conf"
 
-		sort "$conf_app_dir/${app}.conf" -o "$conf_app_dir/${app}.conf"
+		sort "$app_conf_dir/${app}.conf" -o "$app_conf_dir/${app}.conf"
 	fi
 else
-	if [ ! -f "${conf_app_dir}/${app}.conf" ]; then
+	if [ ! -f "${app_conf_dir}/${app}.conf" ]; then
 		echo "Erro. Não foram encontrados os parâmetros para deploy da aplicação $app. O script deverá ser reexecutado no modo interativo."
 	else
 
-		if [ "$(grep -v --file=$install_dir/template/app.template ${conf_app_dir}/${app}.conf | wc -l)" -eq "0" ]; then
-	        	source "${conf_app_dir}/${app}.conf"
+		if [ "$(grep -v --file=$install_dir/template/app.template ${app_conf_dir}/${app}.conf | wc -l)" -eq "0" ]; then
+	        	source "${app_conf_dir}/${app}.conf"
 		else
-			echo -e "\nErro. Há parâmetros incorretos no arquivo ${conf_app_dir}/${app}.conf:"
-			grep -v --file="$install_dir/template/app.template" "${conf_app_dir}/${app}.conf"
+			echo -e "\nErro. Há parâmetros incorretos no arquivo ${app_conf_dir}/${app}.conf:"
+			grep -v --file="$install_dir/template/app.template" "${app_conf_dir}/${app}.conf"
 			end 1
 		fi
 
@@ -793,10 +793,10 @@ done < $tmp_dir/hosts_$ambiente
 
 ##### EXPURGO DE LOGS #######
 
-history_app_dir="${history_app_parent_dir}/${app}"
+app_history_dir="${app_history_dir_tree}/${app}"
 
-mkdir -p "${history_app_dir}/"
-find "${history_app_dir}/" -maxdepth 1 -type d | grep -vx "${history_app_dir}/" | sort > $tmp_dir/logs_total
+mkdir -p "${app_history_dir}/"
+find "${app_history_dir}/" -maxdepth 1 -type d | grep -vx "${app_history_dir}/" | sort > $tmp_dir/logs_total
 tail $tmp_dir/logs_total --lines=${history_html_size} > $tmp_dir/logs_ultimos
 grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
 cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
@@ -805,7 +805,7 @@ cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
 
 data_deploy=$(date +%F_%Hh%Mm%Ss)
 id_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g")
-deploy_log_dir="${history_app_dir}/${id_deploy}"								#Diretório onde serão armazenados os logs do atendimento.
+deploy_log_dir="${app_history_dir}/${id_deploy}"								#Diretório onde serão armazenados os logs do atendimento.
 
 if [ -d "${deploy_log_dir}_PENDENTE" ]; then
 	rm -f ${deploy_log_dir}_PENDENTE/*
@@ -844,7 +844,7 @@ if [ ! "$rev" == "rollback" ]; then
 	origem=$(echo "$origem" | sed -r "s|^(/.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
 
 	if [ ! -d "$origem" ]; then
-		echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $conf_app_dir/$app.conf."
+		echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $app_conf_dir/$app.conf."
 		end 1
 	elif [ ! "$rev" == "auto" ]; then
 		check_downgrade
