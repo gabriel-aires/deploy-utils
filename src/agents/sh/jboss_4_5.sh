@@ -6,79 +6,12 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 
 ###### FUNÇÕES ######
 
-function install_dir () {										##### Determina o diretório de instalação do script ####
-
-	if [ -L $0 ]; then
-		caminho_script=$(dirname $(readlink $0))
-	else
-		caminho_script=$(dirname $BASH_SOURCE)
-	fi
-
-	if [ -z $(echo $caminho_script | grep -Ex "^/.*$") ]; then 					#caminho é relativo
-
-		if [ "$caminho_script" == "." ]; then
-			caminho_script="$(pwd)"
-		else
-			caminho_script="$(pwd)/$caminho_script"
-
-			while [ $(echo "$caminho_script" | grep -E "/\./" | wc -l) -ne 0 ]; do   	#substitui /./ por /
-				caminho_script=$(echo "$caminho_script" | sed -r "s|/\./|/|")
-			done
-
-			while [ $(echo "$caminho_script" | grep -E "/\.\./" | wc -l) -ne 0 ]; do   	#corrige a string caso o script tenha sido chamado a partir de um subdiretório
-				caminho_script=$(echo "$caminho_script" | sed -r "s|[^/]+/\.\./||")
-			done
-		fi
-	fi
-
-	install_dir=$(dirname $caminho_script)
-
-}
-
 function log () {
 
 	##### LOG DE DEPLOY DETALHADO ####
 
 	echo -e "$(date +"%F %Hh%Mm%Ss") : $HOSTNAME : $1 : $2"
 
-}
-
-function global_log () {
-
-	##### LOG DE DEPLOYS GLOBAL #####
-
-	obs_log="$1"
-
-	horario_log=$(echo "$(date +%F_%Hh%Mm%Ss)" | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1;\4|")
-	app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
-	ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
-	host_log="$(echo "$HOSTNAME" | sed -r "s/^([^\.]+)\..*$/\1/" | tr '[:upper:]' '[:lower:]')"
-
-	mensagem_log="$horario_log;$app_log;$rev;$ambiente_log;$host_log;$obs_log;"
-
-	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
-
-	while [ -f "${remote_lock_dir}/$history_lock_file" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
-		sleep 1
-	done
-
-	edit_log=1
-	touch "${remote_lock_dir}/$history_lock_file"
-
-	touch ${remote_history_dir}/$history_csv_file
-	touch ${remote_app_history_dir}/$history_csv_file
-
-	tail --lines=$global_history_size ${remote_history_dir}/$history_csv_file > $tmp_dir/deploy_log_new
-	tail --lines=$app_history_size ${remote_app_history_dir}/$history_csv_file > $tmp_dir/app_log_new
-
-	echo -e "$mensagem_log" >> $tmp_dir/deploy_log_new
-	echo -e "$mensagem_log" >> $tmp_dir/app_log_new
-
-	cp -f $tmp_dir/deploy_log_new ${remote_history_dir}/$history_csv_file
-	cp -f $tmp_dir/app_log_new ${remote_app_history_dir}/$history_csv_file
-
-	rm -f ${remote_lock_dir}/$history_lock_file 							#remove a trava sobre o arquivo de log tão logo seja possível.
-	edit_log=0
 }
 
 function jboss_script_init () {
@@ -376,7 +309,7 @@ function jboss_instances () {
 		    				if [ $( cat "$tmp_dir/old.list" | wc -l ) -eq 0 ]; then
 
 		    					log "ERRO" "Deploy abortado. Não foi encontrado pacote anterior. O deploy deverá ser feito manualmente."
-		    					global_log "Deploy abortado. Pacote anterior não encontrado."
+		    					write_history "Deploy abortado. Pacote anterior não encontrado."
 
 	    					else
 
@@ -398,7 +331,7 @@ function jboss_instances () {
 
 		    						if [ -z "$script_init" ]; then
 		    							log "ERRO" "Não foi encontrado o script de inicialização da instância JBoss. O deploy deverá ser feito manualmente."
-		    							global_log "Deploy abortado. Script de inicialização não encontrado."
+		    							write_history "Deploy abortado. Script de inicialização não encontrado."
 		    						else
 		    							log "INFO" "Instância do JBOSS:     \t$instancia_jboss"
 		    							log "INFO" "Diretório de deploy:    \t$dir_deploy"
@@ -411,7 +344,7 @@ function jboss_instances () {
 
 		    							if [ $(pgrep -f "$(dirname $caminho_instancias_jboss).*-c $instancia_jboss" | wc -l) -ne 0 ]; then
 		    								log "ERRO" "Não foi possível parar a instância $instancia_jboss do JBOSS. Deploy abortado."
-		    								global_log "Deploy abortado. Impossível parar a instância $instancia_jboss."
+		    								write_history "Deploy abortado. Impossível parar a instância $instancia_jboss."
 		    							else
 		    								rm -f $old
 		    								cp $pacote $dir_deploy/$(echo $app | tr '[:upper:]' '[:lower:]').$ext
@@ -431,10 +364,10 @@ function jboss_instances () {
 
 		    								if [ $(pgrep -f "$(dirname $caminho_instancias_jboss).*-c $instancia_jboss" | wc -l) -eq 0 ]; then
 		    									log "ERRO" "O deploy do arquivo $war foi concluído, porém não foi possível reiniciar a instância do JBOSS."
-		    									global_log "Deploy não concluído. Erro ao reiniciar a instância $instancia_jboss."
+		    									write_history "Deploy não concluído. Erro ao reiniciar a instância $instancia_jboss."
 		    								else
 		    									log "INFO" "Deploy do arquivo $war concluído com sucesso!"
-		    									global_log "Deploy concluído com sucesso na instância $instancia_jboss."
+		    									write_history "Deploy concluído com sucesso na instância $instancia_jboss."
 		    								fi
 
 	    								fi

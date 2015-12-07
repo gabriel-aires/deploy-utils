@@ -75,35 +75,6 @@ function paint () {
 
 }
 
-function install_dir () {										##### Determina o diretório de instalação do script ####
-
-	if [ -L $0 ]; then
-		caminho_script=$(dirname $(readlink $0))
-	else
-		caminho_script=$(dirname $BASH_SOURCE)
-	fi
-
-	if [ -z $(echo $caminho_script | grep -Ex "^/.*$") ]; then 					#caminho é relativo
-
-		if [ "$caminho_script" == "." ]; then
-			caminho_script="$(pwd)"
-		else
-			caminho_script="$(pwd)/$caminho_script"
-
-			while [ $(echo "$caminho_script" | grep -E "/\./" | wc -l) -ne 0 ]; do   	#substitui /./ por /
-				caminho_script=$(echo "$caminho_script" | sed -r "s|/\./|/|")
-			done
-
-			while [ $(echo "$caminho_script" | grep -E "/\.\./" | wc -l) -ne 0 ]; do   	#corrige a string caso o script tenha sido chamado a partir de um subdiretório
-				caminho_script=$(echo "$caminho_script" | sed -r "s|[^/]+/\.\./||")
-			done
-		fi
-	fi
-
-	install_dir=$(dirname $caminho_script)
-
-}
-
 function checkout () {											# o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
 	if [ ! -d "$repo_dir/$nomerepo/.git" ]; then
@@ -268,6 +239,10 @@ function clean_locks () {
 		cat $tmp_dir/locks | xargs --no-run-if-empty rm -f					#remove locks
 	fi
 
+	if [ "$edit_log" == "1" ]; then
+		rm -f ${lock_dir}/$history_lock_file
+	fi
+
 }
 
 
@@ -344,49 +319,6 @@ function mklist () {
 
 }
 
-function log () {
-
-	##### LOG DE DEPLOY #####
-
-	obs_log="$1"
-
-	horario_log=$(echo $data_deploy | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1;\4|")
-
-	if [ -z "$obs_log" ]; then
-
-		if [ "$modo" == 'p' ]; then
-			obs_log="$mensagem_sucesso. Arquivos obsoletos preservados."
-		else
-			obs_log="$mensagem_sucesso. arquivos obsoletos deletados."
-		fi
-	fi
-
-	mensagem_log="$horario_log;$app;$rev;$ambiente;$host;$obs_log;"
-
-	##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
-
-	while [ -f "$lock_dir/$history_lock_file" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
-		sleep 1
-	done
-
-	touch $lock_dir/$history_lock_file && echo "$lock_dir/$history_lock_file" >> $tmp_dir/locks
-
-	touch $history_dir/$history_csv_file
-	touch ${app_history_dir}/$history_csv_file
-
-	tail --lines=$global_history_size $history_dir/$history_csv_file > $tmp_dir/deploy_log_new
-	tail --lines=$app_history_size ${app_history_dir}/$history_csv_file > $tmp_dir/app_log_new
-
-	echo -e "$mensagem_log" >> $tmp_dir/deploy_log_new
-	echo -e "$mensagem_log" >> $tmp_dir/app_log_new
-
-	cp -f $tmp_dir/app_log_new ${app_history_dir}/$history_csv_file
-	cp -f $tmp_dir/deploy_log_new $history_dir/$history_csv_file
-
-	rm -f $lock_dir/$history_lock_file 							#remove a trava sobre o arquivo de log tão logo seja possível
-
-}
-
 function end () {
 
 	trap "" SIGQUIT SIGTERM SIGINT SIGHUP
@@ -411,7 +343,7 @@ function end () {
 
 		if [ "$rev" == "rollback" ]; then
 			echo -e "\nErro: rollback interrompido. Favor reexecutar o script."
-			log "Rollback não efetuado. O script deve ser reexecutado."
+			write_history "Rollback não efetuado. O script deve ser reexecutado."
 		else
 			host_erro="$host"
 
@@ -419,7 +351,7 @@ function end () {
 
 				bak="$bak_dir/${app}_${host}"							# necessário garantir que a variável bak esteja setada, pois o script pode ter sido interrompido antes dessa etapa.
 				rm -Rf $bak
-				log "Deploy abortado."
+				write_history "Deploy abortado."
 
 			elif [ "$estado" == 'escrita' ]; then
 
@@ -439,10 +371,10 @@ function end () {
 				eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
 				echo "fim_rollback" >> $deploy_log_dir/progresso_$host.txt
-				log "Deploy interrompido. Backup restaurado."
+				write_history "Deploy interrompido. Backup restaurado."
 
 			else
-				log "Deploy abortado."
+				write_history "Deploy abortado."
 			fi
 
 			echo "deploy_abortado" >> $deploy_log_dir/progresso_$host.txt
@@ -473,11 +405,11 @@ function end () {
 							eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
 							echo "fim_rollback" >> $deploy_log_dir/progresso_$host.txt
-							log "Rollback realizado devido a erro ou deploy cancelado em $host_erro."
+							write_history "Rollback realizado devido a erro ou deploy cancelado em $host_erro."
 
 						fi
 					else
-						log "Deploy abortado."
+						write_history "Deploy abortado."
 					fi
 				fi
 
@@ -829,6 +761,9 @@ fi
 
 if [ "$modo" == "d" ]; then
 	rsync_opts="$rsync_opts --delete"
+	obs_log="$mensagem_sucesso. arquivos obsoletos deletados."
+else
+	obs_log="$mensagem_sucesso. arquivos obsoletos preservados."
 fi
 
 ##### GIT #########
@@ -997,7 +932,7 @@ while read dir_destino; do
 			rsync_cmd="rsync $rsync_opts $origem/ $destino/"
 			eval $rsync_cmd 2> $deploy_log_dir/rsync_$host.log || end 1
 
-			log
+			write_history "$obs_log"
 
 			estado="fim_$estado" && echo $estado >> $deploy_log_dir/progresso_$host.txt
    		else
