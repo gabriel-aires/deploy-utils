@@ -3,7 +3,7 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 
 estado="validacao"
 pid=$$
-interativo="true"
+interactive="true"
 automatico="false"
 
 ##### Execução somente como usuário root ######
@@ -17,11 +17,11 @@ fi
 
 while getopts ":dfh" opcao; do
 	case $opcao in
-        	d)
-                	modo='d'
+        d)
+            modo='d'
 			;;
 		f)
-			interativo="false"
+			interactive="false"
 			;;
 		h)
 			echo -e "O script requer os seguintes parâmetros: (opções) <aplicação> <revisão> <ambiente>."
@@ -49,31 +49,6 @@ ambiente=$3
 
 
 #### Funções ##########
-
-function paint () {
-
-	if $interativo; then
-		local color
-
-		case $2 in
-			black)		color=0;;
-			red)		color=1;;
-			green)		color=2;;
-			yellow)		color=3;;
-			blue)		color=4;;
-			magenta)	color=5;;
-			cyan)		color=6;;
-			white)		color=7;;
-		esac
-
-		case $1 in
-			fg)		tput setaf $color;;
-			bg)		tput setab $color;;
-			default)	tput sgr0;;
-		esac
-	fi
-
-}
 
 function checkout () {											# o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
@@ -192,12 +167,9 @@ function check_downgrade () {
 
 }
 
-
 function clean_temp () {										#cria pasta temporária, remove arquivos e pontos de montagem temporários
 
-	if [ ! -z $tmp_dir ]; then
-
-		mkdir -p $tmp_dir
+	if [ -d $tmp_dir ]; then
 
 		if [ -f "$tmp_dir/destino_mnt" ]; then
 			cat $tmp_dir/destino_mnt | xargs --no-run-if-empty umount 2> /dev/null
@@ -207,8 +179,6 @@ function clean_temp () {										#cria pasta temporária, remove arquivos e pon
 
 		rm -f $tmp_dir/*
 		rmdir $tmp_dir
-	else
-		end 1
 	fi
 }
 
@@ -245,51 +215,9 @@ function clean_locks () {
 
 }
 
-
-function valid () {	#requer os argumentos nome_variável e mensagem, nessa ordem.
-
-	if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z $edit ]; then
-
-		paint 'fg' 'yellow'
-
-		var="$1"
-		msg="$2"
-		edit=0
-
-		valor="echo \$${var}"
-		valor="$(eval $valor)"
-
-		regra="echo \$regex_${var}"
-		regra="$(eval $regra)"
-
-		regra_inversa="echo \$not_regex_${var}"
-		regra_inversa="$(eval ${regra_inversa})"
-
-		if [ -z "$regra" ]; then
-			echo "Erro. Não há uma regra para validação da variável $var" && end 1
-		elif "$interativo"; then
-			while [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; do
-				echo -e "$msg"
-				read -p "$var: " -e -r $var
-				edit=1
-                		valor="echo \$${var}"
-		                valor="$(eval $valor)"
-			done
-		elif [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; then
-			echo -e "$msg" && end 1
-		fi
-
-		paint 'default'
-
-	else
-		end 1
-	fi
-
-}
-
 function editconf () {
 
-	if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$edit" ]; then
+	if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$edit_var" ]; then
         	campo="$1"
         	valor_campo="$2"
         	arquivo_conf="$3"
@@ -297,10 +225,10 @@ function editconf () {
         	touch $arquivo_conf
 
         	if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
-			sed -i -r "/^$campo\=.*$/d" "$arquivo_conf"
-			echo "$campo='$valor_campo'" >> "$arquivo_conf"
+				sed -i -r "/^$campo\=.*$/d" "$arquivo_conf"
+				echo "$campo='$valor_campo'" >> "$arquivo_conf"
         	else
-			test $edit -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
+				test "$edit_var" -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
         	fi
 	else
 		echo "Erro. Não foi possível editar o arquivo de configuração." && end 1
@@ -447,9 +375,9 @@ else
 	trap "end 1; exit" SIGQUIT SIGTERM SIGINT SIGHUP				#a função será chamada quando o script for finalizado ou interrompido.
 fi
 
-edit=0
+edit_var=0
 
-if $interativo; then
+if $interactive; then
 	clear
 fi
 
@@ -460,20 +388,12 @@ if [ ! -f "$install_dir/conf/global.conf" ]; then
 	exit 1
 fi
 
-if [ "$(grep -v --file=$install_dir/template/global.template $install_dir/conf/global.conf | grep -v '^$' | wc -l)" -ne "0" ]; then
-	echo 'O arquivo global.conf não atende ao template correspondente.'
-	exit 1
-fi
-
+chk_template $install_dir/conf/global.conf
 source "$install_dir/conf/global.conf" || exit 1						#carrega o arquivo de constantes.
 
-if [ -f "$install_dir/conf/user.conf" ] && [ -f "$install_dir/template/user.template" ]; then
-	if [ "$(grep -v --file=$install_dir/template/user.template $install_dir/conf/user.conf | grep -v '^$' | wc -l)" -ne "0" ]; then
-		echo 'O arquivo user.conf não atende ao template correspondente.'
-		exit 1
-	else
-		source "$install_dir/conf/user.conf" || exit 1
-	fi
+if [ -f "$install_dir/conf/user.conf" ]; then
+	chk_template $install_dir/conf/user.conf
+	source "$install_dir/conf/user.conf" || exit 1
 fi
 
 tmp_dir="$work_dir/$pid"
@@ -494,39 +414,37 @@ if [ -z "$regex_tmp_dir" ] \
 	|| [ -z "$regex_dir_destino" ] \
 	|| [ -z "$regex_auth" ] \
 	|| [ -z "$regex_qtd" ] \
-	|| [ -z $(echo $bak_dir | grep -E "$regex_bak_dir") ] \
-	|| [ -z $(echo $html_dir | grep -E "$regex_html_dir") ] \
-	|| [ -z $(echo $tmp_dir | grep -E "$regex_tmp_dir") ] \
-	|| [ -z $(echo $history_dir | grep -E "$regex_history_dir") ] \
-	|| [ -z $(echo $repo_dir | grep -E "$regex_repo_dir")  ] \
-	|| [ -z $(echo $lock_dir | grep -E "$regex_lock_dir") ] \
-	|| [ -z $(echo $app_history_size | grep -E "$regex_qtd") ] \
-	|| [ -z $(echo $history_html_size | grep -E "$regex_qtd") ] \
-	|| [ -z $(echo $global_history_size | grep -E "$regex_qtd") ] \
 	|| [ -z "$mensagem_sucesso" ] \
 	|| [ -z "$modo_padrao" ] \
 	|| [ -z "$rsync_opts" ] \
 	|| [ -z "$ambientes" ] \
-	|| [ -z "$interativo" ];
+	|| [ -z "$interactive" ];
 then
 	echo 'Favor preencher corretamente o arquivo global.conf / user.conf e tentar novamente.'
 	exit 1
 fi
 
-mkdir -p $install_dir $work_dir $history_dir ${app_history_dir_tree} $repo_dir $lock_dir $app_conf_dir $bak_dir			#cria os diretórios necessários, caso não existam.
+aux=$interactive
+valid "bak_dir" "\nErro. Diretório de backup informado incorretamente."
+valid "html_dir" "\nErro. Diretório de html informado incorretamente."
+valid "tmp_dir" "\nErro. Diretório temporário informado incorretamente."
+valid "history_dir" "\nErro. Diretório de histórico informado incorretamente."
+valid "repo_dir" "\nErro. Diretório de repositórios git informado incorretamente."
+valid "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente."
+valid "app_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico de aplicações."
+valid "global_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico global."
+valid "history_html_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico em HTML."
+interactive=$aux
 
-if [ ! -e "$history_dir/$history_csv_file" ]; then										#cria arquivo de histórico, caso não exista.
-	touch $history_dir/$history_csv_file
-fi
+mkdir -p $install_dir $work_dir $history_dir ${app_history_dir_tree} $repo_dir $lock_dir $app_conf_dir $bak_dir	$tmp_dir		#cria os diretórios necessários, caso não existam.
 
-clean_temp && mkdir -p $tmp_dir
 mklist "$ambientes" "$tmp_dir/ambientes"
 
 #### Validação do input do usuário ######
 
 echo "Iniciando processo de deploy..."
 
-if $interativo; then
+if $interactive; then
 	valid "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas)."
 	valid "rev" "\nInforme a revisão corretamente."
 
@@ -552,7 +470,7 @@ fi
 
 lock $app "Deploy abortado: há outro deploy da aplicação $app em curso."
 
-if $interativo; then
+if $interactive; then
 
 	if [ ! -f "${app_conf_dir}/${app}.conf" ]; then					#caso não haja registro referente ao sistema ou haja entradas duplicadas.
 
@@ -623,15 +541,13 @@ if $interativo; then
 	else
 
 		echo -e "\nObtendo parâmetros da aplicação $app..."
+		chk_template "${app_conf_dir}/${app}.conf" "app" "continue"
 
-		if [ "$(grep -v --file=$install_dir/template/app.template ${app_conf_dir}/${app}.conf | wc -l)" -eq "0" ]; then
-	        	source "${app_conf_dir}/${app}.conf"
+		if [ "$?" -eq "0" ]; then
+	        source "${app_conf_dir}/${app}.conf"
 		else
-			echo -e "\nErro. Há parâmetros incorretos no arquivo ${app_conf_dir}/${app}.conf:"
-			grep -v --file="$install_dir/template/app.template" "${app_conf_dir}/${app}.conf"
-
 			echo ""
-			read -p "Remover as entradas acima? (s/n): " -e -r ans
+			read -p "Remover as entradas inválidas acima? (s/n): " -e -r ans
 
 			if [ "$ans" == "s" ] || [ "$ans" == "S" ]; then
 				grep --file="$install_dir/template/app.template" "${app_conf_dir}/${app}.conf" > "$tmp_dir/app_conf_new"
@@ -672,30 +588,25 @@ else
 		echo "Erro. Não foram encontrados os parâmetros para deploy da aplicação $app. O script deverá ser reexecutado no modo interativo."
 	else
 
-		if [ "$(grep -v --file=$install_dir/template/app.template ${app_conf_dir}/${app}.conf | wc -l)" -eq "0" ]; then
-	        	source "${app_conf_dir}/${app}.conf"
-		else
-			echo -e "\nErro. Há parâmetros incorretos no arquivo ${app_conf_dir}/${app}.conf:"
-			grep -v --file="$install_dir/template/app.template" "${app_conf_dir}/${app}.conf"
-			end 1
-		fi
+		chk_template "${app_conf_dir}/${app}.conf" "app"
+    	source "${app_conf_dir}/${app}.conf"
 
-	        valid "repo" "\nErro. \'$repo\' não é um repositório git válido."
-	        valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
-	        valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
+	    valid "repo" "\nErro. \'$repo\' não é um repositório git válido."
+	    valid "raiz" "\nErro. \'$repo\' não é um caminho válido para a raiz da aplicação $app."
+	    valid "hosts_$ambiente" "\nErro. A lista de hosts para o ambiente $ambiente não é válida."
 		valid "auto_$ambiente" "\nErro. Não foi possível ler a flag de deploy automático."
 		valid "modo_$ambiente" "\nErro. Foi informado um modo inválido para deploy no ambiente $ambiente."
-	        valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
+	    valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
 		valid "auth" "\nErro. \'$auth\' não é protocolo de segurança válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):"
 
-	        lista_hosts="echo \$hosts_${ambiente}"
-	        lista_hosts=$(eval "$lista_hosts")
+	    lista_hosts="echo \$hosts_${ambiente}"
+	    lista_hosts=$(eval "$lista_hosts")
 
-	        auto="echo \$auto_${ambiente}"
-	        auto=$(eval "$auto")
+	    auto="echo \$auto_${ambiente}"
+	    auto=$(eval "$auto")
 
-	        modo_app="echo \$modo_${ambiente}"
-	        modo_app=$(eval "$modo_app")
+	    modo_app="echo \$modo_${ambiente}"
+	    modo_app=$(eval "$modo_app")
 
 		if [ "$rev" == "auto" ]; then
 			if [ "$auto" == "1" ]; then
@@ -893,12 +804,12 @@ while read dir_destino; do
 
 		###### ESCRITA DAS MUDANÇAS EM DISCO ######
 
-		if $interativo; then
+		if $interactive; then
 			echo ""
 			read -p "Gravar mudanças em disco? (s/n): " -e -r ans </dev/tty
 		fi
 
-		if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ "$interativo" == "false" ]; then
+		if [ "$ans" == 's' ] || [ "$ans" == 'S' ] || [ "$interactive" == "false" ]; then
 
 			if [ ! "$rev" == "rollback" ]; then
 

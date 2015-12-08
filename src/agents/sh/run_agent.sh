@@ -106,22 +106,11 @@ dir_props_local="${install_dir}/conf/$agent_name"
 arq_props_local=$(find "$dir_props_local" -type f -iname "*.conf" -print)
 arq_props_local=$(echo "$arq_props_local" | sed -r "s%(.)$%\1|%g")
 
-# Verifica se o arquivo global.conf atende ao template correspondente.
+# Verifica se o arquivo global.conf atende ao template correspondente e carrega configurações.
 
-if [ -f "$arq_props_global" ]; then
-	dos2unix "$arq_props_global" > /dev/null 2>&1
-else
-	exit 1
-fi
-
-if [ "$(grep -v --file=${install_dir}/template/global.template $arq_props_global | wc -l)" -ne "0" ] \
-	|| [ $(cat $arq_props_global | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^DIR_.+='?AMBIENTE'?$" | wc -l) -ne "1" ];
-then
-	exit 1
-fi
-
-# Carrega constantes.
-
+test -f "$arq_props_global" || exit 1
+dos2unix "$arq_props_global" > /dev/null 2>&1
+chk_template "$arq_props_global"
 source "$arq_props_global" || exit 1
 
 # Se houver mais de um PID referente ao script, a tarefa já está em andamento.
