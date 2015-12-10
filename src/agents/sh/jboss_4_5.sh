@@ -137,8 +137,8 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	    		while read l; do
 
-	    			war=$( echo $l | sed -r "s|^${origem}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy]/([^/]+)\.[EeWw][Aa][Rr]$|\1|" )
-	    			app=$( echo $l | sed -r "s|^${origem}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|" )
+	    			war=$( echo $l | sed -r "s|^${origem}/[^/]+/deploy/([^/]+)\.[ew]ar$|\1|i" )
+	    			app=$( echo $l | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[ew]ar$|\1|i" )
 
 	    			if [ $(echo $war | grep -Ei "^$app" | wc -l) -ne 1 ]; then
 	    				echo $l >> "$tmp_dir/remove_incorretos.list"
@@ -160,8 +160,8 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	    		while read l; do
 
-    				war=$( echo $l | sed -r "s|^${origem}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy]/([^/]+)\.[EeWw][Aa][Rr]$|\1|" )
-	    			dir=$( echo $l | sed -r "s|^(${origem}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[EeWw][Aa][Rr]$|\1|" )
+    				war=$( echo $l | sed -r "s|^${origem}/[^/]+/deploy/([^/]+)\.[ew]ar$|\1|i" )
+	    			dir=$( echo $l | sed -r "s|^(${origem}/[^/]+/deploy)/[^/]+\.[ew]ar$|\1|i" )
 
 	    			if [ $( find $dir -type f | wc -l ) -ne 1 ]; then
 	    				echo $l >> $tmp_dir/remove_versoes.list
@@ -186,7 +186,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	    				war=$(basename $pacote)
 					ext=$(echo $war | sed -r "s|^.*\.([^\.]+)$|\1|")
-	    				app=$(echo $pacote | sed -r "s|^${origem}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|" )
+	    				app=$(echo $pacote | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[ew]ar$|\1|i" )
 	    				rev=$(unzip -p -a $pacote META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
 					host=$(echo $HOSTNAME | cut -f1 -d '.')
 
@@ -222,8 +222,8 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	    						log "INFO" "O pacote $old será substituído".
 
-	    						dir_deploy=$(echo $old | sed -r "s|^(${caminho_instancias_jboss}/[^/]+/[Dd][Ee][Pp][Ll][Oo][Yy])/[^/]+\.[EeWw][Aa][Rr]$|\1|")
-	    						instancia_jboss=$(echo $old | sed -r "s|^${caminho_instancias_jboss}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|")
+	    						dir_deploy=$(echo $old | sed -r "s|^(${caminho_instancias_jboss}/[^/]+/deploy)/[^/]+\.[ew]ar$|\1|i")
+	    						instancia_jboss=$(echo $old | sed -r "s|^${caminho_instancias_jboss}/([^/]+)/deploy/[^/]+\.[ew]ar$|\1|i")
 	    						jboss_temp="$caminho_instancias_jboss/$instancia_jboss/tmp"
 	    						jboss_temp=$(find $caminho_instancias_jboss -iwholename $jboss_temp)
 	    						jboss_work="$caminho_instancias_jboss/$instancia_jboss/work"
@@ -310,7 +310,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	    	log "INFO" "Copiando logs da rotina e das instâncias JBOSS em ${caminho_instancias_jboss}..."
 
-	        find $destino/* -type d -iname 'log' | sed -r "s|^${destino}/([^/]+)/[Ll][Oo][Gg]|\1|g" > "$tmp_dir/app_destino.list"
+	        find $destino/* -type d -iname 'log' | sed -r "s|^${destino}/([^/]+)/log|\1|ig" > "$tmp_dir/app_destino.list"
 
     		while read app; do
 
@@ -325,7 +325,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 		    			while read caminho_app; do
 
-		    				instancia_jboss=$(echo $caminho_app | sed -r "s|^${caminho_instancias_jboss}/([^/]+)/[Dd][Ee][Pp][Ll][Oo][Yy]/[^/]+\.[EeWw][Aa][Rr]$|\1|")
+		    				instancia_jboss=$(echo $caminho_app | sed -r "s|^${caminho_instancias_jboss}/([^/]+)/deploy/[^/]+\.[ew]ar$|\1|")
 		    				server_log=$(find "${caminho_instancias_jboss}/${instancia_jboss}" -iwholename "${caminho_instancias_jboss}/${instancia_jboss}/log/server.log" 2> /dev/null)
 
 		    				if [ $(echo $server_log | wc -l) -eq 1 ]; then

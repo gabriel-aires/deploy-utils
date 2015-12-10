@@ -181,6 +181,7 @@ function write_history () {
             history_path=$history_dir
             app_history_path=${app_history_dir}
 		    ;;
+	esac
 
     while [ -f "${lock_path}/$history_lock_file" ]; do						#nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
 	    sleep 1
