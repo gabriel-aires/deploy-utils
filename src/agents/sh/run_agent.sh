@@ -139,10 +139,185 @@ else
 	exit 0
 fi
 
+if [ ! -d "$remote_pkg_dir_tree" ] || [ ! -d "$remote_log_dir_tree" ]; then
+	log "ERRO" "Parâmetros incorretos no arquivo '${arq_props_global}'."
+	end "1"
+fi
+
 # Executa deploys e copia logs das instâncias jboss
 
 if [ $(echo "$arq_props_local" | wc -w) -ne 0 ]; then
-	source $agent_name.sh >> $log 2>&1
+
+	echo $arq_props_local | while read -d '|' local_conf; do
+
+		# Valida o arquivo de configurações $local_conf
+
+		cat $arq_props_global | grep -E "DIR_.+='.+'" | sed 's/"//g' | sed "s/'//g" | sed -r "s|^[^ ]+=([^ ]+)$|\^\1=|" > $tmp_dir/parametros_obrigatorios
+
+		dos2unix "$local_conf" &> /dev/null
+
+		## if [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^caminho_instancias_jboss='?/.+/server'?$" | wc -l) -ne "1" ] \
+		if [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -ne "0" ] \		#apenas definição de variáveis
+			|| [ $(cat $local_conf | sed -r 's|=.*$||' | grep -Ex --file=$tmp_dir/parametros_obrigatorios | wc -l) -ne "$(cat $tmp_dir/parametros_obrigatorios | wc -l)" ];		#verifica parâmetros obrigatórios.
+		then
+			log "ERRO" "Parâmetros incorretos no arquivo '$local_conf'."
+			continue
+		else
+			source "$local_conf" || continue
+			rm -f "$tmp_dir/*"
+		fi
+
+		# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
+
+		set_dir "$remote_pkg_dir_tree" 'origem'
+		set_dir "$remote_log_dir_tree" 'destino'
+
+		if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
+			log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
+			continue
+		fi
+
+		######## DEPLOY #########
+
+		if [ $(ls "${origem}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
+
+			chk_dir ${origem}
+
+
+	    	# Verificar se há arquivos para deploy.
+
+	    	log "INFO" "Procurando novos pacotes..."
+
+	    	find "$origem" -type f -regextype posix-extended -iregex "^.*.war$|^.*.ear$" > $tmp_dir/arq.list
+
+    		if [ $(cat $tmp_dir/arq.list | wc -l) -lt 1 ]; then
+	    		log "INFO" "Não foram encontrados novos pacotes para deploy."
+	    	else
+	    		# Caso haja arquivos, verificar se o nome do pacote corresponde ao diretório da aplicação.
+
+	    		rm -f "$tmp_dir/remove_incorretos.list"
+				touch "$tmp_dir/remove_incorretos.list"
+
+	    		while read l; do
+
+	    			war=$( echo $l | sed -r "s|^${origem}/[^/]+/deploy/([^/]+)\.[ew]ar$|\1|i" )
+	    			app=$( echo $l | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[ew]ar$|\1|i" )
+
+	    			if [ $(echo $war | grep -Ei "^$app" | wc -l) -ne 1 ]; then
+	    				echo $l >> "$tmp_dir/remove_incorretos.list"
+	    			fi
+
+	    		done < "$tmp_dir/arq.list"
+
+	    		if [ $(cat $tmp_dir/remove_incorretos.list | wc -l) -gt 0 ]; then
+	    			log "WARN" "Removendo pacotes em diretórios incorretos..."
+	    			cat "$tmp_dir/remove_incorretos.list" | xargs -r -d "\n" rm -fv
+	    		fi
+
+	    		# Caso haja pacotes, deve haver no máximo um pacote por diretório
+
+	    		find "$origem" -type f -regextype posix-extended -iregex "^.*.war$|^.*.ear$" > $tmp_dir/arq.list
+
+				rm -f "$tmp_dir/remove_versoes.list"
+				touch "$tmp_dir/remove_versoes.list"
+
+	    		while read l; do
+
+    				war=$( echo $l | sed -r "s|^${origem}/[^/]+/deploy/([^/]+)\.[ew]ar$|\1|i" )
+	    			dir=$( echo $l | sed -r "s|^(${origem}/[^/]+/deploy)/[^/]+\.[ew]ar$|\1|i" )
+
+	    			if [ $( find $dir -type f | wc -l ) -ne 1 ]; then
+	    				echo $l >> $tmp_dir/remove_versoes.list
+	    			fi
+
+	    		done < "$tmp_dir/arq.list"
+
+	    		if [ $(cat $tmp_dir/remove_versoes.list | wc -l) -gt 0 ]; then
+	    			log "WARN" "Removendo pacotes com mais de uma versão..."
+	    			cat $tmp_dir/remove_versoes.list | xargs -r -d "\n" rm -fv
+	    		fi
+
+    			find "$origem" -type f -regextype posix-extended -iregex "^.*.war$|^.*.ear$" > $tmp_dir/war.list
+
+	    		if [ $(cat $tmp_dir/war.list | wc -l) -lt 1 ]; then
+    				log "INFO" "Não há novos pacotes para deploy."
+	    		else
+	    			log "INFO" "Verificação do diretório ${remote_pkg_dir_tree} concluída. Iniciando processo de deploy dos pacotes abaixo."
+	    			cat $tmp_dir/war.list
+
+	    			while read pacote; do
+
+		    			war=$(basename $pacote)
+						ext=$(echo $war | sed -r "s|^.*\.([^\.]+)$|\1|")
+		    			app=$(echo $pacote | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[ew]ar$|\1|i" )
+		    			rev=$(unzip -p -a $pacote META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
+						host=$(echo $HOSTNAME | cut -f1 -d '.')
+
+						if [ -z "$rev" ]; then
+							rev="N/A"
+						fi
+
+						remote_app_history_dir=${remote_app_history_dir_tree}/$(echo ${app} | tr '[:upper:]' '[:lower:]')
+	    				data_deploy=$(date +%F_%Hh%Mm%Ss)
+						id_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
+						deploy_log_dir=${remote_app_history_dir}/${id_deploy}
+
+						mkdir -p $log_APP $deploy_log_dir
+
+						#expurgo de logs
+						find "${remote_app_history_dir}/" -maxdepth 1 -type d | grep -vx "${remote_app_history_dir}/" | sort > $tmp_dir/logs_total
+						tail $tmp_dir/logs_total --lines=${history_html_size} > $tmp_dir/logs_ultimos
+						grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
+						cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
+
+						qtd_log_inicio=$(cat $log | wc -l)
+
+						source $agent_name.sh >> $log 2>&1
+
+						qtd_log_fim=$(cat $log | wc -l)
+						qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
+
+						tail -n ${qtd_info_deploy} $log > $deploy_log_dir/deploy_${host}.log
+
+					done < "$tmp_dir/war.list"
+
+    			fi
+
+    		fi
+
+		else
+    		log "ERRO" "Não foram encontrados os diretórios das aplicações em $origem"
+		fi
+
+		#### logs
+
+		if [ $(ls "${destino}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
+
+			if [ "$origem" != "$destino" ]; then
+				chk_dir "$destino"
+			fi
+
+		        find $destino/* -type d -iname 'log' | sed -r "s|^${destino}/([^/]+)/log|\1|ig" > "$tmp_dir/app_destino.list"
+
+	    		while read app; do
+
+					destino_log=$(find "$destino/$app/" -type d -iname 'log' 2> /dev/null)
+					if [ $(echo ${destino_log} | wc -l) -eq 1 ]; then
+							source $agent_name.sh >> $log 2>&1
+					else
+						log "ERRO" "O diretório para cópia de logs da aplicação $app não foi encontrado".
+					fi
+
+				done < "$tmp_dir/app_destino.list"
+
+		else
+	        log "ERRO" "Não foram encontrados os diretórios das aplicações em $destino"
+		fi
+
+	done
+
 else
 	exit 1
 fi
+
+end "0"
