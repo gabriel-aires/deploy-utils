@@ -128,7 +128,7 @@ function deploy_pkg () {
 					write_history "Deploy abortado. Impossível parar a instância $instancia_jboss."
 				else
 					rm -f $old
-					cp $pacote $dir_deploy/$(echo $app | tr '[:upper:]' '[:lower:]').$ext
+					cp $pkg $dir_deploy/$(echo $app | tr '[:upper:]' '[:lower:]').$ext
 					chown -R jboss:jboss $dir_deploy/
 
 					if [ -d "$jboss_temp" ]; then
@@ -157,7 +157,7 @@ function deploy_pkg () {
 
 		done < "$tmp_dir/old.list"
 
-		rm -f $pacote
+		rm -f $pkg
 
 	fi
 
@@ -196,8 +196,3 @@ function copy_log () {
 	fi
 
 }
-
-case $1 in
-	deploy_pkg) deploy_pkg;;
-	copy_log)	copy_log;;
-esac
