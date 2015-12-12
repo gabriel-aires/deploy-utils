@@ -23,10 +23,6 @@ dir_3=
 #dir_10=''
 #...
 
-### caminho para log de deploys global:
-history_lock_file=
-history_csv_file=
-
 ### expurgo de logs
 global_history_size=
 app_history_size=

@@ -209,7 +209,7 @@ function clean_locks () {
 		cat $tmp_dir/locks | xargs --no-run-if-empty rm -f					#remove locks
 	fi
 
-	if [ "$lock_history" == "1" ]; then
+	if $lock_history; then
 		rm -f ${lock_dir}/$history_lock_file
 	fi
 
@@ -232,17 +232,6 @@ function editconf () {
         	fi
 	else
 		echo "Erro. Não foi possível editar o arquivo de configuração." && end 1
-	fi
-
-}
-
-function mklist () {
-
-	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
-		lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g')
-		echo "$lista" > $2
-	else
-		end 1
 	fi
 
 }
@@ -381,8 +370,6 @@ if $interactive; then
 	clear
 fi
 
-find_install_dir
-
 if [ ! -f "$install_dir/conf/global.conf" ]; then
 	echo 'Arquivo global.conf não encontrado.'
 	exit 1
@@ -398,23 +385,7 @@ fi
 
 tmp_dir="$work_dir/$pid"
 
-if [ -z "$regex_tmp_dir" ] \
-	|| [ -z "$regex_tmp_dir" ] \
-	|| [ -z "$regex_history_dir" ] \
-	|| [ -z "$regex_repo_dir" ] \
-	|| [ -z "$regex_lock_dir" ] \
-	|| [ -z "$regex_bak_dir" ] \
-	|| [ -z "$regex_html_dir" ] \
-	|| [ -z "$regex_app" ] \
-	|| [ -z "$regex_rev" ] \
-	|| [ -z "$regex_chamado" ] \
-	|| [ -z "$regex_modo" ] \
-	|| [ -z "$regex_repo" ] \
-	|| [ -z "$regex_raiz" ] \
-	|| [ -z "$regex_dir_destino" ] \
-	|| [ -z "$regex_auth" ] \
-	|| [ -z "$regex_qtd" ] \
-	|| [ -z "$mensagem_sucesso" ] \
+if [ -z "$mensagem_sucesso" ] \
 	|| [ -z "$modo_padrao" ] \
 	|| [ -z "$rsync_opts" ] \
 	|| [ -z "$ambientes" ] \
@@ -431,9 +402,6 @@ valid "tmp_dir" "\nErro. Diretório temporário informado incorretamente."
 valid "history_dir" "\nErro. Diretório de histórico informado incorretamente."
 valid "repo_dir" "\nErro. Diretório de repositórios git informado incorretamente."
 valid "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente."
-valid "app_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico de aplicações."
-valid "global_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico global."
-valid "history_html_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico em HTML."
 interactive=$aux
 
 mkdir -p $install_dir $work_dir $history_dir ${app_history_dir_tree} $repo_dir $lock_dir $app_conf_dir $bak_dir	$tmp_dir		#cria os diretórios necessários, caso não existam.
@@ -634,21 +602,8 @@ while read host; do
 	echo "$dir_destino" >> $tmp_dir/dir_destino
 done < $tmp_dir/hosts_$ambiente
 
-##### EXPURGO DE LOGS #######
-
-app_history_dir="${app_history_dir_tree}/${app}"
-
-mkdir -p "${app_history_dir}/"
-find "${app_history_dir}/" -maxdepth 1 -type d | grep -vx "${app_history_dir}/" | sort > $tmp_dir/logs_total
-tail $tmp_dir/logs_total --lines=${history_html_size} > $tmp_dir/logs_ultimos
-grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
-cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
-
-##### CRIAÇÃO DO DIRETÓRIO DE LOG #####
-
-data_deploy=$(date +%F_%Hh%Mm%Ss)
-id_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g")
-deploy_log_dir="${app_history_dir}/${id_deploy}"								#Diretório onde serão armazenados os logs do atendimento.
+#### Diretórios onde serão armazenados os logs de deploy (define e cria os diretórios app_history_dir e deploy_log_dir)
+set_app_history_dirs
 
 if [ -d "${deploy_log_dir}_PENDENTE" ]; then
 	rm -f ${deploy_log_dir}_PENDENTE/*
@@ -758,7 +713,7 @@ while read dir_destino; do
 
 	fi
 
-	##### CRIA PONTO DE MONTAGEM TEMPORÁRIO E DIRETÓRIO DO CHAMADO #####
+	##### CRIA PONTO DE MONTAGEM TEMPORÁRIO #####
 
 	destino="/mnt/deploy_${app}_${host}"
 	echo $destino >> $tmp_dir/destino_mnt

@@ -2,11 +2,12 @@
 #
 # Script para automatização dos deploys e disponibilização de logs do ambiente JBOSS / Linux.
 #
+source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
+
 agent_name="$1"
 task_name="$2"
 file_types="$3"
-
-source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
+pid="$$"
 
 ###### FUNÇÕES ######
 
@@ -19,10 +20,11 @@ function log () {	##### log de execução detalhado.
 function end () {
 
 	if [ -d "$tmp_dir" ]; then
-		rm -Rf ${tmp_dir}/*
+		rm -f ${tmp_dir}/*
+		rmdir ${tmp_dir}
 	fi
 
-	if [ "$lock_history" == "1" ]; then
+	if $lock_history; then
 		rm -f ${remote_lock_dir}/$history_lock_file
 	fi
 
@@ -87,25 +89,18 @@ chk_dir () {
 		local ext_list="$3"
 		local file_path_regex=''
 
-		if [ -z "$(echo "$last_dir" | grep -Eivx '^log$|^deploy$')" ] && [ -z "$(echo "$ext_list" | grep -Eiv '^([a-z0-9]+ )*[a-z0-9]+$')" ]; then
+		log "INFO" "Verificando a consistência dos diretórios de '$last_dir' em '$root_dir'..."
 
-			log "INFO" "Verificando a consistência dos diretórios de $last_dir em $root_dir.."
+	    # eliminar da estrutura de diretórios subjacente os arquivos e subpastas cujos nomes contenham espaços.
+	    find $root_dir/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
 
-		    # eliminar da estrutura de diretórios subjacente os arquivos e subpastas cujos nomes contenham espaços.
-		    find $root_dir/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
+	    # garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
+	    find $root_dir/* -type d | grep -Ei "^$root_dir/[^/]+/[^/]+" | grep -Eixv "^$root_dir/[^/]+/$last_dir$" | xargs -r -d "\n" rm -Rfv
 
-		    # garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
-		    find $root_dir/* -type d | grep -Ei "^$root_dir/[^/]+/[^/]+" | grep -Eixv "^$root_dir/[^/]+/$last_dir$" | xargs -r -d "\n" rm -Rfv
-
-		    # eliminar arquivos em local incorreto ou com extensão diferente das especificadas.
-			file_path_regex="^$root_dir/[^/]+/$last_dir/[^/]+\."
-			file_path_regex="$(echo "$file_path_regex" | sed -r "s|^(.*)$|\1$ext_list\$|ig" | sed -r "s: :\$\|$file_path_regex:g")"
-			find "$root_dir" -type f | grep -Eixv "$file_path_regex" | xargs -r -d "\n" rm -fv
-
-		else
-			log "ERRO" "chk_dir: falha na validação dos parâmetros: $@"
-			end 1
-		fi
+	    # eliminar arquivos em local incorreto ou com extensão diferente das especificadas.
+		file_path_regex="^$root_dir/[^/]+/$last_dir/[^/]+\."
+		file_path_regex="$(echo "$file_path_regex" | sed -r "s|^(.*)$|\1$ext_list\$|ig" | sed -r "s: :\$\|$file_path_regex:g")"
+		find "$root_dir" -type f | grep -Eixv "$file_path_regex" | xargs -r -d "\n" rm -fv
 
 	else
 		log "ERRO" "chk_dir: falha na validação dos parâmetros: $@"
@@ -195,9 +190,10 @@ function deploy_agent () {
 
     			echo $pkg_list | while read -d '|' pkg; do
 
+					#define variáveis a sereem utilizadas pelo agente durante o processo de deploy.
 					export pkg
 					export ext=$(echo $(basename $pkg) | sed -r "s|^.*\.([^\.]+)$|\1|" | tr '[:upper:]' '[:lower:]')
-	    			export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" )
+	    			export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" | tr '[:upper:]' '[:lower:]')
 					export host=$(echo $HOSTNAME | cut -f1 -d '.')
 
 					case $ext in
@@ -213,29 +209,25 @@ function deploy_agent () {
 						rev="N/A"
 					fi
 
-					id_deploy=$(echo $(date +%F_%Hh%Mm%Ss)_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
-
 					export rev
-					export remote_app_history_dir=${remote_app_history_dir_tree}/$(echo ${app} | tr '[:upper:]' '[:lower:]')
-					export deploy_log_dir=${remote_app_history_dir}/${id_deploy}
 
+					#### Diretórios onde serão armazenados os logs de deploy (define e cria os diretórios remote_app_history_dir e deploy_log_dir)
+					set_app_history_dirs
+
+					export remote_app_history_dir
+					export deploy_log_dir
+
+					#valida variáveis antes da chamada do agente.
+					valid 'app' "Nome de aplicação inválido: $app"
+					valid 'host' "regex_hosts_$ambiente" "Host inválido para o ambiente $ambiente: $host"
+
+					#inicio deploy
 					deploy_log_file=$deploy_log_dir/deploy_${host}.log
-					mkdir -p $remote_app_history_dir $deploy_log_dir
-
-					#expurgo de logs
-					find "${remote_app_history_dir}/" -maxdepth 1 -type d | grep -vx "${remote_app_history_dir}/" | sort > $tmp_dir/logs_total
-					tail $tmp_dir/logs_total --lines=${history_html_size} > $tmp_dir/logs_ultimos
-					grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
-					cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
-
 					qtd_log_inicio=$(cat $log | wc -l)
-
 					rm -f $tmp_dir/*
 					$agent_script 'deploy'
-
 					qtd_log_fim=$(cat $log | wc -l)
 					qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
-
 					tail -n ${qtd_info_deploy} $log > $deploy_log_file
 
 				done < "$tmp_dir/pkg.list"
@@ -257,16 +249,18 @@ function log_agent () {
 		chk_dir "$destino" "log" "$file_types"
 
 		app_list="$(find $destino/* -type d -iname 'log' -print | sed -r "s|^${destino}/([^/]+)/log|\1|ig")"
-		app_list=$(echo "$app_list" | sed -r "s%(.)$%\1|%g")
+		app_list=$(echo "$app_list" | sed -r "s%(.)$%\1|%g" | tr '[:upper:]' '[:lower:]')
 
 		echo $app_list | while read -d '|' app; do
 
-			destino_log=$(find "$destino/$app/" -type d -iname 'log' 2> /dev/null)
+			destino_log=$(find "$destino/" -type d -iwholename "$destino/$app/log" 2> /dev/null)
 
-			if [ $(echo ${destino_log} | wc -l) -eq 1 ]; then
+			if [ -d "$destino_log" ]; then
 
 				export destino_log
 				export app
+
+				valid 'app' 'Nome de aplicação inválido.'
 
 				rm -f $tmp_dir/*
 				$agent_script 'log'
@@ -290,8 +284,6 @@ function log_agent () {
 
 trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
-find_install_dir
-
 arq_props_global="${install_dir}/conf/global.conf"
 dir_props_local="${install_dir}/conf/$agent_name"
 agent_script="${install_dir}/sh/$agent_name.sh"
@@ -305,26 +297,23 @@ dos2unix "$arq_props_global" > /dev/null 2>&1
 chk_template "$arq_props_global"
 source "$arq_props_global" || exit 1
 
-# verifica se o arquivo de funções existe.
+# Se houver mais de um PID referente à linha de comando, a tarefa já está em andamento.
 
-test -f "$agent_script" || exit 1
-
-# Se houver mais de um PID referente ao script, a tarefa já está em andamento.
-
-if [ "$(pgrep -f $0)" != "$$" ]; then
-    echo "Tarefa em andamento... Aguarde."
+if [ "$(pgrep -f "$0 +$agent_name +$task_name +$file_types")" != "$pid" ]; then
+    log "INFO" "Tarefa em andamento... Aguarde."
     exit 0
 fi
 
 # cria diretório temporário.
 
-if [ ! -z "$tmp_dir" ]; then
+if [ ! -z "$work_dir" ]; then
+	tmp_dir="$work_dir/$pid"
 	mkdir -p $tmp_dir
 else
 	exit 0
 fi
 
-# cria pasta de logs / expurga logs de deploy do mês anterior.
+# cria pasta de logs / expurga logs do mês anterior.
 
 if [ ! -z "$log_dir" ]; then
 	mkdir -p $log_dir
@@ -340,81 +329,86 @@ if [ ! -d "$remote_pkg_dir_tree" ] || [ ! -d "$remote_log_dir_tree" ]; then
 	end "1"
 fi
 
-# Executa deploys / copia logs das instâncias jboss
+# Valida argumentos do script.
+valid 'agent_name' "Nome inválido para o agente." >> $log 2>&1
+valid 'task_name' "Nome inválido para a tarefa." >> $log 2>&1
+valid 'file_types' "Lista de extensões inválida." >> $log 2>&1
 
-if [ $(echo "$arq_props_local" | wc -w) -ne 0 ]; then
+# verifica se o agente existe.
+test -f "$agent_script" || exit 1
 
-	echo $arq_props_local | while read -d '|' local_conf; do
-
-		# Valida o arquivo de configurações $local_conf
-
-		cat $arq_props_global | grep -E "DIR_.+='.+'" | sed 's/"//g' | sed "s/'//g" | sed -r "s|^[^ ]+=([^ ]+)$|\^\1=|" > $tmp_dir/parametros_obrigatorios
-
-		dos2unix "$local_conf" &> /dev/null
-
-		## if [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^#|^$" | grep -Ex "^caminho_instancias_jboss='?/.+/server'?$" | wc -l) -ne "1" ] \
-		if [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -ne "0" ] \		#apenas definição de variáveis
-			|| [ $(cat $local_conf | sed -r 's|=.*$||' | grep -Ex --file=$tmp_dir/parametros_obrigatorios | wc -l) -ne "$(cat $tmp_dir/parametros_obrigatorios | wc -l)" ];		#verifica parâmetros obrigatórios.
-		then
-			log "ERRO" "Parâmetros incorretos no arquivo '$local_conf'." >> $log 2>&1
-			continue
-		else
-			source "$local_conf" || continue
-			rm -f "$tmp_dir/*"
-		fi
-
-		# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
-
-		set_dir "$remote_pkg_dir_tree" 'origem'
-		set_dir "$remote_log_dir_tree" 'destino'
-
-		if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
-			log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços." >> $log 2>&1
-			continue
-		fi
-
-		# exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
-
-		export -f 'log'
-		export 'execution_mode'
-		export 'interactive'
-		export 'lock_history'
-		export 'remote_lock_dir'
-		export 'remote_history_dir'
-		export 'tmp_dir'
-
-		while read l ; do
-			if [ $(echo $l | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -eq 1 ]; then
-				conf_var=$(echo "$l" | sed -r "s|=.*$||")
-				export $conf_var
-			fi
-		done < $local_conf
-
-		# executar agente.
-
-		case task_name in
-			'log')
-				if [ "$(grep -E '^[:blank:]+([\'\"])?log([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
-					log_agent >> $log 2>&1
-				else
-					log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1
-					end 1
-				fi
-				;;
-			'deploy')
-				if [ "$(grep -E '^[:blank:]+([\'\"])?deploy([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
-					deploy_agent >> $log 2>&1
-				else
-					log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1
-					end 1
-				fi
-				;;
-		esac
-
-	done
-
-else
+# verifica o(s) arquivo(s) de configuração do agente.
+if [ $(echo "$arq_props_local" | sed -r "s%|%%g" | wc -w) -eq 0 ]; then
 	exit 1
 fi
 
-end "0"
+# Executa a tarefa especificada para cada arquivo de configuração do agente.
+echo $arq_props_local | while read -d '|' local_conf; do
+
+	# Valida o arquivo de configurações $local_conf
+	cat $arq_props_global | grep -E "DIR_.+='.+'" | sed 's/"//g' | sed "s/'//g" | sed -r "s|^[^ ]+=([^ ]+)$|\^\1=|" > $tmp_dir/parametros_obrigatorios
+	dos2unix "$local_conf" &> /dev/null
+
+	if [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -ne "0" ] \		#apenas definição de variáveis
+		|| [ $(cat $local_conf | sed -r 's|=.*$||' | grep -Ex --file=$tmp_dir/parametros_obrigatorios | wc -l) -ne "$(cat $tmp_dir/parametros_obrigatorios | wc -l)" ];		#verifica parâmetros obrigatórios.
+	then
+		log "ERRO" "Parâmetros incorretos no arquivo '$local_conf'." >> $log 2>&1
+		continue
+	else
+		source "$local_conf" || continue
+		rm -f "$tmp_dir/*"
+	fi
+
+	# validar parâmetro ambiente do arquivo $local_conf:
+	valid 'ambiente' "Nome inválido para o ambiente." >> $log 2>&1
+
+	# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
+	set_dir "$remote_pkg_dir_tree" 'origem'
+	set_dir "$remote_log_dir_tree" 'destino'
+
+	if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
+		log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços." >> $log 2>&1
+		continue
+	fi
+
+	# exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
+
+	export -f 'log'
+	export 'execution_mode'
+	export 'interactive'
+	export 'lock_history'
+	export 'remote_lock_dir'
+	export 'remote_history_dir'
+	export 'tmp_dir'
+
+	while read l ; do
+		if [ $(echo $l | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -eq 1 ]; then
+			conf_var=$(echo "$l" | sed -r "s|=.*$||")
+			export $conf_var
+		fi
+	done < $local_conf
+
+	# executar agente.
+
+	case task_name in
+		'log')
+			if [ "$(grep -E '^[:blank:]+([\'\"])?log([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
+				log_agent >> $log 2>&1
+			else
+				log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1
+				end 1
+			fi
+			;;
+		'deploy')
+			if [ "$(grep -E '^[:blank:]+([\'\"])?deploy([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
+				deploy_agent >> $log 2>&1
+			else
+				log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1
+				end 1
+			fi
+			;;
+	esac
+
+done
+
+end 0

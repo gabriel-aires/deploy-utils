@@ -12,4 +12,4 @@ identificacao=
 # -----------------------------------------------------------------------------------------------------
 # No lugar da expressão regular abaixo, declarar as variáveis utilizadas pelo agente de deploy
 # Ex: caminho_instancias_jboss , wildfly_server_groups, etc.
-[a-z][0-9a-z_-]*=
+[a-z][0-9a-z_]*=

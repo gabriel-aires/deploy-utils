@@ -196,7 +196,7 @@ function copy_log () {
 }
 
 case $1 in
-	log)	copy_log;;
+	log) copy_log;;
 	deploy) deploy_pkg;;
-	*)		log "ERRO" "O script somente admite os parâmetros 'deploy' ou 'log'.";;
+	*) log "ERRO" "O script somente admite os parâmetros 'deploy' ou 'log'.";;
 esac

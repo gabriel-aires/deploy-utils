@@ -1,8 +1,12 @@
 #!/bin/bash
+# Este arquivo deve ser carregado no cabeçalho de cada script através do comando "source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1"
 
-# As funções abaixo devem ser carregadas antes da execução de qualquer script.
+# Define/Carrega variáveis comuns.
 
-alias find_install_dir="install_dir=$(dirname $(dirname $(readlink -f $0)))"
+install_dir="install_dir=$(dirname $(dirname $(readlink -f $0)))"
+source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/conf/include.conf || exit 1
+
+# Define funções comuns.
 
 function paint () {
 
@@ -28,6 +32,17 @@ function paint () {
 	fi
 
 	return 0
+
+}
+
+function mklist () {
+
+	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
+		local lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g')
+		echo "$lista" > $2
+	else
+		end 1 2> /dev/null || exit 1
+	fi
 
 }
 
@@ -123,10 +138,13 @@ function valid () {	#argumentos: nome_variável (nome_regra) (nome_regra_inversa
 		valor="$(eval $valor)"
 
 		if [ -z "$regra" ]; then
-			echo "Erro. Não há uma regra para validação da variável $nome_var"
+			case "$execution_mode" in
+				'agent') log "ERRO" "Não há uma regra para validação da variável $nome_var";;
+				'server') echo "Erro. Não há uma regra para validação da variável $nome_var";;
+			esac
 			end 1 2> /dev/null || exit 1
 
-		elif "$interactive"; then
+		elif "$interactive"; then	#o modo interativo somente é possível caso $execution_mode='server'
 			edit_var=0
 			while [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; do
 				paint 'fg' 'yellow'
@@ -139,7 +157,10 @@ function valid () {	#argumentos: nome_variável (nome_regra) (nome_regra_inversa
 			done
 
 		elif [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; then
-			echo -e "$msg"
+			case "$execution_mode" in
+				'agent') log "ERRO" "$msg";;
+				'server') echo -e "$msg";;
+			esac
 			end 1 2> /dev/null || exit 1
 
 		fi
@@ -187,23 +208,38 @@ function write_history () {
 	    sleep 1
 	done
 
-	lock_history=1
+	lock_history=true
 	touch "${lock_path}/$history_lock_file"
 
 	touch ${history_path}/$history_csv_file
 	touch ${app_history_path}/$history_csv_file
 
-	tail --lines=$global_history_size ${history_path}/$history_csv_file > $tmp_dir/deploy_log_new
-	tail --lines=$app_history_size ${app_history_path}/$history_csv_file > $tmp_dir/app_log_new
-
-	echo -e "$msg_log" >> $tmp_dir/deploy_log_new
-	echo -e "$msg_log" >> $tmp_dir/app_log_new
-
-	cp -f $tmp_dir/deploy_log_new ${history_path}/$history_csv_file
-	cp -f $tmp_dir/app_log_new ${app_history_path}/$history_csv_file
+	echo -e "$msg_log" >> ${history_path}/$history_csv_file
+	echo -e "$msg_log" >> ${app_history_path}/$history_csv_file
 
 	rm -f ${lock_path}/$history_lock_file    							#remove a trava sobre o arquivo de log tão logo seja possível.
-	lock_history=0
+	lock_history=false
+
+	return 0
+
+}
+
+function set_app_history_dirs () {
+
+	id_deploy=$(echo $(date +%F_%Hh%Mm%Ss)_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
+
+	case execution_mode in
+		'server')
+			app_history_dir="${app_history_dir_tree}/${app}"
+			deploy_log_dir="${app_history_dir}/${id_deploy}"
+			;;
+		'agent')
+			remote_app_history_dir="${remote_app_history_dir_tree}/${app}"
+			deploy_log_dir="${remote_app_history_dir}/${id_deploy}"
+			;;
+	esac
+
+	mkdir -p $deploy_log_dir || return 1
 
 	return 0
 
