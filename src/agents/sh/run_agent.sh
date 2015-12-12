@@ -10,11 +10,9 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 
 ###### FUNÇÕES ######
 
-function log () {
+function log () {	##### log de execução detalhado.
 
-	##### LOG DE DEPLOY DETALHADO ####
-
-	echo -e "$(date +"%F %Hh%Mm%Ss") : $HOSTNAME : $1 : $2"
+	echo -e "$(date +"%F %Hh%Mm%Ss") : $HOSTNAME : $BASH_SOURCE(${FUNCNAME[1]}): $1 :  $2"
 
 }
 
@@ -24,7 +22,7 @@ function end () {
 		rm -Rf ${tmp_dir}/*
 	fi
 
-	if [ "$edit_log" == "1" ]; then
+	if [ "$lock_history" == "1" ]; then
 		rm -f ${remote_lock_dir}/$history_lock_file
 	fi
 
@@ -197,21 +195,31 @@ function deploy_agent () {
 
     			echo $pkg_list | while read -d '|' pkg; do
 
-	    			pkg_filename=$(basename $pkg)
-					ext=$(echo $pkg_filename | sed -r "s|^.*\.([^\.]+)$|\1|")
-	    			app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" )
-	    			rev=$(unzip -p -a $pkg META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
-					host=$(echo $HOSTNAME | cut -f1 -d '.')
+					export pkg
+					export ext=$(echo $(basename $pkg) | sed -r "s|^.*\.([^\.]+)$|\1|" | tr '[:upper:]' '[:lower:]')
+	    			export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" )
+					export host=$(echo $HOSTNAME | cut -f1 -d '.')
+
+					case $ext in
+						war|ear|sar)
+							rev=$(unzip -p -a $pkg META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
+							;;
+						*)
+							rev=$(echo $(basename $pkg) | sed -r "s|^$app||i" | sed -r "s|$ext$||i" | sed -r "s|^[\.\-_]||")
+							;;
+					esac
 
 					if [ -z "$rev" ]; then
 						rev="N/A"
 					fi
 
-					remote_app_history_dir=${remote_app_history_dir_tree}/$(echo ${app} | tr '[:upper:]' '[:lower:]')
-    				data_deploy=$(date +%F_%Hh%Mm%Ss)
-					id_deploy=$(echo ${data_deploy}_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
-					deploy_log_dir=${remote_app_history_dir}/${id_deploy}
+					id_deploy=$(echo $(date +%F_%Hh%Mm%Ss)_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
 
+					export rev
+					export remote_app_history_dir=${remote_app_history_dir_tree}/$(echo ${app} | tr '[:upper:]' '[:lower:]')
+					export deploy_log_dir=${remote_app_history_dir}/${id_deploy}
+
+					deploy_log_file=$deploy_log_dir/deploy_${host}.log
 					mkdir -p $remote_app_history_dir $deploy_log_dir
 
 					#expurgo de logs
@@ -223,12 +231,12 @@ function deploy_agent () {
 					qtd_log_inicio=$(cat $log | wc -l)
 
 					rm -f $tmp_dir/*
-					deploy_pkg
+					$agent_script 'deploy'
 
 					qtd_log_fim=$(cat $log | wc -l)
 					qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
 
-					tail -n ${qtd_info_deploy} $log > $deploy_log_dir/deploy_${host}.log
+					tail -n ${qtd_info_deploy} $log > $deploy_log_file
 
 				done < "$tmp_dir/pkg.list"
 
@@ -256,8 +264,15 @@ function log_agent () {
 			destino_log=$(find "$destino/$app/" -type d -iname 'log' 2> /dev/null)
 
 			if [ $(echo ${destino_log} | wc -l) -eq 1 ]; then
+
+				export destino_log
+				export app
+
 				rm -f $tmp_dir/*
-				copy_log
+				$agent_script 'log'
+				cp -f $log "$destino_log/cron.log"
+				unix2dos "$destino_log/cron.log" > /dev/null 2>&1
+
 			else
 				log "ERRO" "O diretório para cópia de logs da aplicação $app não foi encontrado".
 			fi
@@ -279,7 +294,7 @@ find_install_dir
 
 arq_props_global="${install_dir}/conf/global.conf"
 dir_props_local="${install_dir}/conf/$agent_name"
-agent_functions="${install_dir}/sh/$agent_name.sh"
+agent_script="${install_dir}/sh/$agent_name.sh"
 arq_props_local=$(find "$dir_props_local" -type f -iname "*.conf" -print)
 arq_props_local=$(echo "$arq_props_local" | sed -r "s%(.)$%\1|%g")
 
@@ -292,7 +307,7 @@ source "$arq_props_global" || exit 1
 
 # verifica se o arquivo de funções existe.
 
-test -f "$agent_functions" || exit 1
+test -f "$agent_script" || exit 1
 
 # Se houver mais de um PID referente ao script, a tarefa já está em andamento.
 
@@ -358,22 +373,39 @@ if [ $(echo "$arq_props_local" | wc -w) -ne 0 ]; then
 			continue
 		fi
 
+		# exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
+
+		export -f 'log'
+		export 'execution_mode'
+		export 'interactive'
+		export 'lock_history'
+		export 'remote_lock_dir'
+		export 'remote_history_dir'
+		export 'tmp_dir'
+
+		while read l ; do
+			if [ $(echo $l | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -eq 1 ]; then
+				conf_var=$(echo "$l" | sed -r "s|=.*$||")
+				export $conf_var
+			fi
+		done < $local_conf
+
+		# executar agente.
+
 		case task_name in
 			'log')
-				if [ "$(grep -E '^function copy_log () {$' $agent_functions | wc -l)" -eq 1 ]; then
-					source $agent_functions
+				if [ "$(grep -E '^[:blank:]+([\'\"])?log([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
 					log_agent >> $log 2>&1
 				else
-					log "ERRO" "A função de cópia de logs não foi encontrada em $agent_functions." >> $log 2>&1
+					log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1
 					end 1
 				fi
 				;;
 			'deploy')
-				if [ "$(grep -E '^function deploy_pkg () {$' $agent_functions | wc -l)" -eq 1 ]; then
-					source $agent_functions
+				if [ "$(grep -E '^[:blank:]+([\'\"])?deploy([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
 					deploy_agent >> $log 2>&1
 				else
-					log "ERRO" "A função de deploy de pacotes não foi encontrada em $agent_functions." >> $log 2>&1
+					log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1
 					end 1
 				fi
 				;;

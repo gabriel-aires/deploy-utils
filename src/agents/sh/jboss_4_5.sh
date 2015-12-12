@@ -182,9 +182,7 @@ function copy_log () {
 			if [ $(echo $server_log | wc -l) -eq 1 ]; then
 				cd $(dirname $server_log); zip -rql1 ${destino_log}/${instancia_jboss}.zip *; cd - > /dev/null
 				cp -f $server_log "$destino_log/server_${instancia_jboss}.log"
-				cp -f $log "$destino_log/cron.log"
 				unix2dos "$destino_log/server_${instancia_jboss}.log" > /dev/null 2>&1
-				unix2dos "$destino_log/cron.log" > /dev/null 2>&1
 			else
 				log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $app."
 			fi
@@ -196,3 +194,9 @@ function copy_log () {
 	fi
 
 }
+
+case $1 in
+	log)	copy_log;;
+	deploy) deploy_pkg;;
+	*)		log "ERRO" "O script somente admite os parâmetros 'deploy' ou 'log'.";;
+esac

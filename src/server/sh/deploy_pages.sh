@@ -209,7 +209,7 @@ function clean_locks () {
 		cat $tmp_dir/locks | xargs --no-run-if-empty rm -f					#remove locks
 	fi
 
-	if [ "$edit_log" == "1" ]; then
+	if [ "$lock_history" == "1" ]; then
 		rm -f ${lock_dir}/$history_lock_file
 	fi
 
@@ -571,8 +571,8 @@ if $interactive; then
 		editconf "hosts_$ambiente" "$lista_hosts" "$app_conf_dir/${app}.conf"
 
 		valid "modo_$ambiente" "\nErro. Informe um modo válido para deploy no ambiente $ambiente [p/d]:"
-	        modo_app="echo \$modo_${ambiente}"
-	        modo_app=$(eval "$modo_app")
+	    modo_app="echo \$modo_${ambiente}"
+	    modo_app=$(eval "$modo_app")
 		editconf "modo_$ambiente" "$modo_app" "$app_conf_dir/${app}.conf"
 
 		valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"

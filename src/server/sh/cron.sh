@@ -2,7 +2,7 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 pid=$$
-edit_log=false
+lock_history=false
 
 ##### Execução somente como usuário root ######
 
@@ -117,7 +117,7 @@ function deploy_auto () {
 		sleep 1
 	done
 
-	edit_log=true
+	lock_history=true
 	touch $lock_dir/$history_lock_file
 
 	find "$history_dir/" -maxdepth 3 -type f -name "$history_csv_file" > $tmp_dir/logs_csv
@@ -127,7 +127,7 @@ function deploy_auto () {
 	done < $tmp_dir/logs_csv
 
 	rm -f $lock_dir/$history_lock_file
-	edit_log=false
+	lock_history=false
 
 	end 0
 
@@ -157,7 +157,7 @@ function end {
 		rm -f "$lock_dir/autodeploy"
 	fi
 
-	if $edit_log; then
+	if $lock_history; then
 		rm -f "$lock_dir/$deploy_log_edit"
 	fi
 

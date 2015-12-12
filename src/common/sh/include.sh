@@ -187,7 +187,7 @@ function write_history () {
 	    sleep 1
 	done
 
-	edit_log=1
+	lock_history=1
 	touch "${lock_path}/$history_lock_file"
 
 	touch ${history_path}/$history_csv_file
@@ -203,7 +203,7 @@ function write_history () {
 	cp -f $tmp_dir/app_log_new ${app_history_path}/$history_csv_file
 
 	rm -f ${lock_path}/$history_lock_file    							#remove a trava sobre o arquivo de log tão logo seja possível.
-	edit_log=0
+	lock_history=0
 
 	return 0
 
