@@ -59,15 +59,24 @@ function chk_template () {
 		fi
 
 		if [ -z $nome_template ]; then
-			echo -e "\nErro. Não foi indentificado um template para validação do arquivo $arquivo."
+			case $execution_mode in
+				'agent') log "ERRO" "Não foi indentificado um template para validação do arquivo $arquivo.";;
+				'server') echo -e "\nErro. Não foi indentificado um template para validação do arquivo $arquivo.";;
+			esac
 			end 1 2> /dev/null || exit 1
 
 		elif [ ! -f "$install_dir/template/$nome_template.template" ]; then
-			echo -e "\nErro. O template espeficicado não foi encontrado."
+			case $execution_mode in
+				'agent') log "ERRO" "O template espeficicado não foi encontrado: $nome_template.";;
+				'server') echo -e "\nErro. O template espeficicado não foi encontrado.";;
+			esac
 			end 1 2> /dev/null || exit 1
 
 		elif [ "$(cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template | wc -l)" -ne "0" ]; then
-			echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:"
+			case $execution_mode in
+				'agent') log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
+				'server') echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
+			esac
 			grep -v --file="$install_dir/template/$nome_template.template" "$arquivo"
 
 			if [ "$flag" == "continue" ]; then

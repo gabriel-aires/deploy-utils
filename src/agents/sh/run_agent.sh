@@ -346,13 +346,8 @@ fi
 echo $arq_props_local | while read -d '|' local_conf; do
 
 	# Valida o arquivo de configurações $local_conf
-	cat $arq_props_global | grep -E "DIR_.+='.+'" | sed 's/"//g' | sed "s/'//g" | sed -r "s|^[^ ]+=([^ ]+)$|\^\1=|" > $tmp_dir/parametros_obrigatorios
-	dos2unix "$local_conf" &> /dev/null
-
-	if [ $(cat $local_conf | sed 's|"||g' | grep -Ev "^#|^$" | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -ne "0" ] \		#apenas definição de variáveis
-		|| [ $(cat $local_conf | sed -r 's|=.*$||' | grep -Ex --file=$tmp_dir/parametros_obrigatorios | wc -l) -ne "$(cat $tmp_dir/parametros_obrigatorios | wc -l)" ];		#verifica parâmetros obrigatórios.
-	then
-		log "ERRO" "Parâmetros incorretos no arquivo '$local_conf'." >> $log 2>&1
+	chk_template "$local_conf" 'local' 'continue' >> $log 2>&1
+	if [ $? -eq 1 ]; then
 		continue
 	else
 		source "$local_conf" || continue
