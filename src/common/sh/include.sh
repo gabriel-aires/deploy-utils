@@ -94,38 +94,55 @@ function chk_template () {
 
 }
 
-function valid () {	#argumentos: nome_variável (nome_regra) (nome_regra_inversa) mensagem_erro.
+function valid () {
+
+	#argumentos: nome_variável (nome_regra) (nome_regra_inversa) mensagem_erro ("continue").
+	#O comportamento padrão é a finalização do script quando a validação falha.
+	#Esse comportamento pode ser alterado se a palavra "continue" for adicionada como último argumento,
+	#nesse caso a função simplesmente retornará 1 caso a validação falhe.
 
 	if [ ! -z "$1" ] && [ ! -z "${!#}" ]; then
 
+		#argumentos
 		local nome_var="$1"			# obrigatório
 		local nome_regra			# opcional, se informado, é o segundo argumento.
 		local nome_regra_inversa	# opcional, se informado, é o terceiro argumento.
-		local msg="${!#}"			# obrigatório: a mensagem de erro é o último argumento
+		local msg					# mensagem de erro: obrigatório.
 
+		#variaveis internas
+		local exit_cmd="end 1 2> /dev/null || exit 1"
+		local flag_count=0
 		local valor
 		local regra
 		local regra_inversa
 
-		if [ "$#" -gt "2" ] && [ ! -z "$2" ]; then
+		if [ "${!#}" == "continue" ]; then
+			((flag_count++))
+			exit_cmd="return 1"
+			msg=$(eval "echo \$$(($#-1))")
+		else
+			msg="${!#}"
+		fi
+
+		if [ "$#" -gt "((2 + $flag_count))" ] && [ ! -z "$2" ]; then
 			nome_regra="$2"
 
 			if [ $(echo "$nome_regra" | grep -Ex "^regex_[a-z_]+$" | wc -l) -ne 1 ]; then
 				echo "Erro. O argumento especificado não é uma regra de validação."
-				end 1 2> /dev/null || exit 1
+				eval "$exit_cmd"
 			fi
 
-			if [ "$#" -gt "3" ] && [ ! -z "$3" ]; then
+			if [ "$#" -gt "((3 + $flag_count))" ] && [ ! -z "$3" ]; then
 				nome_regra_inversa="$3"
 
 				if [ $(echo "${nome_regra_inversa}" | grep -Ex "^not_regex_[a-z_]+$" | wc -l) -ne 1 ]; then
 					echo "Erro. O argumento especificado não é uma regra de validação inversa."
-					end 1 2> /dev/null || exit 1
+					eval "$exit_cmd"
 				fi
 			fi
 
 		else
-			end 1 2> /dev/null || exit 1
+			eval "$exit_cmd"
 		fi
 
 		if [ -z "$nome_regra" ]; then
@@ -151,7 +168,7 @@ function valid () {	#argumentos: nome_variável (nome_regra) (nome_regra_inversa
 				'agent') log "ERRO" "Não há uma regra para validação da variável $nome_var";;
 				'server') echo "Erro. Não há uma regra para validação da variável $nome_var";;
 			esac
-			end 1 2> /dev/null || exit 1
+			eval "$exit_cmd"
 
 		elif "$interactive"; then	#o modo interativo somente é possível caso $execution_mode='server'
 			edit_var=0
@@ -170,12 +187,12 @@ function valid () {	#argumentos: nome_variável (nome_regra) (nome_regra_inversa
 				'agent') log "ERRO" "$msg";;
 				'server') echo -e "$msg";;
 			esac
-			end 1 2> /dev/null || exit 1
+			eval "$exit_cmd"
 
 		fi
 
 	else
-		end 1 2> /dev/null || exit 1
+		eval "$exit_cmd"
 	fi
 
 	return 0		# o script continua somente se a variável tiver sido validada corretamente.

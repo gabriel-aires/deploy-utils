@@ -218,8 +218,8 @@ function deploy_agent () {
 					export deploy_log_dir
 
 					#valida variáveis antes da chamada do agente.
-					valid 'app' "Nome de aplicação inválido: $app"
-					valid 'host' "regex_hosts_$ambiente" "Host inválido para o ambiente $ambiente: $host"
+					valid 'app' "Nome de aplicação inválido: $app" "continue" || continue
+					valid 'host' "regex_hosts_$ambiente" "Host inválido para o ambiente $ambiente: $host" "continue" || continue
 
 					#inicio deploy
 					deploy_log_file=$deploy_log_dir/deploy_${host}.log
@@ -260,7 +260,7 @@ function log_agent () {
 				export destino_log
 				export app
 
-				valid 'app' 'Nome de aplicação inválido.'
+				valid 'app' 'Nome de aplicação inválido.' "continue" || continue
 
 				rm -f $tmp_dir/*
 				$agent_script 'log'
@@ -355,7 +355,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 	fi
 
 	# validar parâmetro ambiente do arquivo $local_conf:
-	valid 'ambiente' "Nome inválido para o ambiente." >> $log 2>&1
+	valid 'ambiente' "Nome inválido para o ambiente." "continue" >> $log 2>&1 || continue
 
 	# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
 	set_dir "$remote_pkg_dir_tree" 'origem'
