@@ -346,13 +346,8 @@ fi
 echo $arq_props_local | while read -d '|' local_conf; do
 
 	# Valida o arquivo de configurações $local_conf
-	chk_template "$local_conf" 'local' 'continue' >> $log 2>&1
-	if [ $? -eq 1 ]; then
-		continue
-	else
-		source "$local_conf" || continue
-		rm -f "$tmp_dir/*"
-	fi
+	chk_template "$local_conf" 'local' 'continue' >> $log 2>&1 || continue
+	source "$local_conf" || continue
 
 	# validar parâmetro ambiente do arquivo $local_conf:
 	valid 'ambiente' "Nome inválido para o ambiente." "continue" >> $log 2>&1 || continue
@@ -391,7 +386,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 				log_agent >> $log 2>&1
 			else
 				log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1
-				end 1
+				continue
 			fi
 			;;
 		'deploy')
@@ -399,7 +394,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 				deploy_agent >> $log 2>&1
 			else
 				log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1
-				end 1
+				continue
 			fi
 			;;
 	esac
