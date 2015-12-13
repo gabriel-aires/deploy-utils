@@ -66,7 +66,7 @@ function chk_template () {
 			echo -e "\nErro. O template espeficicado não foi encontrado."
 			end 1 2> /dev/null || exit 1
 
-		elif [ "$(grep -v --file=$install_dir/template/$nome_template.template $arquivo | wc -l)" -ne "0" ]; then
+		elif [ "$(cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template | wc -l)" -ne "0" ]; then
 			echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:"
 			grep -v --file="$install_dir/template/$nome_template.template" "$arquivo"
 

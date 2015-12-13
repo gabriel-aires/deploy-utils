@@ -1,5 +1,9 @@
 ### Definir abaixo as constantes do ambiente
 
+### modo de execução (server/agent)
+execution_mode=
+interactive=
+
 ### compartilhamentos para obtenção de pacotes e disponbilização de logs (os caminhos podem ser iguais):
 remote_pkg_dir_tree=
 remote_log_dir_tree=
@@ -7,7 +11,7 @@ remote_lock_dir=
 remote_history_dir=
 remote_app_history_dir_tree=
 
-### hierarquização dos diretórios
+### hierarquização dos diretórios ('ambiente' deve ser o primeiro subnível da árvore).
 
 qtd_dir=
 
@@ -23,13 +27,12 @@ dir_3=
 #dir_10=''
 #...
 
-### expurgo de logs
-global_history_size=
-app_history_size=
-history_html_size=
-
-### diretórios/arquivos utilizados no processo de deploy jboss:
-tmp_dir=
+### diretórios/arquivos locais utilizados pelo agente.
+work_dir=
 log_dir=
 log=
-lock=
+
+### expressões regulares relacionadas a variáveis utilizadas pelo agente.
+regex_agent_name=
+regex_task_name=
+regex_file_types=
