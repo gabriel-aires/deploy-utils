@@ -105,7 +105,7 @@ function cron_tasks () {
 	if [ -f "$history_dir/$history_csv_file" ]; then
 		qtd_history=$(cat "$history_dir/$history_csv_file" | wc -l)
 	 	if [ $qtd_history -gt $global_history_size ]; then
-			qtd_purge=(($qtd_history - $global_history_size))
+			qtd_purge=$(($qtd_history - $global_history_size))
 			sed -i "1,${qtd_purge}d" "$history_dir/$history_csv_file"
 		fi
 	fi
@@ -114,7 +114,7 @@ function cron_tasks () {
 	while read app_history; do
 		qtd_history=$(cat "$app_history" | wc -l)
 		if [ $qtd_history -gt $app_history_size ]; then
-			qtd_purge=(($qtd_history - $app_history_size))
+			qtd_purge=$(($qtd_history - $app_history_size))
 			sed -i "1,${qtd_purge}d" "$app_history"
 		fi
 	done < $tmp_dir/app_history_list
