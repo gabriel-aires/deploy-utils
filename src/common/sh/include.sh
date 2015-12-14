@@ -55,7 +55,7 @@ function chk_template () {
 		local flag="$3"					# indica se o script deve ser encerrado ou não ao encontrar inconsistências. Para prosseguir, deve ser passado o valor "continue"
 
 		if [ -z "$nome_template" ] && [ -f "$install_dir/template/$(basename $arquivo | cut -f1 -d '.').template" ]; then
-			nome_template=$(basename $arquivo | cut -f1 -d '.').template
+			nome_template="$(basename $arquivo | cut -f1 -d '.')"
 		fi
 
 		if [ -z $nome_template ]; then
