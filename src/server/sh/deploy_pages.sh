@@ -5,6 +5,7 @@ estado="validacao"
 pid=$$
 interactive="true"
 automatico="false"
+execution_mode="server"
 
 ##### Execução somente como usuário root ######
 

@@ -4,6 +4,7 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 pid=$$
 lock_history=false
 interactive=false
+execution_mode="server"
 
 ##### Execução somente como usuário root ######
 

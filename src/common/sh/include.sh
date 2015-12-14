@@ -54,6 +54,8 @@ function chk_template () {
 		local nome_template="$2"		# parâmetro opcional, especifica um template para validação do arquivo.
 		local flag="$3"					# indica se o script deve ser encerrado ou não ao encontrar inconsistências. Para prosseguir, deve ser passado o valor "continue"
 
+		paint 'fg' 'yellow'
+
 		if [ -z "$nome_template" ] && [ -f "$install_dir/template/$(basename $arquivo | cut -f1 -d '.').template" ]; then
 			nome_template="$(basename $arquivo | cut -f1 -d '.')"
 		fi
@@ -63,6 +65,7 @@ function chk_template () {
 				'agent') log "ERRO" "Não foi indentificado um template para validação do arquivo $arquivo.";;
 				'server') echo -e "\nErro. Não foi indentificado um template para validação do arquivo $arquivo.";;
 			esac
+			paint 'default'
 			end 1 2> /dev/null || exit 1
 
 		elif [ ! -f "$install_dir/template/$nome_template.template" ]; then
@@ -70,15 +73,17 @@ function chk_template () {
 				'agent') log "ERRO" "O template espeficicado não foi encontrado: $nome_template.";;
 				'server') echo -e "\nErro. O template espeficicado não foi encontrado.";;
 			esac
+			paint 'default'
 			end 1 2> /dev/null || exit 1
 
 		elif [ "$(cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template | wc -l)" -ne "0" ]; then
-			case "$execution_mode" in
-				agent) log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
-				server) echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
+			case $execution_mode in
+				'agent') log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
+				'server') echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
 			esac
 			cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template
 
+			paint 'default'
 			if [ "$flag" == "continue" ]; then
 				return 1
 			else

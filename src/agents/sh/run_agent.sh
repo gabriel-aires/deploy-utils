@@ -8,6 +8,7 @@ agent_name="$1"
 task_name="$2"
 file_types="$3"
 pid="$$"
+execution_mode="agent"
 
 ###### FUNÇÕES ######
 
