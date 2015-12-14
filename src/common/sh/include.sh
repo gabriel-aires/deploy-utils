@@ -3,7 +3,7 @@
 
 # Define/Carrega variáveis comuns.
 
-install_dir="install_dir=$(dirname $(dirname $(readlink -f $0)))"
+install_dir="$(dirname $(dirname $(readlink -f $0)))"
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/conf/include.conf || exit 1
 
 # Define funções comuns.
