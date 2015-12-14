@@ -91,6 +91,8 @@ function chk_template () {
 			fi
 		fi
 
+		paint 'default'
+
 	else
 		end 1 2> /dev/null || exit 1
 	fi
