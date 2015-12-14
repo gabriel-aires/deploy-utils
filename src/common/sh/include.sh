@@ -129,7 +129,7 @@ function valid () {
 			msg="${!#}"
 		fi
 
-		if [ "$#" -gt "((2 + $flag_count))" ] && [ ! -z "$2" ]; then
+		if [ "$#" -gt "$((2 + $flag_count))" ] && [ ! -z "$2" ]; then
 			nome_regra="$2"
 
 			if [ $(echo "$nome_regra" | grep -Ex "^regex_[a-z_]+$" | wc -l) -ne 1 ]; then
@@ -137,7 +137,7 @@ function valid () {
 				eval "$exit_cmd"
 			fi
 
-			if [ "$#" -gt "((3 + $flag_count))" ] && [ ! -z "$3" ]; then
+			if [ "$#" -gt "$((3 + $flag_count))" ] && [ ! -z "$3" ]; then
 				nome_regra_inversa="$3"
 
 				if [ $(echo "${nome_regra_inversa}" | grep -Ex "^not_regex_[a-z_]+$" | wc -l) -ne 1 ]; then
