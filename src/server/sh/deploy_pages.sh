@@ -14,7 +14,7 @@ if [ ! "$USER" == 'root' ]; then
 	exit 1
 fi
 
-#### UTILIZAÇÃO: deloy_paginas.sh <aplicação> <revisão> <ambiente> -opções ############
+#### UTILIZAÇÃO: deploy_pages.sh -opções <aplicação> <revisão> <ambiente> ############
 
 while getopts ":dfh" opcao; do
 	case $opcao in

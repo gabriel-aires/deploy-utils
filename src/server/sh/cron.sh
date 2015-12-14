@@ -67,7 +67,7 @@ function cron_tasks () {
 	        	while read aplicacao; do
 				horario
 				echo ""
-				/bin/bash $install_dir/sh/deploy_paginas.sh -f $aplicacao auto $ambiente
+				/bin/bash $install_dir/sh/deploy_pages.sh -f $aplicacao auto $ambiente
 				wait
 				echo ""
 			done < "$tmp_dir/lista_aplicacoes"
