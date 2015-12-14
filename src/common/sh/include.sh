@@ -77,7 +77,7 @@ function chk_template () {
 				'agent') log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
 				'server') echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
 			esac
-			grep -v --file="$install_dir/template/$nome_template.template" "$arquivo"
+			cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template
 
 			if [ "$flag" == "continue" ]; then
 				return 1

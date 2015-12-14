@@ -1,3 +1,5 @@
+# modo de execução (server/agent)
+execution_mode=
 # Caminhos para diretórios e arquivos utilizados no processo de deploy.
 work_dir=
 bak_dir=
