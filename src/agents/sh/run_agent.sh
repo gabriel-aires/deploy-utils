@@ -25,9 +25,7 @@ function end () {
 		rmdir ${tmp_dir}
 	fi
 
-	if $lock_history; then
-		rm -f ${remote_lock_dir}/$history_lock_file
-	fi
+	clean_locks
 
 	exit "$1"
 }
@@ -298,13 +296,6 @@ dos2unix "$arq_props_global" > /dev/null 2>&1
 chk_template "$arq_props_global"
 source "$arq_props_global" || exit 1
 
-# Se houver mais de um PID referente à linha de comando, a tarefa já está em andamento.
-
-if [ "$(pgrep -fx "$(readlink -f "$0") *$agent_name *$task_name *$file_types.*")" != "$pid" ]; then
-    log "INFO" "Tarefa em andamento... Aguarde."
-    exit 0
-fi
-
 # cria diretório temporário.
 
 if [ ! -z "$work_dir" ]; then
@@ -312,6 +303,17 @@ if [ ! -z "$work_dir" ]; then
 	mkdir -p $tmp_dir
 else
 	exit 0
+fi
+
+# Cria lockfiles.
+
+if [ -n "$agent_name" ] && [ -n "$task_name" ] && [ -n "$file_types" ]; then
+	mklist	$file_types > $tmp_dir/ext_list
+	while read extension; do
+		lock "$agent_name $task_name $extension" "Uma tarefa concorrente já está em andamento. Aguarde..."
+	done < $tmp_dir/ext_list
+else
+	end 1
 fi
 
 # cria pasta de logs / expurga logs do mês anterior.
@@ -322,7 +324,7 @@ if [ ! -z "$log_dir" ]; then
 	echo "" >> $log
 	find $log_dir -type f | grep -v $(date "+%Y-%m") | xargs rm -f
 else
-	exit 0
+	end 0
 fi
 
 if [ ! -d "$remote_pkg_dir_tree" ] || [ ! -d "$remote_log_dir_tree" ]; then
@@ -336,11 +338,11 @@ valid 'task_name' "Nome inválido para a tarefa." >> $log 2>&1
 valid 'file_types' "Lista de extensões inválida." >> $log 2>&1
 
 # verifica se o agente existe.
-test -f "$agent_script" || exit 1
+test -f "$agent_script" || end 1
 
 # verifica o(s) arquivo(s) de configuração do agente.
 if [ $(echo "$arq_props_local" | sed -r "s%|%%g" | wc -w) -eq 0 ]; then
-	exit 1
+	end 1
 fi
 
 # Executa a tarefa especificada para cada arquivo de configuração do agente.
@@ -365,6 +367,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 	# exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
 
 	export -f 'log'
+	export -f 'write_history'
 	export 'execution_mode'
 	export 'interactive'
 	export 'lock_history'

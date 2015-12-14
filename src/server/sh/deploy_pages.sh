@@ -187,39 +187,6 @@ function clean_temp () {										#cria pasta temporária, remove arquivos e pon
 	fi
 }
 
-function lock () {											#argumentos: nome_trava, mensagem_erro, (instrução)
-
-	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
-		if [ -d $tmp_dir ] && [ -d $lock_dir ]; then
-			if [ ! -f $tmp_dir/locks ]; then
-				touch $tmp_dir/locks
-			fi
-			if [ -f $lock_dir/$1 ]; then
-				echo -e "\n$2" && end 0
-			else
-				touch $lock_dir/$1 && echo "$lock_dir/$1" >> $tmp_dir/locks
-			fi
-		else
-			end 1
-		fi
-	else
-		end 1
-	fi
-
-}
-
-function clean_locks () {
-
-	if [ -d $lock_dir ] && [ -f "$tmp_dir/locks" ]; then
-		cat $tmp_dir/locks | xargs --no-run-if-empty rm -f					#remove locks
-	fi
-
-	if $lock_history; then
-		rm -f ${lock_dir}/$history_lock_file
-	fi
-
-}
-
 function editconf () {
 
 	if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$edit_var" ]; then

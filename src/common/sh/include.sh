@@ -35,6 +35,51 @@ function paint () {
 
 }
 
+function lock () {											#argumentos: nome_trava, mensagem_erro, (instrução)
+
+	if [ -d $lock_dir ] && [ ! -z "$1" ] && [ ! -z "$2" ]; then
+
+		local lockfile="$(echo "$1" | sed -r "s|[;, \:\.]+|_|g")"
+		local msg="$2"
+
+		if [ -f "$lock_dir/$lockfile" ]; then
+			case $execution_mode in
+				'agent') log "INFO" "$msg";;
+				'server') echo -e "\n$msg";;
+			esac
+
+			end 0 2> /dev/null || exit 0
+		else
+			lock_array[$lock_index]="$lock_dir/$lockfile" && ((lock_index++))
+			touch "$lock_dir/$lockfile"
+		fi
+	else
+		end 1 2> /dev/null || exit 1
+	fi
+
+	return 0
+
+}
+
+function clean_locks () {
+
+	if [ -d $lock_dir ]; then
+		local i=0
+		while [ $i -le $lock_index ]; do
+			test -f "${lock_array[$i]}" && rm -f "${lock_array[$i]}"
+			((i++))
+		done
+	fi
+
+	if $lock_history; then
+		case $execution_mode in
+			'agent') rm -f ${remote_lock_dir}/$history_lock_file;;
+			'server') rm -f ${lock_dir}/$history_lock_file;;
+		esac
+	fi
+
+}
+
 function mklist () {
 
 	if [ ! -z "$1" ] && [ ! -z "$2" ]; then
