@@ -300,7 +300,7 @@ source "$arq_props_global" || exit 1
 
 # Se houver mais de um PID referente à linha de comando, a tarefa já está em andamento.
 
-if [ "$(pgrep -f "$0 +$agent_name +$task_name +$file_types")" != "$pid" ]; then
+if [ "$(pgrep -fx "$(readlink -f "$0") *$agent_name *$task_name *$file_types.*")" != "$pid" ]; then
     log "INFO" "Tarefa em andamento... Aguarde."
     exit 0
 fi
