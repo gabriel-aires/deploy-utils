@@ -120,7 +120,7 @@ function cron_tasks () {
 	done < $tmp_dir/app_history_list
 
 	########## 3) logs de deploy de aplicações
-	find ${app_history_dir_tree} -maxdepth 1 -type d > $tmp_dir/app_list
+	find ${app_history_dir_tree} -mindepth 1 -maxdepth 1 -type d > $tmp_dir/app_list
 	while read app; do
 		app_history_dir="${app_history_dir_tree}/${app}"
 		find "${app_history_dir}/" -maxdepth 1 -type d | grep -vx "${app_history_dir}/" | sort > $tmp_dir/logs_total
