@@ -145,9 +145,6 @@ function valid () {
 					eval "$exit_cmd"
 				fi
 			fi
-
-		else
-			eval "$exit_cmd"
 		fi
 
 		if [ -z "$nome_regra" ]; then
