@@ -54,8 +54,8 @@ function chk_template () {
 		local nome_template="$2"		# parâmetro opcional, especifica um template para validação do arquivo.
 		local flag="$3"					# indica se o script deve ser encerrado ou não ao encontrar inconsistências. Para prosseguir, deve ser passado o valor "continue"
 
-		if [ -z "$nome_template" ]; then
-			nome_template=$(find $install_dir/template/ -maxdepth 1 -type f -name "$(basename $arquivo | cut -f1 -d '.').template" )
+		if [ -z "$nome_template" ] && [ -f "$install_dir/template/$(basename $arquivo | cut -f1 -d '.').template"]; then
+			nome_template=$(basename $arquivo | cut -f1 -d '.').template
 		fi
 
 		if [ -z $nome_template ]; then
