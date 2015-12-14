@@ -120,14 +120,14 @@ function cron_tasks () {
 	done < $tmp_dir/app_history_list
 
 	########## 3) logs de deploy de aplicações
-	find ${app_history_dir_tree} -mindepth 1 -maxdepth 1 -type d > $tmp_dir/app_list
-	while read app; do
-		app_history_dir="${app_history_dir_tree}/${app}"
-		find "${app_history_dir}/" -maxdepth 1 -type d | grep -vx "${app_history_dir}/" | sort > $tmp_dir/logs_total
+	find ${app_history_dir_tree} -mindepth 1 -maxdepth 1 -type d > $tmp_dir/app_history_path
+	while read path; do
+		app_history_dir="${app_history_dir_tree}/$(basename $path)"
+		find "${app_history_dir}/" -mindepth 1 -maxdepth 1 -type d | sort > $tmp_dir/logs_total
 		tail $tmp_dir/logs_total --lines=${history_html_size} > $tmp_dir/logs_ultimos
 		grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
 		cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
-	done < $tmp_dir/app_list
+	done < $tmp_dir/app_history_path
 
 	########## 4) Logs em formato html
 	find "$history_dir/" -maxdepth 3 -type f -name "$history_csv_file" > $tmp_dir/logs_csv
