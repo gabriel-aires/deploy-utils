@@ -163,8 +163,8 @@ function end {
 		rmdir $tmp_dir
 	fi
 
-	if [ -f $lock_dir/autodeploy ]; then
-		rm -f "$lock_dir/autodeploy"
+	if [ -f $lock_dir/server_cron_tasks ]; then
+		rm -f "$lock_dir/server_cron_tasks"
 	fi
 
 	if $lock_history; then
@@ -216,10 +216,10 @@ mkdir -p $work_dir $lock_dir $history_dir $app_history_dir_tree $app_conf_dir
 
 #### Cria lockfile e diretório temporário #########
 
-if [ -f $lock_dir/autodeploy ]; then
+if [ -f $lock_dir/server_cron_tasks ]; then
 	echo -e "O script de deploy automático já está em execução." && exit 0
 else
-	touch $lock_dir/autodeploy
+	touch $lock_dir/server_cron_tasks
 	mkdir -p $tmp_dir
 fi
 
