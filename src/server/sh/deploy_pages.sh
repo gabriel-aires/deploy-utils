@@ -141,7 +141,11 @@ function check_downgrade () {
 	git tag > $tmp_dir/git_tag_app
 	git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $tmp_dir/git_log_app
 
-	ultimo_deploy_app=$(grep -Eix "^([^;]+;){6}$mensagem_sucesso.*$" ${app_history_dir}/$history_csv_file | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
+	if [ -f "${app_history_dir}/$history_csv_file" ]; then
+		ultimo_deploy_app=$(grep -Eix "^([^;]+;){6}$mensagem_sucesso.*$" ${app_history_dir}/$history_csv_file | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
+	else
+		ultimo_deploy_app=''
+	fi
 
 	if [ -n "$ultimo_deploy_app" ]; then
 
