@@ -209,7 +209,7 @@ function write_history () {
 
 	local horario_log=$(echo "$(date +%F_%Hh%Mm%Ss)" | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1;\4|")
 	local app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
-    local rev_log="$(echo "$rev" | tr '[:upper:]' '[:lower:]')"
+    local rev_log="$(echo "$rev" | sed -r 's|;|_|g')"
 	local ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
 	local host_log="$(echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
     local obs_log="$1"
