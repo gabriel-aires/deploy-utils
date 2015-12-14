@@ -73,7 +73,7 @@ function chk_template () {
 			end 1 2> /dev/null || exit 1
 
 		elif [ "$(cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template | wc -l)" -ne "0" ]; then
-			case $execution_mode in
+			case "$execution_mode" in
 				agent) log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
 				server) echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
 			esac
