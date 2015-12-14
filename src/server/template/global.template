@@ -33,6 +33,7 @@ html_tr_style_warning=
 regex_tmp_dir=
 regex_bak_dir=
 regex_history_dir=
+regex_html_dir=
 regex_repo_dir=
 regex_lock_dir=
 # Expressões de validação de parâmetros das aplicações
@@ -65,4 +66,4 @@ regex_auto_homologacao=
 regex_auto_sustentacao=
 regex_auto_producao=
 # Expressões inválidas
-not_regex_
+not_regex_[a-z][0-9a-z_]*=
