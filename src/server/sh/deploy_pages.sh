@@ -611,8 +611,6 @@ if [ -d "${deploy_log_dir}_PENDENTE" ]; then
 	rmdir ${deploy_log_dir}_PENDENTE
 fi
 
-mkdir -p $deploy_log_dir
-
 echo -e "\nSistema:\t$app"
 echo -e "Revisão:\t$rev"
 

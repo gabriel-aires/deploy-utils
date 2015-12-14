@@ -258,7 +258,7 @@ function set_app_history_dirs () {
 
 	id_deploy=$(echo $(date +%F_%Hh%Mm%Ss)_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
 
-	case execution_mode in
+	case $execution_mode in
 		'server')
 			app_history_dir="${app_history_dir_tree}/${app}"
 			deploy_log_dir="${app_history_dir}/${id_deploy}"
