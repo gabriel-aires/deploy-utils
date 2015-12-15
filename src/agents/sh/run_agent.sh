@@ -287,44 +287,51 @@ function log_agent () {
 ###### INICIALIZAÇÃO ######
 trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
-# Valida o arquivo global.conf, carrega configurações, valida variáveis e cria diretórios necessários.
+# Valida o arquivo global.conf e carrega configurações
 arq_props_global="${install_dir}/conf/global.conf"
 test -f "$arq_props_global" || exit 1
 dos2unix "$arq_props_global" > /dev/null 2>&1
 chk_template "$arq_props_global"
 source "$arq_props_global" || exit 1
 
+# cria diretório temporário
 tmp_dir="$work_dir/$pid"
+valid 'tmp_dir' 'Caminho inválido para armazenamento de diretórios temporários' && mkdir -p $tmp_dir
 
-erro=false
-valid 'remote_pkg_dir_tree' 'regex_remote_dir' 'Caminho inválido para o repositório de pacotes.' 'continue' || erro=1
-valid 'remote_log_dir_tree' 'regex_remote_dir' 'Caminho inválido para o diretório raiz de cópia dos logs.' 'continue' || erro=1
-valid 'remote_lock_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de lockfiles do servidor' 'continue' || erro=1
-valid 'remote_history_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de gravação do histórico' 'continue' || erro=1
-valid 'remote_app_history_dir_tree' 'regex_remote_dir' 'Caminho inválido para o histórico de deploy das aplicações' 'continue' || erro-1
-valid 'tmp_dir' 'Caminho inválido para armazenamento de diretórios temporários' 'continue' || erro=1
-valid 'lock_dir' 'Caminho inválido para o diretório de lockfiles do agente.' 'continue' || erro=1
-valid 'log_dir' 'Caminho inválido para o diretório de armazenamento de logs' 'continue' || erro=1
-valid 'agent_name' "Nome inválido para o agente." 'continue' || erro=1
-valid 'task_name' "Nome inválido para a tarefa." 'continue' || erro=1
-valid 'file_types' "Lista de extensões inválida." 'continue' || erro=1
-
-test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes.' && erro=1
-test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs.' && erro=1
-test ! -d "$remote_lock_dir" && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor' && erro=1
-test ! -d "$remote_history_dir" && log 'ERRO' 'Caminho para o diretório de gravação do histórico' && erro=1
-test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' && erro=1
-
-if $erro; then
-	exit 1
-else
-	unset erro && mkdir -p $tmp_dir $lock_dir $log_dir
-fi
-
-# expurga logs do mês anterior.
-touch $log
+# cria diretório de logs e expurga logs do mês anterior.
+valid 'log_dir' 'Caminho inválido para o diretório de armazenamento de logs'
+log="$log_dir/deploy-$(date +%F).log"
+mkdir -p $log_dir && touch $log
 echo "" >> $log
 find $log_dir -type f | grep -v $(date "+%Y-%m") | xargs rm -f
+
+# cria diretório de locks
+valid 'lock_dir' 'Caminho inválido para o diretório de lockfiles do agente.' && mkdir -p $lock_dir
+
+#valida caminho para diretórios do servidor e argumentos do script
+erro=false
+
+valid 'agent_name' "Nome inválido para o agente." 'continue' >> $log 2>&1 || erro=1
+valid 'task_name' "Nome inválido para a tarefa." 'continue' >> $log 2>&1 || erro=1
+valid 'file_types' "Lista de extensões inválida." 'continue' >> $log 2>&1 || erro=1
+
+valid 'remote_pkg_dir_tree' 'regex_remote_dir' 'Caminho inválido para o repositório de pacotes.' 'continue' >> $log 2>&1 || erro=1
+valid 'remote_log_dir_tree' 'regex_remote_dir' 'Caminho inválido para o diretório raiz de cópia dos logs.' 'continue' >> $log 2>&1 || erro=1
+valid 'remote_lock_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de lockfiles do servidor' 'continue' >> $log 2>&1 || erro=1
+valid 'remote_history_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de gravação do histórico' 'continue' >> $log 2>&1 || erro=1
+valid 'remote_app_history_dir_tree' 'regex_remote_dir' 'Caminho inválido para o histórico de deploy das aplicações' 'continue' >> $log 2>&1 || erro-1
+
+test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes inexistente.' >> $log 2>&1 && erro=1
+test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs inexistente.' >> $log 2>&1 && erro=1
+test ! -d "$remote_lock_dir" && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor não encontrado' >> $log 2>&1 && erro=1
+test ! -d "$remote_history_dir" && log 'ERRO' 'Caminho para o diretório de gravação do histórico não encontrado' >> $log 2>&1 && erro=1
+test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' >> $log 2>&1 && erro=1
+
+if $erro; then
+	end 1
+else
+	unset erro
+fi
 
 # Cria lockfiles.
 mklist	"$file_types" "$tmp_dir/ext_list"
@@ -365,8 +372,8 @@ echo $arq_props_local | while read -d '|' local_conf; do
 	valid 'ambiente' "Nome inválido para o ambiente." "continue" >> $log 2>&1 || continue
 
 	# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
-	set_dir "$remote_pkg_dir_tree" 'origem'
-	set_dir "$remote_log_dir_tree" 'destino'
+	set_dir "$remote_pkg_dir_tree" 'origem' >> $log 2>&1
+	set_dir "$remote_log_dir_tree" 'destino' >> $log 2>&1
 
 	if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
 		log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços." >> $log 2>&1
@@ -395,7 +402,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	case $task_name in
 		'log')
-			if [ "$(grep -E '^[:blank:]+([\'\"])?log([\'\"])?' $agent_script | wc -l)" -eq 1 ]; then
+			if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep 'log)' | wc -l)" -eq 1 ]; then
 				log_agent >> $log 2>&1
 			else
 				log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1
@@ -403,7 +410,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 			fi
 			;;
 		'deploy')
-			if [ "$(grep -E '^[:blank:]+([\'\"])?deploy([\'\"])?' $agent_script | wc -l)" -eq 1 ]; then
+			if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep 'deploy)' | wc -l)" -eq 1 ]; then
 				deploy_agent >> $log 2>&1
 			else
 				log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1
