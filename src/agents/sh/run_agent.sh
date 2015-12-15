@@ -314,9 +314,12 @@ test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz d
 test ! -d "$remote_lock_dir" && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor' && erro=1
 test ! -d "$remote_history_dir" && log 'ERRO' 'Caminho para o diretório de gravação do histórico' && erro=1
 test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' && erro=1
-test $erro && exit 1
 
-unset erro && mkdir -p $tmp_dir $lock_dir $log_dir
+if $erro; then
+	exit 1
+else
+	unset erro && mkdir -p $tmp_dir $lock_dir $log_dir
+fi
 
 # expurga logs do mês anterior.
 touch $log
