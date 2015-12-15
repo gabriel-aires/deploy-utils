@@ -4,6 +4,11 @@
 #
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
+# Utilização
+if [ "$#" -ne '3' ] [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+	echo "Utilização: $(readlink -f $0) <nome_agente> <nome_tarefa> <lista_extensões>" && exit 1
+fi
+
 agent_name="$1"
 task_name="$2"
 file_types="$3"
@@ -282,31 +287,47 @@ function log_agent () {
 ###### INICIALIZAÇÃO ######
 trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
-# Verifica se o arquivo global.conf atende ao template correspondente e carrega configurações.
+# Valida o arquivo global.conf, carrega configurações, valida variáveis e cria diretórios necessários.
 arq_props_global="${install_dir}/conf/global.conf"
 test -f "$arq_props_global" || exit 1
 dos2unix "$arq_props_global" > /dev/null 2>&1
 chk_template "$arq_props_global"
 source "$arq_props_global" || exit 1
 
-# cria diretório temporário.
-if [ ! -z "$work_dir" ]; then
-	tmp_dir="$work_dir/$pid"
-	mkdir -p $tmp_dir
-else
-	exit 0
-fi
+tmp_dir="$work_dir/$pid"
+
+erro=false
+valid 'remote_pkg_dir_tree' 'regex_remote_dir' 'Caminho inválido para o repositório de pacotes.' 'continue' || erro=1
+valid 'remote_log_dir_tree' 'regex_remote_dir' 'Caminho inválido para o diretório raiz de cópia dos logs.' 'continue' || erro=1
+valid 'remote_lock_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de lockfiles do servidor' 'continue' || erro=1
+valid 'remote_history_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de gravação do histórico' 'continue' || erro=1
+valid 'remote_app_history_dir_tree' 'regex_remote_dir' 'Caminho inválido para o histórico de deploy das aplicações' 'continue' || erro-1
+valid 'tmp_dir' 'Caminho inválido para armazenamento de diretórios temporários' 'continue' || erro=1
+valid 'lock_dir' 'Caminho inválido para o diretório de lockfiles do agente.' 'continue' || erro=1
+valid 'log_dir' 'Caminho inválido para o diretório de armazenamento de logs' 'continue' || erro=1
+valid 'agent_name' "Nome inválido para o agente." 'continue' || erro=1
+valid 'task_name' "Nome inválido para a tarefa." 'continue' || erro=1
+valid 'file_types' "Lista de extensões inválida." 'continue' || erro=1
+
+test ! -d 'remote_pkg_dir_tree' && log 'ERRO' 'Caminho para o repositório de pacotes.' && erro=1
+test ! -d 'remote_log_dir_tree' && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs.' && erro=1
+test ! -d 'remote_lock_dir' && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor' && erro=1
+test ! -d 'remote_history_dir' && log 'ERRO' 'Caminho para o diretório de gravação do histórico' && erro=1
+test ! -d 'remote_app_history_dir_tree' && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' && erro=1
+test $erro && exit 1
+
+unset erro && mkdir -p $tmp_dir $lock_dir $log_dir
+
+# expurga logs do mês anterior.
+touch $log
+echo "" >> $log
+find $log_dir -type f | grep -v $(date "+%Y-%m") | xargs rm -f
 
 # Cria lockfiles.
-if [ -n "$agent_name" ] && [ -n "$task_name" ] && [ -n "$file_types" ]; then
-	mklist	"$file_types" "$tmp_dir/ext_list"
-	while read extension; do
-		lock "$agent_name $task_name $extension" "Uma tarefa concorrente já está em andamento. Aguarde..."
-	done < $tmp_dir/ext_list
-else
-	log "ERRO" "O script requer os seguintes parâmetros: <nome_agente> <tarefa> <extensões de arquivo>"
-	end 1
-fi
+mklist	"$file_types" "$tmp_dir/ext_list"
+while read extension; do
+	lock "$agent_name $task_name $extension" "Uma tarefa concorrente já está em andamento. Aguarde..."
+done < $tmp_dir/ext_list
 
 # Identifica script e diretório de configuração do agente.
 dir_props_local="${install_dir}/conf/$agent_name"
@@ -324,29 +345,6 @@ if [ ! -x $agent_script ]; then
 	log "ERRO" "O arquivo executável correspondente ao agente $agent_name não foi identificado."
 	end 1
 fi
-
-# cria pasta de logs / expurga logs do mês anterior.
-if [ ! -z "$log_dir" ]; then
-	mkdir -p $log_dir
-	touch $log
-	echo "" >> $log
-	find $log_dir -type f | grep -v $(date "+%Y-%m") | xargs rm -f
-else
-	end 0
-fi
-
-if [ ! -d "$remote_pkg_dir_tree" ] || [ ! -d "$remote_log_dir_tree" ]; then
-	log "ERRO" "Parâmetros incorretos no arquivo '${arq_props_global}'." >> $log 2>&1
-	end "1"
-fi
-
-# Valida argumentos do script.
-valid 'agent_name' "Nome inválido para o agente." >> $log 2>&1
-valid 'task_name' "Nome inválido para a tarefa." >> $log 2>&1
-valid 'file_types' "Lista de extensões inválida." >> $log 2>&1
-
-# verifica se o agente existe.
-test -f "$agent_script" || end 1
 
 # verifica o(s) arquivo(s) de configuração do agente.
 if [ $(echo "$arq_props_local" | sed -r "s%|%%g" | wc -w) -eq 0 ]; then

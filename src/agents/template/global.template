@@ -29,8 +29,14 @@ dir_3=
 
 ### diretórios/arquivos locais utilizados pelo agente.
 work_dir=
+lock_dir=
 log_dir=
 log=
+
+### Validação de diretórios utilizados pelo agente.
+regex_tmp_dir=
+regex_lock_dir=
+regex_remote_dir=
 
 ### expressões regulares relacionadas a variáveis utilizadas pelo agente.
 regex_agent_name=
