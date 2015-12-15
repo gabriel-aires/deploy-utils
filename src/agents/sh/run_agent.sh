@@ -309,11 +309,11 @@ valid 'agent_name' "Nome inválido para o agente." 'continue' || erro=1
 valid 'task_name' "Nome inválido para a tarefa." 'continue' || erro=1
 valid 'file_types' "Lista de extensões inválida." 'continue' || erro=1
 
-test ! -d 'remote_pkg_dir_tree' && log 'ERRO' 'Caminho para o repositório de pacotes.' && erro=1
-test ! -d 'remote_log_dir_tree' && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs.' && erro=1
-test ! -d 'remote_lock_dir' && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor' && erro=1
-test ! -d 'remote_history_dir' && log 'ERRO' 'Caminho para o diretório de gravação do histórico' && erro=1
-test ! -d 'remote_app_history_dir_tree' && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' && erro=1
+test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes.' && erro=1
+test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs.' && erro=1
+test ! -d "$remote_lock_dir" && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor' && erro=1
+test ! -d "$remote_history_dir" && log 'ERRO' 'Caminho para o diretório de gravação do histórico' && erro=1
+test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' && erro=1
 test $erro && exit 1
 
 unset erro && mkdir -p $tmp_dir $lock_dir $log_dir
