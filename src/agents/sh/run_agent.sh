@@ -402,7 +402,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	case $task_name in
 		'log')
-			if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep 'log)' | wc -l)" -eq 1 ]; then
+			if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep -E '^[:blank:]*log\)' | wc -l)" -eq 1 ]; then
 				log_agent >> $log 2>&1
 			else
 				log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1
@@ -410,7 +410,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 			fi
 			;;
 		'deploy')
-			if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep 'deploy)' | wc -l)" -eq 1 ]; then
+			if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep -E '^[:blank:]*deploy\)' | wc -l)" -eq 1 ]; then
 				deploy_agent >> $log 2>&1
 			else
 				log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1
