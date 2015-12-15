@@ -395,7 +395,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	case $task_name in
 		'log')
-			if [ "$(grep -E '^[:blank:]+([\'\"])?log([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
+			if [ "$(grep -E '^[:blank:]+([\'\"])?log([\'\"])?' $agent_script | wc -l)" -eq 1 ]; then
 				log_agent >> $log 2>&1
 			else
 				log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1
@@ -403,7 +403,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 			fi
 			;;
 		'deploy')
-			if [ "$(grep -E '^[:blank:]+([\'\"])?deploy([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
+			if [ "$(grep -E '^[:blank:]+([\'\"])?deploy([\'\"])?' $agent_script | wc -l)" -eq 1 ]; then
 				deploy_agent >> $log 2>&1
 			else
 				log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1
