@@ -313,6 +313,7 @@ if [ -n "$agent_name" ] && [ -n "$task_name" ] && [ -n "$file_types" ]; then
 		lock "$agent_name $task_name $extension" "Uma tarefa concorrente já está em andamento. Aguarde..."
 	done < $tmp_dir/ext_list
 else
+	log "ERRO" "O script requer os seguintes parâmetros: <nome_agente> <tarefa> <extensões de arquivo>"
 	end 1
 fi
 
