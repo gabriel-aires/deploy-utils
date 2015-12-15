@@ -47,7 +47,7 @@ function set_dir () {
 
 	local fim=0
 	local n=1
-	local var_n="DIR_$n"
+	local var_n="dir_$n"
 
 	if [ "$(eval "echo \$$var_n")" == '' ];then
 		fim=1
@@ -62,7 +62,7 @@ function set_dir () {
 		dir_acima=$dir_acima/$dir_n
 
 		((n++))
-		var_n="DIR_$n"
+		var_n="dir_$n"
 
 		if [ "$(eval "echo \$$var_n")" == '' ];then
 			fim=1
