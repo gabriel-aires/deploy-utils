@@ -299,7 +299,7 @@ fi
 
 # Cria lockfiles.
 if [ -n "$agent_name" ] && [ -n "$task_name" ] && [ -n "$file_types" ]; then
-	mklist	$file_types > $tmp_dir/ext_list
+	mklist	"$file_types" "$tmp_dir/ext_list"
 	while read extension; do
 		lock "$agent_name $task_name $extension" "Uma tarefa concorrente já está em andamento. Aguarde..."
 	done < $tmp_dir/ext_list
