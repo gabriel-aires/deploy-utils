@@ -280,24 +280,16 @@ function log_agent () {
 
 
 ###### INICIALIZAÇÃO ######
-
 trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
-arq_props_global="${install_dir}/conf/global.conf"
-dir_props_local="${install_dir}/conf/$agent_name"
-agent_script="${install_dir}/sh/$agent_name.sh"
-arq_props_local=$(find "$dir_props_local" -type f -iname "*.conf" -print)
-arq_props_local=$(echo "$arq_props_local" | sed -r "s%(.)$%\1|%g")
-
 # Verifica se o arquivo global.conf atende ao template correspondente e carrega configurações.
-
+arq_props_global="${install_dir}/conf/global.conf"
 test -f "$arq_props_global" || exit 1
 dos2unix "$arq_props_global" > /dev/null 2>&1
 chk_template "$arq_props_global"
 source "$arq_props_global" || exit 1
 
 # cria diretório temporário.
-
 if [ ! -z "$work_dir" ]; then
 	tmp_dir="$work_dir/$pid"
 	mkdir -p $tmp_dir
@@ -306,7 +298,6 @@ else
 fi
 
 # Cria lockfiles.
-
 if [ -n "$agent_name" ] && [ -n "$task_name" ] && [ -n "$file_types" ]; then
 	mklist	$file_types > $tmp_dir/ext_list
 	while read extension; do
@@ -317,8 +308,24 @@ else
 	end 1
 fi
 
-# cria pasta de logs / expurga logs do mês anterior.
+# Identifica script e diretório de configuração do agente.
+dir_props_local="${install_dir}/conf/$agent_name"
+agent_script="${install_dir}/sh/$agent_name.sh"
 
+if [ -d $dir_props_local ]; then
+	arq_props_local=$(find "$dir_props_local" -type f -iname "*.conf" -print)
+	arq_props_local=$(echo "$arq_props_local" | sed -r "s%(.)$%\1|%g")
+else
+	log "ERRO" "O diretório de configuração do agente não foi encontrado."
+	end 1
+fi
+
+if [ ! -x $agent_script ]; then
+	log "ERRO" "O arquivo executável correspondente ao agente $agent_name não foi identificado."
+	end 1
+fi
+
+# cria pasta de logs / expurga logs do mês anterior.
 if [ ! -z "$log_dir" ]; then
 	mkdir -p $log_dir
 	touch $log
