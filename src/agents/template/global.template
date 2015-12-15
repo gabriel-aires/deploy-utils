@@ -35,6 +35,7 @@ log=
 
 ### Validação de diretórios utilizados pelo agente.
 regex_tmp_dir=
+regex_log_dir=
 regex_lock_dir=
 regex_remote_dir=
 
