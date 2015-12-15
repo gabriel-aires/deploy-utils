@@ -385,7 +385,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 	export 'tmp_dir'
 
 	while read l ; do
-		if [ $(echo $l | grep -Evx "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -eq 1 ]; then
+		if [ $(echo $l | grep -Ex "^[a-zA-Z0-9_]+='?[a-zA-Z0-9_/\-]+'?$" | wc -l) -eq 1 ]; then
 			conf_var=$(echo "$l" | sed -r "s|=.*$||")
 			export $conf_var
 		fi
