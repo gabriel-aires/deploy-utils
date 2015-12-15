@@ -393,7 +393,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
 	# executar agente.
 
-	case task_name in
+	case $task_name in
 		'log')
 			if [ "$(grep -E '^[:blank:]+([\'\"])?log([\'\"])?\)' $agent_script | wc -l)" -eq 1 ]; then
 				log_agent >> $log 2>&1
