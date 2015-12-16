@@ -234,7 +234,7 @@ function deploy_agent () {
 					qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
 					tail -n ${qtd_info_deploy} $log > $deploy_log_file
 
-				done < "$tmp_dir/pkg.list"
+				done
 
 			fi
 
