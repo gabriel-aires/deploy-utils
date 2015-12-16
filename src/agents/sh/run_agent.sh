@@ -99,7 +99,7 @@ chk_dir () {
 	    find $root_dir/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
 
 	    # garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
-	    find $root_dir/* -type d | grep -Ei "^$root_dir/[^/]+/[^/]+" | grep -Eixv "^$root_dir/[^/]+/$last_dir$" | xargs -r -d "\n" rm -Rfv
+	    find $root_dir/* -type d | grep -Ei "^$root_dir/[^/]+/[^/]+" | grep -Eixv "^$root_dir/[^/]+/deploy|$root_dir/[^/]+/log$" | xargs -r -d "\n" rm -Rfv
 
 	    # eliminar arquivos em local incorreto ou com extensão diferente das especificadas.
 		file_path_regex="^$root_dir/[^/]+/$last_dir/[^/]+\."
