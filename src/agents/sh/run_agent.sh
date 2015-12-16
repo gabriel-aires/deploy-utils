@@ -388,7 +388,9 @@ echo $arq_props_local | while read -d '|' local_conf; do
 	export 'interactive'
 	export 'lock_history'
 	export 'remote_lock_dir'
+	export 'history_lock_file'
 	export 'remote_history_dir'
+	export 'history_csv_file'
 	export 'tmp_dir'
 
 	while read l ; do
