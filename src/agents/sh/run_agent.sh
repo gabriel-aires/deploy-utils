@@ -99,12 +99,12 @@ chk_dir () {
 	    find $root_dir/* | sed -r "s| |\\ |g" | grep ' ' | xargs -r -d "\n" rm -Rfv
 
 	    # garantir integridade da estrutura de diretórios, eliminando subpastas inseridas incorretamente.
-	    find $root_dir/* -type d | grep -Ei "^$root_dir/[^/]+/[^/]+" | grep -Eixv "^$root_dir/[^/]+/deploy|$root_dir/[^/]+/log$" | xargs -r -d "\n" rm -Rfv
+	    find $root_dir/* -type d | grep -Eix "^$root_dir/[^/]+/$last_dir(/[^/]+)+$" | xargs -r -d "\n" rm -Rfv
 
 	    # eliminar arquivos em local incorreto ou com extensão diferente das especificadas.
 		file_path_regex="^$root_dir/[^/]+/$last_dir/[^/]+\."
 		file_path_regex="$(echo "$file_path_regex" | sed -r "s|^(.*)$|\1$ext_list\$|ig" | sed -r "s: :\$\|$file_path_regex:g")"
-		find "$root_dir" -type f | grep -Eixv "$file_path_regex" | xargs -r -d "\n" rm -fv
+		find "$root_dir" -type f | grep -Eix "^$root_dir/[^/]+/$last_dir/[^/]+$" | grep -Eixv "$file_path_regex" | xargs -r -d "\n" rm -fv
 
 	else
 		log "ERRO" "chk_dir: falha na validação dos parâmetros: $@"
