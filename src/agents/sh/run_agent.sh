@@ -19,7 +19,7 @@ execution_mode="agent"
 
 function log () {	##### log de execução detalhado.
 
-	echo -e "$(date +"%F %Hh%Mm%Ss") : $HOSTNAME : $BASH_SOURCE(${FUNCNAME[1]}): $1 :  $2"
+	echo -e "$(date +"%F %Hh%Mm%Ss") : $HOSTNAME : $(readlink -f $0) (${FUNCNAME[1]}) : $1 :  $2"
 
 }
 
