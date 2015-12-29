@@ -257,19 +257,19 @@ function log_agent () {
 
 		echo $app_list | while read -d '|' app; do
 
-			destino_log=$(find "$destino/" -type d -iwholename "$destino/$app/log" 2> /dev/null)
+			shared_log_dir=$(find "$destino/" -type d -iwholename "$destino/$app/log" 2> /dev/null)
 
-			if [ -d "$destino_log" ]; then
+			if [ -d "$shared_log_dir" ]; then
 
-				export destino_log
+				export shared_log_dir
 				export app
 
 				valid 'app' 'Nome de aplicação inválido.' "continue" || continue
 
 				rm -f $tmp_dir/*
 				$agent_script 'log'
-				cp -f $log "$destino_log/cron.log"
-				unix2dos "$destino_log/cron.log" > /dev/null 2>&1
+				cp -f $log "$shared_log_dir/cron.log"
+				unix2dos "$shared_log_dir/cron.log" > /dev/null 2>&1
 
 			else
 				log "ERRO" "O diretório para cópia de logs da aplicação $app não foi encontrado".

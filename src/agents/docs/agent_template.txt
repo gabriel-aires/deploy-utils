@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+# Orientações para construção do agente:
+#
+# 1) Variáveis.
+#
+#   a) Reservadas:
+#
+#       As variáveis abaixo são exportadas para o ambiente de execução do agente, PORÉM NÃO DEVEM SER UTILIZADAS DIRETAMENTE:
+#
+#       - $execution_mode:      	string que indica o modo de execução do script ("server" ou "agent")
+#       - $interactive:     	    flag que indica se o script deve ser executado em modo interativo ("true" ou "false")
+#       - $lock_history:        	flag que indica se o processo atual possui a trava para escrita no arquivo de histórico ("true" ou "false")
+#       - $remote_lock_dir:     	caminho para o diretório de lockfiles (ex: "/mnt/...")
+#       - $history_lock_file:   	nome do arquivo de trava do histórico (ex: "deploy_log_edit")
+#       - $remote_history_dir:  	caminho para o diretório do histórico (ex: "/mnt/...")
+#       - $remote_app_history_dir:  caminho para o diretório de histórico da aplicação em questão (ex: "/mnt/.../$app")
+#       - $history_csv_file:    	nome do arquivo csv que contém o histórico (ex: "deploy_log.csv")
+#
+#   b) Somente-leitura:
+#
+#       As variáveis abaixo são exportadas para o ambiente de execução do agente E PODEM SER REFERENCIADAS CONFORME NECESSÁRIO, MAS NÃO REATRIBUÍDAS (ver casos especiais* abaixo):
+#
+#		Comuns:
+#
+#       	- $tmp_dir:             caminho para o diretório temporário a ser utilizado pelo agente (ex: "/opt/.../$pid_do_processo_pai")
+#       	                        * o diretório poderá ser utilizado livremente para armazenar arquivos temporários
+#   	                            * o diretório existirá e estará vazio ao início da execução do agente
+#	                 	            * o diretório não deve ser apagado (essa tarefa é realizada pelo processo pai).
+#
+#       	- $app:                 nome da aplicação em questão (ex: "visao")
+#  	        	                    * utilizado no processo de deploy ou cópia de logs do servidor de aplicação.
+#  	            	                * corresponde a um diretório na árvores do repositório de pacotes/logs
+#
+#		Cópia de logs:
+#
+#			- $shared_log_dir:		caminho para o diretório compartilhado de logs da aplicação (ex:/mnt/.../$app/log)
+#									* utilizado somente para cópia de logs do servidor de aplicação
+#									* os arquivos de log da aplicação e/ou da instância do servidor de aplicação deverão ser copiados para este diretório.
+#
+#		Deploy de pacotes:
+#
+#			- $deploy_log_dir:		caminho para o diretório de log do deploy em questão (ex:/opt/.../$app/$deploy_id)
+#									* utilizado somente no processo de deploy.
+#									* a saída padrão do agente é automaticamente redirecionada para o arquivo $deploy_log_dir/deploy_${host}.log
+#									* poderão ser acrescentados arquivos adicionais a este diretório conforme conveniente.
+#
+#  	     	- $pkg:                 caminho completo para o pacote da aplicação encontrado (ex: "/mnt/.../$app-1.0.3.war")
+#           	                    * utilizado somente no processo de deploy.
+#           	                    * deve ser removido em caso de deploy bem sucedido.
+#
+#       	- $ext:                 extensão do pacote encontrado (ex: "war")
+#           	                    * utilizado somente no processo de deploy.
+#
+#       	- $host*:                hostname da máquina onde o agente é executado (ex: "rhjb5pdin01")
+#           	                    * utilizado somente no processo de deploy.
+#               	                * normalmente a aplicação roda na mesma máquina do agente de deploy, caso contrário modificar o valor de $host conforme requerido.
+#
+#       	- $rev*:                 versão da nova release encontrada para deploy (ex: "1.0.3")
+#           	                    * para pacotes war, ear e sar, é o valor do campo "implementation-version" no arquivo "META-INF/MANIFEST.MF"
+#               	                * para outros arquivos, é o trecho do nome do pacote compreendido entre o nome da aplicação e extensão do arquivo, ex: sgq-(1.0.3).war.
+#                   	            * caso seja necessário obter a revisão por outro método, reatribuir o valor de $rev conforme requerido.
+#
+#	c) Variáveis específicas do agente:
+#
+#		São aquelas definidas no arquivo de configuração do agente em $install_dir/conf/$agent_name. Também são exportadas para o ambiente de execução.
+#		Enquanto as variáveis anteriores passam por validação prévia, estas devem ser checadas diretamente pelo agente a ser executado.
+#
+# 2) Funções.
+#
+#	a) Funções pré-definidas: são exportadas a partir do processo pai.
+#
+#       Nome:		write_history
+#		Descrição: 	a função write history deve ser chamada para registrar o resultado de um deploy no arquivo de histórico.
+#		Argumentos:	mensagem de deploy (string)
+#		Exemplos:	write_history "Deploy concluído com sucesso na instância XXXXXXXX"; write_history "Deploy abortado."
+#
+#		Nome:		log
+#		Descrição:	grava no log do agente uma mensagem no formato "HORÁRIO : HOSTNAME : ARQUIVO (FUNÇÃO) : NIVEL_LOG : MENSAGEM".
+#		Argumentos:	nível de log (string), mensagem de log (string)
+#		Exemplos:	log "INFO" "Iniciando o deploy do arquivo $pkg", log "ERRO" "Script de inicialização da instância XXXX não encontrado."
+#
+#	b) Funções do agente: devem ser criadas para possibilitar o funcionamento do agente.
+#
+#		Nome:		deploy_pkg
+#		Descrição:	a função deploy_pkg deve ser criada para possibilitar o deploy de um pacote no servidor de aplicação.
+#		Argumentos:	nenhum
+#		Exemplos:	deploy_pkg;
+#
+#		Nome:		copy_log
+#		Descrição:	a função copy_log deve ser criada para disponibilizar os logs da aplicação no diretório compartilhado.
+#		Argumentos:	nenhum
+#		Exemplos:	copy_log;
+#
+#	c) Funções auxiliares: à exceção das funções acima, outras poderão ser definidas no script do agente conforme conveniente.
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+function deploy_pkg () {
+
+	# Validar variáveis específicas
+
+	# encontrar local de implantação da aplicação $app
+
+	# parar a respectiva instância do servidor de aplicação
+
+	# efetuar deploy do pacote $pkg no diretório de destino, renomeando-o para $app.$ext
+
+	# reiniciar instância do servidor de aplicação
+
+	# registrar sucesso do deploy no log do agente e no histórico de deploy
+	log "INFO" "Deploy do arquivo $pkg concluído com sucesso!"
+	write_history "Deploy concluído com sucesso."
+
+	# remover pacote do diretório de origem
+	rm -f $pkg
+
+}
+
+function copy_log () {
+
+	# Validar variáveis específicas
+
+	# registrar o início do processo de cópia de logs no log do agente
+	log "INFO" "Buscando logs da aplicação $app..."
+
+	# localizar logs específicos da aplicação $app e/ou do servidor de aplicação
+
+	# copiar arquivos para o diretório $shared_log_dir
+
+}
+
+case $1 in
+	log) copy_log;;
+	deploy) deploy_pkg;;
+	*) log "ERRO" "O script somente admite os parâmetros 'deploy' ou 'log'.";;
+esac

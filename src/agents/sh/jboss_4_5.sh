@@ -180,9 +180,9 @@ function copy_log () {
 			server_log=$(find "${caminho_instancias_jboss}/${instancia_jboss}" -iwholename "${caminho_instancias_jboss}/${instancia_jboss}/log/server.log" 2> /dev/null)
 
 			if [ $(echo $server_log | wc -l) -eq 1 ]; then
-				cd $(dirname $server_log); zip -rql1 ${destino_log}/${instancia_jboss}.zip *; cd - > /dev/null
-				cp -f $server_log "$destino_log/server_${instancia_jboss}.log"
-				unix2dos "$destino_log/server_${instancia_jboss}.log" > /dev/null 2>&1
+				cd $(dirname $server_log); zip -rql1 ${shared_log_dir}/${instancia_jboss}.zip *; cd - > /dev/null
+				cp -f $server_log "$shared_log_dir/server_${instancia_jboss}.log"
+				unix2dos "$shared_log_dir/server_${instancia_jboss}.log" > /dev/null 2>&1
 			else
 				log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $app."
 			fi
