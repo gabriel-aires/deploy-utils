@@ -1,0 +1,14 @@
+# -----------------------------------------------------------------------------------------------------
+# Local a ser monitorado no repositório de pacotes. Cada variável corresponde a um nível de diretório.
+# -----------------------------------------------------------------------------------------------------
+ambiente=
+servidor_aplicacao=
+identificacao=
+# -----------------------------------------------------------------------------------------------------
+# Parâmetros do servidor de aplicação:
+# -----------------------------------------------------------------------------------------------------
+wildfly_dir=
+controller_hostname=
+controller_port=
+user=
+password=

@@ -364,8 +364,9 @@ fi
 # Executa a tarefa especificada para cada arquivo de configuração do agente.
 echo $arq_props_local | while read -d '|' local_conf; do
 
-	# Valida o arquivo de configurações $local_conf
+	# Valida o arquivo de configurações $local_conf, que deve atender aos templates local.template e $agent_name.template
 	chk_template "$local_conf" 'local' 'continue' >> $log 2>&1 || continue
+	chk_template "$local_conf" "$agent_name" 'continue' >> $log 2>&1 || continue
 	source "$local_conf" || continue
 
 	# validar parâmetro ambiente do arquivo $local_conf:
