@@ -311,21 +311,21 @@ valid 'lock_dir' 'Caminho inválido para o diretório de lockfiles do agente.' &
 #valida caminho para diretórios do servidor e argumentos do script
 erro=false
 
-valid 'agent_name' "Nome inválido para o agente." 'continue' >> $log 2>&1 || erro=1
-valid 'task_name' "Nome inválido para a tarefa." 'continue' >> $log 2>&1 || erro=1
-valid 'file_types' "Lista de extensões inválida." 'continue' >> $log 2>&1 || erro=1
+valid 'agent_name' "Nome inválido para o agente." 'continue' >> $log 2>&1 || erro=true
+valid 'task_name' "Nome inválido para a tarefa." 'continue' >> $log 2>&1 || erro=true
+valid 'file_types' "Lista de extensões inválida." 'continue' >> $log 2>&1 || erro=true
 
-valid 'remote_pkg_dir_tree' 'regex_remote_dir' 'Caminho inválido para o repositório de pacotes.' 'continue' >> $log 2>&1 || erro=1
-valid 'remote_log_dir_tree' 'regex_remote_dir' 'Caminho inválido para o diretório raiz de cópia dos logs.' 'continue' >> $log 2>&1 || erro=1
-valid 'remote_lock_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de lockfiles do servidor' 'continue' >> $log 2>&1 || erro=1
-valid 'remote_history_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de gravação do histórico' 'continue' >> $log 2>&1 || erro=1
-valid 'remote_app_history_dir_tree' 'regex_remote_dir' 'Caminho inválido para o histórico de deploy das aplicações' 'continue' >> $log 2>&1 || erro-1
+valid 'remote_pkg_dir_tree' 'regex_remote_dir' 'Caminho inválido para o repositório de pacotes.' 'continue' >> $log 2>&1 || erro=true
+valid 'remote_log_dir_tree' 'regex_remote_dir' 'Caminho inválido para o diretório raiz de cópia dos logs.' 'continue' >> $log 2>&1 || erro=true
+valid 'remote_lock_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de lockfiles do servidor' 'continue' >> $log 2>&1 || erro=true
+valid 'remote_history_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de gravação do histórico' 'continue' >> $log 2>&1 || erro=true
+valid 'remote_app_history_dir_tree' 'regex_remote_dir' 'Caminho inválido para o histórico de deploy das aplicações' 'continue' >> $log 2>&1 || erro=true
 
-test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes inexistente.' >> $log 2>&1 && erro=1
-test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs inexistente.' >> $log 2>&1 && erro=1
-test ! -d "$remote_lock_dir" && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor não encontrado' >> $log 2>&1 && erro=1
-test ! -d "$remote_history_dir" && log 'ERRO' 'Caminho para o diretório de gravação do histórico não encontrado' >> $log 2>&1 && erro=1
-test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' >> $log 2>&1 && erro=1
+test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes inexistente.' >> $log 2>&1 && erro=true
+test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs inexistente.' >> $log 2>&1 && erro=true
+test ! -d "$remote_lock_dir" && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor não encontrado' >> $log 2>&1 && erro=true
+test ! -d "$remote_history_dir" && log 'ERRO' 'Caminho para o diretório de gravação do histórico não encontrado' >> $log 2>&1 && erro=true
+test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' >> $log 2>&1 && erro=true
 
 if $erro; then
 	end 1
