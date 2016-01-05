@@ -6,7 +6,7 @@ function deploy_pkg () {
 	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | grep "$app.$ext")"
 	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app.$ext" | grep "enabled" | cut -f1 -d ' ')"
 
-	if [ -n $app_deployed ]; then
+	if [ -n "$app_deployed" ]; then
 
 		echo "$app_srvgroup" | while read group; do
 
@@ -45,7 +45,7 @@ function copy_log () {
 	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | cut -f1 -d ' ' | grep -Ex "$app\..+")"
 	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app_deployed" | grep "enabled" | cut -f1 -d ' ')"
 
-	if [ -n $app_deployed ]; then
+	if [ -n "$app_deployed" ]; then
 
 		echo "$app_srvgroup" | while read group; do
 
