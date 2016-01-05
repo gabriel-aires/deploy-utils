@@ -42,10 +42,10 @@ function copy_log () {
 	log "INFO" "Buscando logs da aplicação $app..."
 
 	# localizar logs específicos da aplicação $app e/ou do servidor de aplicação
-	app_name="$($wildfly_cmd --command="deployment-info --server-group=*" | cut -f1 -d ' ' | grep -Ex "$app\..+")"
-	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app_name" | grep "enabled" | cut -f1 -d ' ')"
+	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | cut -f1 -d ' ' | grep -Ex "$app\..+")"
+	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app_deployed" | grep "enabled" | cut -f1 -d ' ')"
 
-	if [ -n $app_name ]; then
+	if [ -n $app_deployed ]; then
 
 		echo "$app_srvgroup" | while read group; do
 
