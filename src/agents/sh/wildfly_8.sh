@@ -62,9 +62,8 @@ function copy_log () {
 
 					# copiar arquivos para o diretório $shared_log_dir
 					log "INFO" "Copiando logs da aplicação $app no diretório $app_log_dir"
-					hc_name=$(echo $app_log_dir | sed -r "s|$wildfly_dir||" | cut -f1 -d '/')
-					cd $app_log_dir; zip -rql1 ${shared_log_dir}/${hc_name}_${group}.zip *; cd - > /dev/null
-					cp -f $app_log_dir/server.log $shared_log_dir/server_${hc_name}_${group}.log
+					cd $app_log_dir; zip -rql1 ${shared_log_dir}/logs_${hc_name}_${srvconf}.zip *; cd - > /dev/null
+					cp -f $app_log_dir/server.log $shared_log_dir/server_${hc_name}_${srvconf}.log
 
 				else
 

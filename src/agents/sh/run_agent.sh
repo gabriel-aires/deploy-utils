@@ -268,8 +268,8 @@ function log_agent () {
 
 				rm -f $tmp_dir/*
 				$agent_script 'log'
-				cp -f $log "$shared_log_dir/cron.log"
-				unix2dos "$shared_log_dir/cron.log" > /dev/null 2>&1
+				cp -f $log "$shared_log_dir/cron_$HOSTNAME.log"
+				unix2dos "$shared_log_dir/cron_$HOSTNAME.log" > /dev/null 2>&1
 
 			else
 				log "ERRO" "O diretório para cópia de logs da aplicação $app não foi encontrado".
