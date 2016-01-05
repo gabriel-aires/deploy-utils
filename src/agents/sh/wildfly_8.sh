@@ -20,8 +20,8 @@ function deploy_pkg () {
 			$wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group" || exit 1
 
 			# registrar sucesso do deploy no log do agente e no histórico de deploy
-			log "INFO" "Deploy do arquivo $pkg realizado com sucesso no server-group $group"
-			write_history "Deploy da aplicação $app realizado com sucesso no server-group $group"
+			log "INFO" "Deploy do arquivo $pkg realizado com sucesso no server-group '$group'"
+			write_history "Deploy concluído com sucesso no grupo '$group'"
 
 		done
 
