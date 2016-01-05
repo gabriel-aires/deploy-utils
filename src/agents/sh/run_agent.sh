@@ -24,9 +24,9 @@ function log () {	##### log de execução detalhado.
 	
 	if [ $len -lt 80 ]; then
 		local fill=$((80 - $len))
-		echo -e "$msg" | sed -r "s|(.)$|\1 {$fill}$1    $2|"
+		echo -e "$msg" | sed -r "s|(.)$|\1                   |" | sed -r "s| {$fill}$|$1\t$2|"
 	else
-		echo -e "$msg    $1    $2"
+		echo -e "$msg    $1\t$2"
 	fi
 
 }
