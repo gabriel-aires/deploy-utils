@@ -3,10 +3,10 @@
 function deploy_pkg () {
 
 	# encontrar local de implantação da aplicação $app
-	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | grep "$app.$ext" | wc -l)"
+	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | grep "$app.$ext")"
 	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app.$ext" | grep "enabled" | cut -f1 -d ' ')"
 
-	if [ $app_deployed -eq 1 ]; then
+	if [ -n $app_deployed ]; then
 
 		echo "$app_srvgroup" | while read group; do
 
@@ -43,10 +43,9 @@ function copy_log () {
 
 	# localizar logs específicos da aplicação $app e/ou do servidor de aplicação
 	app_name="$($wildfly_cmd --command="deployment-info --server-group=*" | cut -f1 -d ' ' | grep -Ex "$app\..+")"
-	app_deployed=$(echo $app_name | wc -l)
 	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app_name" | grep "enabled" | cut -f1 -d ' ')"
 
-	if [ $app_deployed -eq 1 ]; then
+	if [ -n $app_name ]; then
 
 		echo "$app_srvgroup" | while read group; do
 
