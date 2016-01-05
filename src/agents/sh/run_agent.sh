@@ -222,8 +222,8 @@ function deploy_agent () {
 					export deploy_log_dir
 
 					#valida variáveis antes da chamada do agente.
-					valid 'app' "Nome de aplicação inválido: $app" "continue" || continue
-					valid 'host' "regex_hosts_$ambiente" "Host inválido para o ambiente $ambiente: $host" "continue" || continue
+					valid 'app' "'$app': Nome de aplicação inválido" "continue" || continue
+					valid 'host' "regex_hosts_$ambiente" "'$host': Host inválido para o ambiente $ambiente" "continue" || continue
 
 					#inicio deploy
 					deploy_log_file=$deploy_log_dir/deploy_${host}.log
@@ -264,7 +264,7 @@ function log_agent () {
 				export shared_log_dir
 				export app
 
-				valid 'app' 'Nome de aplicação inválido.' "continue" || continue
+				valid 'app' "'$app': Nome de aplicação inválido." "continue" || continue
 
 				rm -f $tmp_dir/*
 				$agent_script 'log'
@@ -296,30 +296,30 @@ source "$arq_props_global" || exit 1
 
 # cria diretório temporário
 tmp_dir="$work_dir/$pid"
-valid 'tmp_dir' 'Caminho inválido para armazenamento de diretórios temporários' && mkdir -p $tmp_dir
+valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" && mkdir -p $tmp_dir
 
 # cria diretório de logs e expurga logs do mês anterior.
-valid 'log_dir' 'Caminho inválido para o diretório de armazenamento de logs'
+valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs"
 log="$log_dir/deploy-$(date +%F).log"
 mkdir -p $log_dir && touch $log
 echo "" >> $log
 find $log_dir -type f | grep -v $(date "+%Y-%m") | xargs rm -f
 
 # cria diretório de locks
-valid 'lock_dir' 'Caminho inválido para o diretório de lockfiles do agente.' && mkdir -p $lock_dir
+valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles do agente." && mkdir -p $lock_dir
 
 #valida caminho para diretórios do servidor e argumentos do script
 erro=false
 
-valid 'agent_name' "Nome inválido para o agente." 'continue' >> $log 2>&1 || erro=true
-valid 'task_name' "Nome inválido para a tarefa." 'continue' >> $log 2>&1 || erro=true
-valid 'file_types' "Lista de extensões inválida." 'continue' >> $log 2>&1 || erro=true
+valid 'agent_name' "'$agent_name': Nome inválido para o agente." 'continue' >> $log 2>&1 || erro=true
+valid 'task_name' "'$task_name': Nome inválido para a tarefa." 'continue' >> $log 2>&1 || erro=true
+valid 'file_types' "'$file_types': Lista de extensões inválida." 'continue' >> $log 2>&1 || erro=true
 
-valid 'remote_pkg_dir_tree' 'regex_remote_dir' 'Caminho inválido para o repositório de pacotes.' 'continue' >> $log 2>&1 || erro=true
-valid 'remote_log_dir_tree' 'regex_remote_dir' 'Caminho inválido para o diretório raiz de cópia dos logs.' 'continue' >> $log 2>&1 || erro=true
-valid 'remote_lock_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de lockfiles do servidor' 'continue' >> $log 2>&1 || erro=true
-valid 'remote_history_dir' 'regex_remote_dir' 'Caminho inválido para o diretório de gravação do histórico' 'continue' >> $log 2>&1 || erro=true
-valid 'remote_app_history_dir_tree' 'regex_remote_dir' 'Caminho inválido para o histórico de deploy das aplicações' 'continue' >> $log 2>&1 || erro=true
+valid 'remote_pkg_dir_tree' 'regex_remote_dir' "'$remote_pkg_dir_tree': Caminho inválido para o repositório de pacotes." 'continue' >> $log 2>&1 || erro=true
+valid 'remote_log_dir_tree' 'regex_remote_dir' "'$remote_log_dir_tree': Caminho inválido para o diretório raiz de cópia dos logs." 'continue' >> $log 2>&1 || erro=true
+valid 'remote_lock_dir' 'regex_remote_dir' "'$remote_log_dir': Caminho inválido para o diretório de lockfiles do servidor" 'continue' >> $log 2>&1 || erro=true
+valid 'remote_history_dir' 'regex_remote_dir' "'$remote_history_dir': Caminho inválido para o diretório de gravação do histórico" 'continue' >> $log 2>&1 || erro=true
+valid 'remote_app_history_dir_tree' 'regex_remote_dir' "'$remote_app_history_dir_tree': Caminho inválido para o histórico de deploy das aplicações" 'continue' >> $log 2>&1 || erro=true
 
 test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes inexistente.' >> $log 2>&1 && erro=true
 test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs inexistente.' >> $log 2>&1 && erro=true
@@ -370,7 +370,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 	source "$local_conf" || continue
 
 	# validar parâmetro ambiente do arquivo $local_conf:
-	valid 'ambiente' "Nome inválido para o ambiente." "continue" >> $log 2>&1 || continue
+	valid 'ambiente' "'$ambiente': Nome inválido para o ambiente." "continue" >> $log 2>&1 || continue
 
 	# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
 	set_dir "$remote_pkg_dir_tree" 'origem' >> $log 2>&1
