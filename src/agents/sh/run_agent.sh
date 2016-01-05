@@ -19,7 +19,15 @@ execution_mode="agent"
 
 function log () {	##### log de execução detalhado.
 
-	echo -e "$(date +"%F %Hh%Mm%Ss")\t$HOSTNAME\t$(basename $(readlink -f $0))\t(${FUNCNAME[1]})\t$1\t$2"
+	local msg="$(date +"%F %Hh%Mm%Ss")  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
+	local len=$(echo "$msg" | wc -c)
+	
+	if [ $len -lt 80 ]; then
+		local fill=$((80 - $len))
+		echo -e "$msg" | sed -r "s|(.)$|\1 {$fill}$1    $2|"
+	else
+		echo -e "$msg    $1    $2"
+	fi
 
 }
 
