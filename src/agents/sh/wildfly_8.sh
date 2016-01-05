@@ -52,7 +52,7 @@ function copy_log () {
 
 			app_logs="$(find $wildfly_dir/ -type d -iwholename "*/servers/$group*/log" 2> /dev/null)"
 
-			echo "$app_logs" | while read "$app_log_dir"; do
+			echo "$app_logs" | while read "app_log_dir"; do
 
 				if [ -f $app_log_dir/server.log ]; then
 
@@ -88,7 +88,7 @@ test -n $password || exit 1
 
 # testar conexão
 wildfly_cmd="$wildfly_dir/bin/jboss-cli.sh --connect --controller=$controller_hostname:$controller_port --user=$user --password=$password"
-$wildfly_cmd --command="deployment-info --server-group=*" || exit 1
+$wildfly_cmd --command="deployment-info --server-group=*" > /dev/null || exit 1
 
 # executar função de deploy ou cópia de logs
 case $1 in
