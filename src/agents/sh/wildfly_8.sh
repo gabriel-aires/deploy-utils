@@ -50,11 +50,15 @@ function copy_log () {
 
 		echo "$app_srvgroup" | while read group; do
 
-			app_logs="$(find $wildfly_dir/ -type d -iwholename "*/servers/$group*/log" 2> /dev/null)"
-
-			echo "$app_logs" | while read "app_log_dir"; do
-
-				if [ -f $app_log_dir/server.log ]; then
+            hc=$(find $wildfly_dir/ -type d -maxdepth 1 -iname 'hc*' 2> /dev/null)
+            
+            echo "$hc" | while read hc_dir; do
+                
+                hc_name=$(basename $hc_dir)
+                srvconf=$(cat $hc_dir/configuration/host-slave.xml | grep -E "group=(['\"])?$group(['\"])?" | sed -r "s|^.*name=['\"]?([^'\"]+)['\"]?.*$|\1|")
+    			app_log_dir=$(find $hc_dir/ -type d -iwholename "$hc_dir/servers/$srvconf/log" 2> /dev/null)
+    
+				if [ -d  "$app_log_dir" ] && [ -f "$app_log_dir/server.log" ]; then
 
 					# copiar arquivos para o diretório $shared_log_dir
 					log "INFO" "Copiando logs da aplicação $app no diretório $app_log_dir"
