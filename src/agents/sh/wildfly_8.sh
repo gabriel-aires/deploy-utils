@@ -1,47 +1,47 @@
 #!/bin/bash
 
+# TODO: adicionar suporte a wildfly 8 standalone.
+
 function deploy_pkg () {
 
-	# encontrar local de implantação da aplicação $app
-	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | grep "$app.$ext")"
-	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app.$ext" | grep "enabled" | cut -f1 -d ' ')"
+	# Caso o host seja domain controller, verificar se a aplicação $app já foi implantada.
+	if [ "$HOSTNAME" == "$controller_hostname" ] || [ "$(echo $HOSTNAME | cut -f1 -d '.')" == "$controller_hostname" ]; then
 
-	if [ -n "$app_deployed" ]; then
+    	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | grep "$app.$ext")"
+    	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app.$ext" | grep "enabled" | cut -f1 -d ' ')"
+        
+        if [ -n "$app_deployed" ]; then
+        
+            log "INFO" "Iniciando processo de deploy da aplicação $app..."
+        
+        	echo "$app_srvgroup" | while read group; do
+        
+        		log "INFO" "Removendo a aplicação $app do grupo $group..."
+        		$wildfly_cmd --command="undeploy $app.$ext --server-groups=$group" || exit 1
+        		log "INFO" "Implantando a nova versão da aplicação $app no grupo $group"
+        		$wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group" || exit 1
+        		log "INFO" "Deploy do arquivo $pkg realizado com sucesso no server-group '$group'"
+        		write_history "Deploy concluído com sucesso no grupo '$group'"
+        
+        	done
+        
+        else
+        	log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && exit 1
+        fi
+        
+        # finalizado o deploy, remover pacote do diretório de origem
+        rm -f $pkg
 
-		echo "$app_srvgroup" | while read group; do
-
-			log "INFO" "Removendo a aplicação $app do server-group $group"
-
-			# parar a respectiva instância do servidor de aplicação
-			$wildfly_cmd --command="undeploy $app.$ext --server-groups=$group" || exit 1
-
-			# efetuar deploy do pacote $pkg no diretório de destino, renomeando-o para $app.$ext
-			# reiniciar instância do servidor de aplicação
-			$wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group" || exit 1
-
-			# registrar sucesso do deploy no log do agente e no histórico de deploy
-			log "INFO" "Deploy do arquivo $pkg realizado com sucesso no server-group '$group'"
-			write_history "Deploy concluído com sucesso no grupo '$group'"
-
-		done
-
-	else
-
-		log "ERRO" "Não foi encontrado deploy anterior da aplicação $app" && exit 1
-
-	fi
-
-	# remover pacote do diretório de origem
-	rm -f $pkg
-
+    else
+        log "ERRO" "O deploy deve ser realizado através domain controller ($controller_host)" && exit 1
+    fi
 }
 
 function copy_log () {
 
-	# registrar o início do processo de cópia de logs no log do agente
 	log "INFO" "Buscando logs da aplicação $app..."
 
-	# localizar logs específicos da aplicação $app e/ou do servidor de aplicação
+    # verificar se a aplicação $app está implantada no domínio.
 	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | cut -f1 -d ' ' | grep -Ex "$app\..+")"
 	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app_deployed" | grep "enabled" | cut -f1 -d ' ')"
 
@@ -52,32 +52,31 @@ function copy_log () {
             hc=$(find $wildfly_dir/ -type d -maxdepth 1 -iname 'hc*' 2> /dev/null)
             
             echo "$hc" | while read hc_dir; do
-                
+
+                # para cada host controller, identificar os logs no diretório de configuração da instância associada ao server group                
                 hc_name=$(basename $hc_dir)
                 srvconf=$(cat $hc_dir/configuration/host-slave.xml | grep -E "group=(['\"])?$group(['\"])?" | sed -r "s|^.*name=['\"]?([^'\"]+)['\"]?.*$|\1|")
     			app_log_dir=$(find $hc_dir/ -type d -iwholename "$hc_dir/servers/$srvconf/log" 2> /dev/null)
     
 				if [ -d  "$app_log_dir" ] && [ -f "$app_log_dir/server.log" ]; then
 
-					# copiar arquivos para o diretório $shared_log_dir
 					log "INFO" "Copiando logs da aplicação $app no diretório $app_log_dir"
 					cd $app_log_dir; zip -rql1 ${shared_log_dir}/logs_${hc_name}_${srvconf}.zip *; cd - > /dev/null
 					cp -f $app_log_dir/server.log $shared_log_dir/server_${hc_name}_${srvconf}.log
+					
+					log "INFO" "Expurgando logs antigos no diretório $app_log_dir..."
+					ls -1 $app_log_dir/server.log.* | sort | head -n -$log_limit | xargs -r rm -fv
 
 				else
-
-					log "INFO" "Nenhum arquivo de log foi encontrado sob o diretório $app_log_dir"
-
+					log "INFO" "Não foram encontrados arquivos de log para a aplicação $app"
 				fi
 
 			done
-
+			
 		done
-
+		
 	else
-
-		log "ERRO" "Não foi encontrado deploy anterior da aplicação $app" && exit 1
-
+		log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && exit 1
 	fi
 }
 
@@ -87,8 +86,9 @@ test -n $controller_hostname || exit 1
 test -n $controller_port || exit 1
 test -n $user || exit 1
 test -n $password || exit 1
+test "$log_limit" -ge 0 || exit 1
 
-# testar conexão
+# testar a conexão com o domain controller
 wildfly_cmd="$wildfly_dir/bin/jboss-cli.sh --connect --controller=$controller_hostname:$controller_port --user=$user --password=$password"
 $wildfly_cmd --command="deployment-info --server-group=*" > /dev/null || exit 1
 
