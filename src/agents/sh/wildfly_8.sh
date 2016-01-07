@@ -4,31 +4,31 @@
 
 function deploy_pkg () {
 
-	# Caso o host seja domain controller, verificar se a aplicação $app já foi implantada.
-	if [ "$HOSTNAME" == "$controller_hostname" ] || [ "$(echo $HOSTNAME | cut -f1 -d '.')" == "$controller_hostname" ]; then
+    # Caso o host seja domain controller, verificar se a aplicação $app já foi implantada.
+    if [ "$HOSTNAME" == "$controller_hostname" ] || [ "$(echo $HOSTNAME | cut -f1 -d '.')" == "$controller_hostname" ]; then
 
-    	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | grep "$app.$ext")"
-    	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app.$ext" | grep "enabled" | cut -f1 -d ' ')"
-        
+        app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | grep "$app.$ext")"
+        app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app.$ext" | grep "enabled" | cut -f1 -d ' ')"
+
         if [ -n "$app_deployed" ]; then
-        
+
             log "INFO" "Iniciando processo de deploy da aplicação $app..."
-        
-        	echo "$app_srvgroup" | while read group; do
-        
-        		log "INFO" "Removendo a aplicação $app do grupo $group..."
-        		$wildfly_cmd --command="undeploy $app.$ext --server-groups=$group" || exit 1
-        		log "INFO" "Implantando a nova versão da aplicação $app no grupo $group"
-        		$wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group" || exit 1
-        		log "INFO" "Deploy do arquivo $pkg realizado com sucesso no server-group '$group'"
-        		write_history "Deploy concluído com sucesso no grupo '$group'"
-        
-        	done
-        
+
+            echo "$app_srvgroup" | while read group; do
+
+                log "INFO" "Removendo a aplicação $app do grupo $group..."
+                $wildfly_cmd --command="undeploy $app.$ext --server-groups=$group" || exit 1
+                log "INFO" "Implantando a nova versão da aplicação $app no grupo $group"
+                $wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group" || exit 1
+                log "INFO" "Deploy do arquivo $pkg realizado com sucesso no server-group '$group'"
+                write_history "Deploy concluído com sucesso no grupo '$group'"
+
+            done
+
         else
-        	log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && exit 1
+            log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && exit 1
         fi
-        
+
         # finalizado o deploy, remover pacote do diretório de origem
         rm -f $pkg
 
@@ -39,45 +39,45 @@ function deploy_pkg () {
 
 function copy_log () {
 
-	log "INFO" "Buscando logs da aplicação $app..."
+    log "INFO" "Buscando logs da aplicação $app..."
 
     # verificar se a aplicação $app está implantada no domínio.
-	app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | cut -f1 -d ' ' | grep -Ex "$app\..+")"
-	app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app_deployed" | grep "enabled" | cut -f1 -d ' ')"
+    app_deployed="$($wildfly_cmd --command="deployment-info --server-group=*" | cut -f1 -d ' ' | grep -Ex "$app\..+")"
+    app_srvgroup="$($wildfly_cmd --command="deployment-info --name=$app_deployed" | grep "enabled" | cut -f1 -d ' ')"
 
-	if [ -n "$app_deployed" ]; then
+    if [ -n "$app_deployed" ]; then
 
-		echo "$app_srvgroup" | while read group; do
+        echo "$app_srvgroup" | while read group; do
 
             hc=$(find $wildfly_dir/ -type d -maxdepth 1 -iname 'hc*' 2> /dev/null)
-            
+
             echo "$hc" | while read hc_dir; do
 
-                # para cada host controller, identificar os logs no diretório de configuração da instância associada ao server group                
+                # para cada host controller, identificar os logs no diretório de configuração da instância associada ao server group
                 hc_name=$(basename $hc_dir)
                 srvconf=$(cat $hc_dir/configuration/host-slave.xml | grep -E "group=(['\"])?$group(['\"])?" | sed -r "s|^.*name=['\"]?([^'\"]+)['\"]?.*$|\1|")
-    			app_log_dir=$(find $hc_dir/ -type d -iwholename "$hc_dir/servers/$srvconf/log" 2> /dev/null)
-    
-				if [ -d  "$app_log_dir" ] && [ -f "$app_log_dir/server.log" ]; then
+                app_log_dir=$(find $hc_dir/ -type d -iwholename "$hc_dir/servers/$srvconf/log" 2> /dev/null)
 
-					log "INFO" "Copiando logs da aplicação $app no diretório $app_log_dir"
-					cd $app_log_dir; zip -rql1 ${shared_log_dir}/logs_${hc_name}_${srvconf}.zip *; cd - > /dev/null
-					cp -f $app_log_dir/server.log $shared_log_dir/server_${hc_name}_${srvconf}.log
-					
-					log "INFO" "Expurgando logs antigos no diretório $app_log_dir..."
-					ls -1 $app_log_dir/server.log.* | sort | head -n -$log_limit | xargs -r rm -fv
+                if [ -d  "$app_log_dir" ] && [ -f "$app_log_dir/server.log" ]; then
 
-				else
-					log "INFO" "Não foram encontrados arquivos de log para a aplicação $app"
-				fi
+                    log "INFO" "Copiando logs da aplicação $app no diretório $app_log_dir"
+                    cd $app_log_dir; zip -rql1 ${shared_log_dir}/logs_${hc_name}_${srvconf}.zip *; cd - > /dev/null
+                    cp -f $app_log_dir/server.log $shared_log_dir/server_${hc_name}_${srvconf}.log
 
-			done
-			
-		done
-		
-	else
-		log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && exit 1
-	fi
+                    log "INFO" "Expurgando logs antigos no diretório $app_log_dir..."
+                    ls -1 $app_log_dir/server.log.* | sort | head -n -$log_limit | xargs -r rm -fv
+
+                else
+                    log "INFO" "Não foram encontrados arquivos de log para a aplicação $app"
+                fi
+
+            done
+
+        done
+
+    else
+        log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && exit 1
+    fi
 }
 
 # Validar variáveis específicas
@@ -94,7 +94,7 @@ $wildfly_cmd --command="deployment-info --server-group=*" > /dev/null || exit 1
 
 # executar função de deploy ou cópia de logs
 case $1 in
-	log) copy_log;;
-	deploy) deploy_pkg;;
-	*) log "ERRO" "O script somente admite os parâmetros 'deploy' ou 'log'.";;
+    log) copy_log;;
+    deploy) deploy_pkg;;
+    *) log "ERRO" "O script somente admite os parâmetros 'deploy' ou 'log'.";;
 esac
