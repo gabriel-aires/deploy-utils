@@ -250,17 +250,21 @@ function valid () {
 
 function write_history () {
 
-    ##### LOG DE DEPLOYS GLOBAL #####
-
-    local horario_log=$(echo "$(date +%F_%Hh%Mm%Ss)" | sed -r "s|^(....)-(..)-(..)_(.........)$|\3/\2/\1;\4|")
+    local date_log=$(echo "$(date +%F)" | sed -r "s|^(....)-(..)-(..)$|\3/\2/\1|")
+    local time_log=$(echo "$(date +%Hh%Mm%Ss)")
     local app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
     local rev_log="$(echo "$rev" | sed -r 's|;|_|g')"
     local ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
     local host_log="$(echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
     local obs_log="$1"
-    local msg_log="$horario_log;$app_log;$rev_log;$ambiente_log;$host_log;$obs_log;"
+    local flag_log="$2"
 
-    ##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
+    local aux="$interactive"; interactive=false
+    valid "regex_csv_value" "obs_log" "'$obs_log': mensagem inválida." "continue" || return 1
+    valid "regex_flag" "flag_log" "'$flag_log': flag de deploy inválida." "continue" || return 1
+    interactive=$aux
+
+    local msg_log="$date_log;$time_log;$app_log;$rev_log;$ambiente_log;$host_log;$obs_log;$flag_log;"
 
     local lock_path
     local history_path
@@ -278,6 +282,8 @@ function write_history () {
             app_history_path=${app_history_dir}
             ;;
     esac
+
+    ##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
     while [ -f "${lock_path}/$history_lock_file" ]; do                        #nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
         sleep 1
@@ -301,7 +307,7 @@ function write_history () {
 
 function set_app_history_dirs () {
 
-    id_deploy=$(echo $(date +%F_%Hh%Mm%Ss)_${rev}_${ambiente} | sed -r "s|/|_|g" | tr '[:upper:]' '[:lower:]')
+    id_deploy=$(echo $(date +%F_%Hh%Mm%Ss)_${rev}_${ambiente} | sed -r "s|[/;]|_|g" | tr '[:upper:]' '[:lower:]')
 
     case $execution_mode in
         'server')

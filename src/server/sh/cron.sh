@@ -31,7 +31,7 @@ function html () {
     tail --lines=$history_html_size $arquivo_entrada > $tmp_dir/html_tr
 
     sed -i -r 's|^(.)|\-\1|' $tmp_dir/html_tr
-    sed -i -r "s|^\-(([^;]+;){6}$mensagem_sucesso.*)$|\+\1|" $tmp_dir/html_tr
+    sed -i -r "s|^\-(([^;]+;){7}1)$|\+\1|" $tmp_dir/html_tr
     sed -i -r 's|;$|</td></tr>|' $tmp_dir/html_tr
     sed -i -r 's|;|</td><td>|g' $tmp_dir/html_tr
     sed -i -r 's|^\-|\t\t\t<tr style="@@html_tr_style_warning@@"><td>|' $tmp_dir/html_tr

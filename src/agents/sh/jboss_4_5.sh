@@ -90,7 +90,7 @@ function deploy_pkg () {
     if [ $( cat "$tmp_dir/old.list" | wc -l ) -eq 0 ]; then
 
         log "ERRO" "Deploy abortado. Não foi encontrado pacote anterior. O deploy deverá ser feito manualmente."
-        write_history "Deploy abortado. Pacote anterior não encontrado."
+        write_history "Deploy abortado. Pacote anterior não encontrado." "0"
 
     else
 
@@ -112,7 +112,7 @@ function deploy_pkg () {
 
             if [ -z "$script_init" ]; then
                 log "ERRO" "Não foi encontrado o script de inicialização da instância JBoss. O deploy deverá ser feito manualmente."
-                write_history "Deploy abortado. Script de inicialização não encontrado."
+                write_history "Deploy abortado. Script de inicialização não encontrado." "0"
             else
                 log "INFO" "Instância do JBOSS:     \t$instancia_jboss"
                 log "INFO" "Diretório de deploy:    \t$dir_deploy"
@@ -125,7 +125,7 @@ function deploy_pkg () {
 
                 if [ $(pgrep -f "$(dirname $caminho_instancias_jboss).*-c $instancia_jboss" | wc -l) -ne 0 ]; then
                     log "ERRO" "Não foi possível parar a instância $instancia_jboss do JBOSS. Deploy abortado."
-                    write_history "Deploy abortado. Impossível parar a instância $instancia_jboss."
+                    write_history "Deploy abortado. Impossível parar a instância $instancia_jboss." "0"
                 else
                     rm -f $old
                     cp $pkg $dir_deploy/$(echo $app | tr '[:upper:]' '[:lower:]').$ext
@@ -145,10 +145,10 @@ function deploy_pkg () {
 
                     if [ $(pgrep -f "$(dirname $caminho_instancias_jboss).*-c $instancia_jboss" | wc -l) -eq 0 ]; then
                         log "ERRO" "O deploy do arquivo $war foi concluído, porém não foi possível reiniciar a instância do JBOSS."
-                        write_history "Deploy não concluído. Erro ao reiniciar a instância $instancia_jboss."
+                        write_history "Deploy não concluído. Erro ao reiniciar a instância $instancia_jboss." "0"
                     else
                         log "INFO" "Deploy do arquivo $war concluído com sucesso!"
-                        write_history "Deploy concluído com sucesso na instância $instancia_jboss."
+                        write_history "Deploy concluído com sucesso na instância $instancia_jboss." "1"
                     fi
 
                 fi

@@ -74,8 +74,8 @@
 #
 #       Nome:		write_history
 #		Descrição: 	a função write history deve ser chamada para registrar o resultado de um deploy no arquivo de histórico.
-#		Argumentos:	mensagem de deploy (string)
-#		Exemplos:	write_history "Deploy concluído com sucesso na instância XXXXXXXX"; write_history "Deploy abortado."
+#		Argumentos:	mensagem de deploy (string), flag de deploy (0/1)
+#		Exemplos:	write_history "Deploy concluído com sucesso na instância XXXXXXXX" "1"; write_history "Deploy abortado." "0"
 #
 #		Nome:		log
 #		Descrição:	grava no log do agente uma mensagem no formato "HORÁRIO : HOSTNAME : ARQUIVO (FUNÇÃO) : NIVEL_LOG : MENSAGEM".
@@ -112,7 +112,7 @@ function deploy_pkg () {
 
 	# registrar sucesso do deploy no log do agente e no histórico de deploy
 	log "INFO" "Deploy do arquivo $pkg concluído com sucesso!"
-	write_history "Deploy concluído com sucesso."
+	write_history "Deploy concluído com sucesso." "1"
 
 	# remover pacote do diretório de origem
 	rm -f $pkg

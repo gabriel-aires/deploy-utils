@@ -142,7 +142,7 @@ function check_downgrade () {
     git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $tmp_dir/git_log_app
 
     if [ -f "${app_history_dir}/$history_csv_file" ]; then
-        ultimo_deploy_app=$(grep -Eix "^([^;]+;){6}$mensagem_sucesso.*$" ${app_history_dir}/$history_csv_file | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
+        ultimo_deploy_app=$(grep -Eix "^([^;]+;){7}1.*$" ${app_history_dir}/$history_csv_file | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
     else
         ultimo_deploy_app=''
     fi
@@ -232,7 +232,7 @@ function end () {
 
         if [ "$rev" == "rollback" ]; then
             echo -e "\nErro: rollback interrompido. Favor reexecutar o script."
-            write_history "Rollback não efetuado. O script deve ser reexecutado."
+            write_history "Rollback não efetuado. O script deve ser reexecutado." "0"
         else
             host_erro="$host"
 
@@ -240,7 +240,7 @@ function end () {
 
                 bak="$bak_dir/${app}_${host}"                            # necessário garantir que a variável bak esteja setada, pois o script pode ter sido interrompido antes dessa etapa.
                 rm -Rf $bak
-                write_history "Deploy abortado."
+                write_history "Deploy abortado." "0"
 
             elif [ "$estado" == 'escrita' ]; then
 
@@ -260,10 +260,10 @@ function end () {
                 eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
                 echo "fim_rollback" >> $deploy_log_dir/progresso_$host.txt
-                write_history "Deploy interrompido. Backup restaurado."
+                write_history "Deploy interrompido. Backup restaurado." "0"
 
             else
-                write_history "Deploy abortado."
+                write_history "Deploy abortado." "0"
             fi
 
             echo "deploy_abortado" >> $deploy_log_dir/progresso_$host.txt
@@ -294,11 +294,11 @@ function end () {
                             eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
                             echo "fim_rollback" >> $deploy_log_dir/progresso_$host.txt
-                            write_history "Rollback realizado devido a erro ou deploy cancelado em $host_erro."
+                            write_history "Rollback realizado devido a erro ou deploy cancelado em $host_erro." "0"
 
                         fi
                     else
-                        write_history "Deploy abortado."
+                        write_history "Deploy abortado." "0"
                     fi
                 fi
 
@@ -357,8 +357,7 @@ fi
 
 tmp_dir="$work_dir/$pid"
 
-if [ -z "$mensagem_sucesso" ] \
-    || [ -z "$modo_padrao" ] \
+if [ -z "$modo_padrao" ] \
     || [ -z "$rsync_opts" ] \
     || [ -z "$ambientes" ] \
     || [ -z "$interactive" ];
@@ -367,7 +366,7 @@ then
     exit 1
 fi
 
-aux=$interactive
+aux=$interactive; interactive=false
 valid "bak_dir" "\nErro. Diretório de backup informado incorretamente."
 valid "html_dir" "\nErro. Diretório de html informado incorretamente."
 valid "tmp_dir" "\nErro. Diretório temporário informado incorretamente."
@@ -597,9 +596,9 @@ fi
 
 if [ "$modo" == "d" ]; then
     rsync_opts="$rsync_opts --delete"
-    obs_log="$mensagem_sucesso. arquivos obsoletos deletados."
+    obs_log="Deploy concluído com sucesso. Arquivos obsoletos deletados."
 else
-    obs_log="$mensagem_sucesso. arquivos obsoletos preservados."
+    obs_log="Deploy concluído com sucesso. Arquivos obsoletos preservados."
 fi
 
 ##### GIT #########
@@ -768,7 +767,7 @@ while read dir_destino; do
             rsync_cmd="rsync $rsync_opts $origem/ $destino/"
             eval $rsync_cmd 2> $deploy_log_dir/rsync_$host.log || end 1
 
-            write_history "$obs_log"
+            write_history "$obs_log" "1"
 
             estado="fim_$estado" && echo $estado >> $deploy_log_dir/progresso_$host.txt
         else
@@ -781,6 +780,6 @@ while read dir_destino; do
 done < $tmp_dir/dir_destino
 
 paint 'fg' 'green'
-echo "$mensagem_sucesso"
+echo "$obs_log"
 
 end 0

@@ -21,7 +21,7 @@ function deploy_pkg () {
                 log "INFO" "Implantando a nova versão da aplicação $app no grupo $group"
                 $wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group" || exit 1
                 log "INFO" "Deploy do arquivo $pkg realizado com sucesso no server-group '$group'"
-                write_history "Deploy concluído com sucesso no grupo '$group'"
+                write_history "Deploy concluído com sucesso no grupo '$group'" "1"
 
             done
 
