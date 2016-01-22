@@ -32,6 +32,7 @@ function html () {
 
     sed -i -r 's|^(.)|\-\1|' $tmp_dir/html_tr
     sed -i -r "s|^\-(([^;]+;){7}1.*)$|\+\1|" $tmp_dir/html_tr
+    sed -i -r "s|^([\+\-]([^;]+;){7}).*$|\+\1|" $tmp_dir/html_tr
     sed -i -r 's|;$|</td></tr>|' $tmp_dir/html_tr
     sed -i -r 's|;|</td><td>|g' $tmp_dir/html_tr
     sed -i -r 's|^\-|\t\t\t<tr style="@@html_tr_style_warning@@"><td>|' $tmp_dir/html_tr
