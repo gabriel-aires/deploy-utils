@@ -329,7 +329,7 @@ function set_app_history_dirs () {
 function query_file () {
 
     local file="$1"
-    local delim="$(echo "$2" | sed -r "s|([\\\+\-\.\?\^\$])|\\\1|g")"
+    local delim="$(echo "$2" | sed -r "s|([\\\+\-\.\?\^\$])|\\\\\1|g")"
     local selection="$(echo "\\$3$delim" | sed -r "s| |$delim\\\\|g")"
     local filter="$4"
     local value="$5"
@@ -338,7 +338,7 @@ function query_file () {
         echo "$1: Arquivo inexistente." 1>&2; return 1
     elif ! echo "$delim" | grep -Ex "[[:print:]]+" > /dev/null; then
         echo "$2: Delimitador inválido." 1>&2; return 1
-    elif ! echo "$selection" | grep -Ex "(\\[0-9]+$delim)*\\[0-9]+$delim" > /dev/null; then
+    elif ! echo "$selection" | grep -Ex "(\\\\[0-9]+$delim)*\\\\[0-9]+$delim" > /dev/null; then
         echo "$3: Seleção inválida." 1>&2; return 1
     elif [ "$filter" -lt 1 ]; then
         echo "$4: Filtro inválido." 1>&2; return 1
