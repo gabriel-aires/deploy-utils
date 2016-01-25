@@ -330,7 +330,7 @@ function query_file () {
 
     local file="$1"
     local selection="$(echo "\\$2" | sed -r "s| |\\|g")"
-    local delim="$(echo "$3" | sed -r "s|([\\\+\-\.\^\$])|\\\1|g")"
+    local delim="$(echo "$3" | sed -r "s|([\\\+\-\.\?\^\$])|\\\1|g")"
     local filter="$4"
     local value="$5"
     local output
@@ -354,10 +354,10 @@ function query_file () {
 
     local size=1
     local part_regex="(.*$delim)"
-    local line_regex='^'
-    local filter_regex='^'
+    local line_regex=''
+    local filter_regex=''
 
-    while $(grep -Eil "^(.*$delim){$size}" $file > /dev/null); do
+    while $(grep -El "^(.*$delim){$size}" $file > /dev/null); do
 
         line_regex="$line_regex$part_regex"
 
@@ -371,10 +371,7 @@ function query_file () {
 
     done
 
-    line_regex="$line_regex$"
-    filter_regex="$filter_regex$"
-
-    test "$filter_regex" != '^$' && grep -Ei "$filter_regex" $file | sed -r "s|$line_regex|$selection|" || return 1
+    test -n "$filter_regex" && grep -Ex "$filter_regex" $file | sed -r "s|$line_regex|$selection|" || return 1
 
     return 0
 
