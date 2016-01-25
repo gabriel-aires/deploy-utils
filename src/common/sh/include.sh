@@ -325,3 +325,57 @@ function set_app_history_dirs () {
     return 0
 
 }
+
+function query_file () {
+
+    local file="$1"
+    local selection="$(echo "\\$2" | sed -r "s| |\\|g")"
+    local delim="$(echo "$3" | sed -r "s|([\\\+\-\.\^\$])|\\\1|g")"
+    local filter="$4"
+    local value="$5"
+    local output
+
+    case $execution_mode in
+        'server') output="echo";;
+        'agent') output="log 'ERRO'"
+    esac
+
+    if [ ! -f "$file" ]; then
+        $output "$1: Arquivo inexistente." && return 1
+    elif [ $(grep -Ex "(\\[0-9]+ )+\\[0-9]+" "$selection") ]; then
+        $output "$2: Seleção inválida." && return 1
+    elif [ $(grep -Ex "[[:print]]+" "$delim") ]; then
+        $output "$3: Delimitador inválido." && return 1
+    elif [ "$filter" -ge 1 ]; then
+        $output "$4: Filtro inválido." && return 1
+    elif [ $(grep -Ex "[[:print:]]+" "$value" | grep -Ev "$delim") ]; then
+        $output "$5: Valor inválido." && return 1
+    fi
+
+    local size=1
+    local part_regex="(.*$delim)"
+    local line_regex='^'
+    local filter_regex='^'
+
+    while $(grep -Eil "^(.*$delim){$size}" $file > /dev/null); do
+
+        line_regex="$line_regex$part_regex"
+
+        if [ $size -eq $filter ]; then
+            filter_regex="$filter_regex$value$delim"
+        else
+            filter_regex="$filter_regex$part_regex"
+        fi
+
+        ((size++))
+
+    done
+
+    line_regex="$line_regex$"
+    filter_regex="$filter_regex$"
+
+    test "$filter_regex" != '^$' && grep -Ei "$filter_regex" $file | sed -r "s|$line_regex|$selection|" || return 1
+
+    return 0
+
+}
