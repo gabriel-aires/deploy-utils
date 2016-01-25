@@ -330,7 +330,7 @@ function query_file () {
 
     local file="$1"
     local delim="$(echo "$2" | sed -r "s|([\\\+\-\.\?\^\$])|\\\1|g")"
-    local selection="$(echo "\\$3$delim" | sed -r "s| |$delim\\|g")"
+    local selection="$(echo \\$3$delim | sed -r s| |$delim\\|g)"
     local filter="$4"
     local value="$5"
 
