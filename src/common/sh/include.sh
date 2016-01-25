@@ -347,7 +347,7 @@ function query_file () {
     fi
 
     local size=1
-    local part_regex="(.*$delim)"
+    local part_regex="(.*)$delim"
     local line_regex=''
     local filter_regex=''
 
