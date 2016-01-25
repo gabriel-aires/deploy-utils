@@ -336,13 +336,13 @@ function query_file () {
 
     if [ ! -f "$file" ]; then
         echo "$1: Arquivo inexistente." 1>&2; return 1
-    elif ! grep -Ex "[[:print:]]+" "$delim" > /dev/null; then
+    elif ! echo "$delim" | grep -Ex "[[:print:]]+" > /dev/null; then
         echo "$2: Delimitador inválido." 1>&2; return 1
-    elif ! grep -Ex "(\\[0-9]+$delim)*\\[0-9]+$delim" "$selection" > /dev/null; then
+    elif ! echo "$selection" | grep -Ex "(\\[0-9]+$delim)*\\[0-9]+$delim" > /dev/null; then
         echo "$3: Seleção inválida." 1>&2; return 1
     elif [ "$filter" -lt 1 ]; then
         echo "$4: Filtro inválido." 1>&2; return 1
-    elif ! grep -Ex "[[:print:]]+" "$value" | grep -Ev "$delim" > /dev/null; then
+    elif ! echo "$value" | grep -Ex "[[:print:]]+" | grep -Ev "$delim" > /dev/null; then
         echo "$5: Valor inválido." 1>&2; return 1
     fi
 
