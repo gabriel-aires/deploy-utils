@@ -329,27 +329,21 @@ function set_app_history_dirs () {
 function query_file () {
 
     local file="$1"
-    local selection="$(echo "\\$2" | sed -r "s| |\\|g")"
-    local delim="$(echo "$3" | sed -r "s|([\\\+\-\.\?\^\$])|\\\1|g")"
+    local delim="$(echo "$2" | sed -r "s|([\\\+\-\.\?\^\$])|\\\1|g")"
+    local selection="$(echo "\\$3$delim" | sed -r "s| |$delim\\|g")"
     local filter="$4"
     local value="$5"
-    local output
-
-    case $execution_mode in
-        'server') output="echo";;
-        'agent') output="log 'ERRO'"
-    esac
 
     if [ ! -f "$file" ]; then
-        $output "$1: Arquivo inexistente." && return 1
-    elif [ $(grep -Ex "(\\[0-9]+ )+\\[0-9]+" "$selection") ]; then
-        $output "$2: Seleção inválida." && return 1
-    elif [ $(grep -Ex "[[:print]]+" "$delim") ]; then
-        $output "$3: Delimitador inválido." && return 1
-    elif [ "$filter" -ge 1 ]; then
-        $output "$4: Filtro inválido." && return 1
-    elif [ $(grep -Ex "[[:print:]]+" "$value" | grep -Ev "$delim") ]; then
-        $output "$5: Valor inválido." && return 1
+        echo "$1: Arquivo inexistente." 1>&2; return 1
+    elif [ ! $(grep -Ex "[[:print]]+" "$delim") ]; then
+        echo "$2: Delimitador inválido." 1>&2; return 1
+    elif [ ! $(grep -Ex "(\\[0-9]+$delim)+\\[0-9]+$delim" "$selection") ]; then
+        echo "$3: Seleção inválida." 1>&2; return 1
+    elif [ "$filter" -lt 1 ]; then
+        echo "$4: Filtro inválido." 1>&2; return 1
+    elif [ ! $(grep -Ex "[[:print:]]+" "$value" | grep -Ev "$delim") ]; then
+        echo "$5: Valor inválido." 1>&2; return 1
     fi
 
     local size=1
