@@ -59,7 +59,7 @@ function checkout () {                                            # o comando cd
     fi
 
     cd "$repo_dir/$nomerepo"
-    git fetch --all --force --quiet || end 1
+    git fetch --tags --force --quiet origin || end 1
 
     if $automatico; then
 
