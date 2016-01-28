@@ -8,6 +8,7 @@ function end() {
     fi
 
     break 10 2> /dev/null
+    wait
     exit $1
 }
 
@@ -45,7 +46,7 @@ while true; do
             ;;
 
         "-s"|"--select")
-            while echo "$2" | grep -Ex "[0-9]+"; do
+            while echo "$2" | grep -Ex "[0-9]+" > /dev/null; do
                 columns[$s_index]="$2"
                 ((s_index++))
                 shift
@@ -59,7 +60,7 @@ while true; do
             ;;
 
         "-w"|"--where")
-            while echo "$2" | grep -Ex "[0-9]+(==|=~|=%|!=).*"; do
+            while echo "$2" | grep -Ex "[0-9]+(==|=~|=%|!=).*" > /dev/null; do
                 filter[$f_index]="$(echo "$2" | sed -r 's|^([0-9]+).*$|\1|')"
                 filter_type[$f_index]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=).*$/\1/')"
                 filter_value[$f_index]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=)(.*)$/\2/')"
