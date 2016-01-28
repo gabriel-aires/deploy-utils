@@ -1,5 +1,5 @@
 #!/bin/bash
-source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/conf/include.conf || exit 1
+source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 function options() {
 
