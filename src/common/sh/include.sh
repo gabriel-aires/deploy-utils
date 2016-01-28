@@ -1,10 +1,14 @@
 #!/bin/bash
 # Este arquivo deve ser carregado no cabeçalho de cada script através do comando "source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1"
 
-# Define/Carrega variáveis comuns.
+# Define/Carrega variáveis, funções e scripts comuns.
 
 install_dir="$(dirname $(dirname $(readlink -f $0)))"
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/conf/include.conf || exit 1
+
+# Define scripts comuns.
+
+alias query="$(dirname $(dirname $(dirname $(readlink -f $0))))/sh/query_file.sh"
 
 # Define funções comuns.
 
