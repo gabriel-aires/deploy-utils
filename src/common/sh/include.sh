@@ -370,10 +370,10 @@ function query_file () {
                 ;;
 
             "-w"|"--where")
-                while echo "$2" | grep -Ex "[0-9]+(==|=\~|=%|\!=).*)?"; do
+                while echo "$2" | grep -Ex "[0-9]+(==|=~|=%|!=).*"; do
                     filter[$f]="$(echo "$2" | sed -r 's|^([0-9]+).*$|\1|')"
-                    filter_type[$f]="$(echo "$2" | sed -r 's|^[0-9]+(==|=\~|=%|\!=).*$|\1|')"
-                    filter_value[$f]="$(echo "$2" | sed -r 's|^[0-9]+(==|=\~|=%|\!=)(.*)$|\2|')"
+                    filter_type[$f]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=).*$/\1/')"
+                    filter_value[$f]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=)(.*)$/\2/')"
                     ((f_index++))
                     shift
                 done
@@ -403,7 +403,7 @@ function query_file () {
         esac
     done
 
-    if [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}"]; then
+    if [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}" ]; then
         echo "Erro. Argumentos insuficientes." 1>&2; return 1
     elif ! echo "$delim" | grep -Ex "[[:print:]]+" > /dev/null; then
         echo "Delimitador inválido." 1>&2; return 1
