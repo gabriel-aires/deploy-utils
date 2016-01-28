@@ -424,31 +424,31 @@ function query_file () {
 
         while [ $index -lt $f_index ]; do
 
-            if [ $size -eq $filter[$index] ]; then
+            if [ $size -eq ${filter[$index]} ]; then
 
-                case $filter_type[$index] in
+                case ${filter_type[$index]} in
                     '==') # match exato
-                        filter_value[$index]=$(echo "$filter_value[$index]" | sed -r "s|([\\\+\-\.\?\^\$])|\\\\\1|g")
+                        filter_value[$index]=$(echo "${filter_value[$index]}" | sed -r "s|([\\\+\-\.\?\^\$])|\\\\\1|g")
                         filter_cmd[$index]="$grep_cmd"
                         ;;
                     '=%') # contains
-                        filter_value[$index]=$(echo "$filter_value[$index]" | sed -r "s|([\\\+\-\.\?\^\$])|\\\\\1|g" | sed -r "s|^(.*)$|\.\*\1\.\*|")
+                        filter_value[$index]=$(echo "${filter_value[$index]}" | sed -r "s|([\\\+\-\.\?\^\$])|\\\\\1|g" | sed -r "s|^(.*)$|\.\*\1\.\*|")
                         filter_cmd[$index]="$grep_cmd"
                         ;;
                     '=~') # regex
                         filter_cmd[$index]="$grep_cmd"
                         ;;
                     '!=') # match inverso
-                        filter_value[$index]=$(echo "$filter_value[$index]" | sed -r "s|([\\\+\-\.\?\^\$])|\\\\\1|g")
+                        filter_value[$index]=$(echo "${filter_value[$index]}" | sed -r "s|([\\\+\-\.\?\^\$])|\\\\\1|g")
                         filter_cmd[$index]="$grep_cmd -v"
                         ;;
                 esac
 
-                filter_regex[$index]="$filter_regex[$index]$filter_value[$index]$delim"
+                filter_regex[$index]="${filter_regex[$index]}${filter_value[$index]}$delim"
 
             else
 
-                filter_regex[$index]="$filter_regex[$index]$part_regex"
+                filter_regex[$index]="${filter_regex[$index]}$part_regex"
 
             fi
 
@@ -462,13 +462,13 @@ function query_file () {
 
     index=0
     while [ $index -lt $f_index ]; do
-        where="$where $filter_cmd[$index] $filter_regex[$index] |"
+        where="$where ${filter_cmd[$index]} ${filter_regex[$index]} |"
         ((index++))
     done
 
     index=0
     while [ $index -lt $s_index ]; do
-        selection="$selection\\$columns[$index]$output_delim"
+        selection="$selection\\${columns[$index]}$output_delim"
         ((index++))
     done
 
