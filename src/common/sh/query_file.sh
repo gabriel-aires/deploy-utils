@@ -111,7 +111,6 @@ part_regex="(.*)$delim"
 line_regex=''
 filter_regex=()
 filter_cmd=()
-index
 
 while $(echo "$header" | grep -E "^(.*$delim){$size}" > /dev/null); do
 
