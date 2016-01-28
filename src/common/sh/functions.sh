@@ -254,8 +254,8 @@ function write_history () {
     local flag_log="$2"
 
     local aux="$interactive"; interactive=false
-    valid "regex_csv_value" "obs_log" "'$obs_log': mensagem inválida." "continue" || return 1
-    valid "regex_flag" "flag_log" "'$flag_log': flag de deploy inválida." "continue" || return 1
+    valid "obs_log" "regex_csv_value" "'$obs_log': mensagem inválida." "continue" || return 1
+    valid "flag_log" "regex_flag" "'$flag_log': flag de deploy inválida." "continue" || return 1
     interactive=$aux
 
     local msg_log="$date_log;$time_log;$app_log;$rev_log;$ambiente_log;$host_log;$obs_log;$flag_log;"
