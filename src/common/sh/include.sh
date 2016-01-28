@@ -8,7 +8,8 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/conf/include.co
 
 # Define scripts comuns.
 
-alias query="$(dirname $(dirname $(dirname $(readlink -f $0))))/sh/query_file.sh"
+shopt -s expand_aliases
+alias query="$(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/query_file.sh"
 
 # Define funções comuns.
 
