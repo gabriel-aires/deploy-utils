@@ -117,8 +117,8 @@ while true; do
             echo "-f|--from: especificar arquivo. Ex: dados.csv (obrigatório)"
             echo "-w|--where: especificar filtro. Ex: '1==valor_exato' '2=~regex_valor' '3!=diferente_valor' '4=%contem_valor', etc (opcional)"
             echo "-o|--order-by: especificar ordenação dos resultados. Ex: '1' '2' 'asc', '4' ' 5' 'desc', etc (opcional)"
-            break
             end_flag=1
+            break
             ;;
 
         '')
@@ -127,8 +127,8 @@ while true; do
 
         *)
             echo "'$1':Argumento inválido." 1>&2
-            break
             end_flag=1
+            break            
             ;;
 
     esac
