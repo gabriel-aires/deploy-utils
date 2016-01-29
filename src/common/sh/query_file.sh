@@ -20,7 +20,6 @@ file=''
 delim=''
 output_delim='\t'
 columns=()
-set_value=()
 s_index=0
 filter=()
 filter_type=()
@@ -28,9 +27,20 @@ filter_value=()
 filter_cmd=()
 filter_regex=()
 f_index=0
+order=()
+o_index=0
+top=''
+head_cmd="head"
+top_cmd='cat'
 grep_cmd="grep -E -x"
-selection=''
+sort_cmd="sort"
+order_cmd='cat'
+size=1
+line_regex=''
+output_regex=''
 preview=''
+order_by=''
+selection=''
 
 while true; do
     case "$1" in
@@ -46,11 +56,20 @@ while true; do
             ;;
 
         "-s"|"--select")
-            while echo "$2" | grep -Ex "[0-9]+" > /dev/null; do
+            while echo "$2" | grep -Ex "[1-9][0-9]*" > /dev/null; do
                 columns[$s_index]="$2"
                 ((s_index++))
                 shift
             done
+            shift
+            ;;
+
+        "-t"|"--top")
+            if echo "$2" | grep -Ex "[1-9][0-9]*" > /dev/null; then
+                top="$2"
+                top_cmd="$head_cmd $top"
+                shift
+            fi
             shift
             ;;
 
@@ -60,7 +79,7 @@ while true; do
             ;;
 
         "-w"|"--where")
-            while echo "$2" | grep -Ex "[0-9]+(==|=~|=%|!=).*" > /dev/null; do
+            while echo "$2" | grep -Ex "[1-9][0-9]*(==|=~|=%|!=).*" > /dev/null; do
                 filter[$f_index]="$(echo "$2" | sed -r 's|^([0-9]+).*$|\1|')"
                 filter_type[$f_index]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=).*$/\1/')"
                 filter_value[$f_index]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=)(.*)$/\2/')"
@@ -70,14 +89,33 @@ while true; do
             shift
             ;;
 
+        "-o"|"--order-by")
+            while echo "$2" | grep -Ex "[1-9][0-9]*|asc|desc" > /dev/null; do
+                order_cmd="$sort_cmd"
+                if [ "$2" == "asc" ]; then
+                    shift; break
+                elif [ "$2" == "desc" ]; then
+                    order_cmd="$sort_cmd -r"
+                    shift; break
+                else
+                    order[$o_index]="$2"
+                    ((o_index++))
+                    shift
+                fi
+            done
+            shift
+            ;;
+
         "-h"|"--help")
             echo "Utilização: query_file [nomearquivo] [opções]"
             echo "Opções:"
             echo "-d|--delim: especificar caractere ou string que delimita os campos do arquivo. Ex: ';' (obrigatório)"
             echo "-r|--replace-delim: especificar caractere ou string que delimitará os campos exibidos. Ex: '|' (opcional)"
-            echo "-s|--select: especificar ordem das colunas a serem selecionadas. Ex: "1" "2", etc (obrigatório)"
+            echo "-s|--select: especificar ordem das colunas a serem selecionadas. Ex: '1' '2', etc (obrigatório)"
+            echo "-t|--top: especificar quantidade de linhas a serem retornadas. Ex: '10' '500', etc (opcional)"
             echo "-f|--from: especificar arquivo. Ex: dados.csv (obrigatório)"
             echo "-w|--where: especificar filtro. Ex: '1==valor_exato' '2=~regex_valor' '3!=diferente_valor' '4=%contem_valor', etc (opcional)"
+            echo "-o|--order-by: especificar ordenação dos resultados. Ex: '1' '2' 'asc', '4' ' 5' 'desc', etc (opcional)"
             end 1
             ;;
 
@@ -102,14 +140,10 @@ fi
 mkdir -p $tmp_dir
 
 header="$(head -n 1 $file )"
-size=1
 part_regex="(.*)$delim"
-line_regex=''
-filter_regex=()
-filter_cmd=()
+part_output_regex="(.*)$output_delim"
 
 while $(echo "$header" | grep -E "^(.*$delim){$size}" > /dev/null); do
-
     line_regex="$line_regex$part_regex"
     index=0
 
@@ -136,35 +170,46 @@ while $(echo "$header" | grep -E "^(.*$delim){$size}" > /dev/null); do
             esac
 
             filter_regex[$index]="${filter_regex[$index]}${filter_value[$index]}$delim"
-
         else
-
             filter_regex[$index]="${filter_regex[$index]}$part_regex"
-
         fi
-
         ((index++))
-
     done
-
     ((size++))
-
 done
+((size--))
 
+preview=$file
+
+# Filtro
 index=0
-cp $file $tmp_dir/preview_$index
+cp $preview $tmp_dir/preview_filter_$index
 while [ $index -lt $f_index ]; do
-    ${filter_cmd[$index]} "${filter_regex[$index]}" "$tmp_dir/preview_$index" > "$tmp_dir/preview_$(($index+1))" || end 1
+    ${filter_cmd[$index]} "${filter_regex[$index]}" "$tmp_dir/preview_filter_$index" > "$tmp_dir/preview_filter_$(($index+1))" || end 1
     ((index++))
 done
-preview="$tmp_dir/preview_$index"
+preview="$tmp_dir/preview_filter_$index"
 
+# Ordenação
+index=0
+while [ $index -lt $o_index ]; do
+    order_by="$order_by\\${order[$index]}$output_delim"
+    output_regex="$output_regex$part_output_regex"
+    ((index++))
+done
+
+#Seleção
+output_size=$index
 index=0
 while [ $index -lt $s_index ]; do
+    ((output_size++))
     selection="$selection\\${columns[$index]}$output_delim"
+    output_selection="$output_selection\\$output_size$output_delim"
+    output_regex="$output_regex$part_output_regex"
     ((index++))
 done
 
-sed -r "s|$line_regex|$selection|" $preview || end 1
+# Seleciona colunas de ordenação auxiliares + seleção do usuário, ordena, remove colunas de ordenação auxiliares, exibe n primeiras linhas
+sed -r "s|$line_regex|${order_by}$selection|" $preview | $sort_cmd | sed -r "s|$output_regex|$output_selection|" | $top_cmd || end 1
 
 end 0
