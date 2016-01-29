@@ -142,7 +142,7 @@ function check_downgrade () {
     git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $tmp_dir/git_log_app
 
     if [ -f "${app_history_dir}/$history_csv_file" ]; then
-        ultimo_deploy_app=$(grep -Eix "^([^;]+;){7}1.*$" ${app_history_dir}/$history_csv_file | grep -Eix "^([^;]+;){4}$ambiente.*$" | tail -1 | cut -d ';' -f4 2> /dev/null)
+        ultimo_deploy_app=$(query_file.sh -d ';' -s $col_rev -t 1 -f "${app_history_dir}/$history_csv_file" -w $col_flag==1 $col_env==$ambiente $col_rev!=rollback -o $col_date $col_time desc)
     else
         ultimo_deploy_app=''
     fi
