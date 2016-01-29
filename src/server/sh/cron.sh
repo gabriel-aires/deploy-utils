@@ -28,15 +28,10 @@ function html () {
 
     cd $(dirname $arquivo_entrada)
 
-    tail --lines=$history_html_size $arquivo_entrada > $tmp_dir/html_tr
+    query_file.sh -d ';' -r '</td><td>' -s $col_date $col_time $col_app $col_rev $col_env $col_host $col_obs $col_flag -t $history_html_size -f $arquivo_entrada -o $col_date $col_time desc > $tmp_dir/html_tr
 
-    sed -i -r 's|^(.)|\-\1|' $tmp_dir/html_tr
-    sed -i -r "s|^\-(([^;]+;){7}1.*)$|\+\1|" $tmp_dir/html_tr
-    sed -i -r "s|^([\+\-]([^;]+;){7}).*$|\+\1|" $tmp_dir/html_tr
-    sed -i -r 's|;$|</td></tr>|' $tmp_dir/html_tr
-    sed -i -r 's|;|</td><td>|g' $tmp_dir/html_tr
-    sed -i -r 's|^\-|\t\t\t<tr style="@@html_tr_style_warning@@"><td>|' $tmp_dir/html_tr
-    sed -i -r 's|^\+|\t\t\t<tr style="@@html_tr_style_default@@"><td>|' $tmp_dir/html_tr
+    sed -i -r 's|^(.*)<td>1</td><td>$|\t\t\t<tr style="@@html_tr_style_default@@"><td>\1</tr>|' $tmp_dir/html_tr
+    sed -i -r 's|^(.*)<td>0</td><td>$|\t\t\t<tr style="@@html_tr_style_warning@@"><td>\1</tr>|' $tmp_dir/html_tr
 
     cat $html_dir/begin.html > $tmp_dir/html
     cat $tmp_dir/html_tr >> $tmp_dir/html
