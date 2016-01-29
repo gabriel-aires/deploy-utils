@@ -14,6 +14,7 @@ function end() {
 
 trap "end 1; exit 1" SIGQUIT SIGINT SIGHUP
 
+end_flag=0
 pid="$$"
 tmp_dir="$work_dir/$pid"
 file=''
@@ -116,7 +117,7 @@ while true; do
             echo "-f|--from: especificar arquivo. Ex: dados.csv (obrigatório)"
             echo "-w|--where: especificar filtro. Ex: '1==valor_exato' '2=~regex_valor' '3!=diferente_valor' '4=%contem_valor', etc (opcional)"
             echo "-o|--order-by: especificar ordenação dos resultados. Ex: '1' '2' 'asc', '4' ' 5' 'desc', etc (opcional)"
-            end 1
+            end_flag=1
             ;;
 
         '')
@@ -125,13 +126,15 @@ while true; do
 
         *)
             echo "'$1':Argumento inválido." 1>&2
-            end 1
+            end_flag=1
             ;;
 
     esac
 done
 
-if [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}" ]; then
+if [ $end_flag -eq 0 ]; then
+    end 1
+elif [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}" ]; then
     echo "Erro. Argumentos insuficientes." 1>&2; end 1
 elif ! echo "$delim" | grep -Ex "[[:print:]]+" > /dev/null; then
     echo "Delimitador inválido." 1>&2; end 1
