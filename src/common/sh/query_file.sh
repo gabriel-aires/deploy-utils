@@ -144,7 +144,7 @@ done
 if [ $end_flag -eq 1 ]; then
     end 1
 elif [ $(($s_index+$o_index)) -gt 9 ]; then
-    echo "Erro. Devido a uma limitação do comando sed, o somatório das colunas de seleção e ordenação não deve exceder 9." 1>&2; end 1    
+    echo "Erro. Devido a uma limitação do comando sed, a quantidade total de campos indicados para seleção/ordenação não deve exceder 9." 1>&2; end 1    
 elif [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}" ]; then
     echo "Erro. Argumentos insuficientes." 1>&2; end 1
 elif ! echo "$delim" | grep -Ex "[[:print:]]+" > /dev/null; then
