@@ -30,7 +30,7 @@ f_index=0
 order=()
 o_index=0
 top=''
-head_cmd="head"
+head_cmd="head -n"
 top_cmd='cat'
 grep_cmd="grep -E -x"
 sort_cmd="sort"
@@ -210,6 +210,6 @@ while [ $index -lt $s_index ]; do
 done
 
 # Seleciona colunas de ordenação auxiliares + seleção do usuário, ordena, remove colunas de ordenação auxiliares, exibe n primeiras linhas
-sed -r "s|$line_regex|${order_by}$selection|" $preview | $sort_cmd | sed -r "s|$output_regex|$output_selection|" | $top_cmd || end 1
+sed -r "s|$line_regex|${order_by}$selection|" $preview | $order_cmd | sed -r "s|$output_regex|$output_selection|" | $top_cmd || end 1
 
 end 0
