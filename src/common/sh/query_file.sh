@@ -1,4 +1,6 @@
 #!/bin/bash
+# TODO: utilizar awk para as substituições em arquivo, pois o sed pode armazenar no máximo nove referências (\1 até \9)
+
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 function end() {
@@ -21,14 +23,17 @@ file=''
 delim=''
 output_delim='\t'
 columns=()
+max_column=0
 s_index=0
 filter=()
 filter_type=()
 filter_value=()
 filter_cmd=()
 filter_regex=()
+max_filter=0
 f_index=0
 order=()
+max_order=0
 o_index=0
 top=''
 head_cmd="head -n"
@@ -57,8 +62,9 @@ while true; do
             ;;
 
         "-s"|"--select")
-            while echo "$2" | grep -Ex "[1-9][0-9]*" > /dev/null; do
+            while echo "$2" | grep -Ex "[1-9]" > /dev/null; do
                 columns[$s_index]="$2"
+                test ${columns[$s_index]} -gt $max_column && max_column=${columns[$s_index]}
                 ((s_index++))
                 shift
             done
@@ -80,10 +86,11 @@ while true; do
             ;;
 
         "-w"|"--where")
-            while echo "$2" | grep -Ex "[1-9][0-9]*(==|=~|=%|!=).*" > /dev/null; do
+            while echo "$2" | grep -Ex "[1-9](==|=~|=%|!=).*" > /dev/null; do
                 filter[$f_index]="$(echo "$2" | sed -r 's|^([0-9]+).*$|\1|')"
                 filter_type[$f_index]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=).*$/\1/')"
                 filter_value[$f_index]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=)(.*)$/\2/')"
+                test ${filter[$f_index]} -gt $max_filter && max_filter=${filter[$f_index]}
                 ((f_index++))
                 shift
             done
@@ -91,7 +98,7 @@ while true; do
             ;;
 
         "-o"|"--order-by")
-            while echo "$2" | grep -Ex "[1-9][0-9]*|asc|desc" > /dev/null; do
+            while echo "$2" | grep -Ex "[1-9]|asc|desc" > /dev/null; do
                 order_cmd="$sort_cmd"
                 if [ "$2" == "asc" ]; then
                     shift; break
@@ -100,6 +107,7 @@ while true; do
                     shift; break
                 else
                     order[$o_index]="$2"
+                    test ${order[$o_index]} -gt $max_order && max_order=${order[$o_index]}
                     ((o_index++))
                     shift
                 fi
@@ -128,7 +136,7 @@ while true; do
         *)
             echo "'$1':Argumento inválido." 1>&2
             end_flag=1
-            break            
+            break
             ;;
 
     esac
@@ -183,6 +191,14 @@ while $(echo "$header" | grep -E "^(.*$delim){$size}" > /dev/null); do
     ((size++))
 done
 ((size--))
+
+test $max_column -gt $size && end_flag=1
+test $max_filter -gt $size && end_flag=1
+test $max_order -gt $size && end_flag=1
+
+if [ $end_flag -eq 1 ]; then
+    echo "Erro. O arquivo $file possui apenas $size campos. Favor indicar colunas entre 1 e $size." 1>&2; end 1
+fi
 
 preview=$file
 
