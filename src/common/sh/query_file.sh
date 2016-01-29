@@ -9,12 +9,11 @@ function end() {
         rmdir $tmp_dir
     fi
 
-    break 10 2> /dev/null
     wait
     exit $1
 }
 
-trap "end 1; exit 1" SIGQUIT SIGINT SIGHUP
+trap "break 10 2> /dev/null; end 1" SIGQUIT SIGINT SIGHUP
 
 end_flag=0
 pid="$$"
@@ -206,10 +205,12 @@ preview=$file
 index=0
 cp $preview $tmp_dir/preview_filter_$index
 while [ $index -lt $f_index ]; do
-    ${filter_cmd[$index]} "${filter_regex[$index]}" "$tmp_dir/preview_filter_$index" > "$tmp_dir/preview_filter_$(($index+1))" || end 1
+    ${filter_cmd[$index]} "${filter_regex[$index]}" "$tmp_dir/preview_filter_$index" > "$tmp_dir/preview_filter_$(($index+1))" || end_flag=1
     ((index++))
 done
 preview="$tmp_dir/preview_filter_$index"
+
+test $end_flag -eq 1 && end 1
 
 # Ordenação
 index=0
