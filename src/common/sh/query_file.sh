@@ -134,7 +134,7 @@ while true; do
     esac
 done
 
-if [ $end_flag -eq 0 ]; then
+if [ $end_flag -eq 1 ]; then
     end 1
 elif [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}" ]; then
     echo "Erro. Argumentos insuficientes." 1>&2; end 1
