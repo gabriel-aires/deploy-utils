@@ -167,7 +167,7 @@ mkdir -p $tmp_dir
 
 header="$(head -n 1 $file )"
 part_regex="(.*)$delim"
-part_output_regex=".*$output_delim"
+part_output_regex=".*$delim"
 
 while $(echo "$header" | grep -E "^(.*$delim){$size}" > /dev/null); do
     line_regex="$line_regex$part_regex"
@@ -230,7 +230,7 @@ test $end_flag -eq 1 && end 1
 # Ordenação
 index=0
 while [ $index -lt $o_index ]; do
-    order_by="$order_by\\${order[$index]}$output_delim"
+    order_by="$order_by\\${order[$index]}$delim"
     output_regex="$output_regex$part_output_regex"
     ((index++))
 done
@@ -240,17 +240,17 @@ output_regex="$output_regex("
 index=0
 while [ $index -lt $s_index ]; do
     if [ ${columns[$index]} == '&' ]; then
-        selection="$selection${columns[$index]}$output_delim"
+        selection="$selection${columns[$index]}$delim"
         output_regex="$output_regex$line_output_regex"
     else
-        selection="$selection\\${columns[$index]}$output_delim"
+        selection="$selection\\${columns[$index]}$delim"
         output_regex="$output_regex$part_output_regex"
     fi
     ((index++))
 done
 output_regex="$output_regex)"
 
-# Retorna colunas de (ordenação auxiliares + ) seleção do usuário, (ordena), (remove colunas de ordenação auxiliares), (remove linhas duplicadas), (exibe n primeiras linhas)
-sed -r "s|$line_regex|${order_by}$selection|" $preview | $order_cmd | sed -r "s|$output_regex|\1|" | $distinct_cmd | $top_cmd || end 1
+# Retorna colunas de (ordenação auxiliares + ) seleção do usuário, (ordena), (remove colunas de ordenação auxiliares), (remove linhas duplicadas), (exibe n primeiras linhas), substitui delimitador
+sed -r "s|$line_regex|${order_by}$selection|" $preview | $order_cmd | sed -r "s|$output_regex|\1|" | $distinct_cmd | $top_cmd | sed -r "s|$delim|$output_delim|g" || end 1
 
 end 0
