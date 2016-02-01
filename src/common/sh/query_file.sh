@@ -240,7 +240,7 @@ output_regex="$output_regex("
 index=0
 while [ $index -lt $s_index ]; do
     if [ ${columns[$index]} == '&' ]; then
-        selection="$selection${columns[$index]}$delim"
+        selection="$selection${columns[$index]}"
         output_regex="$output_regex$line_output_regex"
     else
         selection="$selection\\${columns[$index]}$delim"
