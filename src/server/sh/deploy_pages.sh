@@ -142,7 +142,7 @@ function check_last_deploy () {
         local top=1
         last_rev=''
         while [ -z "$last_rev" ]; do
-            last_rev=$(query_file.sh --delim ';' \
+            last_rev=$(query_file.sh --delim ';' --replace-delim '' \
                 '--select' $col_rev \
                 --top $top \
                 --from "${history_dir}/$history_csv_file" \
@@ -160,6 +160,12 @@ function check_last_deploy () {
     fi
 
     if [ -n "$last_rev" ]; then
+
+        ### aborta a execução caso a revisão solicitada já tenha sido implantada no deploy anterior
+        if [ "$rev" == "$last_rev" ] && [ "$redeploy" == "false" ]; then
+            echo -e "\nA revisão $rev foi implantada no deploy anterior. Encerrando..."
+            end 1
+        fi
 
         ### em caso de deploy manual, alerta possível downgrade ###
         if ! $automatico; then
@@ -183,14 +189,6 @@ function check_last_deploy () {
                 paint 'default'
             fi
         fi
-
-        ### aborta a execução caso a revisão solicitada já tenha sido implantada no deploy anterior
-        if [ "$rev" == "$last_rev" ] && [ "$redeploy" == "false" ]; then
-            echo -e "\nA revisão $rev foi implantada no deploy anterior. Encerrando..."
-            end 1
-        fi
-
-
     fi
 
     cd - &> /dev/null
