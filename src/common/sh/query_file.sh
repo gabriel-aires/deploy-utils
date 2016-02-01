@@ -1,5 +1,4 @@
 #!/bin/bash
-# TODO: utilizar awk ou perl para as substituições em arquivo, pois o sed pode armazenar no máximo nove referências (\1 até \9)
 
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
@@ -64,7 +63,7 @@ while true; do
             ;;
 
         "-s"|"--select")
-            while echo "$2" | grep -Ex "[1-9]|\*" > /dev/null; do
+            while echo "$2" | grep -Ex "[1-9][0-9]*|\*" > /dev/null; do
                 if [ "$2" == '*' ]; then
                     columns[$s_index]="&"
                 else
@@ -97,7 +96,7 @@ while true; do
             ;;
 
         "-w"|"--where")
-            while echo "$2" | grep -Ex "[1-9](==|=~|=%|!=).*" > /dev/null; do
+            while echo "$2" | grep -Ex "[1-9][0-9]*(==|=~|=%|!=).*" > /dev/null; do
                 filter[$f_index]="$(echo "$2" | sed -r 's|^([0-9]+).*$|\1|')"
                 filter_type[$f_index]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=).*$/\1/')"
                 filter_value[$f_index]="$(echo "$2" | sed -r 's/^[0-9]+(==|=~|=%|!=)(.*)$/\2/')"
@@ -109,7 +108,7 @@ while true; do
             ;;
 
         "-o"|"--order-by")
-            while echo "$2" | grep -Ex "[1-9]|asc|desc" > /dev/null; do
+            while echo "$2" | grep -Ex "[1-9][0-9]*|asc|desc" > /dev/null; do
                 order_cmd="$sort_cmd"
                 if [ "$2" == "asc" ]; then
                     shift; break
@@ -231,7 +230,7 @@ test $end_flag -eq 1 && end 1
 # Ordenação
 index=0
 while [ $index -lt $o_index ]; do
-    order_by="$order_by\\${order[$index]}$delim"
+    order_by="$order_by\$${order[$index]}$delim"
     output_regex="$output_regex$part_output_regex"
     ((index++))
 done
@@ -241,10 +240,10 @@ output_regex="$output_regex("
 index=0
 while [ $index -lt $s_index ]; do
     if [ ${columns[$index]} == '&' ]; then
-        selection="$selection${columns[$index]}"
+        selection="$selection\$${columns[$index]}"
         output_regex="$output_regex$line_output_regex"
     else
-        selection="$selection\\${columns[$index]}$delim"
+        selection="$selection\$${columns[$index]}$delim"
         output_regex="$output_regex$part_output_regex"
     fi
     ((index++))
@@ -252,6 +251,6 @@ done
 output_regex="$output_regex)"
 
 # Retorna colunas de (ordenação auxiliares + ) seleção do usuário, (ordena), (remove colunas de ordenação auxiliares), (remove linhas duplicadas), (exibe n primeiras linhas), substitui delimitador
-sed -r "s|$line_regex|${order_by}$selection|" $preview | $order_cmd | sed -r "s|$output_regex|\1|" | $distinct_cmd | $top_cmd | sed -r "s|$delim|$output_delim|g" || end 1
+perl -pe "s|$line_regex|${order_by}$selection|" $preview | $order_cmd | sed -r "s|$output_regex|\1|" | $distinct_cmd | $top_cmd | sed -r "s|$delim|$output_delim|g" || end 1
 
 end 0
