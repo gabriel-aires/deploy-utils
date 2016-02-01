@@ -5,6 +5,7 @@ estado="validacao"
 pid=$$
 interactive="true"
 automatico="false"
+redeploy="false"
 execution_mode="server"
 
 ##### Execução somente como usuário root ######
@@ -16,7 +17,7 @@ fi
 
 #### UTILIZAÇÃO: deploy_pages.sh -opções <aplicação> <revisão> <ambiente> ############
 
-while getopts ":dfh" opcao; do
+while getopts ":dfrh" opcao; do
     case $opcao in
         d)
             modo='d'
@@ -24,15 +25,19 @@ while getopts ":dfh" opcao; do
         f)
             interactive="false"
             ;;
+        r)
+            redeploy="true"
+            ;;
         h)
             echo -e "O script requer os seguintes parâmetros: (opções) <aplicação> <revisão> <ambiente>."
             echo -e "Opções:"
             echo -e "\t-d\thabilitar o modo de deleção de arquivos obsoletos."
             echo -e "\t-f\tforçar a execução do script de forma não interativa."
+            echo -e "\t-r\tpermitir redeploy."
             exit 0
             ;;
         \?)
-            echo "-$OPTARG não é uma opção válida ( -d -f -h )." && exit 1
+            echo "-$OPTARG não é uma opção válida ( -d -f -r -h )." && exit 1
             ;;
     esac
 done
@@ -77,7 +82,7 @@ function checkout () {                                            # o comando cd
             end 1
         fi
 
-        ultimo_commit=''
+        last_commit=''
 
         case $revisao_auto in
             tag)
@@ -88,28 +93,26 @@ function checkout () {                                            # o comando cd
 
                     commit_tag=$(git log "$tag" --oneline | head -1 | cut -f1 -d ' ')
                     if [ $(grep -Ex "^${commit_tag}$" $tmp_dir/commits | wc -l) -eq 1 ]; then
-                        ultimo_commit=$commit_tag
-                        ultima_tag=$tag
+                        last_commit=$commit_tag
+                        last_tag=$tag
                     fi
 
                 done < $tmp_dir/tags
 
-                if [ ! -z $ultimo_commit ] && [ ! -z $ultima_tag ]; then
-                    echo -e "\nObtendo a revisão $ultimo_commit a partir da tag $ultima_tag."
-                    rev=$ultima_tag
-                    git checkout --force --quiet $ultima_tag || end 1
+                if [ ! -z $last_commit ] && [ ! -z $last_tag ]; then
+                    echo -e "\nObtendo a revisão $last_commit a partir da tag $last_tag."
+                    rev=$last_tag
                 else
                     echo "Erro ao obter a revisão especificada. Deploy abortado"
                     end 1
                 fi
                 ;;
             commit)
-                ultimo_commit=$(git log "origin/$branch_auto" --oneline | head -1 | cut -f1 -d ' ')
+                last_commit=$(git log "origin/$branch_auto" --oneline | head -1 | cut -f1 -d ' ')
 
-                if [ ! -z $ultimo_commit ]; then
-                    echo -e "\nObtendo a revisão $ultimo_commit a partir da branch $branch_auto."
-                    rev=$ultimo_commit
-                    git checkout --force --quiet $ultimo_commit || end 1
+                if [ ! -z $last_commit ]; then
+                    echo -e "\nObtendo a revisão $last_commit a partir da branch $branch_auto."
+                    rev=$last_commit
                 else
                     echo "Erro ao obter a revisão especificada. Deploy abortado"
                     end 1
@@ -118,8 +121,9 @@ function checkout () {                                            # o comando cd
         esac
     else
         echo -e "\nObtendo a revisão ${rev}..."
-        git checkout --force --quiet $rev || end 1
     fi
+
+    git checkout --force --quiet $rev || end 1
 
     if [ -z "$(git branch | grep -x '* (no branch)' )" ]; then
         echo -e "\nDeploys a partir do nome de uma branch são proibidos, pois prejudicam a rastreabilidade do processo. Deploy abortado"
@@ -130,42 +134,63 @@ function checkout () {                                            # o comando cd
 }
 
 
-function check_downgrade () {
-
-    ### alerta downgrade ###
+function check_last_deploy () {
 
     cd $origem
 
-    downgrade=false
-
-    git tag > $tmp_dir/git_tag_app
-    git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $tmp_dir/git_log_app
-
-    if [ -f "${app_history_dir}/$history_csv_file" ]; then
-        ultimo_deploy_app=$(query_file.sh -d ';' -s $col_rev -t 1 -f "${app_history_dir}/$history_csv_file" -w $col_flag==1 $col_env==$ambiente $col_rev!=rollback -o $col_date $col_time desc)
+    if [ -f "${history_dir}/$history_csv_file" ]; then
+        local top=1
+        last_rev=''
+        while [ -z "$last_rev" ]; do
+            last_rev=$(query_file.sh --delim ';' \
+                '--select' $col_rev \
+                --top $top \
+                --from "${history_dir}/$history_csv_file" \
+                --where $col_app==$app $col_flag==1 $col_env==$ambiente \
+                --order-by $col_year $col_month $col_day $col_time desc \
+                | tail -n 1 2> /dev/null \
+            )
+            if [ "$last_rev" == 'rollback' ]; then
+                last_rev=''
+                top=$(($top+2))
+            fi
+        done
     else
-        ultimo_deploy_app=''
+        last_rev=''
     fi
 
-    if [ -n "$ultimo_deploy_app" ]; then
+    if [ -n "$last_rev" ]; then
 
-        local rev_check=$(echo $ultimo_deploy_app | sed -r "s|\.|\\\.|g")
+        ### em caso de deploy manual, alerta possível downgrade ###
+        if ! $automatico; then
 
-        if [ $(grep -Ex "^$rev_check$" $tmp_dir/git_tag_app | wc -l) -eq 1 ]; then            # a revisão é uma tag
-            if [ $(grep -Ex "^[a-f0-9]+\.\.$rev_check$" $tmp_dir/git_log_app | wc -l) -eq 0 ]; then    # a tag é posterior à revisão para a qual foi solicitado o deploy
-                downgrade=true
+            downgrade=false
+
+            git tag > $tmp_dir/git_tag_app
+            git log --decorate=full | grep -E "^commit" | sed -r "s|^commit ||" | sed -r "s| .*refs/tags/|\.\.|" | sed -r "s| .*$||" | sed -r "s|([a-f0-9]+\.\..*).$|\1|" > $tmp_dir/git_log_app
+
+            local rev_check=$(echo $last_rev | sed -r "s|\.|\\\.|g")
+
+            if [ $(grep -Ex "^$rev_check$" $tmp_dir/git_tag_app | wc -l) -eq 1 ]; then # a revisão é uma tag
+                test $(grep -Ex "^[a-f0-9]+\.\.$rev_check$" $tmp_dir/git_log_app | wc -l) -eq 0 && downgrade=true    # a tag é posterior à revisão para a qual foi solicitado o deploy
+            else # a revisão é um hash
+                test $(grep -Ex "^$rev_check.*" $tmp_dir/git_log_app | wc -l) -eq 0 && downgrade=true  # o hash é posterior à revisão para a qual foi solicitado o deploy
             fi
-        else                                                # a revisão é um hash
-            if [ $(grep -Ex "^$rev_check.*" $tmp_dir/git_log_app | wc -l) -eq 0 ]; then            # o hash é posterior à revisão para a qual foi solicitado o deploy
-                downgrade=true
+
+            if $downgrade; then
+                paint 'bg' 'red' && paint 'fg' 'black'
+                echo -e "\nAVISO! Foi detectado um deploy anterior de uma revisão mais recente: $last_rev"
+                paint 'default'
             fi
         fi
 
-        if $downgrade; then
-            paint 'bg' 'red' && paint 'fg' 'black'
-            echo -e "\nAVISO! Foi detectado um deploy anterior de uma revisão mais recente: $ultimo_deploy_app"
-            paint 'default'
+        ### aborta a execução caso a revisão solicitada já tenha sido implantada no deploy anterior
+        if [ "$rev" == "$last_rev" ] && [ "$redeploy" == "false" ]; then
+            echo -e "\nA revisão $rev foi implantada no deploy anterior. Encerrando..."
+            end 1
         fi
+
+
     fi
 
     cd - &> /dev/null
@@ -616,8 +641,8 @@ if [ ! "$rev" == "rollback" ]; then
     if [ ! -d "$origem" ]; then
         echo -e "\nErro: não foi possível encontrar o caminho $origem.\nVerifique a revisão informada ou corrija o arquivo $app_conf_dir/$app.conf."
         end 1
-    elif [ ! "$rev" == "auto" ]; then
-        check_downgrade
+    else
+        check_last_deploy
     fi
 fi
 
