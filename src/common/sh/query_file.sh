@@ -127,11 +127,12 @@ while true; do
             ;;
 
         "-h"|"--help")
-            echo "Utilização: query_file [nomearquivo] [opções]"
+            echo "Utilização: query_file.sh [opções]"
             echo "Opções:"
             echo "-d|--delim: especificar caractere ou string que delimita os campos do arquivo. Ex: ';' (obrigatório)"
-            echo "-r|--replace-delim: especificar caractere ou string que delimitará os campos exibidos. Ex: '|' (opcional)"
+            echo "-r|--replace-delim: especificar caractere ou string que delimitará os campos exibidos. Ex: '/' (opcional)"
             echo "-s|--select: especificar ordem das colunas a serem selecionadas. Ex: '1' '2' '*', etc (obrigatório)"
+            echo "-u|--unique|--distinct: (sem argumentos). Suprime linhas duplicadas da saída padrão (opcional)"
             echo "-t|--top: especificar quantidade de linhas a serem retornadas. Ex: '10' '500', etc (opcional)"
             echo "-f|--from: especificar arquivo. Ex: dados.csv (obrigatório)"
             echo "-w|--where: especificar filtro. Ex: '1==valor_exato' '2=~regex_valor' '3!=diferente_valor' '4=%contem_valor', etc (opcional)"
