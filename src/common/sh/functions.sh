@@ -244,7 +244,9 @@ function valid () {
 
 function write_history () {
 
-    local date_log=$(echo "$(date +%F)" | sed -r "s|^(....)-(..)-(..)$|\3/\2/\1|")
+    local day_log=$(echo "$(date +%d)")
+    local month_log=$(echo "$(date +%m)")
+    local year_log=$(echo "$(date +%Y)")
     local time_log=$(echo "$(date +%Hh%Mm%Ss)")
     local app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
     local rev_log="$(echo "$rev" | sed -r 's|;|_|g')"
@@ -258,7 +260,7 @@ function write_history () {
     valid "flag_log" "regex_flag" "'$flag_log': flag de deploy inválida." "continue" || return 1
     interactive=$aux
 
-    local msg_log="$date_log;$time_log;$app_log;$rev_log;$ambiente_log;$host_log;$obs_log;$flag_log;"
+    local msg_log="$day_log;$month_log;$year_log;$time_log;$app_log;$rev_log;$ambiente_log;$host_log;$obs_log;$flag_log;"
 
     local lock_path
     local history_path

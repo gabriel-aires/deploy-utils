@@ -28,7 +28,7 @@ function html () {
 
     cd $(dirname $arquivo_entrada)
 
-    query_file.sh --delim ';' --replace-delim '</td><td>' --select '*' --top $history_html_size --from $arquivo_entrada --order-by $col_date $col_time desc > $tmp_dir/html_tr
+    query_file.sh --delim ';' --replace-delim '</td><td>' --select '*' --top $history_html_size --from $arquivo_entrada --order-by $col_year $col_month $col_day $col_time desc > $tmp_dir/html_tr
 
     sed -i -r 's|^(.*)<td>1</td><td>$|\t\t\t<tr style="@@html_tr_style_default@@"><td>\1</tr>|' $tmp_dir/html_tr
     sed -i -r 's|^(.*)<td>0</td><td>$|\t\t\t<tr style="@@html_tr_style_warning@@"><td>\1</tr>|' $tmp_dir/html_tr
