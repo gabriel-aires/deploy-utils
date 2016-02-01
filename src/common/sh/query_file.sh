@@ -1,5 +1,5 @@
 #!/bin/bash
-# TODO: utilizar awk para as substituições em arquivo, pois o sed pode armazenar no máximo nove referências (\1 até \9)
+# TODO: utilizar awk ou perl para as substituições em arquivo, pois o sed pode armazenar no máximo nove referências (\1 até \9)
 
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
@@ -37,11 +37,14 @@ o_index=0
 top=''
 head_cmd="head -n"
 top_cmd='cat'
+uniq_cmd='uniq'
+distinct_cmd='cat'
 grep_cmd="grep -E -x"
 sort_cmd="sort"
 order_cmd='cat'
 size=1
 line_regex=''
+line_output_regex=''
 output_regex=''
 preview=''
 order_by=''
@@ -61,12 +64,21 @@ while true; do
             ;;
 
         "-s"|"--select")
-            while echo "$2" | grep -Ex "[1-9]" > /dev/null; do
-                columns[$s_index]="$2"
-                test ${columns[$s_index]} -gt $max_column && max_column=${columns[$s_index]}
+            while echo "$2" | grep -Ex "[1-9]|\*" > /dev/null; do
+                if [ "$2" == '*' ]; then
+                    columns[$s_index]="&"
+                else
+                    columns[$s_index]="$2"
+                    test ${columns[$s_index]} -gt $max_column && max_column=${columns[$s_index]}
+                fi
                 ((s_index++))
                 shift
             done
+            shift
+            ;;
+
+        "-u"|"--unique"|"--distinct")
+            distinct_cmd="$uniq_cmd"
             shift
             ;;
 
@@ -119,7 +131,7 @@ while true; do
             echo "Opções:"
             echo "-d|--delim: especificar caractere ou string que delimita os campos do arquivo. Ex: ';' (obrigatório)"
             echo "-r|--replace-delim: especificar caractere ou string que delimitará os campos exibidos. Ex: '|' (opcional)"
-            echo "-s|--select: especificar ordem das colunas a serem selecionadas. Ex: '1' '2', etc (obrigatório)"
+            echo "-s|--select: especificar ordem das colunas a serem selecionadas. Ex: '1' '2' '*', etc (obrigatório)"
             echo "-t|--top: especificar quantidade de linhas a serem retornadas. Ex: '10' '500', etc (opcional)"
             echo "-f|--from: especificar arquivo. Ex: dados.csv (obrigatório)"
             echo "-w|--where: especificar filtro. Ex: '1==valor_exato' '2=~regex_valor' '3!=diferente_valor' '4=%contem_valor', etc (opcional)"
@@ -143,10 +155,10 @@ done
 
 if [ $end_flag -eq 1 ]; then
     end 1
-elif [ $(($s_index+$o_index)) -gt 9 ]; then
-    echo "Erro. Devido a uma limitação do comando sed, a quantidade total de campos indicados para seleção/ordenação não deve exceder 9." 1>&2; end 1    
 elif [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}" ]; then
     echo "Erro. Argumentos insuficientes." 1>&2; end 1
+elif [ "$distinct_cmd" == "$uniq_cmd" ] && [ "$order_cmd" == 'cat' ]; then
+    echo "Erro. A opção '-u|--unique|--distinct' deve ser utilizada em conjunto com a opção '-o|--order-by'." 1>&2; end 1
 elif ! echo "$delim" | grep -Ex "[[:print:]]+" > /dev/null; then
     echo "Delimitador inválido." 1>&2; end 1
 fi
@@ -155,10 +167,11 @@ mkdir -p $tmp_dir
 
 header="$(head -n 1 $file )"
 part_regex="(.*)$delim"
-part_output_regex="(.*)$output_delim"
+part_output_regex=".*$output_delim"
 
 while $(echo "$header" | grep -E "^(.*$delim){$size}" > /dev/null); do
     line_regex="$line_regex$part_regex"
+    line_output_regex="$line_output_regex$part_output_regex"
     index=0
 
     while [ $index -lt $f_index ]; do
@@ -223,17 +236,21 @@ while [ $index -lt $o_index ]; do
 done
 
 #Seleção
-output_size=$index
+output_regex="$output_regex("
 index=0
 while [ $index -lt $s_index ]; do
-    ((output_size++))
-    selection="$selection\\${columns[$index]}$output_delim"
-    output_selection="$output_selection\\$output_size$output_delim"
-    output_regex="$output_regex$part_output_regex"
+    if [ ${columns[$index]} == '&' ]; then
+        selection="$selection${columns[$index]}$output_delim"
+        output_regex="$output_regex$line_output_regex"
+    else
+        selection="$selection\\${columns[$index]}$output_delim"
+        output_regex="$output_regex$part_output_regex"
+    fi
     ((index++))
 done
+output_regex="$output_regex)"
 
-# Seleciona colunas de ordenação auxiliares + seleção do usuário, ordena, remove colunas de ordenação auxiliares, exibe n primeiras linhas
-sed -r "s|$line_regex|${order_by}$selection|" $preview | $order_cmd | sed -r "s|$output_regex|$output_selection|" | $top_cmd || end 1
+# Retorna colunas de (ordenação auxiliares + ) seleção do usuário, (ordena), (remove colunas de ordenação auxiliares), (remove linhas duplicadas), (exibe n primeiras linhas)
+sed -r "s|$line_regex|${order_by}$selection|" $preview | $order_cmd | sed -r "s|$output_regex|\1|" | $distinct_cmd | $top_cmd || end 1
 
 end 0
