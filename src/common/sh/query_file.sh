@@ -194,19 +194,19 @@ done
 for position in $(seq 1 $size); do
 
     for index in $(seq 0 $(($s_index-1))) ; do
-        if echo ${$columns[$index]} | grep -Ex "$arg_name_regex" &> /dev/null; then
+        if echo ${columns[$index]} | grep -Ex "$arg_name_regex" &> /dev/null; then
             test "$(echo ${$columns[$index]} | sed -r "s|\[($col_name_regex)\]|\1|")" == "$(echo $header | perl -pe "s|$line_regex|\$$position|")" && columns[$index]=$position
         fi
     done
 
     for index in $(seq 0 $(($f_index-1))) ; do
-        if echo ${$filter[$index]} | grep -Ex "$arg_name_regex" &> /dev/null; then
+        if echo ${filter[$index]} | grep -Ex "$arg_name_regex" &> /dev/null; then
             test "$(echo ${$filter[$index]} | sed -r "s|\[($col_name_regex)\]|\1|")" == "$(echo $header | perl -pe "s|$line_regex|\$$position|")" && filter[$index]=$position
         fi
     done
 
     for index in $(seq 0 $(($o_index-1))) ; do
-        if echo ${$order[$index]} | grep -Ex "$arg_name_regex" &> /dev/null; then
+        if echo ${order[$index]} | grep -Ex "$arg_name_regex" &> /dev/null; then
             test "$(echo ${$order[$index]} | sed -r "s|\[($col_name_regex)\]|\1|")" == "$(echo $header | perl -pe "s|$line_regex|\$$position|")" && order[$index]=$position
         fi
     done
