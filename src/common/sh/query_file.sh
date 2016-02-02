@@ -179,7 +179,7 @@ file_size=$(cat $file | wc -l)
 preview=$tmp_dir/raw_data
 
 tail -n $(($header_size-$file_size)) $file > $preview
-header="$(head -n $header_size $file | tail -n 1)"
+test $header_size -gt 0 && header="$(head -n $header_size $file | tail -n 1)" || header=$(head -n 1 $file)
 part_regex="(.*)$delim"
 part_output_regex=".*$delim"
 
