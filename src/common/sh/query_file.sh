@@ -218,7 +218,7 @@ for index in $(seq 0 $(($s_index-1))) ; do
     if echo ${columns[$index]} | grep -Ex "$arg_num_regex" &> /dev/null; then
         test ${columns[$index]} -gt $max_column && max_column=${columns[$s_index]}
     elif echo ${columns[$index]} | grep -Ex "$arg_name_regex" &> /dev/null; then
-        echo "Coluna de seleção inválida. O campo ${$columns[$index]} não foi encontrado no cabeçalho."
+        echo "Coluna de seleção inválida. O campo ${columns[$index]} não foi encontrado no cabeçalho."
         end_flag=1
     fi
 done
@@ -227,7 +227,7 @@ for index in $(seq 0 $(($f_index-1))) ; do
     if echo ${filter[$index]} | grep -Ex "$arg_num_regex" &> /dev/null; then
         test ${filter[$index]} -gt $max_filter && max_filter=${filter[$f_index]}
     else
-        echo "Coluna de filtro inválida. O campo ${$filter[$index]} não foi encontrado no cabeçalho."
+        echo "Coluna de filtro inválida. O campo ${filter[$index]} não foi encontrado no cabeçalho."
         end_flag=1
     fi
 done
@@ -236,7 +236,7 @@ for index in $(seq 0 $(($o_index-1))) ; do
     if echo ${order[$index]} | grep -Ex "$arg_num_regex" &> /dev/null; then
         test ${order[$index]} -gt $max_order && max_order=${order[$o_index]}
     else
-        echo "Coluna de ordenação inválida. O campo ${$order[$index]} não foi encontrado no cabeçalho."
+        echo "Coluna de ordenação inválida. O campo ${order[$index]} não foi encontrado no cabeçalho."
         end_flag=1
     fi
 done
