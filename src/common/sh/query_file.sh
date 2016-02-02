@@ -106,9 +106,9 @@ while true; do
 
         "-w"|"--where")
             while echo "$2" | grep -Ex "($arg_num_regex|$arg_name_regex)(==|=~|=%|!=).*" > /dev/null; do
-                filter[$f_index]="$(echo "$2" | sed -r "s|^($arg_num_regex|$arg_name_regex).*$|\1|")"
-                filter_type[$f_index]="$(echo "$2" | sed -r "s/^($arg_num_regex|$arg_name_regex)(==|=~|=%|!=).*$/\2/")"
-                filter_value[$f_index]="$(echo "$2" | sed -r "s/^($arg_num_regex|$arg_name_regex)(==|=~|=%|!=)(.*)$/\3/")"
+                filter[$f_index]="$(echo "$2" | sed -r "s|^(($arg_num_regex|$arg_name_regex)).*$|\1|")"
+                filter_type[$f_index]="$(echo "$2" | sed -r "s/^(($arg_num_regex|$arg_name_regex))(==|=~|=%|!=).*$/\2/")"
+                filter_value[$f_index]="$(echo "$2" | sed -r "s/^(($arg_num_regex|$arg_name_regex))(==|=~|=%|!=)(.*)$/\3/")"
                 ((f_index++))
                 shift
             done
