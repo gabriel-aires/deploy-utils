@@ -16,6 +16,9 @@ echo '  <body>'
 echo "      <h1>$html_header</h1>"
 
 ### QUERY HISTORY
+APP=$(echo "$QUERY_STRING" | sed -r "s/^.*&?$col_app=([^&]+).*$/\1/" | sed -r "s/%20/ /g")
+export $APP
+
 if [ -f  $history_dir/$history_csv_file ]; then
     $install_dir/cgi/html_table.cgi $history_dir/$history_csv_file
 else
