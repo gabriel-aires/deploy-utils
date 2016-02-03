@@ -18,7 +18,7 @@ trap "end 1" SIGQUIT SIGINT SIGHUP
 
 mkdir -p $tmp_dir
 
-echo -e '\t\t<table cellpadding=5 width=100% style="@@html_table_style@@"' >  $tmp_dir/html
+echo -e '\t\t<table cellpadding=5 width=100% style="@@html_table_style@@">' >  $tmp_dir/html
 
 query_file.sh --delim "$delim" --replace-delim '</th><th>' --select '*' --top 1 --from $data_file >> $tmp_dir/html
 query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 --select '*' --top $history_html_size --from $data_file --order-by $col_year $col_month $col_day $col_time desc >> $tmp_dir/html
