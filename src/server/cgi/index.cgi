@@ -17,7 +17,7 @@ echo "      <h1>$html_header</h1>"
 
 ### QUERY HISTORY
 if [ -f  $history_dir/$history_csv_file ]; then
-    /bin/bash $install_dir/cgi/html_table.cgi $history_dir/$history_csv_file
+    $install_dir/cgi/html_table.cgi $history_dir/$history_csv_file
 else
     echo '  <p>Histórico de deploy inexistente</p>'
 fi
