@@ -1,10 +1,11 @@
 #!/bin/bash
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
+source $install_dir/sh/init.sh || exit 1
 
-pid=$$
 lock_history=false
 interactive=false
 execution_mode="server"
+verbosity="quiet"
 
 ##### Execução somente como usuário root ######
 
@@ -19,34 +20,6 @@ function horario () {
 
     echo $(date "+%F %T"):
 
-}
-
-function html () {
-
-    arquivo_entrada=$1
-    arquivo_saida=$2
-
-    cd $(dirname $arquivo_entrada)
-
-    query_file.sh --delim ';' --replace-delim '</td><td>' --select '*' --top $history_html_size --from $arquivo_entrada --order-by $col_year $col_month $col_day $col_time desc > $tmp_dir/html_tr
-
-    sed -i -r 's|^(.*)<td>1</td><td>$|\t\t\t<tr style="@@html_tr_style_default@@"><td>\1</tr>|' $tmp_dir/html_tr
-    sed -i -r 's|^(.*)<td>0</td><td>$|\t\t\t<tr style="@@html_tr_style_warning@@"><td>\1</tr>|' $tmp_dir/html_tr
-
-    cat $html_dir/begin.html > $tmp_dir/html
-    cat $tmp_dir/html_tr >> $tmp_dir/html
-    cat $html_dir/end.html >> $tmp_dir/html
-
-    sed -i -r "s|@@html_title@@|$html_title|" $tmp_dir/html
-    sed -i -r "s|@@html_header@@|$html_header|" $tmp_dir/html
-    sed -i -r "s|@@html_table_style@@|$html_table_style|" $tmp_dir/html
-    sed -i -r "s|@@html_th_style@@|$html_th_style|" $tmp_dir/html
-    sed -i -r "s|@@html_tr_style_default@@|$html_tr_style_default|" $tmp_dir/html
-    sed -i -r "s|@@html_tr_style_warning@@|$html_tr_style_warning|" $tmp_dir/html
-
-    cp -f $tmp_dir/html $arquivo_saida
-
-    cd - &> /dev/null
 }
 
 function cron_tasks () {
@@ -102,18 +75,9 @@ function cron_tasks () {
         qtd_history=$(cat "$history_dir/$history_csv_file" | wc -l)
         if [ $qtd_history -gt $global_history_size ]; then
             qtd_purge=$(($qtd_history - $global_history_size))
-            sed -i "1,${qtd_purge}d" "$history_dir/$history_csv_file"
+            sed -i "2,${qtd_purge}d" "$history_dir/$history_csv_file"
         fi
     fi
-
-    find "$app_history_dir_tree/" -type f -name "$history_csv_file" > $tmp_dir/app_history_list
-    while read app_history; do
-        qtd_history=$(cat "$app_history" | wc -l)
-        if [ $qtd_history -gt $app_history_size ]; then
-            qtd_purge=$(($qtd_history - $app_history_size))
-            sed -i "1,${qtd_purge}d" "$app_history"
-        fi
-    done < $tmp_dir/app_history_list
 
     ########## 3) logs de deploy de aplicações
     find ${app_history_dir_tree} -mindepth 1 -maxdepth 1 -type d > $tmp_dir/app_history_path
@@ -124,12 +88,6 @@ function cron_tasks () {
         grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
         cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
     done < $tmp_dir/app_history_path
-
-    ########## 4) Logs em formato html
-    find "$history_dir/" -maxdepth 3 -type f -name "$history_csv_file" > $tmp_dir/logs_csv
-    while read log_csv; do
-        html $log_csv $history_html_file || end 1
-    done < $tmp_dir/logs_csv
 
     ########## Destrava histórico
     rm -f $lock_dir/$history_lock_file
@@ -175,42 +133,10 @@ function end {
 
 #### Inicialização #####
 
-if [ ! -f "$install_dir/conf/global.conf" ]; then
-    echo 'Arquivo global.conf não encontrado.'
-    exit 1
-fi
-
-if [ "$(grep -v --file=$install_dir/template/global.template $install_dir/conf/global.conf | grep -v '^$' | wc -l)" -ne "0" ]; then
-    echo 'O arquivo global.conf não atende ao template correspondente.'
-    exit 1
-fi
-
-source "$install_dir/conf/global.conf" || exit 1                        #carrega o arquivo de constantes.
-
-if [ -f "$install_dir/conf/user.conf" ] && [ -f "$install_dir/template/user.template" ]; then
-    if [ "$(grep -v --file=$install_dir/template/user.template $install_dir/conf/user.conf | grep -v '^$' | wc -l)" -ne "0" ]; then
-        echo 'O arquivo user.conf não atende ao template correspondente.'
-        exit 1
-    else
-        source "$install_dir/conf/user.conf" || exit 1
-    fi
-fi
-
-tmp_dir="$work_dir/$pid"
-
-if [ -z "$ambientes" ] || [ ! -d "$html_dir" ]; then
+if [ -z "$ambientes" ]; then
     echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
     exit 1
 fi
-
-valid 'tmp_dir' "Erro. Diretório de arquivos temporários inválido: $tmp_dir"
-valid 'lock_dir' "Erro. Diretório de lockfiles inválido: $lock_dir"
-valid 'html_dir' "Erro. Diretório de arquivos HTML inválido: $html_dir"
-valid 'history_dir' "Erro. Diretório de histórico inválido: $history_dir"
-
-mkdir -p $work_dir $lock_dir $history_dir $app_history_dir_tree $app_conf_dir
-
-#### Cria lockfile e diretório temporário #########
 
 if [ -f $lock_dir/server_cron_tasks ]; then
     echo -e "O script de deploy automático já está em execução." && exit 0

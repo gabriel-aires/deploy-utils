@@ -1,5 +1,6 @@
 #!/bin/bash
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
+source $install_dir/sh/init.sh || exit 1
 
 estado="validacao"
 pid=$$
@@ -7,6 +8,7 @@ interactive="true"
 automatico="false"
 redeploy="false"
 execution_mode="server"
+verbosity="verbose"
 
 ##### Execução somente como usuário root ######
 
@@ -142,7 +144,7 @@ function check_last_deploy () {
         local top=1
         last_rev=''
         while [ -z "$last_rev" ]; do
-            last_rev=$(query_file.sh --delim ';' --replace-delim '' \
+            last_rev=$(query_file.sh --delim "$delim" --replace-delim '' --header 1 \
                 '--select' $col_rev \
                 --top $top \
                 --from "${history_dir}/$history_csv_file" \
@@ -365,21 +367,6 @@ if $interactive; then
     clear
 fi
 
-if [ ! -f "$install_dir/conf/global.conf" ]; then
-    echo 'Arquivo global.conf não encontrado.'
-    exit 1
-fi
-
-chk_template $install_dir/conf/global.conf
-source "$install_dir/conf/global.conf" || exit 1                        #carrega o arquivo de constantes.
-
-if [ -f "$install_dir/conf/user.conf" ]; then
-    chk_template $install_dir/conf/user.conf
-    source "$install_dir/conf/user.conf" || exit 1
-fi
-
-tmp_dir="$work_dir/$pid"
-
 if [ -z "$modo_padrao" ] \
     || [ -z "$rsync_opts" ] \
     || [ -z "$ambientes" ] \
@@ -389,16 +376,7 @@ then
     exit 1
 fi
 
-aux=$interactive; interactive=false
-valid "bak_dir" "\nErro. Diretório de backup informado incorretamente."
-valid "html_dir" "\nErro. Diretório de html informado incorretamente."
-valid "tmp_dir" "\nErro. Diretório temporário informado incorretamente."
-valid "history_dir" "\nErro. Diretório de histórico informado incorretamente."
-valid "repo_dir" "\nErro. Diretório de repositórios git informado incorretamente."
-valid "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente."
-interactive=$aux
-
-mkdir -p $install_dir $work_dir $history_dir ${app_history_dir_tree} $repo_dir $lock_dir $app_conf_dir $bak_dir    $tmp_dir        #cria os diretórios necessários, caso não existam.
+mkdir -p $tmp_dir        # os outros diretórios são criados pelo init.sh
 
 mklist "$ambientes" "$tmp_dir/ambientes"
 

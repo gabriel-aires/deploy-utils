@@ -14,22 +14,10 @@ task_name="$2"
 file_types="$3"
 pid="$$"
 execution_mode="agent"
+verbosity="quiet"
+interactive=false
 
 ###### FUNÇÕES ######
-
-function log () {    ##### log de execução detalhado.
-
-    local msg="$(date +"%F %Hh%Mm%Ss")  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
-    local len=$(echo "$msg" | wc -c)
-
-    if [ $len -lt 80 ]; then
-        local fill=$((80 - $len))
-        echo -e "$msg" | sed -r "s|(.)$|\1                    |" | sed -r "s| {$((20-$fill))}$|$1\t$2|"
-    else
-        echo -e "$msg    $1\t$2"
-    fi
-
-}
 
 function end () {
 
@@ -394,6 +382,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
     export -f 'log'
     export -f 'write_history'
     export 'execution_mode'
+    export 'verbosity'
     export 'interactive'
     export 'lock_history'
     export 'remote_lock_dir'

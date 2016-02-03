@@ -11,6 +11,7 @@
 #       As variáveis abaixo são exportadas para o ambiente de execução do agente, PORÉM NÃO DEVEM SER UTILIZADAS DIRETAMENTE:
 #
 #       - $execution_mode:      	string que indica o modo de execução do script ("server" ou "agent")
+#       - $verbosity:             	string que indica a verbosidade do script ("quiet" ou "verbose")
 #       - $interactive:     	    flag que indica se o script deve ser executado em modo interativo ("true" ou "false")
 #       - $lock_history:        	flag que indica se o processo atual possui a trava para escrita no arquivo de histórico ("true" ou "false")
 #       - $remote_lock_dir:     	caminho para o diretório de lockfiles (ex: "/mnt/...")

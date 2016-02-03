@@ -29,6 +29,20 @@ function paint () {
 
 }
 
+function log () {    ##### log de execução detalhado.
+
+    local msg="$(date +"%F %Hh%Mm%Ss")  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
+    local len=$(echo "$msg" | wc -c)
+
+    if [ $len -lt 80 ]; then
+        local fill=$((80 - $len))
+        echo -e "$msg" | sed -r "s|(.)$|\1                    |" | sed -r "s| {$((20-$fill))}$|$1\t$2|"
+    else
+        echo -e "$msg    $1\t$2"
+    fi
+
+}
+
 function lock () {                                            #argumentos: nome_trava, mensagem_erro, (instrução)
 
     if [ -d $lock_dir ] && [ ! -z "$1" ] && [ ! -z "$2" ]; then
@@ -37,9 +51,9 @@ function lock () {                                            #argumentos: nome_
         local msg="$2"
 
         if [ -f "$lock_dir/$lockfile" ]; then
-            case $execution_mode in
-                'agent') log "INFO" "$msg";;
-                'server') echo -e "\n$msg";;
+            case $verbosity in
+                'quiet') log "INFO" "$msg";;
+                'verbose') echo -e "\n$msg";;
             esac
 
             end 0 2> /dev/null || exit 0
@@ -100,25 +114,25 @@ function chk_template () {
         fi
 
         if [ -z $nome_template ]; then
-            case $execution_mode in
-                'agent') log "ERRO" "Não foi indentificado um template para validação do arquivo $arquivo.";;
-                'server') echo -e "\nErro. Não foi indentificado um template para validação do arquivo $arquivo.";;
+            case $verbosity in
+                'quiet') log "ERRO" "Não foi indentificado um template para validação do arquivo $arquivo.";;
+                'verbose') echo -e "\nErro. Não foi indentificado um template para validação do arquivo $arquivo.";;
             esac
             paint 'default'
             end 1 2> /dev/null || exit 1
 
         elif [ ! -f "$install_dir/template/$nome_template.template" ]; then
-            case $execution_mode in
-                'agent') log "ERRO" "O template espeficicado não foi encontrado: $nome_template.";;
-                'server') echo -e "\nErro. O template espeficicado não foi encontrado.";;
+            case $verbosity in
+                'quiet') log "ERRO" "O template espeficicado não foi encontrado: $nome_template.";;
+                'verbose') echo -e "\nErro. O template espeficicado não foi encontrado.";;
             esac
             paint 'default'
             end 1 2> /dev/null || exit 1
 
         elif [ "$(cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template | wc -l)" -ne "0" ]; then
             case $execution_mode in
-                'agent') log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
-                'server') echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
+                'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
+                'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
             esac
             cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template
 
@@ -207,13 +221,13 @@ function valid () {
         valor="$(eval $valor)"
 
         if [ -z "$regra" ]; then
-            case "$execution_mode" in
-                'agent') log "ERRO" "Não há uma regra para validação da variável $nome_var";;
-                'server') echo "Erro. Não há uma regra para validação da variável $nome_var";;
+            case "$verbosity" in
+                'quiet') log "ERRO" "Não há uma regra para validação da variável $nome_var";;
+                'verbose') echo "Erro. Não há uma regra para validação da variável $nome_var";;
             esac
             eval "$exit_cmd"
 
-        elif "$interactive"; then    #o modo interativo somente é possível caso $execution_mode='server'
+        elif "$interactive"; then
             edit_var=0
             while [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; do
                 paint 'fg' 'yellow'
@@ -226,9 +240,9 @@ function valid () {
             done
 
         elif [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; then
-            case "$execution_mode" in
-                'agent') log "ERRO" "$msg";;
-                'server') echo -e "$msg";;
+            case "$verbosity" in
+                'quiet') log "ERRO" "$msg";;
+                'verbose') echo -e "$msg";;
             esac
             eval "$exit_cmd"
 
@@ -249,7 +263,7 @@ function write_history () {
     local year_log=$(echo "$(date +%Y)")
     local time_log=$(echo "$(date +%Hh%Mm%Ss)")
     local app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
-    local rev_log="$(echo "$rev" | sed -r 's|;|_|g')"
+    local rev_log="$(echo "$rev" | sed -r "s|$delim|_|g")"
     local ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
     local host_log="$(echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
     local obs_log="$1"
@@ -260,7 +274,8 @@ function write_history () {
     valid "flag_log" "regex_flag" "'$flag_log': flag de deploy inválida." "continue" || return 1
     interactive=$aux
 
-    local msg_log="$day_log;$month_log;$year_log;$time_log;$app_log;$rev_log;$ambiente_log;$host_log;$obs_log;$flag_log;"
+    local header="$(echo "$col_day$col_month$col_year$col_time$col_app$col_rev$col_env$col_host$col_obs$col_flag" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
+    local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$app_log$delim$rev_log$delim$ambiente_log$delim$host_log$delim$obs_log$delim$flag_log$delim"
 
     local lock_path
     local history_path
@@ -288,11 +303,9 @@ function write_history () {
     lock_history=true
     touch "${lock_path}/$history_lock_file"
 
-    touch ${history_path}/$history_csv_file
-    touch ${app_history_path}/$history_csv_file
+    test -f ${history_path}/$history_csv_file && touch ${history_path}/$history_csv_file || echo -e "$header" > ${history_path}/$history_csv_file
 
     echo -e "$msg_log" >> ${history_path}/$history_csv_file
-    echo -e "$msg_log" >> ${app_history_path}/$history_csv_file
 
     rm -f ${lock_path}/$history_lock_file                                #remove a trava sobre o arquivo de log tão logo seja possível.
     lock_history=false

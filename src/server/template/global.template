@@ -1,5 +1,6 @@
 # modo de execução (server/agent)
 execution_mode=
+verbosity=
 # Caminhos para diretórios e arquivos utilizados no processo de deploy.
 work_dir=
 bak_dir=
@@ -7,10 +8,9 @@ history_dir=
 app_history_dir_tree=
 repo_dir=
 lock_dir=
-html_dir=
+cgi_dir=
 app_conf_dir=
 cron_log_file=
-history_html_file=
 credenciais=
 # Opções de deploy padrão
 ambientes=
@@ -32,7 +32,7 @@ html_tr_style_warning=
 regex_tmp_dir=
 regex_bak_dir=
 regex_history_dir=
-regex_html_dir=
+regex_cgi_dir=
 regex_repo_dir=
 regex_lock_dir=
 # Expressões de validação de parâmetros das aplicações
