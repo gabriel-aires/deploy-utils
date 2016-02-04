@@ -14,19 +14,20 @@ function end() {
     exit $1
 }
 
-trap "end 1" SIGQUIT SIGINT SIGHUP
+trap "end 1" SIGQUIT SIGINT SIGHUP EXIT ERR
 
 mkdir -p $tmp_dir
 
-echo -e '\t\t<table cellpadding=5 width=100% style="@@html_table_style@@">' >  $tmp_dir/html
+test -z $SELECT && SELECT="--select \'\*\'"
+test -z $TOP && TOP=''
+test -z $WHERE && WHERE=''
+test -z $ORDERBY && ORDERBY="--order-by $col_year $col_month $col_day desc"
 
-query_file.sh --delim "$delim" --replace-delim '</th><th>' --select '*' --top 1 --from $data_file >> $tmp_dir/html 2> /dev/null
+# CABEÇALHO
+query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --from $data_file > $tmp_dir/html 2> /dev/null
 
-if [ -z "$APP" ]; then
-    query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 --select '*' --from $data_file --order-by "$col_year" "$col_month" "$col_day" "$col_time" desc >> $tmp_dir/html 2> /dev/null
-else
-    query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 --select '*' --from $data_file --where "$col_app==$APP" --order-by "$col_year" "$col_month" "$col_day" "$col_time" desc >> $tmp_dir/html 2> /dev/null
-fi
+# DADOS
+query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT --from $data_file $WHERE $ORDERBY >> $tmp_dir/html 2> /dev/null
 
 sed -i -r 's|^(.*)<th>Flag</th><th>$|\t\t\t<tr style="@@html_th_style@@"><th>\1</tr>|' $tmp_dir/html
 sed -i -r 's|^(.*)<td>1</td><td>$|\t\t\t<tr style="@@html_tr_style_default@@"><td>\1</tr>|' $tmp_dir/html
@@ -37,7 +38,6 @@ sed -i -r "s|@@html_th_style@@|$html_th_style|" $tmp_dir/html
 sed -i -r "s|@@html_tr_style_default@@|$html_tr_style_default|" $tmp_dir/html
 sed -i -r "s|@@html_tr_style_warning@@|$html_tr_style_warning|" $tmp_dir/html
 
-echo '</table>' >> $tmp_dir/html
 cat $tmp_dir/html
 
 end 0

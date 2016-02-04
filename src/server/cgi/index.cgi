@@ -27,6 +27,10 @@ fi
 mkdir $tmp_dir
 
 MIN_PAGE=1
+WHERE=''
+ORDERBY=''
+TOP=''
+SELECT=''
 
 if [ -z $QUERY_STRING ]; then
 	STARTPAGE="$REQUEST_URI"
@@ -34,6 +38,7 @@ if [ -z $QUERY_STRING ]; then
 	NEXT=2
 	PREV=0
 	APP=''
+
 	NEXT_URI="$STARTPAGE?p=$NEXT"
 
 else
@@ -41,6 +46,8 @@ else
 
 	APP="$(echo "$col_app" | sed -r 's/\[//' | sed -r 's/\]//')"
 	APP=$(echo "$QUERY_STRING" | sed -r "s/^.*$APP=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
+
+    WHERE="--where $col_app==$APP"
 
 	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
 	test -n "$PAGE" || PAGE=1
@@ -53,15 +60,14 @@ else
 
 	PREV_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$PREV\2/")"
         test "$PREV_URI" != "$REQUEST_URI" || PREV_URI="$REQUEST_URI&p=$PREV"
-       
+
 fi
 
-export 'APP'
-
+export 'WHERE'
 
 $install_dir/cgi/html_table.cgi $file > $tmp_dir/html_table
 
-DATA_SIZE=$(($(cat "$tmp_dir/html_table" | wc -l)-2))
+DATA_SIZE=$(($(cat "$tmp_dir/html_table" | wc -l)-1))
 test $DATA_SIZE -lt $history_html_size && print_size=$DATA_SIZE || print_size=$history_html_size
 
 MAX_PAGE=$(($DATA_SIZE/$history_html_size))
@@ -76,11 +82,11 @@ if [ $PREV -ge $MIN_PAGE ]; then
 	FOOTER="<a href=\"$PREV_URI\" style=\"color:black\">$PREV</a> $FOOTER"
 fi
 
-FOOTER="	<table width=100% style=\"text-align:left;color:black\">\
-			<tr> <td><br></td> </tr>\
-			<tr> <td><a href=\"${STARTPAGE}detalhe/\" style=\"color:black\">Logs</td> </tr>\
-			<tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td> <td style=\"text-align:right\">Página: $FOOTER</td> </tr>\
-		</table>"
+FOOTER="    <table width=100% style=\"text-align:left;color:black\">\
+			     <tr> <td><br></td> </tr>\
+                 <tr> <td><a href=\"${STARTPAGE}detalhe/\" style=\"color:black\">Logs</td> </tr>\
+                 <tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td> <td style=\"text-align:right\">Página: $FOOTER</td> </tr>\
+            </table>"
 
 echo "		<select onchange="javascript:location.href=this.value">"
 echo "			<option value=\"Sistema\">Sistema...</option>"
@@ -88,10 +94,14 @@ find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | xargs -I{} -d '\n'
 echo "		</select>"
 
 echo "		<p>"
-head -n 2 "$tmp_dir/html_table"
-head -n $((($PAGE*$history_html_size)+2)) $tmp_dir/html_table | tail -n $print_size
+echo "      <table cellpadding=5 width=100% style=\"$html_table_style\">"
+head -n 1 "$tmp_dir/html_table"
+head -n $((($PAGE*$history_html_size)+1)) $tmp_dir/html_table | tail -n $print_size
+echo "      </table>" >> $tmp_dir/html
 echo "		</p>"
+
 echo "$FOOTER"
+
 echo '  </body>'
 echo '</html>'
 
