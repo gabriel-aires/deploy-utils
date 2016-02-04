@@ -43,8 +43,6 @@ WHERE=''
 ORDERBY=''
 TOP=''
 
-ARG_STRING=$(echo)
-
 if [ -z $QUERY_STRING ]; then
 	STARTPAGE="$REQUEST_URI"
 	PAGE=1
