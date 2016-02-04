@@ -57,6 +57,9 @@ else
 	SELECT="$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
     test "$SELECT" != "$QUERY_STRING" && SELECT="--select $(echo $SELECT | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''
 
+    DISTINCT="$(echo "$QUERY_STRING" | sed -r "s/^.*DISTINCT=([^\&]+)&?.*$/\1/")"
+    test "$DISTINCT" == "$QUERY_STRING" && DISTINCT=0
+
     TOP="$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/")"
     test "$TOP" != "$QUERY_STRING" TOP="--top (echo $TOP | sed -r 's/%20/ /g' | sed -r 's/\+/ /g')" || TOP=''
 
@@ -102,10 +105,10 @@ fi
 
 # Form Select
 echo "<form action=\"$STARTPAGE\" method=\"get\">"
-echo "SELECT:   <input type=\"text\" name=\"SELECT\">Ex: $col_app_name $col_env_name $col_host_name</input><br>"
-echo "TOP:      <input type=\"text\" name=\"TOP\">Ex: 10</input><br>"
-echo "WHERE:    <input type=\"text\" name=\"WHERE\">Ex: $col_rev_name=%v1 $col_app_name==visao </input><br>"
-echo "ORDER BY: <input type=\"text\" name=\"ORDERBY\">Ex: $col_year_name $col_month_name $col_time_name desc</input><br>"
+echo "SELECT:   <input type=\"text\" name=\"SELECT\" value=\"Ex: $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT<br>"
+echo "TOP:      <input type=\"text\" name=\"TOP\" value=\"Ex: 10\"><br>"
+echo "WHERE:    <input type=\"text\" name=\"WHERE\" value=\"Ex: $col_rev_name=%v1 $col_app_name==visao\"><br>"
+echo "ORDER BY: <input type=\"text\" name=\"ORDERBY\" value=\"Ex: $col_year_name $col_month_name $col_time_name desc\"><br>"
 echo "<input type=\"submit\" name=\"SEARCH\" value=\"Buscar\">"
 echo "</form>"
 

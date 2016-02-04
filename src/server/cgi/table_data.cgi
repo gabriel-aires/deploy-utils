@@ -20,6 +20,7 @@ mkdir -p $tmp_dir
 
 # Valores default para a construção da query
 test -z $SELECT && SELECT="--select all"
+test -z $DISTINCT && DISTINCT=''
 test -z $TOP && TOP=''
 test -z $WHERE && WHERE=''
 test -z $ORDERBY && ORDERBY="--order-by $col_year $col_month $col_day desc"
@@ -35,7 +36,7 @@ fi
 query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --from $data_file > $tmp_dir/html
 
 # DADOS
-query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT --from $data_file $WHERE $ORDERBY >> $tmp_dir/html
+query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT $DISTINCT $TOP --from $data_file $WHERE $ORDERBY  >> $tmp_dir/html
 
 sed -i -r "s|^(.*)<th>$col_flag_name</th><th>$|\t\t\t<tr style=\"$html_th_style\"><th>\1</tr>|" $tmp_dir/html
 sed -i -r "s|^(.*)<td>1</td><td>$|\t\t\t<tr style=\"$html_tr_style_default\"><td>\1</tr>|" $tmp_dir/html
