@@ -104,10 +104,12 @@ fi
 
 # Form Select
 echo "<form action=\"$STARTPAGE\" method=\"get\">"
-echo "SELECT:   <input type=\"text\" size=\"100\" name=\"SELECT\" value=\"Ex: $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT<br>"
-echo "TOP:      <input type=\"text\" size=\"100\" name=\"TOP\" value=\"Ex: 10\"><br>"
-echo "WHERE:    <input type=\"text\" size=\"100\" name=\"WHERE\" value=\"Ex: $col_rev_name=%v1 $col_app_name==visao\"><br>"
-echo "ORDER BY: <input type=\"text\" size=\"100\" name=\"ORDERBY\" value=\"Ex: $col_year_name $col_month_name $col_time_name desc\"><br>"
+echo "     <table>"
+echo "          <tr><td>SELECT:   </td><td><input type=\"text\" size=\"100\" name=\"SELECT\" value=\"Ex: $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT</td></tr>"
+echo "          <tr><td>TOP:      </td><td><input type=\"text\" size=\"100\" name=\"TOP\" value=\"Ex: 10\"></td></tr>"
+echo "          <tr><td>WHERE:    </td><td><input type=\"text\" size=\"100\" name=\"WHERE\" value=\"Ex: $col_rev_name=%v1 $col_app_name==visao\"></td></tr>"
+echo "          <tr><td>ORDER BY: </td><td><input type=\"text\" size=\"100\" name=\"ORDERBY\" value=\"Ex: $col_year_name $col_month_name $col_time_name desc\"></td></tr>"
+echo "     </table>"
 echo "<input type=\"submit\" name=\"SEARCH\" value=\"Buscar\">"
 echo "</form>"
 
