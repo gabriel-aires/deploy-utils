@@ -18,10 +18,18 @@ trap "end 1" SIGQUIT SIGINT SIGHUP EXIT ERR
 
 mkdir -p $tmp_dir
 
-test -z $SELECT && SELECT="--select '*'"
+# Valores default para a construção da query
+test -z $SELECT && SELECT="--select all"
 test -z $TOP && TOP=''
 test -z $WHERE && WHERE=''
 test -z $ORDERBY && ORDERBY="--order-by $col_year $col_month $col_day desc"
+
+# A última coluna deve ser a flag de deploy (possibilita diferenciação entre deploys com erro e sucesso)
+col_flag_aux=$(echo "$col_flag" | sed -r 's|(\[)|\\\1|' | sed -r 's|(\])|\\\1|')
+col_flag_name=$(echo "$col_flag" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+if echo "$SELECT" | grep -Ev " (all|$col_flag_aux)$" > /dev/null; then
+    SELECT="$SELECT $col_flag"
+fi
 
 # CABEÇALHO
 query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --from $data_file > $tmp_dir/html
@@ -29,14 +37,9 @@ query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --fro
 # DADOS
 query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT --from $data_file $WHERE $ORDERBY >> $tmp_dir/html
 
-sed -i -r 's|^(.*)<th>Flag</th><th>$|\t\t\t<tr style="@@html_th_style@@"><th>\1</tr>|' $tmp_dir/html
-sed -i -r 's|^(.*)<td>1</td><td>$|\t\t\t<tr style="@@html_tr_style_default@@"><td>\1</tr>|' $tmp_dir/html
-sed -i -r 's|^(.*)<td>0</td><td>$|\t\t\t<tr style="@@html_tr_style_warning@@"><td>\1</tr>|' $tmp_dir/html
-
-sed -i -r "s|@@html_table_style@@|$html_table_style|" $tmp_dir/html
-sed -i -r "s|@@html_th_style@@|$html_th_style|" $tmp_dir/html
-sed -i -r "s|@@html_tr_style_default@@|$html_tr_style_default|" $tmp_dir/html
-sed -i -r "s|@@html_tr_style_warning@@|$html_tr_style_warning|" $tmp_dir/html
+sed -i -r "s|^(.*)<th>$col_flag_name</th><th>$|\t\t\t<tr style=\"$html_th_style\"><th>\1</tr>|" $tmp_dir/html
+sed -i -r "s|^(.*)<td>1</td><td>$|\t\t\t<tr style=\"$html_tr_style_default\"><td>\1</tr>|" $tmp_dir/html
+sed -i -r "s|^(.*)<td>0</td><td>$|\t\t\t<tr style=\"$html_tr_style_warning\"><td>\1</tr>|" $tmp_dir/html
 
 cat $tmp_dir/html
 

@@ -77,8 +77,8 @@ while true; do
             ;;
 
         "-s"|"--select")
-            while echo "$2" | grep -Ex "$arg_num_regex|$arg_name_regex|\*" > /dev/null; do
-                test "$2" == '*' && columns[$s_index]="&" || columns[$s_index]="$2"
+            while echo "$2" | grep -Ex "$arg_num_regex|$arg_name_regex|all" > /dev/null; do
+                test "$2" == 'all' && columns[$s_index]="&" || columns[$s_index]="$2"
                 ((s_index++))
                 shift
             done
@@ -139,7 +139,7 @@ while true; do
             echo "-d|--delim: especificar caractere ou string que delimita os campos do arquivo. Ex: ';' (obrigatório)"
             echo "-r|--replace-delim: especificar caractere ou string que delimitará os campos exibidos. Ex: '/' (opcional)"
             echo "-x|--header: especificar a linha que contém o cabeçalho do arquivo. Ex: '1' (opcional)"
-            echo "-s|--select: especificar ordem das colunas a serem selecionadas. Ex: '[nome_coluna1]' '2' '*', etc (obrigatório)"
+            echo "-s|--select: especificar ordem das colunas a serem selecionadas. Ex: '[nome_coluna1]' '2' 'all', etc (obrigatório)"
             echo "-u|--unique|--distinct: (sem argumentos). Suprime linhas duplicadas da saída padrão (opcional)"
             echo "-t|--top: especificar quantidade de linhas a serem retornadas. Ex: '10' '500', etc (opcional)"
             echo "-f|--from: especificar arquivo. Ex: dados.csv (obrigatório)"
