@@ -61,7 +61,7 @@ else
     test "$DISTINCT" != "$QUERY_STRING" && DISTINCT="--distinct" || DISTINCT=''
 
     TOP="$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/")"
-    test "$TOP" != "$QUERY_STRING" && TOP="--top (echo $TOP | sed -r 's/%20/ /g' | sed -r 's/\+/ /g')" || TOP=''
+    test "$TOP" != "$QUERY_STRING" && TOP="--top $(echo $TOP | sed -r "s/%20/ /g" | sed -r "s/\+/ /g")" || TOP=''
 
     WHERE="$(echo "$QUERY_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/")"
     test "$WHERE" != "$QUERY_STRING" && WHERE="--where $(echo $WHERE | sed -r "s/%20/ /g" | sed -r "s/%3D/=/g"  | sed -r "s/%25/%/g" | sed -r "s/%21/!/g" | sed -r "s/\+/ /g" | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/g' | sed -r 's/([\=\!][\=\%\~])/\]\1/g')" || WHERE=''
