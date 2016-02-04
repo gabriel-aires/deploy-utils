@@ -22,21 +22,10 @@ echo -e '\t\t<table cellpadding=5 width=100% style="@@html_table_style@@">' >  $
 
 query_file.sh --delim "$delim" --replace-delim '</th><th>' --select '*' --top 1 --from $data_file >> $tmp_dir/html 2> /dev/null
 
-if [ -z $APP ]; then
-    query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 \
-        --select '*' \
-        --top $history_html_size \
-        --from $data_file \
-        --order-by $col_year $col_month $col_day $col_time desc \
-        >> $tmp_dir/html 2> /dev/null
+if [ -z "$APP" ]; then
+    query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 --select '*' --from $data_file --order-by "$col_year" "$col_month" "$col_day" "$col_time" desc >> $tmp_dir/html 2> /dev/null
 else
-    query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 \
-        --select '*' \
-        --top $history_html_size \
-        --from $data_file \
-        --where $col_app==$APP \
-        --order-by $col_year $col_month $col_day $col_time desc \
-        >> $tmp_dir/html 2> /dev/null
+    query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 --select '*' --from $data_file --where "$col_app==$APP" --order-by "$col_year" "$col_month" "$col_day" "$col_time" desc >> $tmp_dir/html 2> /dev/null
 fi
 
 sed -i -r 's|^(.*)<th>Flag</th><th>$|\t\t\t<tr style="@@html_th_style@@"><th>\1</tr>|' $tmp_dir/html
