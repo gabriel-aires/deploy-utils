@@ -89,12 +89,10 @@ find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | xargs -I{} -d '\n'
 echo "		</select>"
 
 #Histórico
-echo "		<p>"
 echo "      <table cellpadding=5 width=100% style=\"$html_table_style\">"
 head -n 1 "$tmp_dir/html_table"
 head -n $((($PAGE*$history_html_size)+1)) $tmp_dir/html_table | tail -n $print_size
 echo "      </table>"
-echo "		</p>"
 
 #Links
 echo "      <table width=100% style=\"text-align:left;color:black\">"

@@ -18,16 +18,16 @@ trap "end 1" SIGQUIT SIGINT SIGHUP EXIT ERR
 
 mkdir -p $tmp_dir
 
-test -z $SELECT && SELECT="--select \'\*\'"
+test -z $SELECT && SELECT="--select '*'"
 test -z $TOP && TOP=''
 test -z $WHERE && WHERE=''
 test -z $ORDERBY && ORDERBY="--order-by $col_year $col_month $col_day desc"
 
 # CABEÇALHO
-query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --from $data_file > $tmp_dir/html 2> /dev/null
+query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --from $data_file > $tmp_dir/html
 
 # DADOS
-query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT --from $data_file $WHERE $ORDERBY >> $tmp_dir/html 2> /dev/null
+query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT --from $data_file $WHERE $ORDERBY >> $tmp_dir/html
 
 sed -i -r 's|^(.*)<th>Flag</th><th>$|\t\t\t<tr style="@@html_th_style@@"><th>\1</tr>|' $tmp_dir/html
 sed -i -r 's|^(.*)<td>1</td><td>$|\t\t\t<tr style="@@html_tr_style_default@@"><td>\1</tr>|' $tmp_dir/html
