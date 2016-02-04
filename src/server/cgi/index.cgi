@@ -65,7 +65,7 @@ fi
 
 export 'WHERE'
 
-$install_dir/cgi/html_table.cgi $file > $tmp_dir/html_table
+$install_dir/cgi/table_data.cgi $file > $tmp_dir/html_table
 
 DATA_SIZE=$(($(cat "$tmp_dir/html_table" | wc -l)-1))
 test $DATA_SIZE -lt $history_html_size && print_size=$DATA_SIZE || print_size=$history_html_size
