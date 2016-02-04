@@ -85,7 +85,7 @@ fi
 #Combo aplicações
 echo "		<select onchange="javascript:location.href=this.value">"
 echo "			<option value=\"Sistema\">Sistema...</option>"
-find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t<option value=\"$STARTPAGE?Sistema=\1\">\1</option>|"
+find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | sort | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t<option value=\"$STARTPAGE?Sistema=\1\">\1</option>|"
 echo "		</select>"
 
 #Histórico
@@ -99,10 +99,10 @@ echo "      </p>"
 #Links
 echo "      <table width=100% style=\"text-align:left;color:black\">"
 echo "		    <tr> <td><br></td> </tr>"
-echo "          <tr> <td><a href=\"${STARTPAGE}detalhe/\" style=\"color:black\">Logs</td> </tr>"
 echo "          <tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td> <td style=\"text-align:right\">Página: $NAV</td> </tr>"
+echo "          <tr> <td><a href=\"${STARTPAGE}detalhe/\" style=\"color:black\">Logs</td> </tr>"
+echo "          <tr> <td><a href=\"${STARTPAGE}d/\" style=\"color:black\">Download</td> </tr>"
 echo "      </table>"
-
 
 rm -f $tmp_dir/*
 rmdir $tmp_dir
