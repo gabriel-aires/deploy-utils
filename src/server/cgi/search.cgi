@@ -54,7 +54,7 @@ if [ -z $QUERY_STRING ]; then
 elif [ "$(echo "$QUERY_STRING" | sed -r "s/^.*SEARCH=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | grep -vx "$QUERY_STRING")" == "Buscar" ]; then
 	STARTPAGE="$(echo "$REQUEST_URI" | sed -r "s/\?$QUERY_STRING$//")"
 
-	SELECT=$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | grep -vx "$QUERY_STRING")
+	SELECT="$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | grep -vx "$QUERY_STRING")"
     test -n "$SELECT" && SELECT="--select $(echo $SELECT | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/')"
 
     TOP=$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g"  | grep -vx "$QUERY_STRING")
