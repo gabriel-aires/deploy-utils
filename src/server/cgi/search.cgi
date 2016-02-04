@@ -60,7 +60,7 @@ elif [ "$(echo "$QUERY_STRING" | sed -r "s/^.*SEARCH=([^\&]+)&?.*$/\1/" | sed -r
     TOP=$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g"  | grep -vx "$QUERY_STRING")
     test -n "$TOP" && TOP="--top $TOP"
 
-    WHERE=$(echo "$QUERY_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/%3D/=/g"  | sed -r "s/%25/=/g" | sed -r "s/\+/ /g" | grep -vx "$QUERY_STRING")
+    WHERE=$(echo "$QUERY_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/%3D/=/g"  | sed -r "s/%25/%/g" | sed -r "s/%21/!/g" | sed -r "s/\+/ /g" | grep -vx "$QUERY_STRING")
     test -n "$WHERE" && WHERE="--where $(echo $WHERE | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/' | sed -r 's/([\=\!][\=\%\~])/\]\1/')"
 
     ORDERBY=$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g"  | grep -vx "$QUERY_STRING")
