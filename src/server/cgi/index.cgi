@@ -72,27 +72,23 @@ test $DATA_SIZE -lt $history_html_size && print_size=$DATA_SIZE || print_size=$h
 
 MAX_PAGE=$(($DATA_SIZE/$history_html_size))
 
-FOOTER="$PAGE"
+NAV="$PAGE"
 
 if [ $NEXT -le $MAX_PAGE ]; then
-	FOOTER="$FOOTER <a href=\"$NEXT_URI\" style=\"color:black\">$NEXT</a>"
+	NAV="$NAV <a href=\"$NEXT_URI\" style=\"color:black\">$NEXT</a>"
 fi
 
 if [ $PREV -ge $MIN_PAGE ]; then
-	FOOTER="<a href=\"$PREV_URI\" style=\"color:black\">$PREV</a> $FOOTER"
+	NAV="<a href=\"$PREV_URI\" style=\"color:black\">$PREV</a> $NAV"
 fi
 
-FOOTER="    <table width=100% style=\"text-align:left;color:black\">\
-			     <tr> <td><br></td> </tr>\
-                 <tr> <td><a href=\"${STARTPAGE}detalhe/\" style=\"color:black\">Logs</td> </tr>\
-                 <tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td> <td style=\"text-align:right\">Página: $FOOTER</td> </tr>\
-            </table>"
-
+#Combo aplicações
 echo "		<select onchange="javascript:location.href=this.value">"
 echo "			<option value=\"Sistema\">Sistema...</option>"
 find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t<option value=\"$STARTPAGE?Sistema=\1\">\1</option>|"
 echo "		</select>"
 
+#Histórico
 echo "		<p>"
 echo "      <table cellpadding=5 width=100% style=\"$html_table_style\">"
 head -n 1 "$tmp_dir/html_table"
@@ -100,10 +96,16 @@ head -n $((($PAGE*$history_html_size)+1)) $tmp_dir/html_table | tail -n $print_s
 echo "      </table>"
 echo "		</p>"
 
-echo "$FOOTER"
+#Links
+echo "      <table width=100% style=\"text-align:left;color:black\">"
+echo "		    <tr> <td><br></td> </tr>"
+echo "          <tr> <td><a href=\"${STARTPAGE}detalhe/\" style=\"color:black\">Logs</td> </tr>"
+echo "          <tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td> <td style=\"text-align:right\">Página: $NAV</td> </tr>"
+echo "      </table>"
 
-echo '  </body>'
-echo '</html>'
 
 rm -f $tmp_dir/*
 rmdir $tmp_dir
+
+echo '  </body>'
+echo '</html>'
