@@ -47,7 +47,7 @@ else
 	APP="$(echo "$col_app" | sed -r 's/\[//' | sed -r 's/\]//')"
 	APP=$(echo "$QUERY_STRING" | sed -r "s/^.*$APP=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
 
-    WHERE="--where $col_app==$APP"
+    test -n "$APP" && WHERE="--where $col_app==$APP"
 
 	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
 	test -n "$PAGE" || PAGE=1
@@ -63,6 +63,9 @@ else
 
 fi
 
+echo $APP
+echo $WHERE
+echo $PAGE
 export 'WHERE'
 
 $install_dir/cgi/table_data.cgi $file > $tmp_dir/html_table
