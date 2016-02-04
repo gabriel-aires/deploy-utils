@@ -97,7 +97,7 @@ echo "		<p>"
 echo "      <table cellpadding=5 width=100% style=\"$html_table_style\">"
 head -n 1 "$tmp_dir/html_table"
 head -n $((($PAGE*$history_html_size)+1)) $tmp_dir/html_table | tail -n $print_size
-echo "      </table>" >> $tmp_dir/html
+echo "      </table>"
 echo "		</p>"
 
 echo "$FOOTER"
