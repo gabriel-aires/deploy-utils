@@ -83,8 +83,8 @@ else
 
 fi
 
-echo "s=$SELECT t=$TOP w=$WHERE o=$ORDERBY"
-export 'SELECT' 'TOP' 'WHERE' 'ORDERBY'
+echo "s=$SELECT d=$DISTINCT t=$TOP w=$WHERE o=$ORDERBY"
+export 'SELECT' 'DISTINCT' 'TOP' 'WHERE' 'ORDERBY'
 
 $install_dir/cgi/table_data.cgi $file > $tmp_dir/html_table
 

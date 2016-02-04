@@ -19,11 +19,11 @@ trap "end 1" SIGQUIT SIGINT SIGHUP EXIT ERR
 mkdir -p $tmp_dir
 
 # Valores default para a construção da query
-test -z $SELECT && SELECT="--select all"
-test -z $DISTINCT && DISTINCT=''
-test -z $TOP && TOP=''
-test -z $WHERE && WHERE=''
-test -z $ORDERBY && ORDERBY="--order-by $col_year $col_month $col_day desc"
+test -z "$SELECT" && SELECT="--select all"
+test -z "$DISTINCT" && DISTINCT=''
+test -z "$TOP" && TOP=''
+test -z "$WHERE" && WHERE=''
+test -z "$ORDERBY" && ORDERBY="--order-by $col_year $col_month $col_day desc"
 
 # A última coluna deve ser a flag de deploy (possibilita diferenciação entre deploys com erro e sucesso)
 col_flag_aux=$(echo "$col_flag" | sed -r 's|(\[)|\\\1|' | sed -r 's|(\])|\\\1|')
