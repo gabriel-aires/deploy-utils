@@ -64,7 +64,7 @@ elif [ "$(echo "$QUERY_STRING" | sed -r "s/^.*SEARCH=([^\&]+)&?.*$/\1/" | sed -r
     test -n "$WHERE" && WHERE=$(echo "--where $WHERE" | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/' | sed -r 's/([\=\!][\=\%\~])/\]\1/')
 
     ORDERBY=$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
-    test -n "$ORDERBY" && ORDERBY=$(echo "--order-by $ORDERBY" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/'))
+    test -n "$ORDERBY" && ORDERBY=$(echo "--order-by $ORDERBY" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')
 
 	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
 	test -n "$PAGE" || PAGE=1
