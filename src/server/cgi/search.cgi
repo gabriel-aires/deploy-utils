@@ -51,22 +51,22 @@ if [ -z $QUERY_STRING ]; then
 
 	NEXT_URI="$STARTPAGE?p=$NEXT"
 
-elif [ "$(echo "$QUERY_STRING" | sed -r "s/^.*SEARCH=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")" == "Buscar" ]; then
+elif [ "$(echo "$QUERY_STRING" | sed -r "s/^.*SEARCH=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | grep -vx "$QUERY_STRING")" == "Buscar" ]; then
 	STARTPAGE="$(echo "$REQUEST_URI" | sed -r "s/\?$QUERY_STRING$//")"
 
-	SELECT=$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
+	SELECT=$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | grep -vx "$QUERY_STRING")
     test -n "$SELECT" && SELECT="--select $(echo $SELECT | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/')"
 
-    TOP=$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
+    TOP=$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g"  | grep -vx "$QUERY_STRING")
     test -n "$TOP" && TOP="--top $TOP"
 
-    WHERE=$(echo "$QUERY_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
+    WHERE=$(echo "$QUERY_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g"  | grep -vx "$QUERY_STRING")
     test -n "$WHERE" && WHERE="--where $(echo $WHERE | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/' | sed -r 's/([\=\!][\=\%\~])/\]\1/')"
 
-    ORDERBY=$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
+    ORDERBY=$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g"  | grep -vx "$QUERY_STRING")
     test -n "$ORDERBY" && ORDERBY="--order-by $(echo $ORDERBY | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')"
 
-	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
+	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g"  | grep -vx "$QUERY_STRING")
 	test -n "$PAGE" || PAGE=1
 
 	NEXT=$(($PAGE+1))
@@ -104,8 +104,8 @@ fi
 echo "<form action=\"$STARTPAGE\" method=\"get\">"
 echo "SELECT:   <input type=\"text\" name=\"SELECT\">Ex: $col_app_name $col_env_name $col_host_name</input><br>"
 echo "TOP:      <input type=\"text\" name=\"TOP\">Ex: 10</input><br>"
-echo "WHERE:    <input type=\"text\" name=\"WHERE\">Ex: $col_rev=%v1 $col_app==visao </input><br>"
-echo "ORDER BY: <input type=\"text\" name=\"ORDERBY\">Ex: $col_year $col_month $col_time desc</input><br>"
+echo "WHERE:    <input type=\"text\" name=\"WHERE\">Ex: $col_rev_name=%v1 $col_app_name==visao </input><br>"
+echo "ORDER BY: <input type=\"text\" name=\"ORDERBY\">Ex: $col_year_name $col_month_name $col_time_name desc</input><br>"
 echo "<input type=\"submit\" name=\"SEARCH\" value=\"Buscar\">"
 echo "</form>"
 
