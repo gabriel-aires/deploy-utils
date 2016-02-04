@@ -54,19 +54,19 @@ if [ -z $QUERY_STRING ]; then
 else
 	STARTPAGE="$(echo "$REQUEST_URI" | sed -r "s/\?$QUERY_STRING$//")"
 
-	SELECT="$(echo "$QUERY_STRING\n" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
+	SELECT="$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
     test "$SELECT" != "$QUERY_STRING" && SELECT="--select $(echo $SELECT | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g')" || SELECT=''
 
-    TOP="$(echo "$QUERY_STRING\n" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/")"
+    TOP="$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/")"
     test "$TOP" != "$QUERY_STRING" TOP="--top (echo $TOP | sed -r 's/%20/ /g' | sed -r 's/\+/ /g')" || TOP=''
 
-    WHERE="$(echo "$QUERY_STRING\n" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/")"
+    WHERE="$(echo "$QUERY_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/")"
     test "$WHERE" != "$QUERY_STRING" && WHERE="--where $(echo $WHERE | sed -r "s/%20/ /g" | sed -r "s/%3D/=/g"  | sed -r "s/%25/%/g" | sed -r "s/%21/!/g" | sed -r "s/\+/ /g" | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/g' | sed -r 's/([\=\!][\=\%\~])/\]\1/g')" || WHERE=''
 
-    ORDERBY="$(echo "$QUERY_STRING\n" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/")"
+    ORDERBY="$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/")"
     test "$ORDERBY" != "$QUERY_STRING" && ORDERBY="--order-by $(echo $ORDERBY | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')" || ORDERBY=''
 
-	PAGE=$(echo "$QUERY_STRING\n" | sed -r "s/^.*p=([^\&]+)&?.*$/\1/")
+	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&]+)&?.*$/\1/")
 	test "$PAGE" == "$QUERY_STRING" && PAGE=1
 
 	NEXT=$(($PAGE+1))
