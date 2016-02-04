@@ -25,11 +25,13 @@ test -z "$TOP" && TOP=''
 test -z "$WHERE" && WHERE=''
 test -z "$ORDERBY" && ORDERBY="--order-by $col_year $col_month $col_day desc"
 
-# A última coluna deve ser a flag de deploy (possibilita diferenciação entre deploys com erro e sucesso)
+# Para que haja diferenciação entre deploys com erro e sucesso, a flag de deploy deve ser a última coluna
+change_color=false
 col_flag_aux=$(echo "$col_flag" | sed -r 's|(\[)|\\\1|' | sed -r 's|(\])|\\\1|')
 col_flag_name=$(echo "$col_flag" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-if echo "$SELECT" | grep -Ev " (all|$col_flag_aux)$" > /dev/null; then
-    SELECT="$SELECT $col_flag"
+if echo "$SELECT" | grep -E " $col_flag_aux" > /dev/null; then
+    SELECT="$(echo "$SELECT" | sed -r "s| $col_flag_aux||") $col_flag"
+    change_color=true
 fi
 
 # CABEÇALHO
@@ -38,9 +40,14 @@ query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --fro
 # DADOS
 query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT $DISTINCT $TOP --from $data_file $WHERE $ORDERBY  >> $tmp_dir/html
 
-sed -i -r "s|^(.*)<th>$col_flag_name</th><th>$|\t\t\t<tr style=\"$html_th_style\"><th>\1</tr>|" $tmp_dir/html
-sed -i -r "s|^(.*)<td>1</td><td>$|\t\t\t<tr style=\"$html_tr_style_default\"><td>\1</tr>|" $tmp_dir/html
-sed -i -r "s|^(.*)<td>0</td><td>$|\t\t\t<tr style=\"$html_tr_style_warning\"><td>\1</tr>|" $tmp_dir/html
+if $change_color; then
+    sed -i -r "s|^(.*)<th>$col_flag_name</th><th>$|\t\t\t<tr style=\"$html_th_style\"><th>\1</tr>|" $tmp_dir/html
+    sed -i -r "s|^(.*)<td>1</td><td>$|\t\t\t<tr style=\"$html_tr_style_default\"><td>\1</tr>|" $tmp_dir/html
+    sed -i -r "s|^(.*)<td>0</td><td>$|\t\t\t<tr style=\"$html_tr_style_warning\"><td>\1</tr>|" $tmp_dir/html
+else
+    sed -i -r "s|^(.*)<th>$|\t\t\t<tr style=\"$html_th_style\"><th>\1</tr>|" $tmp_dir/html
+    sed -i -r "s|^(.*)<td>$|\t\t\t<tr style=\"$html_tr_style_default\"><td>\1</tr>|" $tmp_dir/html
+fi
 
 cat $tmp_dir/html
 
