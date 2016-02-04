@@ -58,7 +58,7 @@ else
     test "$SELECT" != "$QUERY_STRING" && SELECT="--select $(echo $SELECT | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''
 
     DISTINCT="$(echo "$QUERY_STRING" | sed -r "s/^.*DISTINCT=([^\&]+)&?.*$/\1/")"
-    test "$DISTINCT" == "$QUERY_STRING" && DISTINCT=0
+    test "$DISTINCT" != "$QUERY_STRING" && DISTINCT="--distinct" || DISTINCT=''
 
     TOP="$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/")"
     test "$TOP" != "$QUERY_STRING" TOP="--top (echo $TOP | sed -r 's/%20/ /g' | sed -r 's/\+/ /g')" || TOP=''
