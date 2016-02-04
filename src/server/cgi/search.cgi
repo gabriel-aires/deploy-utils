@@ -51,20 +51,20 @@ if [ -z $QUERY_STRING ]; then
 
 	NEXT_URI="$STARTPAGE?p=$NEXT"
 
-elif [ "$(echo "$QUERY_STRING" | sed -r "s/^.*SEARCH=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")" == "1" ]; then
+elif [ "$(echo "$QUERY_STRING" | sed -r "s/^.*SEARCH=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")" == "Buscar" ]; then
 	STARTPAGE="$(echo "$REQUEST_URI" | sed -r "s/\?$QUERY_STRING$//")"
 
 	SELECT=$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
-    test -n "$SELECT" && SELECT=$(echo "--select $SELECT" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/')
+    test -n "$SELECT" && SELECT="--select $(echo $SELECT | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/')"
 
     TOP=$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
     test -n "$TOP" && TOP="--top $TOP"
 
     WHERE=$(echo "$QUERY_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
-    test -n "$WHERE" && WHERE=$(echo "--where $WHERE" | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/' | sed -r 's/([\=\!][\=\%\~])/\]\1/')
+    test -n "$WHERE" && WHERE="--where $(echo $WHERE | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/' | sed -r 's/([\=\!][\=\%\~])/\]\1/')"
 
     ORDERBY=$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
-    test -n "$ORDERBY" && ORDERBY=$(echo "--order-by $ORDERBY" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')
+    test -n "$ORDERBY" && ORDERBY="--order-by $(echo $ORDERBY | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')"
 
 	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
 	test -n "$PAGE" || PAGE=1
@@ -106,7 +106,7 @@ echo "SELECT:   <input type=\"text\" name=\"SELECT\">Ex: $col_app_name $col_env_
 echo "TOP:      <input type=\"text\" name=\"TOP\">Ex: 10</input><br>"
 echo "WHERE:    <input type=\"text\" name=\"WHERE\">Ex: $col_rev=%v1 $col_app==visao </input><br>"
 echo "ORDER BY: <input type=\"text\" name=\"ORDERBY\">Ex: $col_year $col_month $col_time desc</input><br>"
-echo "<input type=\"submit\" name=\"SEARCH\" value=\"1\">"
+echo "<input type=\"submit\" name=\"SEARCH\" value=\"Buscar\">"
 echo "</form>"
 
 #Histórico
