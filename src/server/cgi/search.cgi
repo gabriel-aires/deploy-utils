@@ -66,7 +66,7 @@ elif [ "$(echo "$QUERY_STRING" | sed -r "s/^.*SEARCH=([^\&]+)&?.*$/\1/" | sed -r
     ORDERBY=$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/" | sed -r "s/%20/ /g" | sed -r "s/\+/ /g"  | grep -vx "$QUERY_STRING")
     test -n "$ORDERBY" && ORDERBY="--order-by $(echo $ORDERBY | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')"
 
-	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([0-9]+).*$/\1/")
+	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&]+)&?.*$/\1/")
 	test "$PAGE" == "$QUERY_STRING" && PAGE=1
 
 	NEXT=$(($PAGE+1))
