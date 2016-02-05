@@ -85,7 +85,7 @@ fi
 
 export 'SELECT' 'DISTINCT' 'TOP' 'WHERE' 'ORDERBY'
 
-HOMEPAGE=$(dirname "$STARTPAGE")
+HOMEPAGE="$(dirname "$STARTPAGE")/"
 NAV="$PAGE"
 
 # Form Select
