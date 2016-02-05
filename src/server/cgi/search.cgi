@@ -52,7 +52,7 @@ if [ -z "$QUERY_STRING" ]; then
 	NEXT_URI="$STARTPAGE?p=$NEXT"
 
 else
-	STARTPAGE="$(echo "$REQUEST_URI" | sed -r "s/\?$QUERY_STRING$//")"
+	STARTPAGE="$SCRIPT_NAME"
 
 	SELECT="$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
     test "$SELECT" != "$QUERY_STRING" && SELECT="--select $(echo $SELECT | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''
@@ -142,7 +142,6 @@ echo "      </p>"
 echo "      <table width=100% style=\"text-align:left;color:black\">"
 echo "		    <tr> <td><br></td> </tr>"
 echo "          <tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td> <td style=\"text-align:right\">Página: $NAV</td> </tr>"
-echo "          <tr> <td><a href=\"${STARTPAGE}detalhe/\" style=\"color:black\">Logs</td> </tr>"
 echo "      </table>"
 
 rm -f $tmp_dir/*
