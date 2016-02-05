@@ -85,22 +85,7 @@ fi
 
 export 'SELECT' 'DISTINCT' 'TOP' 'WHERE' 'ORDERBY'
 
-$install_dir/cgi/table_data.cgi $file > $tmp_dir/html_table
-
-DATA_SIZE=$(($(cat "$tmp_dir/html_table" | wc -l)-1))
-test $DATA_SIZE -lt $history_html_size && print_size=$DATA_SIZE || print_size=$history_html_size
-
-MAX_PAGE=$(($DATA_SIZE/$history_html_size))
-
 NAV="$PAGE"
-
-if [ $NEXT -le $MAX_PAGE ]; then
-	NAV="$NAV <a href=\"$NEXT_URI\" style=\"color:black\">$NEXT</a>"
-fi
-
-if [ $PREV -ge $MIN_PAGE ]; then
-	NAV="<a href=\"$PREV_URI\" style=\"color:black\">$PREV</a> $NAV"
-fi
 
 # Form Select
 echo "<form action=\"$STARTPAGE\" method=\"get\">"
@@ -117,7 +102,7 @@ echo "</form>"
 
 echo "      <p>"
 if [ -z "$QUERY_STRING" ]; then
-    echo "<table width=\"70%\" border=\"1\" frame=\"box\">"
+    echo "<table width=\"70%\" frame=\"box\">"
     echo "<tr><th>UTILIZAÇÃO:</th></tr>"
     echo "<tr><th><br></th></tr>"
     echo "<tr><th>SELECT:</th><td>Especificar a colunas a serem selecionadas. Ex: 'nome_coluna1' 'nome_coluna2' 'all', etc (padrão='all')</td></tr>"
@@ -127,10 +112,26 @@ if [ -z "$QUERY_STRING" ]; then
     echo "<tr><th>ORDER BY</th><td>Especificar ordenação dos resultados. Ex: 'nome_coluna3' 'nome_coluna4' 'asc', 'nome_coluna1' 'desc', etc (padrão='Ano Mes Dia desc')</td></tr>"
     echo "</table>"
 else
-    echo "          <table cellpadding=5 width=100% style=\"$html_table_style\">"
+
+    $install_dir/cgi/table_data.cgi $file > $tmp_dir/html_table
+
+    DATA_SIZE=$(($(cat "$tmp_dir/html_table" | wc -l)-1))
+    test $DATA_SIZE -lt $history_html_size && print_size=$DATA_SIZE || print_size=$history_html_size
+
+    MAX_PAGE=$(($DATA_SIZE/$history_html_size))
+
+    if [ $NEXT -le $MAX_PAGE ]; then
+    	NAV="$NAV <a href=\"$NEXT_URI\" style=\"color:black\">$NEXT</a>"
+    fi
+
+    if [ $PREV -ge $MIN_PAGE ]; then
+    	NAV="<a href=\"$PREV_URI\" style=\"color:black\">$PREV</a> $NAV"
+    fi
+
+    echo "<table cellpadding=5 width=100% style=\"$html_table_style\">"
     head -n 1 "$tmp_dir/html_table"
     head -n $((($PAGE*$history_html_size)+1)) $tmp_dir/html_table | tail -n $print_size
-    echo "          </table>"
+    echo "</table>"
 fi
 
 echo "      </p>"
