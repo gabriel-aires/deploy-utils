@@ -38,12 +38,12 @@ col_obs_name=$(echo "$col_obs" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_flag_name=$(echo "$col_flag" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 
 MIN_PAGE=1
-SELECT='--help'
+SELECT=''
 WHERE=''
 ORDERBY=''
 TOP=''
 
-if [ -z $QUERY_STRING ]; then
+if [ -z "$QUERY_STRING" ]; then
 	STARTPAGE="$REQUEST_URI"
 	PAGE=1
 	NEXT=2
@@ -113,12 +113,25 @@ echo "     </table>"
 echo "<input type=\"submit\" name=\"SEARCH\" value=\"Buscar\">"
 echo "</form>"
 
-#Histórico
+#Histórico / Ajuda
+
 echo "      <p>"
-echo "          <table cellpadding=5 width=100% style=\"$html_table_style\">"
-head -n 1 "$tmp_dir/html_table"
-head -n $((($PAGE*$history_html_size)+1)) $tmp_dir/html_table | tail -n $print_size
-echo "          </table>"
+if [ -z "$QUERY_STRING" ]; then
+    echo"    UTILIZAÇÃO:\
+        \
+        SELECT:     Especificar a colunas a serem selecionadas. Ex: 'nome_coluna1' 'nome_coluna2' 'all', etc (padrão='all')\
+        DISTINCT:   Marcar para suprimir linhas repetidas. Deve ser utilizada em conjunto com a opção ORDER BY. (padrão='desmarcado')\
+        TOP:        Especificar a quantidade de linhas a serem retornadas. Ex: '10' '500', etc (padrão='retornar todas as linhas')\
+        WHERE:      Especificar filtro(s) . Ex: 'nome_coluna2==valor_exato' 'nome_coluna3!=diferente_valor' 'nome_coluna4=%contem_valor', etc (padrão='sem filtros')\
+        ORDER BY    Especificar ordenação dos resultados. Ex: 'nome_coluna3' 'nome_coluna4' 'asc', 'nome_coluna1' 'desc', etc (padrão='Ano Mes Dia desc')
+    "\    
+else
+    echo "          <table cellpadding=5 width=100% style=\"$html_table_style\">"
+    head -n 1 "$tmp_dir/html_table"
+    head -n $((($PAGE*$history_html_size)+1)) $tmp_dir/html_table | tail -n $print_size
+    echo "          </table>"
+fi
+
 echo "      </p>"
 
 #Links
