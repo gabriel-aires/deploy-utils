@@ -102,7 +102,9 @@ echo "</form>"
 
 echo "      <p>"
 if [ -z "$QUERY_STRING" ]; then
-    echo "<table width=\"70%\" frame=\"box\">"
+    echo "<table width=\"70%\">"
+    echo "<tr><th><br></th></tr>"
+    echo "<tr><th><br></th></tr>"
     echo "<tr><th>UTILIZAÇÃO:</th></tr>"
     echo "<tr><th><br></th></tr>"
     echo "<tr><th>SELECT:</th><td>Especificar a colunas a serem selecionadas. Ex: 'nome_coluna1' 'nome_coluna2' 'all', etc (padrão='all')</td></tr>"
