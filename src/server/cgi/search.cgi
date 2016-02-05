@@ -10,10 +10,10 @@ echo ''
 echo '<html>'
 echo '  <head>'
 echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
-echo "  <title>$html_title</title"
+echo "  <title>Busca Avançada</title"
 echo '  </head>'
 echo '  <body>'
-echo "      <h1>$html_header</h1>"
+echo "      <h1>Busca Avançada</h1>"
 
 ### QUERY FILE
 
@@ -38,7 +38,7 @@ col_obs_name=$(echo "$col_obs" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_flag_name=$(echo "$col_flag" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 
 MIN_PAGE=1
-SELECT=''
+SELECT='--help'
 WHERE=''
 ORDERBY=''
 TOP=''
@@ -105,9 +105,9 @@ fi
 # Form Select
 echo "<form action=\"$STARTPAGE\" method=\"get\">"
 echo "     <table>"
-echo "          <tr><td>SELECT:   </td><td><input type=\"text\" size=\"100\" name=\"SELECT\" value=\"Ex: $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT</td></tr>"
+echo "          <tr><td>SELECT:   </td><td><input type=\"text\" size=\"100\" name=\"SELECT\" value=\"Ex: $col_tag_name $col_time_name $col_month_name $col_year_name $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT</td></tr>"
 echo "          <tr><td>TOP:      </td><td><input type=\"text\" size=\"100\" name=\"TOP\" value=\"Ex: 10\"></td></tr>"
-echo "          <tr><td>WHERE:    </td><td><input type=\"text\" size=\"100\" name=\"WHERE\" value=\"Ex: $col_rev_name=%v1 $col_app_name==visao\"></td></tr>"
+echo "          <tr><td>WHERE:    </td><td><input type=\"text\" size=\"100\" name=\"WHERE\" value=\"Ex: $col_host_name=%rh $col_app_name==sgq\"></td></tr>"
 echo "          <tr><td>ORDER BY: </td><td><input type=\"text\" size=\"100\" name=\"ORDERBY\" value=\"Ex: $col_year_name $col_month_name $col_time_name desc\"></td></tr>"
 echo "     </table>"
 echo "<input type=\"submit\" name=\"SEARCH\" value=\"Buscar\">"
