@@ -117,14 +117,14 @@ echo "</form>"
 
 echo "      <p>"
 if [ -z "$QUERY_STRING" ]; then
-    echo"    UTILIZAÇÃO:\
-        \
-        SELECT:     Especificar a colunas a serem selecionadas. Ex: 'nome_coluna1' 'nome_coluna2' 'all', etc (padrão='all')\
-        DISTINCT:   Marcar para suprimir linhas repetidas. Deve ser utilizada em conjunto com a opção ORDER BY. (padrão='desmarcado')\
-        TOP:        Especificar a quantidade de linhas a serem retornadas. Ex: '10' '500', etc (padrão='retornar todas as linhas')\
-        WHERE:      Especificar filtro(s) . Ex: 'nome_coluna2==valor_exato' 'nome_coluna3!=diferente_valor' 'nome_coluna4=%contem_valor', etc (padrão='sem filtros')\
-        ORDER BY    Especificar ordenação dos resultados. Ex: 'nome_coluna3' 'nome_coluna4' 'asc', 'nome_coluna1' 'desc', etc (padrão='Ano Mes Dia desc')
-    "\    
+    echo "<center>"
+    echo -e "\tUTILIZAÇÃO:\n"
+    echo -e "\tSELECT:     Especificar a colunas a serem selecionadas. Ex: 'nome_coluna1' 'nome_coluna2' 'all', etc (padrão='all')\n"
+    echo -e "\tDISTINCT:   Marcar para suprimir linhas repetidas. Deve ser utilizada em conjunto com a opção ORDER BY. (padrão='desmarcado')\n"
+    echo -e "\tTOP:        Especificar a quantidade de linhas a serem retornadas. Ex: '10' '500', etc (padrão='retornar todas as linhas')\n"
+    echo -e "\tWHERE:      Especificar filtro(s) . Ex: 'nome_coluna2==valor_exato' 'nome_coluna3!=diferente_valor' 'nome_coluna4=%contem_valor', etc (padrão='sem filtros')\n"
+    echo -e "\tORDER BY    Especificar ordenação dos resultados. Ex: 'nome_coluna3' 'nome_coluna4' 'asc', 'nome_coluna1' 'desc', etc (padrão='Ano Mes Dia desc')\n"
+    echo "</center>"
 else
     echo "          <table cellpadding=5 width=100% style=\"$html_table_style\">"
     head -n 1 "$tmp_dir/html_table"
