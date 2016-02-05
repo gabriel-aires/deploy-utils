@@ -107,11 +107,11 @@ if [ -z "$QUERY_STRING" ]; then
     echo "<tr><th><br></th></tr>"
     echo "<tr><th>UTILIZAÇÃO:</th></tr>"
     echo "<tr><th><br></th></tr>"
-    echo "<tr><th>SELECT:</th><td>Especificar a colunas a serem selecionadas. Ex: 'nome_coluna1' 'nome_coluna2' 'all', etc (padrão='all')</td></tr>"
-    echo "<tr><th>DISTINCT:</th><td>Marcar para suprimir linhas repetidas. Deve ser utilizada em conjunto com a opção ORDER BY. (padrão='desmarcado')</td></tr>"
-    echo "<tr><th>TOP:</th><td>Especificar a quantidade de linhas a serem retornadas. Ex: '10' '500', etc (padrão='retornar todas as linhas')</td></tr>"
-    echo "<tr><th>WHERE:</th><td>Especificar filtro(s) . Ex: 'nome_coluna2==valor_exato' 'nome_coluna3!=diferente_valor' 'nome_coluna4=%contem_valor', etc (padrão='sem filtros')</td></tr>"
-    echo "<tr><th>ORDER BY</th><td>Especificar ordenação dos resultados. Ex: 'nome_coluna3' 'nome_coluna4' 'asc', 'nome_coluna1' 'desc', etc (padrão='Ano Mes Dia desc')</td></tr>"
+    echo "<tr><th>SELECT:</th><td>Especificar a colunas a serem selecionadas.<b> Ex: nome_coluna1 nome_coluna2 all, etc (padrão=all)</b></td></tr>"
+    echo "<tr><th>DISTINCT:</th><td>Marcar para suprimir linhas repetidas.<b> Deve ser utilizada em conjunto com a opção ORDER BY. (padrão=desmarcado)</b></td></tr>"
+    echo "<tr><th>TOP:</th><td>Especificar a quantidade de linhas a serem retornadas.<b> Ex: 10 500, etc (padrão=retornar todas as linhas)</b></td></tr>"
+    echo "<tr><th>WHERE:</th><td>Especificar filtro(s) .<b> Ex: nome_coluna2==valor_exato nome_coluna3!=diferente_valor nome_coluna4=%contem_valor, etc (padrão=sem filtros)</b></td></tr>"
+    echo "<tr><th>ORDER BY</th><td>Especificar ordenação dos resultados.<b> Ex: nome_coluna3 nome_coluna4 asc, nome_coluna1 desc, etc (padrão=Ano Mes Dia desc)</b></td></tr>"
     echo "</table>"
 else
 
