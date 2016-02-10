@@ -4,6 +4,18 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/init.sh || exit 1
 
+function end() {
+    if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
+        rm -f $tmp_dir/*
+        rmdir $tmp_dir
+    fi
+
+    wait
+    exit $1
+}
+
+trap "end 1" SIGQUIT SIGINT SIGHUP EXIT ERR
+
 ### HTML
 echo 'Content-type: text/html'
 echo ''
@@ -21,7 +33,7 @@ file=$history_dir/$history_csv_file
 
 if [ ! -f "$file" ]; then
 	echo "<p>Arquivo de histórico inexistente</p>"
-	exit 1
+	end 1
 fi
 
 mkdir $tmp_dir
@@ -104,8 +116,7 @@ echo "          <tr> <td><a href=\"${STARTPAGE}detalhe/\" style=\"color:black\">
 echo "          <tr> <td><a href=\"${STARTPAGE}search.cgi\" style=\"color:black\">Pesquisa Avançada</td> </tr>"
 echo "      </table>"
 
-rm -f $tmp_dir/*
-rmdir $tmp_dir
-
 echo '  </body>'
 echo '</html>'
+
+end 0
