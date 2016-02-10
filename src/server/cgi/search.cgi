@@ -20,8 +20,8 @@ echo "      <h1>Busca Avançada</h1>"
 file=$history_dir/$history_csv_file
 
 if [ ! -f "$file" ]; then
-	echo "<p>Arquivo de histórico inexistente</p>"
-	exit 1
+    echo "<p>Arquivo de histórico inexistente</p>"
+    exit 1
 fi
 
 mkdir $tmp_dir
@@ -44,17 +44,17 @@ ORDERBY=''
 TOP=''
 
 if [ -z "$QUERY_STRING" ]; then
-	STARTPAGE="$REQUEST_URI"
-	PAGE=1
-	NEXT=2
-	PREV=0
+    STARTPAGE="$REQUEST_URI"
+    PAGE=1
+    NEXT=2
+    PREV=0
 
-	NEXT_URI="$STARTPAGE?p=$NEXT"
+    NEXT_URI="$STARTPAGE?p=$NEXT"
 
 else
-	STARTPAGE="$SCRIPT_NAME"
+    STARTPAGE="$SCRIPT_NAME"
 
-	SELECT="$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
+    SELECT="$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
     test "$SELECT" != "$QUERY_STRING" && SELECT="--select $(echo $SELECT | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''
 
     DISTINCT="$(echo "$QUERY_STRING" | sed -r "s/^.*DISTINCT=([^\&]+)&?.*$/\1/")"
@@ -69,17 +69,17 @@ else
     ORDERBY="$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/")"
     test "$ORDERBY" != "$QUERY_STRING" && ORDERBY="--order-by $(echo $ORDERBY | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')" || ORDERBY=''
 
-	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&]+)&?.*$/\1/")
-	test "$PAGE" == "$QUERY_STRING" && PAGE=1
+    PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&]+)&?.*$/\1/")
+    test "$PAGE" == "$QUERY_STRING" && PAGE=1
 
-	NEXT=$(($PAGE+1))
-	PREV=$(($PAGE-1))
+    NEXT=$(($PAGE+1))
+    PREV=$(($PAGE-1))
 
-	NEXT_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$NEXT\2/")"
-        test "$NEXT_URI" != "$REQUEST_URI" || NEXT_URI="$REQUEST_URI&p=$NEXT"
+    NEXT_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$NEXT\2/")"
+    test "$NEXT_URI" != "$REQUEST_URI" || NEXT_URI="$REQUEST_URI&p=$NEXT"
 
-	PREV_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$PREV\2/")"
-        test "$PREV_URI" != "$REQUEST_URI" || PREV_URI="$REQUEST_URI&p=$PREV"
+    PREV_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$PREV\2/")"
+    test "$PREV_URI" != "$REQUEST_URI" || PREV_URI="$REQUEST_URI&p=$PREV"
 
 fi
 
@@ -124,11 +124,11 @@ else
     MAX_PAGE=$(($DATA_SIZE/$history_html_size))
 
     if [ $NEXT -le $MAX_PAGE ]; then
-    	NAV="$NAV <a href=\"$NEXT_URI\" style=\"color:black\">$NEXT</a>"
+        NAV="$NAV <a href=\"$NEXT_URI\" style=\"color:black\">$NEXT</a>"
     fi
 
     if [ $PREV -ge $MIN_PAGE ]; then
-    	NAV="<a href=\"$PREV_URI\" style=\"color:black\">$PREV</a> $NAV"
+        NAV="<a href=\"$PREV_URI\" style=\"color:black\">$PREV</a> $NAV"
     fi
 
     echo "<table cellpadding=5 width=100% style=\"$html_table_style\">"
@@ -141,7 +141,7 @@ echo "      </p>"
 
 #Links
 echo "      <table width=100% style=\"text-align:left;color:black\">"
-echo "		    <tr> <td><br></td> </tr>"
+echo "          <tr> <td><br></td> </tr>"
 echo "          <tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td> <td style=\"text-align:right\">Página: $NAV</td> </tr>"
 echo "          <tr> <td><a href=\"$HOMEPAGE\" style=\"color:black\" >Página Principal</a></td></tr>"
 echo "          <tr> <td><a href=\"${HOMEPAGE}detalhe/\" style=\"color:black\" >Logs</a></td></tr>"
