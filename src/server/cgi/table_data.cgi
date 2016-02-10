@@ -14,7 +14,7 @@ function end() {
     exit $1
 }
 
-trap "end 1" SIGQUIT SIGINT SIGHUP EXIT ERR
+trap "end 1" SIGQUIT SIGINT SIGHUP EXIT
 
 mkdir -p $tmp_dir
 
@@ -35,10 +35,10 @@ if echo "$SELECT" | grep -E " $col_flag_aux" > /dev/null; then
 fi
 
 # CABEÇALHO
-query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --from $data_file > $tmp_dir/html
+query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --from $data_file > $tmp_dir/html 2> /dev/null
 
 # DADOS
-query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT $DISTINCT $TOP --from $data_file $WHERE $ORDERBY  >> $tmp_dir/html
+query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT $DISTINCT $TOP --from $data_file $WHERE $ORDERBY  >> $tmp_dir/html 2> /dev/null
 
 if $change_color; then
     sed -i -r "s|^(.*)<th>$col_flag_name</th><th>$|\t\t\t<tr style=\"$html_th_style\"><th>\1</tr>|" $tmp_dir/html

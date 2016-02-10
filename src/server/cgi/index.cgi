@@ -14,7 +14,7 @@ function end() {
     exit $1
 }
 
-trap "end 1" SIGQUIT SIGINT SIGHUP EXIT ERR
+trap "end 1" SIGQUIT SIGINT SIGHUP EXIT
 
 ### HTML
 echo 'Content-type: text/html'
