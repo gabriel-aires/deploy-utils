@@ -156,7 +156,7 @@ echo "      <table width=100% style=\"text-align:left;color:black\">"
 echo "          <tr> <td><br></td> </tr>"
 echo "          <tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td> <td style=\"text-align:right\">Página: $NAV</td> </tr>"
 echo "          <tr> <td><a href=\"$HOMEPAGE\" style=\"color:black\" >Página Principal</a></td></tr>"
-echo "          <tr> <td><a href=\"${HOMEPAGE}detalhe/\" style=\"color:black\" >Logs</a></td></tr>"
+echo "          <tr> <td><a href=\"$apache_log_alias\" style=\"color:black\" >Logs</a></td></tr>"
 echo "      </table>"
 
 echo '  </body>'
