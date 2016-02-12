@@ -21,7 +21,7 @@
                 Options +Indexes
         </Directory>
 
-        ErrorLog "/var/log/httpd/@apache_vhost_logname_error.log"
-        CustomLog "/var/log/httpd/@apache_vhost_logname_access.log" combined
+        ErrorLog "@apache_log_dir/@apache_vhost_logname_error.log"
+        CustomLog "@apache_log_dir/@apache_vhost_logname_access.log" combined
 
 </VirtualHost>
