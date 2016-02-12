@@ -21,7 +21,22 @@ app_history_size=
 global_history_size=
 cron_log_size=
 history_html_size=
-# HTML
+# Web
+apache_daemon=
+apache_user=
+apache_group=
+apache_confd_dir=
+apache_log_dir=
+apache_init_script=
+apache_namevirtualhost_directive=
+apache_listen_directive=
+apache_vhost_filename=
+apache_vhost_logname=
+apache_vhost_name=
+apache_vhost_port=
+apache_servername=
+apache_cgi_alias=
+apache_log_alias=
 html_title=
 html_header=
 html_table_style=
