@@ -50,9 +50,8 @@ function cron_tasks () {
 
     ########## Valida variáveis que definem o tamanho de logs logs e quantidade de entradas no histórico.
     valid "cron_log_size" "regex_qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas."
-    valid "app_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico de aplicações."
+    valid "app_log_max" "regex_qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações."
     valid "global_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico global."
-    valid "history_html_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico em HTML."
 
     ########## Trava histórico assim que possível
     while [ -f "$lock_dir/$history_lock_file" ]; do
@@ -84,7 +83,7 @@ function cron_tasks () {
     while read path; do
         app_history_dir="${app_history_dir_tree}/$(basename $path)"
         find "${app_history_dir}/" -mindepth 1 -maxdepth 1 -type d | sort > $tmp_dir/logs_total
-        tail $tmp_dir/logs_total --lines=${history_html_size} > $tmp_dir/logs_ultimos
+        tail $tmp_dir/logs_total --lines=${app_log_max} > $tmp_dir/logs_ultimos
         grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
         cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
     done < $tmp_dir/app_history_path

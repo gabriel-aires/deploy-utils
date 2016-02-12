@@ -2,14 +2,14 @@
 modo_padrao=
 rsync_opts=
 # Expurgo de logs
-app_history_size=
+app_log_max=
 global_history_size=
 cron_log_size=
-history_html_size=
 # HTML
 html_title=
 html_header=
 html_table_style=
+html_table_size=
 html_th_style=
 html_tr_style_default=
 html_tr_style_warning=

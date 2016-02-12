@@ -80,9 +80,9 @@ export 'WHERE'
 $install_dir/cgi/table_data.cgi $file > $tmp_dir/html_table
 
 DATA_SIZE=$(($(cat "$tmp_dir/html_table" | wc -l)-1))
-test $DATA_SIZE -lt $history_html_size && print_size=$DATA_SIZE || print_size=$history_html_size
+test $DATA_SIZE -lt $html_table_size && print_size=$DATA_SIZE || print_size=$html_table_size
 
-MAX_PAGE=$(($DATA_SIZE/$history_html_size))
+MAX_PAGE=$(($DATA_SIZE/$html_table_size))
 
 NAV="$PAGE"
 
@@ -104,7 +104,7 @@ echo "		</select>"
 echo "      <p>"
 echo "          <table cellpadding=5 width=100% style=\"$html_table_style\">"
 head -n 1 "$tmp_dir/html_table"
-head -n $((($PAGE*$history_html_size)+1)) $tmp_dir/html_table | tail -n $print_size
+head -n $((($PAGE*$html_table_size)+1)) $tmp_dir/html_table | tail -n $print_size
 echo "          </table>"
 echo "      </p>"
 
