@@ -11,10 +11,14 @@ lock_dir=
 cgi_dir=
 app_conf_dir=
 cron_log_file=
-credenciais=
 # Opções de deploy padrão
 ambientes=
 modo_padrao=
+nfs_auth=
+nfs_opts=
+cifs_auth=
+cifs_credentials=
+cifs_opts=
 rsync_opts=
 # Expurgo de logs
 app_log_max=
@@ -57,7 +61,6 @@ regex_branch=
 regex_repo=
 regex_rev=
 regex_raiz=
-regex_auth=
 regex_share=
 regex_branch_desenvolvimento=
 regex_branch_teste=

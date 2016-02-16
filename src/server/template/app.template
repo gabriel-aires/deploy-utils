@@ -1,5 +1,4 @@
 app=
-auth=
 auto_desenvolvimento=
 auto_homologacao=
 auto_producao=
@@ -20,6 +19,8 @@ modo_homologacao=
 modo_producao=
 modo_sustentacao=
 modo_teste=
+mount_type=
+mount_options=
 raiz=
 repo=
 revisao_desenvolvimento=

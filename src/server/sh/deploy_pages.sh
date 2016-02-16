@@ -432,9 +432,9 @@ if $interactive; then
         read -p "share: " -e -r share
         valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c )."
 
-        echo -e "\nInforme o protocolo de segurança do compartilhamento."
-        read -p "auth: " -e -r auth
-        valid "auth" "\nErro. Informe um protocolo válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i)."
+        echo -e "\nInforme o protocolo de compartilhamento."
+        read -p "mount_type: " -e -r mount_type
+        valid "mount_type" "\nErro. Informe um protocolo válido: cifs, nfs."
 
         if [ -z $modo ]; then
             echo -e "\nInforme um modo de deploy para o ambiente $ambiente ('d': deletar arquivos obsoletos / 'p': preservar arquivos obsoletos):"
@@ -474,7 +474,7 @@ if $interactive; then
         done < $tmp_dir/ambientes
 
         editconf "share" "$share" "$app_conf_dir/${app}.conf"
-        editconf "auth" "$auth" "$app_conf_dir/${app}.conf"
+        editconf "mount_type" "$mount_type" "$app_conf_dir/${app}.conf"
 
         sort "$app_conf_dir/${app}.conf" -o "$app_conf_dir/${app}.conf"
 
@@ -518,8 +518,8 @@ if $interactive; then
         valid "share" "\nErro. Informe um diretório válido, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c ):"
         editconf "share" "$share" "$app_conf_dir/${app}.conf"
 
-        valid "auth" "\nErro. Informe um protocolo válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):"
-        editconf "auth" "$auth" "$app_conf_dir/${app}.conf"
+        valid "mount_type" "\nErro. Informe um protocolo de compartilhamento válido [cifs/nfs]:"
+        editconf "mount_type" "$mount_type" "$app_conf_dir/${app}.conf"
 
         sort "$app_conf_dir/${app}.conf" -o "$app_conf_dir/${app}.conf"
     fi
@@ -537,7 +537,7 @@ else
         valid "auto_$ambiente" "\nErro. Não foi possível ler a flag de deploy automático."
         valid "modo_$ambiente" "\nErro. Foi informado um modo inválido para deploy no ambiente $ambiente."
         valid "share" "\nErro. \'$share\' não é um diretório compartilhado válido."
-        valid "auth" "\nErro. \'$auth\' não é protocolo de segurança válido: krb5(i), ntlm(i), ntlmv2(i), ntlmssp(i):"
+        valid "mount_type" "\nErro. \'$mount_type\' não é um protocolo de compartilhamento suportado [nfs/cifs]."
 
         lista_hosts="echo \$hosts_${ambiente}"
         lista_hosts=$(eval "$lista_hosts")
@@ -567,9 +567,11 @@ lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositó
 mklist "$lista_hosts" $tmp_dir/hosts_$ambiente
 
 while read host; do
-    dir_destino="//$host/$share"
-    dir_destino=$(echo "$dir_destino" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||")
-    nomedestino=$(echo $dir_destino | sed -r "s|/|_|g")
+    case $mount_type in
+        'cifs') dir_destino=$(echo "//$host/$share" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||") ;;
+        'nfs') dir_destino=$(echo "$host:$share" | sed -r "s|(:)([^/])|\1/\2|" | sed -r "s|/$||") ;;
+    esac
+    nomedestino=$(echo $dir_destino | sed -r "s|/:|_|g")
     lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
     echo "$dir_destino" >> $tmp_dir/dir_destino
 done < $tmp_dir/hosts_$ambiente
@@ -662,7 +664,10 @@ estado="fim_$estado" && echo $estado >> $tmp_dir/progresso.txt
 
 while read dir_destino; do
 
-    host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|")
+    case $mount_type in)
+        'nfs') host=$(echo $dir_destino | sed -r "s|^([^/]+):.+$|\1|") ;;
+        'cifs') host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|") ;;
+    esac
 
     cat $tmp_dir/progresso.txt > $deploy_log_dir/progresso_$host.txt
     estado="leitura" && echo $estado >> $deploy_log_dir/progresso_$host.txt
@@ -690,7 +695,9 @@ while read dir_destino; do
 
     mkdir $destino || end 1
 
-    mount -t cifs $dir_destino $destino -o credentials=$credenciais,sec=$auth || end 1    #montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
+    test -z "$mount_options" && mount_options=$(eval "echo \$${mount_type}_opts")
+
+    mount -t $mount_type $dir_destino $destino -o $mount_options || end 1    #montagem do compartilhamento de destino (requer módulo anatel_ad, provisionado pelo puppet)
 
     ##### DIFF ARQUIVOS #####
 
