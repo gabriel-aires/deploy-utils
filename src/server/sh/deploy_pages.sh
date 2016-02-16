@@ -155,6 +155,8 @@ function check_last_deploy () {
             if [ "$last_rev" == 'rollback' ]; then
                 last_rev=''
                 top=$(($top+2))
+            elif [ -z "$last_rev" ]; then
+                break                
             fi
         done
     else
