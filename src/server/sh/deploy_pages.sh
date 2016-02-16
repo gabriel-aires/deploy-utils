@@ -156,7 +156,7 @@ function check_last_deploy () {
                 last_rev=''
                 top=$(($top+2))
             elif [ -z "$last_rev" ]; then
-                break                
+                break
             fi
         done
     else
@@ -299,7 +299,10 @@ function end () {
 
             while read destino_deploy; do
 
-                host=$(echo $destino_deploy | sed -r "s|^//([^/]+)/.+$|\1|")
+                case $mount_type in
+                    'nfs') host=$(echo $dir_destino | sed -r "s|^([^/]+):.+$|\1|") ;;
+                    'cifs') host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|") ;;
+                esac
 
                 if [ ! "$host" == "$host_erro" ]; then
 
