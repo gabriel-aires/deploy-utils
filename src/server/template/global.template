@@ -61,6 +61,7 @@ regex_branch=
 regex_repo=
 regex_rev=
 regex_raiz=
+regex_mount_type=
 regex_share=
 regex_branch_desenvolvimento=
 regex_branch_teste=
