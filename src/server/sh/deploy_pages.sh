@@ -571,7 +571,7 @@ while read host; do
         'cifs') dir_destino=$(echo "//$host/$share" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||") ;;
         'nfs') dir_destino=$(echo "$host:$share" | sed -r "s|(:)([^/])|\1/\2|" | sed -r "s|/$||") ;;
     esac
-    nomedestino=$(echo $dir_destino | sed -r "s|/:|_|g")
+    nomedestino=$(echo $dir_destino | sed -r "s|[/:]|_|g")
     lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
     echo "$dir_destino" >> $tmp_dir/dir_destino
 done < $tmp_dir/hosts_$ambiente
