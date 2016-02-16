@@ -664,7 +664,7 @@ estado="fim_$estado" && echo $estado >> $tmp_dir/progresso.txt
 
 while read dir_destino; do
 
-    case $mount_type in)
+    case $mount_type in
         'nfs') host=$(echo $dir_destino | sed -r "s|^([^/]+):.+$|\1|") ;;
         'cifs') host=$(echo $dir_destino | sed -r "s|^//([^/]+)/.+$|\1|") ;;
     esac
