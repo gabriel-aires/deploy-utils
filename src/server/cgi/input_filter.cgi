@@ -12,7 +12,7 @@ function input_filter() {
   # Remove demais caracteres especiais,
   # Realiza substituições auxiliares
 
-  $params_group="$(echo "$params_value" | \
+  params_value="$(echo "$params_value" | \
     sed -r 's|\+| |g' | \
     sed -r 's|%21|!|g' | \
     sed -r 's|%25|::percent::|g' | \
@@ -27,6 +27,8 @@ function input_filter() {
     sed -r 's| +| |g' | \
     sed -r 's| $||g' \
   )"
+
+  $params_group="$params_value"
 
   set +f
 
