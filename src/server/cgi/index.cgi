@@ -3,6 +3,7 @@
 ### Inicialização
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/init.sh || exit 1
+source $install_dir/cgi/input_filter.cgi || exit 1
 
 function end() {
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -54,14 +55,16 @@ if [ -z $QUERY_STRING ]; then
 	NEXT_URI="$STARTPAGE?p=$NEXT"
 
 else
-	STARTPAGE="$(echo "$REQUEST_URI" | sed -r "s/\?$QUERY_STRING$//")"
+
+  input_filter 'ARG_STRING' "$QUERY_STRING"
+	STARTPAGE="$(echo "$REQUEST_URI" | sed -r "s/\?$ARG_STRING$//")"
 
 	APP="$(echo "$col_app" | sed -r 's/\[//' | sed -r 's/\]//')"
-	APP=$(echo "$QUERY_STRING" | sed -r "s/^.*$APP=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
+	APP=$(echo "$ARG_STRING" | sed -r "s/^.*$APP=([^\&\=]+)&?.*$/\1/" | grep -vx "$ARG_STRING")
 
     test -n "$APP" && WHERE="--where $col_app==$APP"
 
-	PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&\=]+)&?.*$/\1/" | sed -r "s/%20/ /g" | grep -vx "$QUERY_STRING")
+	PAGE=$(echo "$ARG_STRING" | sed -r "s/^.*p=([^\&\=]+)&?.*$/\1/" | grep -vx "$ARG_STRING")
 	test -n "$PAGE" || PAGE=1
 
 	NEXT=$(($PAGE+1))

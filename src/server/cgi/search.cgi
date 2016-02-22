@@ -3,6 +3,7 @@
 ### Inicialização
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/init.sh || exit 1
+source $install_dir/cgi/input_filter.cgi || exit 1
 
 function end() {
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -64,25 +65,27 @@ if [ -z "$QUERY_STRING" ]; then
     NEXT_URI="$STARTPAGE?p=$NEXT"
 
 else
+
+    input_filter 'ARG_STRING' "$QUERY_STRING"
     STARTPAGE="$SCRIPT_NAME"
 
-    SELECT="$(echo "$QUERY_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
-    test "$SELECT" != "$QUERY_STRING" && SELECT="--select $(echo $SELECT | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''
+    SELECT="$(echo "$ARG_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
+    test "$SELECT" != "$ARG_STRING" && SELECT="--select $(echo $SELECT | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''
 
-    DISTINCT="$(echo "$QUERY_STRING" | sed -r "s/^.*DISTINCT=([^\&]+)&?.*$/\1/")"
-    test "$DISTINCT" != "$QUERY_STRING" && DISTINCT="--distinct" || DISTINCT=''
+    DISTINCT="$(echo "$ARG_STRING" | sed -r "s/^.*DISTINCT=([^\&]+)&?.*$/\1/")"
+    test "$DISTINCT" != "$ARG_STRING" && DISTINCT="--distinct" || DISTINCT=''
 
-    TOP="$(echo "$QUERY_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/")"
-    test "$TOP" != "$QUERY_STRING" && TOP="--top $(echo $TOP | sed -r "s/%20/ /g" | sed -r "s/\+/ /g")" || TOP=''
+    TOP="$(echo "$ARG_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/")"
+    test "$TOP" != "$ARG_STRING" && TOP="--top $TOP" || TOP=''
 
-    WHERE="$(echo "$QUERY_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/")"
-    test "$WHERE" != "$QUERY_STRING" && WHERE="--where $(echo $WHERE | sed -r "s/%20/ /g" | sed -r "s/%3D/=/g"  | sed -r "s/%25/%/g" | sed -r "s/%21/!/g" | sed -r "s/\+/ /g" | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/g' | sed -r 's/([\=\!][\=\%\~])/\]\1/g')" || WHERE=''
+    WHERE="$(echo "$ARG_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/")"
+    test "$WHERE" != "$ARG_STRING" && WHERE="--where $(echo $WHERE | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/g' | sed -r 's/([\=\!][\=\%\~])/\]\1/g')" || WHERE=''
 
-    ORDERBY="$(echo "$QUERY_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/")"
-    test "$ORDERBY" != "$QUERY_STRING" && ORDERBY="--order-by $(echo $ORDERBY | sed -r "s/%20/ /g" | sed -r "s/\+/ /g" | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')" || ORDERBY=''
+    ORDERBY="$(echo "$ARG_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/")"
+    test "$ORDERBY" != "$ARG_STRING" && ORDERBY="--order-by $(echo $ORDERBY | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')" || ORDERBY=''
 
-    PAGE=$(echo "$QUERY_STRING" | sed -r "s/^.*p=([^\&]+)&?.*$/\1/")
-    test "$PAGE" == "$QUERY_STRING" && PAGE=1
+    PAGE=$(echo "$ARG_STRING" | sed -r "s/^.*p=([^\&]+)&?.*$/\1/")
+    test "$PAGE" == "$ARG_STRING" && PAGE=1
 
     NEXT=$(($PAGE+1))
     PREV=$(($PAGE-1))
