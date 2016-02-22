@@ -3,7 +3,7 @@
 # Filtra o input de formulários cgi
 function input_filter() {
 
-  set -euf
+  set -f
 
   local params_group="$1"
   local params_value="$2"
@@ -30,6 +30,6 @@ function input_filter() {
     sed -r 's| $||g' \
   )"
 
-  set +euf
+  set +f
 
 }
