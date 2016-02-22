@@ -25,8 +25,8 @@ function input_filter() {
     sed -r 's|*||g' | \
 
     # Substituições auxiliares
-    sed -r 's|::percent::|%|g' \
-    sed -r 's| +| |g' \
+    sed -r 's|::percent::|%|g' | \
+    sed -r 's| +| |g' | \
     sed -r 's| $||g' \
   )"
 
