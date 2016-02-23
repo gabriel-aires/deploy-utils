@@ -50,6 +50,7 @@ col_host_name=$(echo "$col_host" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_obs_name=$(echo "$col_obs" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_flag_name=$(echo "$col_flag" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 
+STARTPAGE="$SCRIPT_NAME"
 MIN_PAGE=1
 SELECT=''
 WHERE=''
@@ -57,17 +58,15 @@ ORDERBY=''
 TOP=''
 
 if [ -z "$QUERY_STRING" ]; then
-    STARTPAGE="$REQUEST_URI"
+
     PAGE=1
     NEXT=2
     PREV=0
-
     NEXT_URI="$STARTPAGE?p=$NEXT"
 
 else
 
     input_filter 'ARG_STRING' "$QUERY_STRING"
-    STARTPAGE="$SCRIPT_NAME"
 
     SELECT="$(echo "$ARG_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
     test "$SELECT" != "$ARG_STRING" && SELECT="--select $(echo $SELECT | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''

@@ -39,6 +39,7 @@ fi
 
 mkdir $tmp_dir
 
+STARTPAGE="$SCRIPT_NAME"
 MIN_PAGE=1
 WHERE=''
 ORDERBY=''
@@ -46,18 +47,16 @@ TOP=''
 SELECT=''
 
 if [ -z $QUERY_STRING ]; then
-	STARTPAGE="$REQUEST_URI"
+
 	PAGE=1
 	NEXT=2
 	PREV=0
 	APP=''
-
 	NEXT_URI="$STARTPAGE?p=$NEXT"
 
 else
 
-  input_filter 'ARG_STRING' "$QUERY_STRING"
-	STARTPAGE="$(echo "$REQUEST_URI" | sed -r "s/\?$ARG_STRING$//")"
+    input_filter 'ARG_STRING' "$QUERY_STRING"
 
 	APP="$(echo "$col_app" | sed -r 's/\[//' | sed -r 's/\]//')"
 	APP=$(echo "$ARG_STRING" | sed -r "s/^.*$APP=([^\&\=]+)&?.*$/\1/" | grep -vx "$ARG_STRING")
@@ -71,10 +70,10 @@ else
 	PREV=$(($PAGE-1))
 
 	NEXT_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$NEXT\2/")"
-        test "$NEXT_URI" != "$REQUEST_URI" || NEXT_URI="$REQUEST_URI&p=$NEXT"
+    test "$NEXT_URI" != "$REQUEST_URI" || NEXT_URI="$REQUEST_URI&p=$NEXT"
 
 	PREV_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$PREV\2/")"
-        test "$PREV_URI" != "$REQUEST_URI" || PREV_URI="$REQUEST_URI&p=$PREV"
+    test "$PREV_URI" != "$REQUEST_URI" || PREV_URI="$REQUEST_URI&p=$PREV"
 
 fi
 
