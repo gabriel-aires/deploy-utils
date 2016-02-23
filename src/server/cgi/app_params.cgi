@@ -79,7 +79,8 @@ elif [ -n "$POST_STRING" ]; then
     APP_NAME=$(echo "$ARG_STRING" | sed -rn "s/^.*app=([^\&\=]+)&?.*$/\1/p")
 
     if [ -n "$APP_NAME" ]; then
-        test -f $app_conf_dir/$APP_NAME.conf && lock $APP_NAME || cp "$install_dir/template/app.template" "$app_conf_dir/$APP_NAME.conf"
+        test -f $app_conf_dir/$APP_NAME.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$APP_NAME.conf"
+        lock "$APP_NAME" "Aplicação $APP_NAME bloqueada para edição"
 
         while read l; do
             key="$(echo "$l" | cut -f1 -d '=')"
