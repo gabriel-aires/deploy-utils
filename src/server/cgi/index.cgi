@@ -39,7 +39,7 @@ fi
 
 mkdir $tmp_dir
 
-STARTPAGE="$SCRIPT_NAME"
+STARTPAGE="$(dirname $SCRIPT_NAME)"
 MIN_PAGE=1
 WHERE=''
 ORDERBY=''
