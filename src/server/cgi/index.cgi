@@ -72,7 +72,7 @@ else
     test -z "$NEXT_URI" && NEXT_URI="$REQUEST_URI&p=$NEXT"
 
 	PREV_URI="$(echo "$REQUEST_URI" | sed -rn "s/^(.*p=)$PAGE(.*)$/\1$PREV\2/p")"
-    test -z "$REQUEST_URI" && PREV_URI="$REQUEST_URI&p=$PREV"
+    test -z "$PREV_URI" && PREV_URI="$REQUEST_URI&p=$PREV"
 
 fi
 
