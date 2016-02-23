@@ -31,6 +31,7 @@ echo '  <body>'
 echo "      <h1>Parâmetros de aplicação</h1>"
 
 mkdir $tmp_dir
+test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
 
 STARTPAGE="$SCRIPT_NAME"
 HOMEPAGE="$(dirname "$STARTPAGE")/"
@@ -69,7 +70,7 @@ if [ -n "$QUERY_STRING" ]; then
     echo "          </form>"
     echo "      </p>"
 
-elif read POST_STRING; then
+elif [ -n "$POST_STRING" ]; then
 
     # SALVAR PARÂMETROS
 
