@@ -83,11 +83,12 @@ elif [ -n "$POST_STRING" ]; then
         lock "$APP_NAME" "Aplicação $APP_NAME bloqueada para edição"
 
         while read l; do
+            edit_var=0
             key="$(echo "$l" | cut -f1 -d '=')"
             old_value="$(echo "$l" | sed -rn "s/^$key=//p")"
             new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*$key=([^\&\=]+)&?.*$/\1/p")"
-            test "$new_value" != "$old_value" && edit_var=1
-            editconf "$key" "$new_value" "$app_conf_dir/$APP_NAME.conf"
+            test "'$new_value'" != "$old_value" && edit_var=1
+            editconf "$key" "'$new_value'" "$app_conf_dir/$APP_NAME.conf"
         done < "$app_conf_dir/$APP_NAME.conf"
 
         echo "Parâmetros da aplicação $APP_NAME atualizados."
