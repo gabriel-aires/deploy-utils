@@ -5,14 +5,11 @@ function input_filter() {
 
   set -f
 
-  local params_group="$1"
-  local params_value="$2"
-
   # Decodifica caracteres necessários,
   # Remove demais caracteres especiais,
   # Realiza substituições auxiliares
 
-  params_value="$(echo "$params_value" | \
+  echo "$1" | \
     sed -r 's|\+| |g' | \
     sed -r 's|%21|\!|g' | \
     sed -r 's|%25|::percent::|g' | \
@@ -25,11 +22,7 @@ function input_filter() {
     sed -r 's|\*||g' | \
     sed -r 's|::percent::|%|g' | \
     sed -r 's| +| |g' | \
-    sed -r 's| $||g' \
-  )"
-
-  echo "$params_value"
-  eval $params_group="$params_value"
+    sed -r 's| $||g'
 
   set +f
 

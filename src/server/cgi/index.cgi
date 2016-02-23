@@ -56,7 +56,7 @@ if [ -z $QUERY_STRING ]; then
 
 else
 
-    input_filter 'ARG_STRING' "$QUERY_STRING"
+    ARG_STRING=$(input_filter "$QUERY_STRING")
 
 	APP="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
 	APP=$(echo "$ARG_STRING" | sed -rn "s/^.*$APP=([^\&\=]+)&?.*$/\1/p")
