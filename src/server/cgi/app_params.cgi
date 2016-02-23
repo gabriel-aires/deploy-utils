@@ -60,8 +60,8 @@ if [ -n "$QUERY_STRING" ]; then
 
     test -f "$app_conf_dir/$APP.conf" && form_file="$app_conf_dir/$APP.conf" || form_file="$install_dir/template/app.template"
     while read l; do
-        key=$(echo "$l" | cut -f1 -d '=')
-        value=$(echo "$l" | sed -rn "s/^[^\=]+=//p")
+        key="$(echo "$l" | cut -f1 -d '=')"
+        value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
         echo "              <tr><td>$key:      </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
     done < "$form_file"
 
@@ -88,7 +88,7 @@ elif [ -n "$POST_STRING" ]; then
             old_value="$(echo "$l" | sed -rn "s/^$key=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
             new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*$key=([^\&\=]+)&?.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
             test "$new_value" != "$old_value" && edit_var=1
-            editconf "$key" "'$new_value'" "$app_conf_dir/$APP_NAME.conf"
+            editconf "$key" "$new_value" "$app_conf_dir/$APP_NAME.conf"
         done < "$app_conf_dir/$APP_NAME.conf"
 
         echo "Parâmetros da aplicação $APP_NAME atualizados."
