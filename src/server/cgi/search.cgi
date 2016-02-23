@@ -66,7 +66,7 @@ if [ -z "$QUERY_STRING" ]; then
 
 else
 
-    input_filter 'ARG_STRING' "$QUERY_STRING"
+    ARG_STRING=$(input_filter "$QUERY_STRING")
 
     SELECT="$(echo "$ARG_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
     test "$SELECT" != "$ARG_STRING" && SELECT="--select $(echo $SELECT | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''
