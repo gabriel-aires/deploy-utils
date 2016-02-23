@@ -85,9 +85,9 @@ elif [ -n "$POST_STRING" ]; then
         while read l; do
             edit_var=0
             key="$(echo "$l" | cut -f1 -d '=')"
-            old_value="$(echo "$l" | sed -rn "s/^$key=//p")"
-            new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*$key=([^\&\=]+)&?.*$/\1/p")"
-            test "'$new_value'" != "$old_value" && edit_var=1
+            old_value="$(echo "$l" | sed -rn "s/^$key=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+            new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*$key=([^\&\=]+)&?.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
+            test "$new_value" != "$old_value" && edit_var=1
             editconf "$key" "'$new_value'" "$app_conf_dir/$APP_NAME.conf"
         done < "$app_conf_dir/$APP_NAME.conf"
 
