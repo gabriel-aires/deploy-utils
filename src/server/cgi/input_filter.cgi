@@ -28,6 +28,7 @@ function input_filter() {
     sed -r 's| $||g' \
   )"
 
+  echo "$params_value"
   eval $params_group="$params_value"
 
   set +f
