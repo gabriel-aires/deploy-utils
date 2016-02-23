@@ -40,6 +40,7 @@ fi
 mkdir $tmp_dir
 
 STARTPAGE="$(dirname $SCRIPT_NAME)"
+APP_PARAM="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
 MIN_PAGE=1
 WHERE=''
 ORDERBY=''
@@ -56,10 +57,9 @@ if [ -z $QUERY_STRING ]; then
 
 else
 
-    ARG_STRING=$(input_filter "$QUERY_STRING")
+    ARG_STRING="$(input_filter "$QUERY_STRING")"
 
-	APP="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
-	APP=$(echo "$ARG_STRING" | sed -rn "s/^.*$APP=([^\&\=]+)&?.*$/\1/p")
+	APP=$(echo "$ARG_STRING" | sed -rn "s/^.*$APP_PARAM=([^\&\=]+)&?.*$/\1/p")
     test -n "$APP" && WHERE="--where $col_app==$APP"
 
 	PAGE=$(echo "$ARG_STRING" | sed -rn "s/^.*p=([^\&\=]+)&?.*$/\1/p")
@@ -98,7 +98,7 @@ fi
 #Combo aplicações
 echo "		<select onchange="javascript:location.href=this.value">"
 echo "			<option value=\"Sistema\">Sistema...</option>"
-find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | sort | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t<option value=\"$STARTPAGE?Sistema=\1\">\1</option>|"
+find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | sort | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t<option value=\"$STARTPAGE?$APP_PARAM=\1\">\1</option>|"
 echo "		</select>"
 
 #Histórico

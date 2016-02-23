@@ -154,6 +154,27 @@ function chk_template () {
 
 }
 
+function editconf () {
+
+    if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$edit_var" ]; then
+        campo="$1"
+        valor_campo="$2"
+        arquivo_conf="$3"
+
+        touch $arquivo_conf
+
+        if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
+            sed -i -r "/^$campo\=.*$/d" "$arquivo_conf"
+            echo "$campo='$valor_campo'" >> "$arquivo_conf"
+        else
+            test "$edit_var" -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
+        fi
+    else
+        echo "Erro. Não foi possível editar o arquivo de configuração." && end 1
+    fi
+
+}
+
 function valid () {
 
     #argumentos: nome_variável (nome_regra) (nome_regra_inversa) mensagem_erro ("continue").
