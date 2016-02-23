@@ -60,20 +60,19 @@ else
 
 	APP="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
 	APP=$(echo "$ARG_STRING" | sed -rn "s/^.*$APP=([^\&\=]+)&?.*$/\1/p")
-
     test -n "$APP" && WHERE="--where $col_app==$APP"
 
 	PAGE=$(echo "$ARG_STRING" | sed -rn "s/^.*p=([^\&\=]+)&?.*$/\1/p")
-	test -n "$PAGE" || PAGE=1
+	test -z "$PAGE" && PAGE=1
 
 	NEXT=$(($PAGE+1))
 	PREV=$(($PAGE-1))
 
 	NEXT_URI="$(echo "$REQUEST_URI" | sed -rn "s/^(.*p=)$PAGE(.*)$/\1$NEXT\2/p")"
-    test -n "$NEXT_URI" || NEXT_URI="$REQUEST_URI&p=$NEXT"
+    test -z "$NEXT_URI" && NEXT_URI="$REQUEST_URI&p=$NEXT"
 
 	PREV_URI="$(echo "$REQUEST_URI" | sed -rn "s/^(.*p=)$PAGE(.*)$/\1$PREV\2/p")"
-    test -n "$REQUEST_URI" || PREV_URI="$REQUEST_URI&p=$PREV"
+    test -z "$REQUEST_URI" && PREV_URI="$REQUEST_URI&p=$PREV"
 
 fi
 
