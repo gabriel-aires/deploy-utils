@@ -37,6 +37,11 @@ STARTPAGE="$SCRIPT_NAME"
 HOMEPAGE="$(dirname "$STARTPAGE")/"
 APP_PARAM="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
 NEW_PARAM='New'
+SAVE_VALUE='Salvar'
+ERASE_VALUE='Remover'
+ERASE_YES='Sim'
+ERASE_NO='Não'
+
 
 #Combo aplicações
 echo "		<select onchange="javascript:location.href=this.value">"
@@ -66,32 +71,62 @@ if [ -n "$QUERY_STRING" ]; then
     done < "$form_file"
 
     echo "              </table>"
-    echo "              <input type=\"submit\" name=\"SAVE\" value=\"Salvar\">"
+    echo "              <input type=\"submit\" name=\"SAVE\" value=\"$SAVE_VALUE\">"
+    echo "              <input type=\"submit\" name=\"ERASE\" value=\"$ERASE_VALUE\">"
     echo "          </form>"
     echo "      </p>"
 
 elif [ -n "$POST_STRING" ]; then
 
-    # SALVAR PARÂMETROS
+    # SALVAR/DELETAR PARÂMETROS
 
     ARG_STRING="$(input_filter "$POST_STRING")"
     echo "$ARG_STRING"
     APP_NAME=$(echo "$ARG_STRING" | sed -rn "s/^.*app=([^\&\=]+)&?.*$/\1/p")
+    SAVE=$(echo "$ARG_STRING" | sed -rn "s/^.*SAVE=([^\&\=]+)&?.*$/\1/p")
+    ERASE=$(echo "$ARG_STRING" | sed -rn "s/^.*ERASE=([^\&\=]+)&?.*$/\1/p")
 
     if [ -n "$APP_NAME" ]; then
-        test -f $app_conf_dir/$APP_NAME.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$APP_NAME.conf"
-        lock "$APP_NAME" "Aplicação $APP_NAME bloqueada para edição"
 
-        while read l; do
-            edit_var=0
-            key="$(echo "$l" | cut -f1 -d '=')"
-            old_value="$(echo "$l" | sed -rn "s/^$key=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-            new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*$key=([^\&\=]+)&?.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
-            test "$new_value" != "$old_value" && edit_var=1
-            editconf "$key" "$new_value" "$app_conf_dir/$APP_NAME.conf"
-        done < "$app_conf_dir/$APP_NAME.conf"
+        if [ "$SAVE" == "$SAVE_VALUE" ]; then
 
-        echo "Parâmetros da aplicação $APP_NAME atualizados."
+            test -f $app_conf_dir/$APP_NAME.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$APP_NAME.conf"
+            lock "$APP_NAME" "Aplicação $APP_NAME bloqueada para edição"
+
+            while read l; do
+                edit_var=0
+                key="$(echo "$l" | cut -f1 -d '=')"
+                old_value="$(echo "$l" | sed -rn "s/^$key=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*$key=([^\&\=]+)&?.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                test "$new_value" != "$old_value" && edit_var=1
+                editconf "$key" "$new_value" "$app_conf_dir/$APP_NAME.conf"
+            done < "$app_conf_dir/$APP_NAME.conf"
+
+            echo "Parâmetros da aplicação $APP_NAME atualizados."
+
+        elif [ "$ERASE" == "$ERASE_VALUE" ]; then
+
+            echo "      <p>"
+            echo "          <b>Tem certeza de que deseja remover os parâmetros da aplicação $APP_NAME?</b>"
+            echo "          <form action=\"$STARTPAGE\" method=\"post\">"
+            echo "              <input type=\"hidden\" name=\"app\" value=\"$APP_NAME\"></td></tr>"
+            echo "              <input type=\"submit\" name=\"ERASE\" value=\"$ERASE_YES\">"
+            echo "              <input type=\"submit\" name=\"ERASE\" value=\"$ERASE_NO\">"
+            echo "          </form>"
+            echo "      </p>"
+
+
+        elif [ "$ERASE" == "$ERASE_YES" ]; then
+
+            rm -f "$app_conf_dir/$APP_NAME.conf"
+            echo "Parâmetros da aplicação $APP_NAME removidos."
+
+        elif [ "$ERASE" == "$ERASE_NO" ]; then
+
+            echo "Deleção dos parâmetros da aplicação $APP_NAME cancelada."
+
+        fi
+
     else
         echo "Erro. O parâmetro 'app' deve ser preenchido."
     fi
