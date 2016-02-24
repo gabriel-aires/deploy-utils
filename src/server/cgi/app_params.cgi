@@ -99,7 +99,9 @@ elif [ -n "$POST_STRING" ]; then
                 editconf "$key" "$new_value" "$app_conf_dir/$APP_NAME.conf"
             done < "$app_conf_dir/$APP_NAME.conf"
 
-            echo "Parâmetros da aplicação $APP_NAME atualizados."
+            echo "      <p>"
+            echo "          <b>Parâmetros da aplicação $APP_NAME atualizados.</b>"
+            echo "      /<p>"
 
         elif [ "$ERASE" == "$ERASE_VALUE" ]; then
 
@@ -112,20 +114,28 @@ elif [ -n "$POST_STRING" ]; then
             echo "          </form>"
             echo "      </p>"
 
-
         elif [ "$ERASE" == "$ERASE_YES" ]; then
 
             rm -f "$app_conf_dir/$APP_NAME.conf"
-            echo "Parâmetros da aplicação $APP_NAME removidos."
+
+            echo "      <p>"
+            echo "          <b>Parâmetros da aplicação $APP_NAME removidos.</b>"
+            echo "      </p>"
 
         elif [ "$ERASE" == "$ERASE_NO" ]; then
 
-            echo "Deleção dos parâmetros da aplicação $APP_NAME cancelada."
+            echo "      <p>"
+            echo "          <b>Deleção dos parâmetros da aplicação $APP_NAME cancelada.</b>"
+            echo "      /<p>"
 
         fi
 
     else
-        echo "Erro. O parâmetro 'app' deve ser preenchido."
+
+        echo "      <p>"
+        echo "          <b>Erro. O parâmetro 'app' deve ser preenchido.</b>"
+        echo "      </p>"
+        
     fi
 
 fi
