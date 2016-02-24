@@ -53,9 +53,9 @@ if [ -n "$QUERY_STRING" ]; then
 
     # EDITAR PARÂMETROS
 
-    ARG_STRING="$(input_filter "$QUERY_STRING")"
-    APP=$(echo "$ARG_STRING" | sed -rn "s/^.*$APP_PARAM=([^\&\=]+)&?.*$/\1/p")
-    NEW=$(echo "$ARG_STRING" | sed -rn "s/^.*$NEW_PARAM=([^\&\=]+)&?.*$/\1/p")
+    ARG_STRING="&$(input_filter "$QUERY_STRING")&"
+    APP=$(echo "$ARG_STRING" | sed -rn "s/^.*&$APP_PARAM=([^\&]+)&.*$/\1/p")
+    NEW=$(echo "$ARG_STRING" | sed -rn "s/^.*&$NEW_PARAM=([^\&]+)&.*$/\1/p")
 
     echo "      <p>"
     echo "          <form action=\"$STARTPAGE\" method=\"post\">"
@@ -78,10 +78,10 @@ elif [ -n "$POST_STRING" ]; then
 
     # SALVAR/DELETAR PARÂMETROS
 
-    ARG_STRING="$(input_filter "$POST_STRING")"
-    APP_NAME=$(echo "$ARG_STRING" | sed -rn "s/^.*app=([^\&\=]+)&?.*$/\1/p")
-    SAVE=$(echo "$ARG_STRING" | sed -rn "s/^.*SAVE=([^\&\=]+)&?.*$/\1/p")
-    ERASE=$(echo "$ARG_STRING" | sed -rn "s/^.*ERASE=([^\&\=]+)&?.*$/\1/p")
+    ARG_STRING="&$(input_filter "$POST_STRING")&"
+    APP_NAME=$(echo "$ARG_STRING" | sed -rn "s/^.*&app=([^\&]+)&.*$/\1/p")
+    SAVE=$(echo "$ARG_STRING" | sed -rn "s/^.*&SAVE=([^\&]+)&.*$/\1/p")
+    ERASE=$(echo "$ARG_STRING" | sed -rn "s/^.*&ERASE=([^\&]+)&.*$/\1/p")
 
     if [ -n "$APP_NAME" ]; then
 
@@ -94,7 +94,7 @@ elif [ -n "$POST_STRING" ]; then
                 edit_var=0
                 key="$(echo "$l" | cut -f1 -d '=')"
                 old_value="$(echo "$l" | sed -rn "s/^$key=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*$key=([^\&\=]+)&?.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
                 test "$new_value" != "$old_value" && edit_var=1
                 editconf "$key" "$new_value" "$app_conf_dir/$APP_NAME.conf"
             done < "$app_conf_dir/$APP_NAME.conf"

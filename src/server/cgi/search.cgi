@@ -66,34 +66,34 @@ if [ -z "$QUERY_STRING" ]; then
 
 else
 
-    ARG_STRING="$(input_filter "$QUERY_STRING")"
+    ARG_STRING="&$(input_filter "$QUERY_STRING")&"
 
-    SELECT="$(echo "$ARG_STRING" | sed -r "s/^.*SELECT=([^\&]+)&?.*$/\1/")"
-    test "$SELECT" != "$ARG_STRING" && SELECT="--select $(echo $SELECT | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )" || SELECT=''
+    SELECT="$(echo "$ARG_STRING" | sed -rn "s/^.*&SELECT=([^\&]+)&.*$/\1/p")"
+    test -n "$SELECT" && SELECT="--select $(echo $SELECT | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[all\]/all/' )"
 
-    DISTINCT="$(echo "$ARG_STRING" | sed -r "s/^.*DISTINCT=([^\&]+)&?.*$/\1/")"
-    test "$DISTINCT" != "$ARG_STRING" && DISTINCT="--distinct" || DISTINCT=''
+    DISTINCT="$(echo "$ARG_STRING" | sed -rn "s/^.*&DISTINCT=([^\&]+)&.*$/\1/p")"
+    test -n "$DISTINCT" && DISTINCT="--distinct"
 
-    TOP="$(echo "$ARG_STRING" | sed -r "s/^.*TOP=([^\&]+)&?.*$/\1/")"
-    test "$TOP" != "$ARG_STRING" && TOP="--top $TOP" || TOP=''
+    TOP="$(echo "$ARG_STRING" | sed -rn "s/^.*&TOP=([^\&]+)&.*$/\1/p")"
+    test -n "$TOP" && TOP="--top $TOP"
 
-    WHERE="$(echo "$ARG_STRING" | sed -r "s/^.*WHERE=([^\&]+)&?.*$/\1/")"
-    test "$WHERE" != "$ARG_STRING" && WHERE="--where $(echo $WHERE | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/g' | sed -r 's/([\=\!][\=\%\~])/\]\1/g')" || WHERE=''
+    WHERE="$(echo "$ARG_STRING" | sed -rn "s/^.*&WHERE=([^\&]+)&.*$/\1/p")"
+    test -n "$WHERE" && WHERE="--where $(echo $WHERE | sed -r 's/^(.)/\[\1/' | sed -r 's/( +)/ \[/g' | sed -r 's/([\=\!][\=\%\~])/\]\1/g')"
 
-    ORDERBY="$(echo "$ARG_STRING" | sed -r "s/^.*ORDERBY=([^\&]+)&?.*$/\1/")"
-    test "$ORDERBY" != "$ARG_STRING" && ORDERBY="--order-by $(echo $ORDERBY | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')" || ORDERBY=''
+    ORDERBY="$(echo "$ARG_STRING" | sed -rn "s/^.*&ORDERBY=([^\&]+)&.*$/\1/p")"
+    test -n "$ORDERBY" && ORDERBY="--order-by $(echo $ORDERBY | sed -r 's/^(.*)$/\[\1\]/' | sed -r 's/( +)/\] \[/g' | sed -r 's/\[asc\]/asc/' | sed -r 's/\[desc\]/desc/')"
 
-    PAGE=$(echo "$ARG_STRING" | sed -r "s/^.*p=([^\&]+)&?.*$/\1/")
-    test "$PAGE" == "$ARG_STRING" && PAGE=1
+    PAGE=$(echo "$ARG_STRING" | sed -rn "s/^.*&p=([^\&]+)&.*$/\1/p")
+    test -z "$PAGE" && PAGE=1
 
     NEXT=$(($PAGE+1))
     PREV=$(($PAGE-1))
 
-    NEXT_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$NEXT\2/")"
-    test "$NEXT_URI" != "$REQUEST_URI" || NEXT_URI="$REQUEST_URI&p=$NEXT"
+    NEXT_URI="$(echo "$REQUEST_URI" | sed -rn "s/^(.*&?p=)$PAGE(.*)$/\1$NEXT\2/p")"
+    test -z "$NEXT_URI" && NEXT_URI="$REQUEST_URI&p=$NEXT"
 
-    PREV_URI="$(echo "$REQUEST_URI" | sed -r "s/^(.*p=)$PAGE(.*)$/\1$PREV\2/")"
-    test "$PREV_URI" != "$REQUEST_URI" || PREV_URI="$REQUEST_URI&p=$PREV"
+    PREV_URI="$(echo "$REQUEST_URI" | sed -rn "s/^(.*&?p=)$PAGE(.*)$/\1$PREV\2/p")"
+    test -z "$PREV_URI" && PREV_URI="$REQUEST_URI&p=$PREV"
 
 fi
 
