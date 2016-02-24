@@ -45,10 +45,18 @@ function log () {    ##### log de execução detalhado.
 
 function lock () {                                            #argumentos: nome_trava, mensagem_erro, (instrução)
 
-    if [ -d $lock_dir ] && [ ! -z "$1" ] && [ ! -z "$2" ]; then
+    if [ -d $lock_dir ] && [ -n "$1" ] && [ -n "$2" ]; then
 
         local lockfile="$(echo "$1" | sed -r "s|[;, \:\.]+|_|g")"
         local msg="$2"
+        local lock_time=0
+
+        # em modo não interativo, aguardar limpeza do lockfile
+        if ! $interactive; then
+            while [ -f "$lock_dir/$lockfile" ] && [ $lock_time - le $lock_timeout ]; do
+                sleep 1
+            done
+        fi
 
         if [ -f "$lock_dir/$lockfile" ]; then
             case $verbosity in
@@ -56,7 +64,7 @@ function lock () {                                            #argumentos: nome_
                 'verbose') echo -e "\n$msg";;
             esac
 
-            end 0 2> /dev/null || exit 0
+            end 1 2> /dev/null || exit 1
         else
             lock_array[$lock_index]="$lock_dir/$lockfile" && ((lock_index++))
             touch "$lock_dir/$lockfile"

@@ -20,6 +20,7 @@ cifs_auth=
 cifs_credentials=
 cifs_opts=
 rsync_opts=
+max_running=
 # Expurgo de logs
 app_log_max=
 global_history_size=
