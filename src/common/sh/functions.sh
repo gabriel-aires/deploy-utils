@@ -156,7 +156,7 @@ function chk_template () {
 
 function editconf () {
 
-    if [ ! -z "$1" ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$edit_var" ]; then
+    if [ -n "$1" ] && [ -n "$3" ] && [ -n "$edit_var" ]; then
         campo="$1"
         valor_campo="$2"
         arquivo_conf="$3"
