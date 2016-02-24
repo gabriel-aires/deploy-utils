@@ -40,8 +40,7 @@ NEW_PARAM='New'
 SAVE_VALUE='Salvar'
 ERASE_VALUE='Remover'
 ERASE_YES='Sim'
-ERASE_NO='Não'
-
+ERASE_NO='Nao'
 
 #Combo aplicações
 echo "		<select onchange="javascript:location.href=this.value">"
@@ -55,7 +54,6 @@ if [ -n "$QUERY_STRING" ]; then
     # EDITAR PARÂMETROS
 
     ARG_STRING="$(input_filter "$QUERY_STRING")"
-    echo "$ARG_STRING"
     APP=$(echo "$ARG_STRING" | sed -rn "s/^.*$APP_PARAM=([^\&\=]+)&?.*$/\1/p")
     NEW=$(echo "$ARG_STRING" | sed -rn "s/^.*$NEW_PARAM=([^\&\=]+)&?.*$/\1/p")
 
@@ -81,7 +79,6 @@ elif [ -n "$POST_STRING" ]; then
     # SALVAR/DELETAR PARÂMETROS
 
     ARG_STRING="$(input_filter "$POST_STRING")"
-    echo "$ARG_STRING"
     APP_NAME=$(echo "$ARG_STRING" | sed -rn "s/^.*app=([^\&\=]+)&?.*$/\1/p")
     SAVE=$(echo "$ARG_STRING" | sed -rn "s/^.*SAVE=([^\&\=]+)&?.*$/\1/p")
     ERASE=$(echo "$ARG_STRING" | sed -rn "s/^.*ERASE=([^\&\=]+)&?.*$/\1/p")
