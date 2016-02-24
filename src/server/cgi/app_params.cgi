@@ -101,7 +101,7 @@ elif [ -n "$POST_STRING" ]; then
 
             echo "      <p>"
             echo "          <b>Parâmetros da aplicação $APP_NAME atualizados.</b>"
-            echo "      /<p>"
+            echo "      </p>"
 
         elif [ "$ERASE" == "$ERASE_VALUE" ]; then
 
@@ -126,7 +126,7 @@ elif [ -n "$POST_STRING" ]; then
 
             echo "      <p>"
             echo "          <b>Deleção dos parâmetros da aplicação $APP_NAME cancelada.</b>"
-            echo "      /<p>"
+            echo "      </p>"
 
         fi
 
@@ -135,7 +135,7 @@ elif [ -n "$POST_STRING" ]; then
         echo "      <p>"
         echo "          <b>Erro. O parâmetro 'app' deve ser preenchido.</b>"
         echo "      </p>"
-        
+
     fi
 
 fi
