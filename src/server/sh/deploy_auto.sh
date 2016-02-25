@@ -37,6 +37,7 @@ if [ -z "$ambientes" ]; then
 fi
 
 lock 'deploy_auto' "Rotina de deploy automático em andamento..."
+mkdir -p $tmp_dir
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
 running=0
 
