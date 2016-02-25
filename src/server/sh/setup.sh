@@ -1,8 +1,8 @@
 #!/bin/bash
 
 case "$1" in
-    --reconfigure) $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || exit 1
-    *)  echo "Argumento inválido" && exit 1
+    --reconfigure) $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || exit 1 ;;
+    *)  echo "Argumento inválido" && exit 1 ;;
 esac
 
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
