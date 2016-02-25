@@ -10,7 +10,7 @@ repo_dir=
 lock_dir=
 cgi_dir=
 app_conf_dir=
-cron_log_file=
+service_log_file=
 # Opções de deploy padrão
 ambientes=
 modo_padrao=
@@ -25,7 +25,7 @@ lock_timeout=
 # Expurgo de logs
 app_log_max=
 global_history_size=
-cron_log_size=
+service_log_size=
 # Daemon
 service_init_script=
 # Web
