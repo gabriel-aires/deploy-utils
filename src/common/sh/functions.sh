@@ -53,7 +53,7 @@ function lock () {                                            #argumentos: nome_
 
         # em modo não interativo, aguardar limpeza do lockfile
         if ! $interactive; then
-            while [ -f "$lock_dir/$lockfile" ] && [ $lock_time - le $lock_timeout ]; do
+            while [ -f "$lock_dir/$lockfile" ] && [ $lock_time -le $lock_timeout ]; do
                 sleep 1
             done
         fi
