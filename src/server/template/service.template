@@ -47,7 +47,9 @@ function start() {
     elif ! $service_locked && ! $service_running; then
         echo "Iniciando serviço de deploy..."
         touch $daemon_lock || return 1
-        nohup $daemon_cmd &> $daemon_log &
+        touch $daemon_log || return 1
+        log "INFO" "Iniciando serviço de deploy..." >> $daemon_log
+        nohup $daemon_cmd &>> $daemon_log &
     else # ! $service_locked && $service_running; then
         echo $(status) && return 1
     fi
