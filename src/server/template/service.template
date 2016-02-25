@@ -8,6 +8,7 @@ daemon_cmd="@src_dir/server/sh/server_tasks.sh --daemon"
 daemon_dir="$(dirname "$daemon_cmd")"
 daemon_name="$(basename "$daemon_cmd" | cut -f1 -d ' ')"
 daemon_lock="/var/lock/subsys/$(basename "$0")"
+daemon_log="@daemon_log"
 
 function status() {
 
@@ -46,7 +47,7 @@ function start() {
     elif ! $service_locked && ! $service_running; then
         echo "Iniciando serviço de deploy..."
         touch $daemon_lock || return 1
-        nohup $daemon_cmd &
+        nohup $daemon_cmd &> $daemon_log &
     else # ! $service_locked && $service_running; then
         echo $(status) && return 1
     fi

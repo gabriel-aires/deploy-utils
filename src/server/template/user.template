@@ -6,7 +6,7 @@ lock_timeout=
 # Expurgo de logs
 app_log_max=
 global_history_size=
-cron_log_size=
+service_log_size=
 # HTML
 html_title=
 html_header=

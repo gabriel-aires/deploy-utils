@@ -37,10 +37,10 @@ function tasks () {
     lock_history=true
     touch $lock_dir/$history_lock_file
 
-    # 1) cron
-    touch $history_dir/$cron_log_file
-    tail --lines=$cron_log_size $history_dir/$cron_log_file > $tmp_dir/cron_log_new
-    cp -f $tmp_dir/cron_log_new $history_dir/$cron_log_file
+    # 1) Serviço
+    touch $history_dir/$service_log_file
+    tail --lines=$service_log_size $history_dir/$service_log_file > $tmp_dir/service_log_new
+    cp -f $tmp_dir/service_log_new $history_dir/$service_log_file
 
     # 2) Histórico de deploys
     local qtd_history
@@ -102,7 +102,7 @@ fi
 
 lock 'server_tasks' "A rotina já está em execução."
 
-valid "cron_log_size" "regex_qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas."
+valid "service_log_size" "regex_qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas."
 valid "app_log_max" "regex_qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações."
 valid "global_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico global."
 
@@ -113,8 +113,8 @@ case "$1" in
     --daemon)
         while true; do
             sleep 1
-            touch $history_dir/$cron_log_file
-            tasks >> $history_dir/$cron_log_file 2>&1
+            touch $history_dir/$service_log_file
+            tasks &>> $history_dir/$service_log_file
         done
         ;;
     *)

@@ -2,7 +2,7 @@
 
 case "$1" in
     --reconfigure) $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh && echo "Reconfigurando serviço..." || exit 1 ;;
-    '') echo "Configurando serviço..."
+    '') echo "Configurando serviço..." ;;
     *)  echo "Argumento inválido" && exit 1 ;;
 esac
 
@@ -40,7 +40,7 @@ test -f $service_init_script && cp -f $service_init_script $service_init_script.
 cp -f $install_dir/template/service.template $service_init_script || exit 1
 
 sed -i -r "s|@src_dir|$src_dir|" $service_init_script
-sed -i -r "s|@install_dir|$install_dir|" $service_init_script
+sed -i -r "s|@daemon_log|$history_dir/$service_log_file|" $service_init_script
 
 #setup owner/permissions
 chmod 755 $src_dir/common/sh/query_file.sh || exit 1
