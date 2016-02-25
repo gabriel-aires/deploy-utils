@@ -6,7 +6,7 @@ fi
 
 daemon_cmd="@src_dir/server/sh/server_tasks.sh --daemon"
 daemon_dir="$(dirname "$daemon_cmd")"
-daemon_name="$(basename "$daemon_cmd" | cut -f1 -d ' ' | cut -f1 -d '.')"
+daemon_name="$(basename "$daemon_cmd" | cut -f1 -d ' ')"
 daemon_lock="/var/lock/subsys/$(basename "$0")"
 
 function status() {
