@@ -15,7 +15,7 @@ id $apache_user > /dev/null || exit 1
 groups $apache_user | sed -r "s|$apache_user :||" | grep " $apache_group" > /dev/null || exit 1
 
 #backup vhost_conf
-test -f $apache_confd_dir/$apache_vhost_filename && cp -f $apache_confd_dir/$apache_vhost_filename $apache_confd_dir/$apache_vhost_filename.bak || exit 1
+test -f $apache_confd_dir/$apache_vhost_filename && cp -f $apache_confd_dir/$apache_vhost_filename $apache_confd_dir/$apache_vhost_filename.bak
 
 #setup vhost_conf
 cp -f $install_dir/template/vhost.template $apache_confd_dir/$apache_vhost_filename || exit 1
@@ -33,7 +33,7 @@ sed -i -r "s|@apache_log_dir|$apache_log_dir|" $apache_confd_dir/$apache_vhost_f
 sed -i -r "s|@apache_vhost_logname|$apache_vhost_logname|" $apache_confd_dir/$apache_vhost_filename
 
 #backup deploy_service
-test -f $service_init_script && cp -f $service_init_script $service_init_script.bak || exit 1
+test -f $service_init_script && cp -f $service_init_script $service_init_script.bak
 
 #setup deploy_service
 cp -f $install_dir/template/service.template $service_init_script || exit 1
