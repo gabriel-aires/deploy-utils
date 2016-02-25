@@ -2,8 +2,7 @@
 
 ### Inicialização
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
-source $install_dir/sh/init.sh || exit 1
-source $install_dir/cgi/input_filter.cgi || exit 1
+source $install_dir/sh/include.sh || exit 1
 
 function end() {
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -53,7 +52,7 @@ if [ -n "$QUERY_STRING" ]; then
 
     # EDITAR PARÂMETROS
 
-    ARG_STRING="&$(input_filter "$QUERY_STRING")&"
+    ARG_STRING="&$(web_filter "$QUERY_STRING")&"
     APP=$(echo "$ARG_STRING" | sed -rn "s/^.*&$APP_PARAM=([^\&]+)&.*$/\1/p")
     NEW=$(echo "$ARG_STRING" | sed -rn "s/^.*&$NEW_PARAM=([^\&]+)&.*$/\1/p")
 
@@ -78,7 +77,7 @@ elif [ -n "$POST_STRING" ]; then
 
     # SALVAR/DELETAR PARÂMETROS
 
-    ARG_STRING="&$(input_filter "$POST_STRING")&"
+    ARG_STRING="&$(web_filter "$POST_STRING")&"
     APP_NAME=$(echo "$ARG_STRING" | sed -rn "s/^.*&app=([^\&]+)&.*$/\1/p")
     SAVE=$(echo "$ARG_STRING" | sed -rn "s/^.*&SAVE=([^\&]+)&.*$/\1/p")
     ERASE=$(echo "$ARG_STRING" | sed -rn "s/^.*&ERASE=([^\&]+)&.*$/\1/p")

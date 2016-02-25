@@ -2,6 +2,7 @@
 
 # Carrega funções e variáveis comuns, define $PATH
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
+source $install_dir/sh/functions.sh || exit 1
 
 # Cria log de erros
 mkdir -p $log_dir || exit 1

@@ -2,8 +2,7 @@
 
 ### Inicialização
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
-source $install_dir/sh/init.sh || exit 1
-source $install_dir/cgi/input_filter.cgi || exit 1
+source $install_dir/sh/include.sh || exit 1
 
 function end() {
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -57,7 +56,7 @@ if [ -z $QUERY_STRING ]; then
 
 else
 
-    ARG_STRING="&$(input_filter "$QUERY_STRING")&"
+    ARG_STRING="&$(web_filter "$QUERY_STRING")&"
 
 	APP=$(echo "$ARG_STRING" | sed -rn "s/^.*&$APP_PARAM=([^\&]+)&.*$/\1/p")
     test -n "$APP" && WHERE="--where $col_app==$APP"

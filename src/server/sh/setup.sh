@@ -6,7 +6,7 @@ case "$1" in
 esac
 
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
-source $install_dir/sh/init.sh || exit 1
+source $install_dir/sh/include.sh || exit 1
 
 #verify apache params
 test -d $apache_confd_dir || exit 1

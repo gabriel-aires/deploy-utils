@@ -1,6 +1,6 @@
 #!/bin/bash
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
-source $install_dir/sh/init.sh || exit 1
+source $install_dir/sh/include.sh || exit 1
 
 estado="validacao"
 pid=$$
@@ -360,7 +360,7 @@ then
     exit 1
 fi
 
-mkdir -p $tmp_dir        # os outros diretórios são criados pelo init.sh
+mkdir -p $tmp_dir        # os outros diretórios são criados pelo include.sh
 
 mklist "$ambientes" "$tmp_dir/ambientes"
 
