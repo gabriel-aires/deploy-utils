@@ -55,6 +55,7 @@ function lock () {                                            #argumentos: nome_
         if ! $interactive; then
             while [ -f "$lock_dir/$lockfile" ] && [ $lock_time -le $lock_timeout ]; do
                 sleep 1
+                ((lock_time++))
             done
         fi
 
