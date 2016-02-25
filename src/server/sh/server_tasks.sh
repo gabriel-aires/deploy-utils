@@ -78,6 +78,7 @@ function end {
 
     trap "" SIGQUIT SIGTERM SIGINT SIGHUP
     erro=$1
+
     break 10 2> /dev/null
     wait
 
@@ -86,15 +87,7 @@ function end {
         rmdir $tmp_dir
     fi
 
-    if [ -f $lock_dir/server_cron_tasks ]; then
-        rm -f "$lock_dir/server_cron_tasks"
-    fi
-
-    if $lock_history; then
-        rm -f "$lock_dir/$deploy_log_edit"
-    fi
-
-    unix2dos $history_dir/$cron_log_file > /dev/null 2>&1
+    clean_locks
 
     return $erro
 
@@ -107,13 +100,29 @@ if [ -z "$ambientes" ]; then
     exit 1
 fi
 
-lock 'deploy_service' "O serviço já está em execução."
+lock 'server_tasks' "A rotina já está em execução."
 
 valid "cron_log_size" "regex_qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas."
 valid "app_log_max" "regex_qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações."
 valid "global_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico global."
 
-while true; do
-    sleep 1
-    tasks >> $history_dir/$cron_log_file 2>&1
-done
+case "$1" in
+    --test)
+        tasks
+        ;;
+    --daemon)
+        while true; do
+            sleep 1
+            touch $history_dir/$cron_log_file
+            tasks >> $history_dir/$cron_log_file 2>&1
+        done
+        ;;
+    *)
+        echo "Utilização: $0 [opções]"
+        echo "Opções:"
+        echo "  --test: executa a rotina uma vez, exibindo a saída em stdout."
+        echo "  --daemon: permite a execução como daemon, redirecionando a saída para um arquivo de log."
+        ;;
+esac
+
+end 0
