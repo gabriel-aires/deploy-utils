@@ -1,7 +1,8 @@
 #!/bin/bash
 
 case "$1" in
-    --reconfigure) $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || exit 1 ;;
+    --reconfigure) $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh && echo "Reconfigurando serviço..." || exit 1 ;;
+    '') echo "Configurando serviço..."
     *)  echo "Argumento inválido" && exit 1 ;;
 esac
 
@@ -50,8 +51,8 @@ chown $apache_user:$apache_group $src_dir/server/cgi/* || exit 1
 chgrp $apache_group $service_init_script || exit 1
 
 #restart services
-$apache_init_script restart > /dev/null || exit 1
-$service_init_script restart > /dev/null || exit 1
+$apache_init_script restart || exit 1
+$service_init_script restart || exit 1
 
 echo "Instalação concluída."
 exit 0
