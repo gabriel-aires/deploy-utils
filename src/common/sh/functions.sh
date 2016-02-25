@@ -51,13 +51,10 @@ function lock () {                                            #argumentos: nome_
         local msg="$2"
         local lock_time=0
 
-        # em modo não interativo, aguardar limpeza do lockfile
-        if ! $interactive; then
-            while [ -f "$lock_dir/$lockfile" ] && [ $lock_time -le $lock_timeout ]; do
-                sleep 1
-                ((lock_time++))
-            done
-        fi
+        while [ -f "$lock_dir/$lockfile" ] && [ $lock_time -le $lock_timeout ]; do
+            sleep 1
+            ((lock_time++))
+        done
 
         if [ -f "$lock_dir/$lockfile" ]; then
             case $verbosity in
