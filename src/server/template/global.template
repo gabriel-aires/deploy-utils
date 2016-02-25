@@ -25,6 +25,8 @@ max_running=
 app_log_max=
 global_history_size=
 cron_log_size=
+# Daemon
+service_init_script=
 # Web
 apache_daemon=
 apache_user=
