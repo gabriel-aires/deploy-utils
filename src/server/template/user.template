@@ -1,6 +1,7 @@
 # Opções de deploy padrão
 modo_padrao=
 rsync_opts=
+max_running=
 lock_timeout=
 # Expurgo de logs
 app_log_max=

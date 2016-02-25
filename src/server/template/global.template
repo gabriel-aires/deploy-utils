@@ -21,6 +21,7 @@ cifs_credentials=
 cifs_opts=
 rsync_opts=
 max_running=
+lock_timeout=
 # Expurgo de logs
 app_log_max=
 global_history_size=
