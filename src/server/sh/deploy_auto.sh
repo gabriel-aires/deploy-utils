@@ -48,11 +48,13 @@ while read ambiente; do
 
     if [ -n "$(cat $tmp_dir/lista_aplicacoes)" ]; then
 
+        log "INFO" "Iniciando deploys automáticos no ambiente '$ambiente'\n"
+
         while read aplicacao; do
 
             seconds=$(date +%s)
             echo '' > $tmp_dir/deploy_$seconds.log
-            log "INFO" "DEPLOY ($aplicacao $ambiente)\n" &>> $tmp_dir/deploy_$seconds.log
+            log "INFO" "DEPLOY (aplicacao:$aplicacao ambiente:$ambiente)\n" &>> $tmp_dir/deploy_$seconds.log
             nohup $install_dir/sh/deploy_pages.sh -f $aplicacao auto $ambiente &>> $tmp_dir/deploy_$seconds.log &
             sleep 1
 
