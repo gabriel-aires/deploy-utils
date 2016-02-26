@@ -60,7 +60,7 @@ chgrp $apache_group $service_init_script || exit 1
 chgrp -R $apache_group $history_dir || exit 1
 chgrp -R $apache_group $work_dir || exit 1
 chgrp -R $apache_group $lock_dir || exit 1
-chgrp -R $apache_user:$apache_group $src_dir/server/cgi || exit 1
+chgrp -R $apache_group $src_dir/server/cgi || exit 1
 
 #restart services
 $apache_init_script restart || exit 1
