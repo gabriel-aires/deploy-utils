@@ -42,10 +42,14 @@ cp -f $install_dir/template/service.template $service_init_script || exit 1
 sed -i -r "s|@src_dir|$src_dir|" $service_init_script
 sed -i -r "s|@daemon_log|$history_dir/$service_log_file|" $service_init_script
 
+#create history_dir
+mkdir -p $history_dir || exit 1
+
 #setup owner/permissions
 chmod 755 $src_dir/common/sh/query_file.sh || exit 1
 chmod 755 $src_dir/server/cgi/* || exit 1
 chmod 755 $service_init_script || exit 1
+chmod -R 775 $history_dir || exit 1
 chgrp $apache_group $src_dir/common/sh/query_file.sh || exit 1
 chown $apache_user:$apache_group $src_dir/server/cgi/* || exit 1
 chgrp $apache_group $service_init_script || exit 1
