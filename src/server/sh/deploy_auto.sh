@@ -6,6 +6,44 @@ lock_history=false
 interactive=false
 execution_mode="server"
 verbosity="quiet"
+running=0
+
+function async_deploy() {
+
+    test "$#" -lt "$4" && return 1
+    test "$#" -gt "$5" && return 1
+    test ! -d "$tmp_dir" && return 1
+
+    local options="$1"
+    local app_name="$2"
+    local rev_name="$3"
+    local env_name="$4"
+    local out_name="$5"
+
+    miliseconds=$(date +%s%3N)
+    echo '' > $tmp_dir/deploy_$miliseconds.log
+    log "INFO" "DEPLOY (opts:$options app:$app_name rev:$rev_name env:$env_name out:$out_name)\n" &>> $tmp_dir/deploy_$miliseconds.log
+
+    if [ -z "$out_name" ]; then
+        nohup $install_dir/sh/deploy_pages.sh "$options" "$app_name" "$rev_name" "$env_name" &>> $tmp_dir/deploy_$miliseconds.log &
+    else
+        touch &>> "$out_name" || return 1
+        nohup $install_dir/sh/deploy_pages.sh "$options" "$app_name" "$rev_name" "$env_name" &>> "$out_name" &
+    fi
+
+    sleep 0.001
+
+    ((running++))
+    if [ "$running" -eq "$max_running" ]; then
+        wait
+        running=0
+        find $tmp_dir/ -maxdepth 1 -type f -iname 'deploy_*.log' | sort | xargs cat
+        rm -f $tmp_dir/*.log
+    fi
+
+    return 0
+
+}
 
 function end {
 
@@ -39,7 +77,6 @@ fi
 lock 'deploy_auto' "Rotina de deploy automático em andamento..."
 mkdir -p $tmp_dir
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
-running=0
 
 while read ambiente; do
 
@@ -52,18 +89,7 @@ while read ambiente; do
 
         while read aplicacao; do
 
-            seconds=$(date +%s)
-            echo '' > $tmp_dir/deploy_$seconds.log
-            log "INFO" "DEPLOY (aplicacao:$aplicacao ambiente:$ambiente)\n" &>> $tmp_dir/deploy_$seconds.log
-            nohup $install_dir/sh/deploy_pages.sh -f $aplicacao auto $ambiente &>> $tmp_dir/deploy_$seconds.log &
-            sleep 1
-
-            ((running++))
-            if [ "$running" -eq "$max_running" ]; then
-                wait
-                find $tmp_dir/ -maxdepth 1 -type f -iname 'deploy_*.log' | sort | xargs cat
-                rm -f $tmp_dir/*.log
-            fi
+            async_deploy "-f" "$aplicacao" "auto" "$ambiente"
 
         done < "$tmp_dir/lista_aplicacoes"
 
