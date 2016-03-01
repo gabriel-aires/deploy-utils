@@ -105,7 +105,7 @@ else
                 echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
                 ! $show_param && echo "$key" | grep -Ex ".*_$ENV_NAME" > /dev/null && show_param=true
                 $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
-            done < "$app_conf_dir/$APP.conf"
+            done < "$app_conf_dir/$APP_NAME.conf"
             echo "              </table>"
             echo "      </p>"
 
@@ -136,7 +136,7 @@ else
 
                 echo "      <p>"
                 echo "              <table>"
-                cat "$deploy_out" | sed -r "|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
+                cat "$deploy_out" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
                 echo "      </p>"
 
