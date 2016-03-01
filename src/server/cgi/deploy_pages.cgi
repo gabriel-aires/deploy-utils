@@ -147,7 +147,7 @@ else
 
                 echo "      <p>"
                 echo "              <table>"
-                cat "$deploy_out" | sed -r "|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
+                cat "$deploy_out" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
                 echo "      </p>"
 
