@@ -21,12 +21,10 @@ function tasks () {
 
     mkdir -p $tmp_dir
 
-    ### Executar rotina de deploys automáticos (no máximo um processo rodando em plano de fundo)
+    ### Processar fila de deploys
 
     auto_running=$(pgrep -f $install_dir/sh/deploy_auto.sh | wc -l)
     test "$auto_running" -eq 0 && $install_dir/sh/deploy_auto.sh &
-
-    ### Executar deploys solicitados via browser (pendente)
 
     ### Expurgo de logs
 

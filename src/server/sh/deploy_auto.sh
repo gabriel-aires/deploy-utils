@@ -67,8 +67,6 @@ function end {
 
 trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
-## Deploy em todos os ambientes ##
-
 if [ -z "$ambientes" ]; then
     echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
     exit 1
@@ -83,6 +81,8 @@ lock 'deploy_auto' "Rotina de deploy automático em andamento..."
 mkdir -p $tmp_dir
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
 
+# Identifica deploys automáticos
+
 while read ambiente; do
 
     grep -REl "^auto_$ambiente='1'$" $app_conf_dir > $tmp_dir/lista_aplicacoes
@@ -90,11 +90,11 @@ while read ambiente; do
 
     if [ -n "$(cat $tmp_dir/lista_aplicacoes)" ]; then
 
-        log "INFO" "Iniciando deploys automáticos no ambiente '$ambiente'\n"
+        log "INFO" "Identificando deploys automáticos no ambiente '$ambiente'...\n"
 
         while read aplicacao; do
 
-            async_deploy "-f" "$aplicacao" "auto" "$ambiente"
+            echo "-f" "$aplicacao" "auto" "$ambiente" >> "$deploy_queue"
 
         done < "$tmp_dir/lista_aplicacoes"
 
@@ -106,9 +106,9 @@ while read ambiente; do
 
 done < "$tmp_dir/lista_ambientes"
 
-## Deploy web ##
+# Executa todos os deploys da fila.
 
-log "INFO" "Iniciando deploys solicitados pela interface web\n"
+log "INFO" "Processando fila de deploys...\n"
 
 while read deploy_args; do
 
