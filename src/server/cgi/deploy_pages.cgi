@@ -42,7 +42,7 @@ PROCEED_VIEW="Continuar"
 PROCEED_SIMULATION="Simular"
 PROCEED_DEPLOY="Deploy"
 
-if [ -z "$POST_STRING"]; then
+if [ -z "$POST_STRING" ]; then
 
     #Formulário deploy
     echo "      <p>"

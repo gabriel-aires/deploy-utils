@@ -44,6 +44,7 @@ sed -i -r "s|@daemon_log|$history_dir/$service_log_file|" $service_init_script
 
 #create directories
 mkdir -p $history_dir || exit 1
+mkdir -p $app_conf_dir || exit 1
 mkdir -p $work_dir || exit 1
 mkdir -p $lock_dir || exit 1
 
@@ -57,6 +58,7 @@ chmod 755 $src_dir/common/sh/query_file.sh || exit 1
 chmod 755 $service_init_script || exit 1
 chmod 770 $deploy_queue || exit 1
 chmod 775 $history_dir || exit 1
+chmod 775 $app_conf_dir || exit 1
 chmod 775 $work_dir || exit 1
 chmod 775 $lock_dir || exit 1
 chmod 755 $src_dir/server/cgi/* || exit 1
@@ -65,6 +67,7 @@ chgrp $apache_group $src_dir/common/sh/query_file.sh || exit 1
 chgrp $apache_group $service_init_script || exit 1
 chgrp $apache_group $deploy_queue
 chgrp -R $apache_group $history_dir || exit 1
+chgrp -R $apache_group $app_conf_dir || exit 1
 chgrp -R $apache_group $work_dir || exit 1
 chgrp -R $apache_group $lock_dir || exit 1
 chgrp -R $apache_group $src_dir/server/cgi || exit 1
