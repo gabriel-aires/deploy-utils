@@ -49,21 +49,21 @@ if [ -z "$POST_STRING"]; then
     echo "          <form action=\"$STARTPAGE\" method=\"post\">"
 
     echo "              <p>"
-    echo "      		    <select name=\"$APP_PARAM\">"
+    echo "      		    <select width=\"50\" name=\"$APP_PARAM\">"
     echo "		        	<option value=\"\" selected>Sistema...</option>"
     find $app_conf_dir/ -mindepth 1 -maxdepth 1 -type f -name '*.conf' | sort | xargs -I{} -d '\n' basename {} | cut -f1 -d '.' | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		            </select>"
     echo "              </p>"
 
     echo "              <p>"
-    echo "      		<select name=\"$ENV_PARAM\">"
+    echo "      		<select width=\"50\" name=\"$ENV_PARAM\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
     cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
 
     echo "              <p>"
-    echo "              <input type=\"text\" name=\"$REV_PARAM\"></input></td></tr>"
+    echo "              <input type=\"text\" width=\"50\" name=\"$REV_PARAM\">Revisão...</input></td></tr>"
     echo "              </p>"
 
     echo "              <p>"
