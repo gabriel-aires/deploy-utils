@@ -81,7 +81,7 @@ else
     ENV_NAME=$(echo "$ARG_STRING" | sed -rn "s/^.*&$ENV_PARAM=([^\&]+)&.*$/\1/p")
     PROCEED=$(echo "$ARG_STRING" | sed -rn "s/^.*&PROCEED=([^\&]+)&.*$/\1/p")
 
-    if [ -n "$APP_NAME" ] && [ -n $REV_NAME] && [ -n "$ENV_NAME" ] && [ -n "$PROCEED" ]; then
+    if [ -n "$APP_NAME" ] && [ -n "$REV_NAME" ] && [ -n "$ENV_NAME" ] && [ -n "$PROCEED" ]; then
 
         if [ "$PROCEED" == "$PROCEED_VIEW" ]; then
 
