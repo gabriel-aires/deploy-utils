@@ -234,13 +234,12 @@ function valid () {
             eval "$exit_cmd"
 
         elif "$interactive"; then
-            edit_var=0
+
             while [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; do
                 paint 'fg' 'yellow'
                 echo -e "$msg"
                 paint 'default'
                 read -p "$nome_var: " -e -r $nome_var
-                edit_var=1
                 valor="echo \$${nome_var}"
                 valor="$(eval $valor)"
             done

@@ -85,25 +85,18 @@ elif [ -n "$POST_STRING" ]; then
     if [ -n "$APP_NAME" ]; then
 
         if [ "$SAVE" == "$SAVE_VALUE" ]; then
-
             test -f $app_conf_dir/$APP_NAME.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$APP_NAME.conf"
             lock "$APP_NAME" "Aplicação $APP_NAME bloqueada para edição"
 
             while read l; do
-                edit_var=0
                 key="$(echo "$l" | cut -f1 -d '=')"
-                old_value="$(echo "$l" | sed -rn "s/^$key=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
                 new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                test "$new_value" != "$old_value" && edit_var=1
                 editconf "$key" "$new_value" "$app_conf_dir/$APP_NAME.conf"
             done < "$app_conf_dir/$APP_NAME.conf"
 
-            echo "      <p>"
-            echo "          <b>Parâmetros da aplicação $APP_NAME atualizados.</b>"
-            echo "      </p>"
+            echo "      <p><b>Parâmetros da aplicação $APP_NAME atualizados.</b></p>"
 
         elif [ "$ERASE" == "$ERASE_VALUE" ]; then
-
             echo "      <p>"
             echo "          <b>Tem certeza de que deseja remover os parâmetros da aplicação $APP_NAME?</b>"
             echo "          <form action=\"$STARTPAGE\" method=\"post\">"
@@ -114,29 +107,17 @@ elif [ -n "$POST_STRING" ]; then
             echo "      </p>"
 
         elif [ "$ERASE" == "$ERASE_YES" ]; then
-
             rm -f "$app_conf_dir/$APP_NAME.conf"
-
-            echo "      <p>"
-            echo "          <b>Parâmetros da aplicação $APP_NAME removidos.</b>"
-            echo "      </p>"
+            echo "      <p><b>Parâmetros da aplicação $APP_NAME removidos.</b></p>"
 
         elif [ "$ERASE" == "$ERASE_NO" ]; then
-
-            echo "      <p>"
-            echo "          <b>Deleção dos parâmetros da aplicação $APP_NAME cancelada.</b>"
-            echo "      </p>"
+            echo "      <p><b>Deleção dos parâmetros da aplicação $APP_NAME cancelada.</b></p>"
 
         fi
 
     else
-
-        echo "      <p>"
-        echo "          <b>Erro. O parâmetro 'app' deve ser preenchido.</b>"
-        echo "      </p>"
-
+        echo "      <p><b>Erro. O parâmetro 'app' deve ser preenchido.</b></p>"
     fi
-
 fi
 
 #Links

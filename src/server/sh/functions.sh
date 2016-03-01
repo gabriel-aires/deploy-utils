@@ -31,21 +31,25 @@ function web_filter() {   # Filtra o input de formulários cgi
 
 function editconf () {      # Atualiza entrada em arquivo de configuração
 
-    if [ -n "$1" ] && [ -n "$3" ] && [ -n "$edit_var" ]; then
-        campo="$1"
-        valor_campo="$2"
-        arquivo_conf="$3"
+    local exit_cmd="end 1 2> /dev/null || exit 1"
+    local campo="$1"
+    local valor_campo="$2"
+    local arquivo_conf="$3"
 
-        touch $arquivo_conf
+    if [ -n "$campo" ] && [ -n "$valor_campo" ]; then
+
+        touch $arquivo_conf || eval "$exit_cmd"
 
         if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
             sed -i -r "/^$campo\=.*$/d" "$arquivo_conf"
             echo "$campo='$valor_campo'" >> "$arquivo_conf"
         else
-            test "$edit_var" -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
+            grep -Ex "$campo='$valor_campo'|$campo=\"$valor_campo\"" "$arquivo_conf" > /dev/null
+            test "$?" -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
         fi
+
     else
-        echo "Erro. Não foi possível editar o arquivo de configuração." && end 1
+        echo "Erro. Não foi possível editar o arquivo de configuração." && $exit_cmd
     fi
 
 }

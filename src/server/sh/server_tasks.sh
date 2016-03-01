@@ -95,11 +95,6 @@ function end {
 
 trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
-if [ -z "$ambientes" ]; then
-    echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
-    exit 1
-fi
-
 lock 'server_tasks' "A rotina já está em execução."
 
 valid "service_log_size" "regex_qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas."

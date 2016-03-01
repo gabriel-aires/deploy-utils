@@ -67,11 +67,16 @@ function end {
 
 trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
-##################### Deploy em todos os ambientes #####################
+## Deploy em todos os ambientes ##
 
 if [ -z "$ambientes" ]; then
     echo 'Favor preencher corretamente o arquivo global.conf e tentar novamente.'
     exit 1
+fi
+
+if [ ! -p "$deploy_queue" ]; then
+    echo 'Arquivo de fila de deploy inexistente.'
+    exit
 fi
 
 lock 'deploy_auto' "Rotina de deploy automático em andamento..."
@@ -100,5 +105,21 @@ while read ambiente; do
     fi
 
 done < "$tmp_dir/lista_ambientes"
+
+## Deploy web ##
+
+log "INFO" "Iniciando deploys iniciados pela interface web\n"
+
+while read deploy_args; do
+
+     opt_string=$(echo "$deploy_args" | cut -f1 -d ' ')
+     app_string=$(echo "$deploy_args" | cut -f2 -d ' ')
+     rev_string=$(echo "$deploy_args" | cut -f3 -d ' ')
+     env_string=$(echo "$deploy_args" | cut -f4 -d ' ')
+     out_string=$(echo "$deploy_args" | cut -f5 -d ' ')
+
+     async_deploy "$opt_string" "$app_string" "$rev_string" "$env_string" "$out_string"
+
+done < "$deploy_queue"
 
 end 0

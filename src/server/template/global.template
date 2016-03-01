@@ -28,6 +28,7 @@ global_history_size=
 service_log_size=
 # Daemon
 service_init_script=
+deploy_queue=
 # Web
 apache_daemon=
 apache_user=
