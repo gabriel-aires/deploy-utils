@@ -4,6 +4,53 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/include.sh || exit 1
 
+function cat_eof() {
+    if [ -r "$1" ] && [ -n "$2" ]; then
+
+        local file="$1"
+        local eof_msg="$2"
+        local eof=false
+        local t=0
+        local timeout=10                    # tempo máximo para variação no tamanho do arquivo.
+        local size=$(cat "$file" | wc -l)
+        local oldsize="$size"
+        local line
+
+        sed -n "1,${size}p" "$file" > $tmp_dir/file_part
+        grep -x "$eof_msg" $tmp_dir/file_part  > /dev/null && eof=true
+
+        while ! $eof; do
+
+            size=$(cat $file | wc -l)
+
+            if [ "$size" -gt "$oldsize" ]; then
+
+                t=0
+                sed -n "$((oldsize+1)),${size}p" "$file" >> $tmp_dir/file_part
+                oldsize="$size"
+                grep -x "$eof" $tmp_dir/file_part > /dev/null && eof=true
+
+            else
+                sleep 1 && ((t++))
+            fi
+
+            test $t -ge $timeout && break
+
+        done
+
+        while read line; do
+            test "$line" != "$eof_msg" && echo "$line" || break
+        done < $tmp_dir/file_part
+
+        rm -f $tmp_dir/file_part
+
+    else
+        return 1
+    fi
+
+    return 0
+}
+
 function end() {
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
         rm -f $tmp_dir/*
@@ -121,30 +168,32 @@ else
 
         else
 
+            test -p "$deploy_queue" || end 1
+
             deploy_options="-f"
             deploy_out="$tmp_dir/deploy.out"
-            deploy_in="$deploy_queue"
-
-            test -p $deploy_in || end 1
-            mkfifo "$deploy_out" || end 1
+            touch $deploy_out
 
             if [ "$PROCEED" == "$PROCEED_SIMULATION" ]; then
 
                 ### Simular deploy
                 deploy_options="${deploy_options}n"
+                echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in"
 
                 echo "      <p>"
                 echo "              <table>"
-                echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in" && cat "$deploy_out" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
+                cat_eof "$deploy_out" "$end_msg" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
                 echo "      </p>"
 
             elif [ "$PROCEED" == "$PROCEED_DEPLOY" ]; then
 
                 ### Executar deploy
+                echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in"
+
                 echo "      <p>"
                 echo "              <table>"
-                echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in" && cat "$deploy_out" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
+                cat_eof "$deploy_out" "$end_msg" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
                 echo "      </p>"
 

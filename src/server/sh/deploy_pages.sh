@@ -361,12 +361,13 @@ function end () {
 
     fi
 
-    wait
+    wait    
     clean_locks
     clean_temp
     wait
 
     paint 'default'
+    echo -e "\n$end_msg"
 
     exit $erro
 }
