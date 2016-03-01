@@ -36,7 +36,7 @@ function editconf () {      # Atualiza entrada em arquivo de configuração
     local valor_campo="$2"
     local arquivo_conf="$3"
 
-    if [ -n "$campo" ] && [ -n "$valor_campo" ]; then
+    if [ -n "$campo" ] && [ -n "$arquivo_conf" ]; then
 
         touch $arquivo_conf || eval "$exit_cmd"
 
