@@ -132,22 +132,19 @@ else
 
                 ### Simular deploy
                 deploy_options="${deploy_options}n"
-                echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in"
 
                 echo "      <p>"
                 echo "              <table>"
-                cat "$deploy_out" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
+                echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in" && cat "$deploy_out" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
                 echo "      </p>"
 
             elif [ "$PROCEED" == "$PROCEED_DEPLOY" ]; then
 
                 ### Executar deploy
-                echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in"
-
                 echo "      <p>"
                 echo "              <table>"
-                cat "$deploy_out" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
+                echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in" && cat "$deploy_out" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
                 echo "      </p>"
 
