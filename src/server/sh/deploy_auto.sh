@@ -10,8 +10,8 @@ running=0
 
 function async_deploy() {
 
-    test "$#" -lt "$4" && return 1
-    test "$#" -gt "$5" && return 1
+    test "$#" -lt "4" && return 1
+    test "$#" -gt "5" && return 1
     test ! -d "$tmp_dir" && return 1
 
     local options="$1"

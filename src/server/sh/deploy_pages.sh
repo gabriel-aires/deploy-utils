@@ -165,7 +165,7 @@ function deploy () {
     echo -e "Diretórios removidos ............... $dir_removido\n" >> $deploy_log_dir/resumo_$host.txt
     echo -e "Total de operações de arquivos ..... $total_arq" >> $deploy_log_dir/resumo_$host.txt
     echo -e "Total de operações de diretórios ... $total_dir" >> $deploy_log_dir/resumo_$host.txt
-    echo -e "Total de operações de exclusão ..... $total_del" >> $deploy_log_dir/resumo_$host.txt
+    echo -e "Total de operações de exclusão ..... $total_del\n" >> $deploy_log_dir/resumo_$host.txt
 
     cat $deploy_log_dir/resumo_$host.txt
 
