@@ -182,7 +182,7 @@ else
 
                 echo "      <p>"
                 echo "              <table>"
-                cat_eof "$deploy_out" "$end_msg" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
+                cat_eof "$deploy_out" "$end_msg" | sed -r "s|^$|<br>|" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
                 echo "      </p>"
 
@@ -193,7 +193,7 @@ else
 
                 echo "      <p>"
                 echo "              <table>"
-                cat_eof "$deploy_out" "$end_msg" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
+                cat_eof "$deploy_out" "$end_msg" | sed -r "s|^$|<br>|" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
                 echo "      </p>"
 
