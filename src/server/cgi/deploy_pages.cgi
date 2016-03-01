@@ -131,7 +131,7 @@ else
             if [ "$PROCEED" == "$PROCEED_SIMULATION" ]; then
 
                 ### Simular deploy
-                deploy_options="$deploy_options -n"
+                deploy_options="${deploy_options}n"
                 echo "$deploy_options" "$APP_NAME" "$REV_NAME" "$ENV_NAME" "$deploy_out" >> "$deploy_in"
 
                 echo "      <p>"
