@@ -63,7 +63,7 @@ if [ -z "$POST_STRING"]; then
     echo "              </p>"
 
     echo "              <p>"
-    echo "              <input type=\"text\" width=\"50\" name=\"$REV_PARAM\">Revisão...</input></td></tr>"
+    echo "              <input type=\"text\" width=\"50\" name=\"$REV_PARAM\" value=\"Revisão...\"></input>"
     echo "              </p>"
 
     echo "              <p>"
