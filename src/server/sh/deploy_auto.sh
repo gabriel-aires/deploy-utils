@@ -27,7 +27,7 @@ function async_deploy() {
     if [ -z "$out_name" ]; then
         nohup $install_dir/sh/deploy_pages.sh "$options" "$app_name" "$rev_name" "$env_name" &>> $tmp_dir/deploy_$miliseconds.log &
     else
-        touch &>> "$out_name" || return 1
+        touch "$out_name" || return 1
         nohup $install_dir/sh/deploy_pages.sh "$options" "$app_name" "$rev_name" "$env_name" &>> "$out_name" &
     fi
 
@@ -108,7 +108,7 @@ done < "$tmp_dir/lista_ambientes"
 
 ## Deploy web ##
 
-log "INFO" "Iniciando deploys iniciados pela interface web\n"
+log "INFO" "Iniciando deploys solicitados pela interface web\n"
 
 while read deploy_args; do
 
