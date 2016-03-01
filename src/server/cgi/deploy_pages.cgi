@@ -39,7 +39,8 @@ function cat_eof() {
         done
 
         while read line; do
-            test "$line" != "$eof_msg" && echo "$line" || break
+            echo "$line"
+            test "$line" == "$eof_msg" && break
         done < $tmp_dir/file_part
 
         rm -f $tmp_dir/file_part
