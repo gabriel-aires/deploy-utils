@@ -11,13 +11,14 @@ function cat_eof() {
         local eof_msg="$2"
         local eof=false
         local t=0
+        local n=0
         local timeout=10                    # tempo máximo para variação no tamanho do arquivo.
         local size=$(cat "$file" | wc -l)
         local oldsize="$size"
         local line
 
-        sed -n "1,${size}p" "$file" > $tmp_dir/file_part
-        grep -x "$eof_msg" $tmp_dir/file_part  > /dev/null && eof=true
+        sed -n "1,${size}p" "$file" > $tmp_dir/file_part_$n
+        grep -x "$eof_msg" $tmp_dir/file_part_$n  > /dev/null && eof=true || cat $tmp_dir/file_part_$n
 
         while ! $eof; do
 
@@ -26,9 +27,11 @@ function cat_eof() {
             if [ "$size" -gt "$oldsize" ]; then
 
                 t=0
-                sed -n "$((oldsize+1)),${size}p" "$file" >> $tmp_dir/file_part
+                rm -f $tmp_dir/file_part_$n
+                ((n++))
+                sed -n "$((oldsize+1)),${size}p" "$file" > $tmp_dir/file_part_$n
                 oldsize="$size"
-                grep -x "$eof" $tmp_dir/file_part > /dev/null && eof=true
+                grep -x "$eof" $tmp_dir/file_part_$n > /dev/null && eof=true || cat $tmp_dir/file_part_$n
 
             else
                 sleep 1 && ((t++))
@@ -41,9 +44,9 @@ function cat_eof() {
         while read line; do
             echo "$line"
             test "$line" == "$eof_msg" && break
-        done < $tmp_dir/file_part
+        done < $tmp_dir/file_part_$n
 
-        rm -f $tmp_dir/file_part
+        rm -f $tmp_dir/file_part_$n
 
     else
         return 1
