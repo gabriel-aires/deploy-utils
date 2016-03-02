@@ -62,7 +62,7 @@ function web_query_history () {
             page=1
             next=2
             prev=0
-            next_uri="$start_page?p=$NEXT"
+            next_uri="$start_page?p=$next"
         else
             page=$(echo "$arg_string" | sed -rn "s/^.*&p=([^\&]+)&.*$/\1/p")
             test -z "$page" && page=1
@@ -70,10 +70,10 @@ function web_query_history () {
             next=$(($page+1))
             prev=$(($page-1))
 
-            next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*&?p=)$page(.*)$/\1$next\2/p")"
+            next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$next\2/p")"
             test -z "$next_uri" && next_uri="$REQUEST_URI&p=$next"
 
-            prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*&?p=)$page(.*)$/\1$prev\2/p")"
+            prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$prev\2/p")"
             test -z "$prev_uri" && prev_uri="$REQUEST_URI&p=$prev"
         fi
 
