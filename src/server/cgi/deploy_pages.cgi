@@ -12,7 +12,7 @@ function cat_eof() {
         local eof=false
         local t=0
         local n=0
-        local timeout=10                    # tempo máximo para variação no tamanho do arquivo.
+        local timeout=60                    # tempo máximo para variação no tamanho do arquivo.
         local size=$(cat "$file" | wc -l)
         local oldsize="$size"
         local line
@@ -37,7 +37,7 @@ function cat_eof() {
                 sleep 1 && ((t++))
             fi
 
-            test $t -ge $timeout && break
+            test $t -ge $timeout && echo 'TIMEOUT' && break
 
         done
 
@@ -188,6 +188,15 @@ else
                 echo "              <table>"
                 cat_eof "$deploy_out" "$end_msg" | sed -r "s|^$|<br>|" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
                 echo "              </table>"
+                echo "      </p>"
+
+                echo "      <p>"
+                echo "          <form action=\"$STARTPAGE\" method=\"post\">"
+                echo "              <input type=\"hidden\" name=\"$APP_PARAM\" value=\"$APP_NAME\"></td></tr>"
+                echo "              <input type=\"hidden\" name=\"$REV_PARAM\" value=\"$REV_NAME\"></td></tr>"
+                echo "              <input type=\"hidden\" name=\"$ENV_PARAM\" value=\"$ENV_NAME\"></td></tr>"
+                echo "              <input type=\"submit\" name=\"PROCEED\" value=\"$PROCEED_DEPLOY\">"
+                echo "          </form>"
                 echo "      </p>"
 
             elif [ "$PROCEED" == "$PROCEED_DEPLOY" ]; then
