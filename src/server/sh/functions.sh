@@ -78,11 +78,10 @@ function web_query_history () {
         fi
 
         data_size=$(($(cat "$table_content" | wc -l)-1))
-        test $data_size -lt $html_table_size && print_size=$data_size || print_size=$html_table_size
-
         min_page=1
         max_page=$(($data_size/$html_table_size))
-
+        test $(($max_page*html_table_size)) -lt $data_size && ((max_page++))
+        test $page -eq $max_page && print_size=$(($html_table_size-($html_table_size*$max_page-$data_size))) || print_size=$html_table_size
         nav="$page"
 
         if [ $next -le $max_page ]; then
