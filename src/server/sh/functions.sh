@@ -29,6 +29,108 @@ function web_filter() {   # Filtra o input de formulários cgi
 
 }
 
+function web_header () {
+
+    test "$(basename $SCRIPT_NAME)" == 'index.cgi' && start_page="$(dirname $SCRIPT_NAME)/" || start_page="$SCRIPT_NAME"
+    page_name=$(basename $SCRIPT_NAME | cut -f1 -d '.')
+    page_title="$(eval "echo \$cgi_${page_name}_title")"
+
+    echo 'Content-type: text/html'
+    echo ''
+    echo '<html>'
+    echo '  <head>'
+    echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
+    echo "  <title>$page_title</title"
+    echo '  </head>'
+    echo '  <body>'
+    echo "      <h1>$page_title</h1>"
+
+    return 0
+}
+
+function web_query_history () {
+
+    file=$history_dir/$history_csv_file
+
+    if [ -f "$file" ]; then
+
+        export 'SELECT' 'DISTINCT' 'TOP' 'WHERE' 'ORDERBY'
+        table_content="$tmp_dir/html_table"
+        $install_dir/cgi/table_data.cgi $file > $table_content
+
+        if [ -z "$QUERY_STRING" ]; then
+            page=1
+            next=2
+            prev=0
+            next_uri="$start_page?p=$NEXT"
+        else
+            page=$(echo "$arg_string" | sed -rn "s/^.*&p=([^\&]+)&.*$/\1/p")
+            test -z "$page" && PAGE=1
+
+            next=$(($page+1))
+            prev=$(($page-1))
+
+            next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*&?p=)$page(.*)$/\1$next\2/p")"
+            test -z "$next_uri" && next_uri="$REQUEST_URI&p=$next"
+
+            prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*&?p=)$page(.*)$/\1$prev\2/p")"
+            test -z "$prev_uri" && prev_uri="$REQUEST_URI&p=$prev"
+        fi
+
+        data_size=$(($(cat "$table_content" | wc -l)-1))
+        test $data_size -lt $html_table_size && print_size=$data_size || print_size=$html_table_size
+
+        min_page=1
+        max_page=$(($data_size/$html_table_size))
+
+        nav="$page"
+
+        if [ $next -le $max_page ]; then
+            nav="$nav <a href=\"$next_uri\" style=\"color:black\">$next</a>"
+        fi
+
+        if [ $prev -ge $min_page ]; then
+            nav="<a href=\"$prev_uri\" style=\"color:black\">$prev</a> $nav"
+        fi
+
+        echo "      <p>"
+        echo "          <table cellpadding=5 width=100% style=\"$html_table_style\">"
+        head -n 1 "$table_content"
+        head -n $((($page*$html_table_size)+1)) "$table_content" | tail -n "$print_size"
+        echo "          </table>"
+        echo "      </p>"
+
+        navbar="<td style=\"text-align:right\">Página: $nav</td>"
+
+    else
+
+        echo "<p>Arquivo de histórico inexistente</p>"
+        end 1
+
+    fi
+
+    return 0
+}
+
+function web_footer () {
+
+    mklist "$cgi_public_pages" $tmp_dir/cgi_public_pages
+
+    echo "      <table width=100% style=\"text-align:left;color:black\">"
+    echo "          <tr> <td><br></td> </tr>"
+    echo "          <tr> <td><a href=\"$start_page\" style=\"color:black\" >Início</a> </td> $navbar </tr>"
+    while read link_name; do
+        link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
+        link_title="$(eval "echo \$cgi_${link_name}_title")"
+        test "$SCRIPT_NAME" != "$link_uri" && echo "          <tr> <td><a href=\"$link_uri\" style=\"color:black\" >"$link_title"</a></td></tr>"
+    done < $tmp_dir/cgi_public_pages
+    echo "          <tr> <td><a href=\"$apache_log_alias\" style=\"color:black\" >Logs</a></td></tr>"
+    echo "      </table>"
+
+    return 0
+
+}
+
 function editconf () {      # Atualiza entrada em arquivo de configuração
 
     local exit_cmd="end 1 2> /dev/null || exit 1"

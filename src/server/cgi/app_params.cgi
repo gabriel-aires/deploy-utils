@@ -17,59 +17,47 @@ function end() {
 }
 
 trap "end 1" SIGQUIT SIGINT SIGHUP EXIT
-
-### HTML
-echo 'Content-type: text/html'
-echo ''
-echo '<html>'
-echo '  <head>'
-echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
-echo "  <title>Parâmetros de aplicação</title"
-echo '  </head>'
-echo '  <body>'
-echo "      <h1>Parâmetros de aplicação</h1>"
-
 mkdir $tmp_dir
-test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
 
-STARTPAGE="$SCRIPT_NAME"
-HOMEPAGE="$(dirname "$STARTPAGE")/"
-APP_PARAM="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
-NEW_PARAM='New'
-SAVE_VALUE='Salvar'
-ERASE_VALUE='Remover'
-ERASE_YES='Sim'
-ERASE_NO='Nao'
+### Cabeçalho
+web_header
+
+# Inicializar variáveis e constantes
+test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
+app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
+new_param='New'
+save_value='Salvar'
+erase_value='Remover'
+erase_yes='Sim'
+erase_no='Nao'
 
 #Combo aplicações
 echo "		<select onchange="javascript:location.href=this.value">"
 echo "			<option value=\"Sistema\">Sistema...</option>"
-echo "			<option value=\"$STARTPAGE?$NEW_PARAM=1\">Registrar nova aplicação...</option>"
-find $app_conf_dir/ -mindepth 1 -maxdepth 1 -type f -name '*.conf' | sort | xargs -I{} -d '\n' basename {} | cut -f1 -d '.' | sed -r "s|(.*)|\t\t<option value=\"$STARTPAGE?$APP_PARAM=\1\">\1</option>|"
+echo "			<option value=\"$start_page?$new_param=1\">Registrar nova aplicação...</option>"
+find $app_conf_dir/ -mindepth 1 -maxdepth 1 -type f -name '*.conf' | sort | xargs -I{} -d '\n' basename {} | cut -f1 -d '.' | sed -r "s|(.*)|\t\t<option value=\"$start_page?$app_param=\1\">\1</option>|"
 echo "		</select>"
 
 if [ -n "$QUERY_STRING" ]; then
 
     # EDITAR PARÂMETROS
 
-    ARG_STRING="&$(web_filter "$QUERY_STRING")&"
-    APP=$(echo "$ARG_STRING" | sed -rn "s/^.*&$APP_PARAM=([^\&]+)&.*$/\1/p")
-    NEW=$(echo "$ARG_STRING" | sed -rn "s/^.*&$NEW_PARAM=([^\&]+)&.*$/\1/p")
+    arg_string="&$(web_filter "$QUERY_STRING")&"
+    app=$(echo "$arg_string" | sed -rn "s/^.*&$app_param=([^\&]+)&.*$/\1/p")
+    new=$(echo "$arg_string" | sed -rn "s/^.*&$new_param=([^\&]+)&.*$/\1/p")
 
     echo "      <p>"
-    echo "          <form action=\"$STARTPAGE\" method=\"post\">"
+    echo "          <form action=\"$start_page\" method=\"post\">"
     echo "              <table>"
-
-    test -f "$app_conf_dir/$APP.conf" && form_file="$app_conf_dir/$APP.conf" || form_file="$install_dir/template/app.template"
+    test -f "$app_conf_dir/$app.conf" && form_file="$app_conf_dir/$app.conf" || form_file="$install_dir/template/app.template"
     while read l; do
         key="$(echo "$l" | cut -f1 -d '=')"
         value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
         echo "              <tr><td>$key:      </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
     done < "$form_file"
-
     echo "              </table>"
-    echo "              <input type=\"submit\" name=\"SAVE\" value=\"$SAVE_VALUE\">"
-    echo "              <input type=\"submit\" name=\"ERASE\" value=\"$ERASE_VALUE\">"
+    echo "              <input type=\"submit\" name=\"save\" value=\"$save_value\">"
+    echo "              <input type=\"submit\" name=\"erase\" value=\"$erase_value\">"
     echo "          </form>"
     echo "      </p>"
 
@@ -77,41 +65,41 @@ elif [ -n "$POST_STRING" ]; then
 
     # SALVAR/DELETAR PARÂMETROS
 
-    ARG_STRING="&$(web_filter "$POST_STRING")&"
-    APP_NAME=$(echo "$ARG_STRING" | sed -rn "s/^.*&app=([^\&]+)&.*$/\1/p")
-    SAVE=$(echo "$ARG_STRING" | sed -rn "s/^.*&SAVE=([^\&]+)&.*$/\1/p")
-    ERASE=$(echo "$ARG_STRING" | sed -rn "s/^.*&ERASE=([^\&]+)&.*$/\1/p")
+    arg_string="&$(web_filter "$POST_STRING")&"
+    app_name=$(echo "$arg_string" | sed -rn "s/^.*&app=([^\&]+)&.*$/\1/p")
+    save=$(echo "$arg_string" | sed -rn "s/^.*&save=([^\&]+)&.*$/\1/p")
+    erase=$(echo "$arg_string" | sed -rn "s/^.*&erase=([^\&]+)&.*$/\1/p")
 
-    if [ -n "$APP_NAME" ]; then
+    if [ -n "$app_name" ]; then
 
-        if [ "$SAVE" == "$SAVE_VALUE" ]; then
-            test -f $app_conf_dir/$APP_NAME.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$APP_NAME.conf"
-            lock "$APP_NAME" "Aplicação $APP_NAME bloqueada para edição"
+        if [ "$save" == "$save_value" ]; then
+            test -f $app_conf_dir/$app_name.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$app_name.conf"
+            lock "$app_name" "Aplicação $app_name bloqueada para edição"
 
             while read l; do
                 key="$(echo "$l" | cut -f1 -d '=')"
-                new_value="$(echo "$ARG_STRING" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                editconf "$key" "$new_value" "$app_conf_dir/$APP_NAME.conf"
-            done < "$app_conf_dir/$APP_NAME.conf"
+                new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                editconf "$key" "$new_value" "$app_conf_dir/$app_name.conf"
+            done < "$app_conf_dir/$app_name.conf"
 
-            echo "      <p><b>Parâmetros da aplicação $APP_NAME atualizados.</b></p>"
+            echo "      <p><b>Parâmetros da aplicação $app_name atualizados.</b></p>"
 
-        elif [ "$ERASE" == "$ERASE_VALUE" ]; then
+        elif [ "$erase" == "$erase_value" ]; then
             echo "      <p>"
-            echo "          <b>Tem certeza de que deseja remover os parâmetros da aplicação $APP_NAME?</b>"
-            echo "          <form action=\"$STARTPAGE\" method=\"post\">"
-            echo "              <input type=\"hidden\" name=\"app\" value=\"$APP_NAME\"></td></tr>"
-            echo "              <input type=\"submit\" name=\"ERASE\" value=\"$ERASE_YES\">"
-            echo "              <input type=\"submit\" name=\"ERASE\" value=\"$ERASE_NO\">"
+            echo "          <b>Tem certeza de que deseja remover os parâmetros da aplicação $app_name?</b>"
+            echo "          <form action=\"$start_page\" method=\"post\">"
+            echo "              <input type=\"hidden\" name=\"app\" value=\"$app_name\"></td></tr>"
+            echo "              <input type=\"submit\" name=\"erase\" value=\"$erase_yes\">"
+            echo "              <input type=\"submit\" name=\"erase\" value=\"$erase_no\">"
             echo "          </form>"
             echo "      </p>"
 
-        elif [ "$ERASE" == "$ERASE_YES" ]; then
-            rm -f "$app_conf_dir/$APP_NAME.conf"
-            echo "      <p><b>Parâmetros da aplicação $APP_NAME removidos.</b></p>"
+        elif [ "$erase" == "$erase_yes" ]; then
+            rm -f "$app_conf_dir/$app_name.conf"
+            echo "      <p><b>Parâmetros da aplicação $app_name removidos.</b></p>"
 
-        elif [ "$ERASE" == "$ERASE_NO" ]; then
-            echo "      <p><b>Deleção dos parâmetros da aplicação $APP_NAME cancelada.</b></p>"
+        elif [ "$erase" == "$erase_no" ]; then
+            echo "      <p><b>Deleção dos parâmetros da aplicação $app_name cancelada.</b></p>"
 
         fi
 
@@ -121,12 +109,7 @@ elif [ -n "$POST_STRING" ]; then
 fi
 
 #Links
-echo "      <table width=100% style=\"text-align:left;color:black\">"
-echo "          <tr> <td><br></td> </tr>"
-echo "          <tr> <td><a href=\"$STARTPAGE\" style=\"color:black\" >Início</a> </td></tr>"
-echo "          <tr> <td><a href=\"$HOMEPAGE\" style=\"color:black\" >Página Principal</a></td></tr>"
-echo "          <tr> <td><a href=\"$apache_log_alias\" style=\"color:black\" >Logs</a></td></tr>"
-echo "      </table>"
+web_footer
 
 echo '  </body>'
 echo '</html>'
