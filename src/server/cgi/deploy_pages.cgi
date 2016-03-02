@@ -31,7 +31,7 @@ function cat_eof() {
                 ((n++))
                 sed -n "$((oldsize+1)),${size}p" "$file" > $tmp_dir/file_part_$n
                 oldsize="$size"
-                grep -x "$eof" $tmp_dir/file_part_$n > /dev/null && eof=true || cat $tmp_dir/file_part_$n
+                grep -x "$eof_msg" $tmp_dir/file_part_$n > /dev/null && eof=true || cat $tmp_dir/file_part_$n
 
             else
                 sleep 1 && ((t++))
