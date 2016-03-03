@@ -36,7 +36,7 @@ function cat_eof() {
         local eof=false
         local t=0
         local n=0
-        local timeout=60                    # tempo máximo para variação no tamanho do arquivo.
+        local timeout=$(($cgi_timeout*9/10))                    # tempo máximo para variação no tamanho do arquivo: 90% do timeout do apache
         local size=$(cat "$file" | wc -l)
         local oldsize="$size"
         local line
