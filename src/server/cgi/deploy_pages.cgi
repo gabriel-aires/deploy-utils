@@ -85,9 +85,10 @@ function end() {
         rmdir $tmp_dir
     fi
 
+    test -n "$sleep_pid" && kill "$sleep_pid"
     clean_locks
-
     wait
+
     exit $1
 }
 
@@ -178,6 +179,7 @@ else
 
             test -p "$deploy_queue" || end 1
             sleep $cgi_timeout > "$deploy_queue" &
+            sleep_pid=$!
             deploy_options="-f"
             deploy_out="$tmp_dir/deploy.out"
             touch $deploy_out
