@@ -35,7 +35,7 @@ erase_no='Nao'
 # Formulário de pesquisa
 echo "      <p>"
 echo "          <form action=\"$start_page\" method=\"get\">"
-echo "              <table>"
+echo "              <table cellspacing=\"5px\">"
 # Sistema...
 echo "                  <tr>"
 echo "                      <td>Sistema: </td>"
@@ -73,7 +73,7 @@ if [ -n "$QUERY_STRING" ]; then
 
     echo "      <p>"
     echo "          <form action=\"$start_page\" method=\"post\">"
-    echo "              <table frame=\"box\" cellspacing=\"5px\">"
+    echo "              <table frame=\"box\" cellspacing=\"5px\" bgcolor=\"gray\">"
     test -f "$app_conf_dir/$app.conf" && form_file="$app_conf_dir/$app.conf" || form_file="$install_dir/template/app.template"
     while read l; do
         show_param=true
