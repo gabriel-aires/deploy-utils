@@ -177,6 +177,7 @@ else
         else
 
             test -p "$deploy_queue" || end 1
+            sleep $cgi_timeout > "$deploy_queue" &
             deploy_options="-f"
             deploy_out="$tmp_dir/deploy.out"
             touch $deploy_out
@@ -185,7 +186,7 @@ else
 
                 ### Simular deploy
                 deploy_options="${deploy_options}n"
-                echo "$deploy_options" "$app_name" "$rev_name" "$env_name" "$deploy_out" >> "$deploy_queue" &
+                echo "$deploy_options" "$app_name" "$rev_name" "$env_name" "$deploy_out" >> "$deploy_queue"
 
                 echo "      <p>"
                 echo "              <table>"
@@ -198,7 +199,7 @@ else
             elif [ "$proceed" == "$proceed_deploy" ]; then
 
                 ### Executar deploy
-                echo "$deploy_options" "$app_name" "$rev_name" "$env_name" "$deploy_out" >> "$deploy_queue" &
+                echo "$deploy_options" "$app_name" "$rev_name" "$env_name" "$deploy_out" >> "$deploy_queue"
 
                 echo "      <p>"
                 echo "              <table>"
