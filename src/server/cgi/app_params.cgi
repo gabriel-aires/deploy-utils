@@ -35,8 +35,8 @@ erase_no='Nao'
 # Formulário de pesquisa
 echo "      <p>"
 echo "          <form action=\"$start_page\" method=\"get\">"
-# Sistema...
 echo "              <table>"
+# Sistema...
 echo "                  <tr>"
 echo "                      <td width=\"100px\">Sistema: </td>"
 echo "                      <td>"
@@ -46,9 +46,7 @@ find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | sort | xargs -I{} 
 echo "                          </select>"
 echo "                      </td>"
 echo "                  </tr>"
-echo "              </table>"
 # Ambiente...
-echo "              <table>"
 echo "                  <tr>"
 echo "                      <td width=\"100px\">Ambiente: </td>"
 echo "                      <td>"
@@ -58,9 +56,11 @@ cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</opt
 echo "                          </select>"
 echo "                      </td>"
 echo "                  </tr>"
-echo "              </table>"
 # Submit
-echo "              <p><input type=\"submit\" name=\"ok\" value=\"OK\"></p>"
+echo "                  <tr>"
+echo "                      <td><input type=\"submit\" name=\"ok\" value=\"OK\"></td>"
+echo "                  </tr>"
+echo "              </table>"
 echo "          </form>"
 echo "      </p>"
 
@@ -73,6 +73,7 @@ if [ -n "$QUERY_STRING" ]; then
 
     echo "      <p>"
     echo "          <form action=\"$start_page\" method=\"post\">"
+    echo "              <hr>"
     echo "              <table>"
     test -f "$app_conf_dir/$app.conf" && form_file="$app_conf_dir/$app.conf" || form_file="$install_dir/template/app.template"
     while read l; do
@@ -86,6 +87,7 @@ if [ -n "$QUERY_STRING" ]; then
         $show_param && echo "              <tr><td>$key:      </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
     done < "$form_file"
     echo "              </table>"
+    echo "              <hr>"
     echo "              <input type=\"submit\" name=\"save\" value=\"$save_value\">"
     echo "              <input type=\"submit\" name=\"erase\" value=\"$erase_value\">"
     echo "          </form>"
