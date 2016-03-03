@@ -85,9 +85,9 @@ function end() {
         rmdir $tmp_dir
     fi
 
-    test -n "$sleep_pid" && kill "$sleep_pid"
+    test -n "$sleep_pid" && kill "$sleep_pid" 2> /dev/null
     clean_locks
-    wait
+    wait 2> /dev/null
 
     exit $1
 }
