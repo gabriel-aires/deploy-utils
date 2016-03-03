@@ -104,7 +104,6 @@ function web_query_history () {
     else
 
         echo "<p>Arquivo de histórico inexistente</p>"
-        end 1
 
     fi
 
