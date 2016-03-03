@@ -74,7 +74,7 @@ if [ -n "$QUERY_STRING" ]; then
     echo "      <p>"
     echo "          <form action=\"$start_page\" method=\"post\">"
     echo "              <table frame=box cellspacing=\"5px\" style=\"background:#EFF5F5\">"
-    test -f "$app_conf_dir/$app.conf" && form_file="$app_conf_dir/$app.conf" || form_file="$install_dir/template/app.template"
+    test -f "$app_conf_dir/$app_name.conf" && form_file="$app_conf_dir/$app_name.conf" || form_file="$install_dir/template/app.template"
     while read l; do
         show_param=true
         key="$(echo "$l" | cut -f1 -d '=')"
