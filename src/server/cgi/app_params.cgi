@@ -38,7 +38,7 @@ echo "          <form action=\"$start_page\" method=\"get\">"
 echo "              <table>"
 # Sistema...
 echo "                  <tr>"
-echo "                      <td width=\"100px\">Sistema: </td>"
+echo "                      <td>Sistema: </td>"
 echo "                      <td>"
 echo "                          <select style=\"min-width:200px\" name=\"$app_param\">"
 echo "		                        <option value=\"\" selected>Adicionar...</option>"
@@ -48,7 +48,7 @@ echo "                      </td>"
 echo "                  </tr>"
 # Ambiente...
 echo "                  <tr>"
-echo "                      <td width=\"100px\">Ambiente: </td>"
+echo "                      <td>Ambiente: </td>"
 echo "                      <td>"
 echo "                          <select style=\"min-width:200px\" name=\"$env_param\">"
 echo "                              <option value=\"\" selected>Todos</option>"
@@ -73,8 +73,7 @@ if [ -n "$QUERY_STRING" ]; then
 
     echo "      <p>"
     echo "          <form action=\"$start_page\" method=\"post\">"
-    echo "              <fieldset>"
-    echo "                  <table>"
+    echo "              <table frame=\"box\">"
     test -f "$app_conf_dir/$app.conf" && form_file="$app_conf_dir/$app.conf" || form_file="$install_dir/template/app.template"
     while read l; do
         show_param=true
@@ -84,12 +83,10 @@ if [ -n "$QUERY_STRING" ]; then
             echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
             ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
         fi
-        $show_param && echo "                   <tr><td>$key:      </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
+        $show_param && echo "               <tr><td>$key: </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
     done < "$form_file"
-    echo "                  </table>"
-    echo "              </fieldset>"
-    echo "              <input type=\"submit\" name=\"save\" value=\"$save_value\">"
-    echo "              <input type=\"submit\" name=\"erase\" value=\"$erase_value\">"
+    echo "                  <tr><td><input type=\"submit\" name=\"save\" value=\"$save_value\"> <input type=\"submit\" name=\"erase\" value=\"$erase_value\"></td>"
+    echo "              </table>"
     echo "          </form>"
     echo "      </p>"
 
