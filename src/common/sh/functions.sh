@@ -63,16 +63,19 @@ function lock () {                                            #argumentos: nome_
             miliseconds=$(date +%s%3N)
         done
 
-        if [ -f "$lock_dir/$lockfile" ]; then
-            eval "$exit_cmd"
-        else
+        if [ ! -f "$lock_dir/$lockfile" ]; then
             touch "$lock_dir/$lockfile" && echo "$$" >> "$lock_dir/$lockfile"
-            if [ $(cat "$lock_dir/$lockfile" | wc -l) -ne 1 ]; then
-                eval "$exit_cmd"
-            else
+            # se mais de um processo realizar append sobre o lockfile, prevalece o lock do que escreveu a primeira linha.
+            if [ $(head -n 1 "$lock_dir/$lockfile") == "$$" ]; then
                 lock_array[$lock_index]="$lock_dir/$lockfile" && ((lock_index++))
+            else
+                eval "$exit_cmd"
             fi
+
+        else
+            eval "$exit_cmd"
         fi
+
     else
         eval "$exit_cmd"
     fi
