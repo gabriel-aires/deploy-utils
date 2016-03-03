@@ -6,7 +6,7 @@ source $install_dir/sh/functions.sh || exit 1
 
 # Cria log de erros
 mkdir -p $log_dir || exit 1
-error_log="$log_dir/error_$$_$0.log"
+error_log="$log_dir/error_$$_$(basename $0).log"
 touch $error_log || exit 1
 
 # Carrega valores default para o servidor
