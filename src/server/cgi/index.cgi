@@ -31,19 +31,19 @@ SELECT=''
 
 # Formulário de pesquisa
 echo "      <p>"
-echo "          <form action=\"$start_page\" method=\"post\">"
+echo "          <form action=\"$start_page\" method=\"get\">"
 # Sistema...
-echo "      		    <select style=\"min-width:200px\" name=\"$app_param\">"
+echo "      		    <select style=\"min-width:100px\" name=\"$app_param\">"
 echo "		        	<option value=\"\" selected>Sistema...</option>"
 find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | sort | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
 echo "		            </select>"
 # Ambiente...
-echo "      		<select style=\"min-width:200px\" name=\"$env_param\">"
+echo "      		<select style=\"min-width:100px\" name=\"$env_param\">"
 echo "		        	<option value=\"\" selected>Ambiente...</option>"
 cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
 echo "		        </select>"
 # Submit
-echo "              <input type=\"submit\" name=\"Buscar\" value=\"1\">"
+echo "              <input type=\"submit\" name=\"search\" value=\"Buscar\">"
 echo "          </form>"
 echo "      </p>"
 
