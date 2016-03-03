@@ -45,30 +45,36 @@ function log () {    ##### log de execução detalhado.
 
 function lock () {                                            #argumentos: nome_trava, mensagem_erro, (instrução)
 
+    local exit_cmd="end 1 2> /dev/null || exit 1"
+
     if [ -d $lock_dir ] && [ -n "$1" ] && [ -n "$2" ]; then
 
         local lockfile="$(echo "$1" | sed -r "s|[;, \:\.]+|_|g")"
-        local msg="$2"
-        local lock_time=0
+        local miliseconds=$(date +%s%3N)
+        local timeout=$(($lock_timeout+$miliseconds))
 
-        while [ -f "$lock_dir/$lockfile" ] && [ $lock_time -le $lock_timeout ]; do
+        case $verbosity in
+            'quiet') exit_cmd="log 'INFO' '$2'; $exit_cmd";;
+            'verbose') exit_cmd="echo -e '\n$2'; $exit_cmd";;
+        esac
+
+        while [ -f "$lock_dir/$lockfile" ] && [ $miliseconds -le $timeout ]; do
             sleep 0.001
-            ((lock_time++))
+            miliseconds=$(date +%s%3N)
         done
 
         if [ -f "$lock_dir/$lockfile" ]; then
-            case $verbosity in
-                'quiet') log "INFO" "$msg";;
-                'verbose') echo -e "\n$msg";;
-            esac
-
-            end 1 2> /dev/null || exit 1
+            eval "$exit_cmd"
         else
-            lock_array[$lock_index]="$lock_dir/$lockfile" && ((lock_index++))
-            touch "$lock_dir/$lockfile"
+            touch "$lock_dir/$lockfile" && echo "$$" >> "$lock_dir/$lockfile"
+            if [ $(cat "$lock_dir/$lockfile" | wc -l) -ne 1 ]; then
+                eval "$exit_cmd"
+            else
+                lock_array[$lock_index]="$lock_dir/$lockfile" && ((lock_index++))
+            fi
         fi
     else
-        end 1 2> /dev/null || exit 1
+        eval "$exit_cmd"
     fi
 
     return 0
