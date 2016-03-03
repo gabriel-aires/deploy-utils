@@ -24,6 +24,7 @@ web_header
 
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
+mklist "$ambientes" "$tmp_dir/lista_ambientes"
 app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
 env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 save_value='Salvar'
