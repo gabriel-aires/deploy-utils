@@ -44,6 +44,7 @@ function web_header () {
     echo '  </head>'
     echo '  <body>'
     echo "      <h1>$page_title</h1>"
+    echo "      <hr>"
 
     return 0
 }
