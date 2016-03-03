@@ -115,8 +115,8 @@ function web_footer () {
 
     mklist "$cgi_public_pages" $tmp_dir/cgi_public_pages
 
+    echo "      <hr>"
     echo "      <table width=100% style=\"text-align:left;color:black\">"
-    echo "          <tr> <td><br></td> </tr>"
     echo "          <tr> <td><a href=\"$start_page\" style=\"color:black\" >Início</a> </td> $navbar </tr>"
     while read link_name; do
         link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
