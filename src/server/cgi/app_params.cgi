@@ -73,7 +73,7 @@ if [ -n "$QUERY_STRING" ]; then
 
     echo "      <p>"
     echo "          <form action=\"$start_page\" method=\"post\">"
-    echo "              <hr>"
+    echo "              <fieldset>"
     echo "              <table>"
     test -f "$app_conf_dir/$app.conf" && form_file="$app_conf_dir/$app.conf" || form_file="$install_dir/template/app.template"
     while read l; do
@@ -86,7 +86,7 @@ if [ -n "$QUERY_STRING" ]; then
         fi
         $show_param && echo "              <tr><td>$key:      </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
     done < "$form_file"
-    echo "              </table>"
+    echo "              </fieldset>"
     echo "              <hr>"
     echo "              <input type=\"submit\" name=\"save\" value=\"$save_value\">"
     echo "              <input type=\"submit\" name=\"erase\" value=\"$erase_value\">"
