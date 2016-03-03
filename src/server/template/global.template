@@ -46,6 +46,7 @@ apache_vhost_port=
 apache_servername=
 apache_cgi_alias=
 apache_log_alias=
+cgi_timeout=
 cgi_public_pages=
 cgi_private_pages=
 cgi_index_title=

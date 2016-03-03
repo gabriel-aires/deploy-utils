@@ -28,6 +28,7 @@ sed -i -r "s|@apache_vhost_port|$apache_vhost_port|" $apache_confd_dir/$apache_v
 sed -i -r "s|@apache_servername|$apache_servername|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_cgi_alias|$apache_cgi_alias|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@cgi_dir|$cgi_dir|" $apache_confd_dir/$apache_vhost_filename
+sed -i -r "s|@cgi_timeout|$cgi_timeout|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_log_alias|$apache_log_alias|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@history_dir|$history_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_log_dir|$apache_log_dir|" $apache_confd_dir/$apache_vhost_filename
