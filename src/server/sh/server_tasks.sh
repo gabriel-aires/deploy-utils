@@ -29,7 +29,7 @@ function tasks () {
     ### Expurgo de logs
 
     while [ -f "$lock_dir/$history_lock_file" ]; do
-        sleep 1
+        sleep 0.001
     done
 
     lock_history=true

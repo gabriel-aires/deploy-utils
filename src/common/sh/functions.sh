@@ -52,7 +52,7 @@ function lock () {                                            #argumentos: nome_
         local lock_time=0
 
         while [ -f "$lock_dir/$lockfile" ] && [ $lock_time -le $lock_timeout ]; do
-            sleep 1
+            sleep 0.001
             ((lock_time++))
         done
 
@@ -302,7 +302,7 @@ function write_history () {
     ##### ABRE O ARQUIVO DE LOG PARA EDIÇÃO ######
 
     while [ -f "${lock_path}/$history_lock_file" ]; do                        #nesse caso, o processo de deploy não é interrompido. O script é liberado para escrever no log após a remoção do arquivo de trava.
-        sleep 1
+        sleep 0.001
     done
 
     lock_history=true
