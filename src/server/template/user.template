@@ -14,10 +14,13 @@ cgi_index_title=
 cgi_search_title=
 cgi_app_params_title=
 cgi_deploy_pages_title=
-html_table_style=
+html_header_bgcolor=
+html_header_fgcolor=
+html_tr_bgcolor_default=
+html_tr_fgcolor_default=
+html_tr_bgcolor_warning=
+html_tr_fgcolor_warning=
+html_margin=
 html_table_size=
-html_th_style=
-html_tr_style_default=
-html_tr_style_warning=
 # Expressões inválidas
 not_regex_
