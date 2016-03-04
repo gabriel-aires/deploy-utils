@@ -42,9 +42,11 @@ function web_header () {
     echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
     echo "  <title>$page_title</title"
     echo '  </head>'
-    echo '  <body>'
-    echo "      <h1>$page_title</h1>"
-    echo "      <hr>"
+    echo "  <body style=\"margin:0\">"
+    echo "      <div style=\"width:100%;color:white;background-color:$html_header_bgcolor;margin-left:$html_margin;margin-right:$html_margin\">"
+    echo "          <h1>$page_title</h1>"
+    echo "      </div>"
+    echo "      <div style=\"margin:$html_margin\">"
 
     return 0
 }
@@ -125,6 +127,7 @@ function web_footer () {
     done < $tmp_dir/cgi_public_pages
     echo "          <tr> <td><a href=\"$apache_log_alias\" style=\"color:black\" >Logs</a></td></tr>"
     echo "      </table>"
+    echo "  </div>"
 
     return 0
 
