@@ -43,8 +43,10 @@ function web_header () {
     echo "  <title>$page_title</title"
     echo '  </head>'
     echo "  <body style=\"margin:0\">"
-    echo "      <div style=\"width:100%;color:white;background-color:$html_header_bgcolor;margin-left:$html_margin;margin-right:$html_margin\">"
-    echo "          <h1>$page_title</h1>"
+    echo "      <div style=\"width:100%;color:white;background-color:$html_header_bgcolor\">"
+    echo "          <div style=\"margin-left:$html_margin;margin-right:$html_margin\">"
+    echo "              <h1>$page_title</h1>"
+    echo "          </div>"
     echo "      </div>"
     echo "      <div style=\"margin:$html_margin\">"
 
