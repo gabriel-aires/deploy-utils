@@ -1,0 +1,112 @@
+/* Elements */
+
+body {
+
+  margin: 0;
+  padding: 0;
+  font-size: 1vw;
+  color: black;
+  background-color: white;
+
+}
+
+div {
+
+  width: 100%
+
+}
+
+table {
+
+  width: 100%
+  padding: 5;
+
+}
+
+/* IDs */
+
+#header {
+
+  padding-left: 20;
+  padding-right: 20;
+
+}
+
+#main {
+
+  padding: 20;
+
+}
+
+/* Classes */
+
+.header_color {
+
+  background-color: #2871bf; /* dark blue #2871bf dark green #2e6e67 light brown #ba9082, light green #90BA82, light blue #66a1ff */
+  color: white;
+
+}
+
+.query_table {
+
+  text-align: center;
+  background-color: white;
+  width: 100%;
+
+}
+
+.query_row_default {
+
+  background-color: #ebeae1;
+  color: black;
+
+}
+
+.query_row_warning {
+
+  background-color: #e6c0b3;
+  color: black;
+
+}
+
+.cfg_table {
+
+  width: 70%;
+  border-spacing: 5px;
+  border-collapse: separate;
+  background-color: #EFF5F5;
+
+}
+
+/* Input */
+
+.select_default {
+
+  min-width: 200px;
+
+}
+
+.select_small {
+
+  min-width: 100px;
+
+}
+
+.text_default {
+
+  width: 200px;
+
+}
+
+.text_large {
+
+  width: 50%
+
+}
+
+.nav {
+
+  text-align: right;
+  color: black;
+
+}

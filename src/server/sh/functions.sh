@@ -40,15 +40,16 @@ function web_header () {
     echo '<html>'
     echo '  <head>'
     echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
-    echo "  <title>$page_title</title"
+    echo "      <title>$page_title</title"
+    echo "      <link rel=\"stylesheet\" type=\"text/css\" href=\"../css/default.css\">"
     echo '  </head>'
-    echo "  <body style=\"margin:0\">"
-    echo "      <div style=\"width:100%;color:white;background-color:$html_header_bgcolor\">"
-    echo "          <div style=\"margin-left:$html_margin;margin-right:$html_margin\">"
+    echo "  <body>"
+    echo "      <div class=\"header_color\">"
+    echo "          <div id=\"header\">"
     echo "              <h1>$page_title</h1>"
     echo "          </div>"
     echo "      </div>"
-    echo "      <div style=\"margin:$html_margin\">"
+    echo "      <div id=\"main\">"
 
     return 0
 }
@@ -84,27 +85,27 @@ function web_query_history () {
 
         data_size=$(($(cat "$table_content" | wc -l)-1))
         min_page=1
-        max_page=$(($data_size/$html_table_size))
-        test $(($max_page*html_table_size)) -lt $data_size && ((max_page++))
-        test $page -eq $max_page && print_size=$(($html_table_size-($html_table_size*$max_page-$data_size))) || print_size=$html_table_size
+        max_page=$(($data_size/$cgi_table_size))
+        test $(($max_page*cgi_table_size)) -lt $data_size && ((max_page++))
+        test $page -eq $max_page && print_size=$(($cgi_table_size-($cgi_table_size*$max_page-$data_size))) || print_size=$cgi_table_size
         nav="$page"
 
         if [ $next -le $max_page ]; then
-            nav="$nav <a href=\"$next_uri\" style=\"color:black\">$next</a>"
+            nav="$nav <a href=\"$next_uri\">$next</a>"
         fi
 
         if [ $prev -ge $min_page ]; then
-            nav="<a href=\"$prev_uri\" style=\"color:black\">$prev</a> $nav"
+            nav="<a href=\"$prev_uri\">$prev</a> $nav"
         fi
 
         echo "      <p>"
-        echo "          <table cellpadding=5 width=100% style=\"$html_table_style\">"
+        echo "          <table class=\"query_table\">"
         head -n 1 "$table_content"
-        test $data_size -gt 1 && head -n $((($page*$html_table_size)+1)) "$table_content" | tail -n "$print_size" || echo "<tr><td colspan=\"100\">Nenhum registro encontrado.</td></tr>"
+        test $data_size -gt 1 && head -n $((($page*$cgi_table_size)+1)) "$table_content" | tail -n "$print_size" || echo "<tr><td colspan=\"100\">Nenhum registro encontrado.</td></tr>"
         echo "          </table>"
         echo "      </p>"
 
-        navbar="<td style=\"text-align:right\">Página: $nav</td>"
+        navbar="<td class=\"nav\">Página: $nav</td>"
 
     else
 
@@ -120,14 +121,14 @@ function web_footer () {
     mklist "$cgi_public_pages" $tmp_dir/cgi_public_pages
 
     echo "      <hr>"
-    echo "      <table width=100% style=\"text-align:left;color:black\">"
-    echo "          <tr> <td><a href=\"$start_page\" style=\"color:black\" >Início</a> </td> $navbar </tr>"
+    echo "      <table>"
+    echo "          <tr> <td><a href=\"$start_page\">Início</a> </td> $navbar </tr>"
     while read link_name; do
         link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
         link_title="$(eval "echo \$cgi_${link_name}_title")"
-        test "$SCRIPT_NAME" != "$link_uri" && echo "          <tr> <td><a href=\"$link_uri\" style=\"color:black\" >"$link_title"</a></td></tr>"
+        test "$SCRIPT_NAME" != "$link_uri" && echo "          <tr> <td><a href=\"$link_uri\">"$link_title"</a></td></tr>"
     done < $tmp_dir/cgi_public_pages
-    echo "          <tr> <td><a href=\"$apache_log_alias\" style=\"color:black\" >Logs</a></td></tr>"
+    echo "          <tr> <td><a href=\"$apache_log_alias\">Logs</a></td></tr>"
     echo "      </table>"
     echo "  </div>"
 

@@ -21,6 +21,6 @@ html_tr_fgcolor_default=
 html_tr_bgcolor_warning=
 html_tr_fgcolor_warning=
 html_margin=
-html_table_size=
+cgi_table_size=
 # Expressões inválidas
 not_regex_

@@ -41,12 +41,12 @@ query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --fro
 query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT $DISTINCT $TOP --from $data_file $WHERE $ORDERBY  >> $tmp_dir/html 2> /dev/null
 
 if $change_color; then
-    sed -i -r "s|^(.*)<th>$col_flag_name</th><th>$|\t\t\t<tr style=\"$html_th_style\"><th>\1</tr>|" $tmp_dir/html
-    sed -i -r "s|^(.*)<td>1</td><td>$|\t\t\t<tr style=\"$html_tr_style_default\"><td>\1</tr>|" $tmp_dir/html
-    sed -i -r "s|^(.*)<td>0</td><td>$|\t\t\t<tr style=\"$html_tr_style_warning\"><td>\1</tr>|" $tmp_dir/html
+    sed -i -r "s|^(.*)<th>$col_flag_name</th><th>$|\t\t\t<tr class=\"header_color\"><th>\1</tr>|" $tmp_dir/html
+    sed -i -r "s|^(.*)<td>1</td><td>$|\t\t\t<tr class=\"query_row_default\"><td>\1</tr>|" $tmp_dir/html
+    sed -i -r "s|^(.*)<td>0</td><td>$|\t\t\t<tr class=\"query_row_warning\"><td>\1</tr>|" $tmp_dir/html
 else
-    sed -i -r "s|^(.*)<th>$|\t\t\t<tr style=\"$html_th_style\"><th>\1</tr>|" $tmp_dir/html
-    sed -i -r "s|^(.*)<td>$|\t\t\t<tr style=\"$html_tr_style_default\"><td>\1</tr>|" $tmp_dir/html
+    sed -i -r "s|^(.*)<th>$|\t\t\t<tr class=\"header_color\"><th>\1</tr>|" $tmp_dir/html
+    sed -i -r "s|^(.*)<td>$|\t\t\t<tr class=\"query_row_default\"><td>\1</tr>|" $tmp_dir/html
 fi
 
 cat $tmp_dir/html

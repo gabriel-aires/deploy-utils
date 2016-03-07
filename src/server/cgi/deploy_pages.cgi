@@ -115,21 +115,21 @@ if [ -z "$POST_STRING" ]; then
     echo "          <form action=\"$start_page\" method=\"post\">"
     # Sistema...
     echo "              <p>"
-    echo "      		    <select style=\"min-width:200px\" name=\"$app_param\">"
+    echo "      		    <select class=\"select_default\" name=\"$app_param\">"
     echo "		        	<option value=\"\" selected>Sistema...</option>"
     find $app_conf_dir/ -mindepth 1 -maxdepth 1 -type f -name '*.conf' | sort | xargs -I{} -d '\n' basename {} | cut -f1 -d '.' | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		            </select>"
     echo "              </p>"
     # Ambiente...
     echo "              <p>"
-    echo "      		<select style=\"min-width:200px\" name=\"$env_param\">"
+    echo "      		<select class=\"select_default\" name=\"$env_param\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
     cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
     # Revisão...
     echo "              <p>"
-    echo "              <input type=\"text\" style=\"min-width:200px\" name=\"$rev_param\" value=\"Revisão...\"></input>"
+    echo "              <input type=\"text\" class=\"text_default\" name=\"$rev_param\" value=\"Revisão...\"></input>"
     echo "              </p>"
     # Submit
     echo "              <p>"
