@@ -9,6 +9,7 @@ app_history_dir_tree=
 repo_dir=
 lock_dir=
 cgi_dir=
+css_dir=
 app_conf_dir=
 service_log_file=
 # Opções de deploy padrão
@@ -45,6 +46,7 @@ apache_vhost_name=
 apache_vhost_port=
 apache_servername=
 apache_cgi_alias=
+apache_css_alias=
 apache_log_alias=
 cgi_timeout=
 cgi_public_pages=

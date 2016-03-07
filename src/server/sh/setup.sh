@@ -29,6 +29,7 @@ sed -i -r "s|@apache_servername|$apache_servername|" $apache_confd_dir/$apache_v
 sed -i -r "s|@apache_cgi_alias|$apache_cgi_alias|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@cgi_dir|$cgi_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@cgi_timeout|$cgi_timeout|" $apache_confd_dir/$apache_vhost_filename
+sed -i -r "s|@css_dir|$css_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_log_alias|$apache_log_alias|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@history_dir|$history_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_log_dir|$apache_log_dir|" $apache_confd_dir/$apache_vhost_filename
@@ -69,6 +70,7 @@ chmod 775 $work_dir || exit 1
 chmod 775 $log_dir || exit 1
 chmod 775 $lock_dir || exit 1
 chmod 755 $src_dir/server/cgi/* || exit 1
+chmod 644 $src_dir/server/css/* || exit 1
 
 chgrp $apache_group $common_work_dir || exit 1
 chgrp $apache_group $common_log_dir || exit 1
@@ -81,6 +83,7 @@ chgrp -R $apache_group $work_dir || exit 1
 chgrp -R $apache_group $log_dir || exit 1
 chgrp -R $apache_group $lock_dir || exit 1
 chgrp -R $apache_group $src_dir/server/cgi || exit 1
+chgrp -R $apache_group $src_dir/server/css || exit 1
 
 #restart services
 $apache_init_script restart || exit 1
