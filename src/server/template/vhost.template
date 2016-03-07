@@ -5,8 +5,8 @@
 
         ServerName @apache_servername
         Alias @apache_log_alias @history_dir
-        Alias @apache_cgi_alias @cgi_dir
         Alias @apache_css_alias @css_dir
+        Alias @apache_cgi_alias @cgi_dir
 
         Timeout @cgi_timeout
 
