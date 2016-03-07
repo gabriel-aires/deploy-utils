@@ -40,7 +40,7 @@ function web_header () {
     echo '<html>'
     echo '  <head>'
     echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
-    echo "      <title>$page_title</title"
+    echo "      <title>$page_title</title>"
     echo "      <link rel=\"stylesheet\" type=\"text/css\" href=\"$apache_css_alias/default.css\">"
     echo '  </head>'
     echo "  <body>"
