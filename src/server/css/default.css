@@ -12,9 +12,15 @@ body {
 
 table {
 
+  border: 0;
   border-spacing: 0.2rem;
   border-collapse: separate;
-  padding: 5;
+
+}
+
+th, td {
+
+  padding: 0.2rem;
 
 }
 
