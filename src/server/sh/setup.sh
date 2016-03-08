@@ -28,7 +28,7 @@ valid "set_apache_namevirtualhost_directive" "regex_bool" "\nErro. A variável s
 
 #verify apache params
 test -d $apache_confd_dir || end 1
-test -z $apache_init_script || end 1
+test -n $apache_init_script || end 1
 id $apache_user > /dev/null || end 1
 groups $apache_user | sed -r "s|$apache_user :||" | grep " $apache_group" > /dev/null || end 1
 
