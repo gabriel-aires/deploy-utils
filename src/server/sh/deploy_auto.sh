@@ -109,8 +109,11 @@ done < "$tmp_dir/lista_ambientes"
 # Executa todos os deploys da fila.
 
 log "INFO" "Processando fila de deploys...\n"
+echo "" > "$deploy_queue" &
 
 while read deploy_args; do
+
+     test -z "$deploy_args" && continue
 
      opt_string=$(echo "$deploy_args" | cut -f1 -d ' ')
      app_string=$(echo "$deploy_args" | cut -f2 -d ' ')
