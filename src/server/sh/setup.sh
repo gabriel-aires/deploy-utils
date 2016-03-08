@@ -43,6 +43,9 @@ $set_apache_listen_directive && apache_listen_directive="Listen $apache_vhost_po
 cp -f $vhost_template $apache_confd_dir/$apache_vhost_filename || end 1
 test -w $vhost_template || end 1
 
+sed -i -r "s|@apache_cgi_alias|$apache_cgi_alias|g" $apache_confd_dir/$apache_vhost_filename
+sed -i -r "s|@apache_log_alias|$apache_log_alias|g" $apache_confd_dir/$apache_vhost_filename
+sed -i -r "s|@apache_css_alias|$apache_css_alias|g" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@ssl_crt_path|$ssl_crt_path|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@ssl_key_path|$ssl_key_path|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_namevirtualhost_directive|$apache_namevirtualhost_directive|" $apache_confd_dir/$apache_vhost_filename
@@ -50,12 +53,9 @@ sed -i -r "s|@apache_listen_directive|$apache_listen_directive|" $apache_confd_d
 sed -i -r "s|@apache_vhost_name|$apache_vhost_name|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_vhost_port|$apache_vhost_port|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_servername|$apache_servername|" $apache_confd_dir/$apache_vhost_filename
-sed -i -r "s|@apache_cgi_alias|$apache_cgi_alias|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@cgi_dir|$cgi_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@cgi_timeout|$cgi_timeout|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@css_dir|$css_dir|" $apache_confd_dir/$apache_vhost_filename
-sed -i -r "s|@apache_css_alias|$apache_css_alias|" $apache_confd_dir/$apache_vhost_filename
-sed -i -r "s|@apache_log_alias|$apache_log_alias|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@history_dir|$history_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_log_dir|$apache_log_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_vhost_logname|$apache_vhost_logname|" $apache_confd_dir/$apache_vhost_filename
