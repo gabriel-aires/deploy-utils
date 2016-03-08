@@ -1,0 +1,43 @@
+@apache_namevirtualhost_directive
+@apache_listen_directive
+
+<VirtualHost @apache_vhost_name:80>
+
+    ServerName @apache_servername
+    Redirect @apache_log_alias @apache_servername:@apache_vhost_port@apache_log_alias
+    Redirect @apache_css_alias @apache_servername:@apache_vhost_port@apache_css_alias
+    Redirect @apache_cgi_alias @apache_servername:@apache_vhost_port@apache_cgi_alias
+
+</VirtualHost >
+
+<VirtualHost @apache_vhost_name:@apache_vhost_port>
+
+    ServerName @apache_servername
+    Alias @apache_log_alias @history_dir
+    Alias @apache_css_alias @css_dir
+    Alias @apache_cgi_alias @cgi_dir
+
+    Timeout @cgi_timeout
+
+    SSLEngine on
+    SSLCertificateFile @ssl_crt_path
+    SSLCertificateKeyFile @ssl_key_path
+
+    <Directory @cgi_dir>
+            Options +ExecCGI
+    </Directory>
+
+    AddHandler cgi-script .cgi .sh
+
+    <IfModule mod_dir.c>
+            DirectoryIndex index.html index.htm index.shtml index.cgi
+    </IfModule>
+
+    <Directory @history_dir>
+            Options +Indexes
+    </Directory>
+
+    ErrorLog "@apache_log_dir/@apache_vhost_logname_error.log"
+    CustomLog "@apache_log_dir/@apache_vhost_logname_access.log" combined
+
+</VirtualHost>
