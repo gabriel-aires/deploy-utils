@@ -97,7 +97,7 @@ function web_query_history () {
         echo "      <p>"
         echo "          <table class=\"query_table\">"
         head -n 1 "$table_content"
-        test $data_size -gt 1 && head -n $((($page*$cgi_table_size)+1)) "$table_content" | tail -n "$print_size" || echo "<tr><td colspan=\"100\">Nenhum registro encontrado.</td></tr>"
+        test $data_size -ge 1 && head -n $((($page*$cgi_table_size)+1)) "$table_content" | tail -n "$print_size" || echo "<tr><td colspan=\"100\">Nenhum registro encontrado.</td></tr>"
         echo "          </table>"
         echo "      </p>"
 
