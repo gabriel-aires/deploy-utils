@@ -8,7 +8,7 @@
     Redirect @apache_css_alias @apache_servername:@apache_vhost_port@apache_css_alias
     Redirect @apache_cgi_alias @apache_servername:@apache_vhost_port@apache_cgi_alias
 
-</VirtualHost >
+</VirtualHost>
 
 <VirtualHost @apache_vhost_name:@apache_vhost_port>
 
