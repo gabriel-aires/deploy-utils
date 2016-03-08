@@ -44,11 +44,7 @@ function web_header () {
     echo "      <link rel=\"stylesheet\" type=\"text/css\" href=\"$apache_css_alias/default.css\">"
     echo '  </head>'
     echo "  <body>"
-    echo "      <div class=\"header_color\">"
-    echo "          <div id=\"header\">"
-    echo "              <h1>$page_title</h1>"
-    echo "          </div>"
-    echo "      </div>"
+    echo "      <div id=\"header\" class=\"header_color\">$page_title</div>"
     echo "      <div id=\"main\">"
 
     return 0
@@ -105,7 +101,7 @@ function web_query_history () {
         echo "          </table>"
         echo "      </p>"
 
-        navbar="<td class=\"nav\">Página: $nav</td>"
+        navbar="<div id=\"navbar\"><p>Página: $nav</p></div>"
 
     else
 
@@ -121,15 +117,18 @@ function web_footer () {
     mklist "$cgi_public_pages" $tmp_dir/cgi_public_pages
 
     echo "      <hr>"
-    echo "      <table>"
-    echo "          <tr> <td><a href=\"$start_page\">Início</a> </td> $navbar </tr>"
+    echo "      <div class=\"footer\">"
+    echo "          <div id=\"links\">"
+    echo "              <p><a href=\"$start_page\">Início</a></p>"
     while read link_name; do
         link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
         link_title="$(eval "echo \$cgi_${link_name}_title")"
-        test "$SCRIPT_NAME" != "$link_uri" && echo "          <tr> <td><a href=\"$link_uri\">"$link_title"</a></td></tr>"
+        test "$SCRIPT_NAME" != "$link_uri" && echo "          <p><a href=\"$link_uri\">"$link_title"</a></p>"
     done < $tmp_dir/cgi_public_pages
-    echo "          <tr> <td><a href=\"$apache_log_alias\">Logs</a></td></tr>"
-    echo "      </table>"
+    echo "              <p><a href=\"$apache_log_alias\">Logs</a></p>"
+    echo "          </div>"
+    echo "          $navbar"
+    echo "      </div>"
     echo "  </div>"
 
     return 0

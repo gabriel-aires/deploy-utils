@@ -4,15 +4,9 @@ body {
 
   margin: 0;
   padding: 0;
-  font-size: 1vw;
+  font-size: 76%;
   color: black;
   background-color: white;
-
-}
-
-div {
-
-  width: 100%
 
 }
 
@@ -23,10 +17,22 @@ table {
 
 }
 
+a {
+
+  color: black;
+
+}
+
 /* IDs */
 
 #header {
 
+  position: fixed;
+  z-index: 1;
+  top: 0%;
+  width: 100%;
+  height: 2.5rem;
+  font-size: 2rem;
   padding-left: 20;
   padding-right: 20;
 
@@ -34,6 +40,9 @@ table {
 
 #main {
 
+  position: relative;
+  z-index: 0;
+  top: 2.5rem;
   padding: 20;
 
 }
@@ -71,8 +80,7 @@ table {
 
 .cfg_table {
 
-  width: 70%;
-  border-spacing: 5px;
+  border-spacing: 0.2rem;
   border-collapse: separate;
   background-color: #EFF5F5;
 
@@ -82,31 +90,47 @@ table {
 
 .select_default {
 
-  min-width: 200px;
+  min-width: 15rem;
 
 }
 
 .select_small {
 
-  min-width: 100px;
+  min-width: 7rem;
 
 }
 
 .text_default {
 
-  width: 200px;
+  width: 15rem;
 
 }
 
 .text_large {
 
-  width: 50%
+  width: 30rem;
 
 }
 
-.nav {
+.footer {
 
-  text-align: right;
-  color: black;
+  position: relative;
+  bottom: 0;
+  line-height: 0.5rem;
+  font-size: 1rem;
+
+}
+
+#links {
+
+  position: absolute;
+  left: 0;
+
+}
+
+#navbar {
+
+  position: absolute;
+  right: 0
 
 }
