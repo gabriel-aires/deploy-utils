@@ -33,14 +33,23 @@ SELECT=''
 echo "      <p>"
 echo "          <form action=\"$start_page\" method=\"get\">"
 # Sistema...
-echo "      		    <select class=\"select_small\" name=\"$app_param\">"
+echo "      		<select class=\"select_small\" name=\"$app_param\">"
 echo "		        	<option value=\"\" selected>Sistema...</option>"
 find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | sort | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
-echo "		            </select>"
+echo "		        </select>"
 # Ambiente...
 echo "      		<select class=\"select_small\" name=\"$env_param\">"
 echo "		        	<option value=\"\" selected>Ambiente...</option>"
 cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+echo "		        </select>"
+# Paginação...
+echo "      		<select class=\"select_small\" name=\"n\">"
+echo "		        	<option value=\"\" selected>Paginação..</option>"
+echo "		        	<option>10</option>"
+echo "		        	<option>20</option>"
+echo "		        	<option>30</option>"
+echo "		        	<option>40</option>"
+echo "		        	<option>50</option>"
 echo "		        </select>"
 # Submit
 echo "              <input type=\"submit\" name=\"search\" value=\"Buscar\">"

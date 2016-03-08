@@ -61,11 +61,15 @@ function web_query_history () {
         $install_dir/cgi/table_data.cgi $file > $table_content
 
         if [ -z "$QUERY_STRING" ]; then
+            view_size="$cgi_table_size"
             page=1
             next=2
             prev=0
             next_uri="$start_page?p=$next"
         else
+            view_size=$(echo "$arg_string" | sed -rn "s/^.*&n=([^\&]+)&.*$/\1/p")
+            test -z "$view_size" && view_size="$cgi_table_size"
+
             page=$(echo "$arg_string" | sed -rn "s/^.*&p=([^\&]+)&.*$/\1/p")
             test -z "$page" && page=1
 
@@ -81,9 +85,9 @@ function web_query_history () {
 
         data_size=$(($(cat "$table_content" | wc -l)-1))
         min_page=1
-        max_page=$(($data_size/$cgi_table_size))
-        test $(($max_page*cgi_table_size)) -lt $data_size && ((max_page++))
-        test $page -eq $max_page && print_size=$(($cgi_table_size-($cgi_table_size*$max_page-$data_size))) || print_size=$cgi_table_size
+        max_page=$(($data_size/$view_size))
+        test $(($max_page*$view_size)) -lt $data_size && ((max_page++))
+        test $page -eq $max_page && print_size=$(($view_size-($view_size*$max_page-$data_size))) || print_size=$view_size
         nav="$page"
 
         if [ $next -le $max_page ]; then
@@ -97,7 +101,7 @@ function web_query_history () {
         echo "      <p>"
         echo "          <table class=\"query_table\">"
         head -n 1 "$table_content"
-        test $data_size -ge 1 && head -n $((($page*$cgi_table_size)+1)) "$table_content" | tail -n "$print_size" || echo "<tr><td colspan=\"100\">Nenhum registro encontrado.</td></tr>"
+        test $data_size -ge 1 && head -n $((($page*$view_size)+1)) "$table_content" | tail -n "$print_size" || echo "<tr><td colspan=\"100\">Nenhum registro encontrado.</td></tr>"
         echo "          </table>"
         echo "      </p>"
 
