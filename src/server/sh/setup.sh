@@ -27,10 +27,10 @@ valid "set_apache_listen_directive" "regex_bool" "\nErro. A variável set_apache
 valid "set_apache_namevirtualhost_directive" "regex_bool" "\nErro. A variável set_apache_namevirtualhost_directive é booleana (true/false)."
 
 #verify apache params
-test -d $apache_confd_dir || end 1
-test -n $apache_init_script || end 1
-id $apache_user > /dev/null || end 1
-groups $apache_user | sed -r "s|$apache_user :||" | grep " $apache_group" > /dev/null || end 1
+test -d "$apache_confd_dir" || end 1
+test -n "$apache_init_script" || end 1
+id "$apache_user" > /dev/null || end 1
+groups "$apache_user" | sed -r "s|$apache_user :||" | grep " $apache_group" > /dev/null || end 1
 
 #backup vhost_conf
 test -f $apache_confd_dir/$apache_vhost_filename && cp -f $apache_confd_dir/$apache_vhost_filename $apache_confd_dir/$apache_vhost_filename.bak
@@ -41,7 +41,7 @@ $set_apache_namevirtualhost_directive && apache_namevirtualhost_directive="NameV
 $set_apache_listen_directive && apache_listen_directive="Listen $apache_vhost_port" || apache_listen_directive=''
 
 cp -f $vhost_template $apache_confd_dir/$apache_vhost_filename || end 1
-test -w $vhost_template $apache_confd_dir/$apache_vhost_filename || end 1
+test -w $vhost_template || end 1
 
 sed -i -r "s|@ssl_crt_path|$ssl_crt_path|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@ssl_key_path|$ssl_key_path|" $apache_confd_dir/$apache_vhost_filename
