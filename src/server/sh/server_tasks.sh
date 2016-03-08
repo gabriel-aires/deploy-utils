@@ -10,7 +10,7 @@ pid="$$"
 
 ##### Execução somente como usuário root ######
 
-if [ ! "$USER" == 'root' ]; then
+if [ "$(id -u)" -ne "0" ]; then
     echo "Requer usuário root."
     exit 1
 fi

@@ -13,7 +13,7 @@ verbosity="verbose"
 
 ##### Execução somente como usuário root ######
 
-if [ ! "$USER" == 'root' ]; then
+if [ "$(id -u)" -ne "0" ]; then
     echo "Requer usuário root."
     exit 1
 fi
@@ -361,7 +361,7 @@ function end () {
 
     fi
 
-    wait    
+    wait
     clean_locks
     clean_temp
     wait
