@@ -4,9 +4,9 @@
 <VirtualHost @apache_vhost_name:80>
 
     ServerName @apache_servername
-    Redirect @apache_log_alias @apache_servername:@apache_vhost_port@apache_log_alias
-    Redirect @apache_css_alias @apache_servername:@apache_vhost_port@apache_css_alias
-    Redirect @apache_cgi_alias @apache_servername:@apache_vhost_port@apache_cgi_alias
+    Redirect @apache_log_alias https://@apache_servername:@apache_vhost_port@apache_log_alias
+    Redirect @apache_css_alias https://@apache_servername:@apache_vhost_port@apache_css_alias
+    Redirect @apache_cgi_alias https://@apache_servername:@apache_vhost_port@apache_cgi_alias
 
 </VirtualHost>
 
