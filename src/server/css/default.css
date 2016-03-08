@@ -94,15 +94,27 @@ a {
 
 /* Input */
 
+.select_small {
+
+  min-width: 7rem;
+
+}
+
 .select_default {
 
   min-width: 15rem;
 
 }
 
-.select_small {
+.select_large {
 
-  min-width: 7rem;
+  min-width: 30rem;
+
+}
+
+.text_small {
+
+  width: 7rem;
 
 }
 
