@@ -12,7 +12,8 @@ body {
 
 table {
 
-  width: 100%;
+  border-spacing: 0.2rem;
+  border-collapse: separate;
   padding: 5;
 
 }
@@ -80,8 +81,6 @@ a {
 
 .cfg_table {
 
-  border-spacing: 0.2rem;
-  border-collapse: separate;
   background-color: #EFF5F5;
 
 }
