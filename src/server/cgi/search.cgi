@@ -41,7 +41,7 @@ TOP=''
 echo "<form action=\"$start_page\" method=\"get\">"
 echo "     <table>"
 echo "          <tr><td>SELECT:    </td><td><input type=\"text\" class=\"text_large\" name=\"SELECT\" value=\"Ex: $col_tag_name $col_time_name $col_month_name $col_year_name $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT</td></tr>"
-echo "          <tr><td>TOP:       </td><td><input type=\"text\" class=\"text_large\" value=\"Ex: 10\"></td></tr>"
+echo "          <tr><td>TOP:       </td><td><input type=\"text\" class=\"text_large\" name=\"TOP\" value=\"Ex: 10\"></td></tr>"
 echo "          <tr><td>WHERE:     </td><td><input type=\"text\" class=\"text_large\" name=\"WHERE\" value=\"Ex: $col_host_name=%rh $col_app_name==sgq\"></td></tr>"
 echo "          <tr><td>ORDER BY:  </td><td><input type=\"text\" class=\"text_large\" name=\"ORDERBY\" value=\"Ex: $col_year_name $col_month_name $col_time_name desc\"></td></tr>"
 # Paginação
