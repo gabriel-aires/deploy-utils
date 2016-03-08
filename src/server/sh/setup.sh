@@ -1,5 +1,8 @@
 #!/bin/bash
 
+interactive='false'
+verbosity='verbose'
+
 function end() {
 
     if [ "$1" != '0' ]; then
