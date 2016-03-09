@@ -65,6 +65,7 @@ cgi_search_title=
 cgi_app_params_title=
 cgi_deploy_pages_title=
 cgi_security_title=
+cgi_signup_title=
 cgi_table_size=
 # Expressões de validação utilizadas na interface Web
 regex_user=
