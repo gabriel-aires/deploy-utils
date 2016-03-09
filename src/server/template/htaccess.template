@@ -4,5 +4,9 @@ AuthUserFile @apache_users_file
 AuthGroupFile @apache_groups_file
 
 <FilesMatch "@cgi_private_regex">
+    Require valid-user
+</FilesMatch>
+
+<FilesMatch "@cgi_admin_regex">
     Require group admin
 </FilesMatch>

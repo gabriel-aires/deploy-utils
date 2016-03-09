@@ -80,6 +80,9 @@ function cat_eof() {
 }
 
 function end() {
+
+    web_footer
+
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
         rm -f $tmp_dir/*
         rmdir $tmp_dir
@@ -215,11 +218,5 @@ else
         echo "      <p><b>Erro. Os parâmetro 'Sistema', 'Ambiente' e 'Revisão' devem ser preenchidos.</b></p>"
     fi
 fi
-
-#Links
-web_footer
-
-echo '  </body>'
-echo '</html>'
 
 end 0

@@ -137,7 +137,9 @@ function web_footer () {
     echo "          $navbar"
     echo "      </div>"
     echo "  </div>"
-
+    echo '  </body>'
+    echo '</html>'
+    
     return 0
 
 }

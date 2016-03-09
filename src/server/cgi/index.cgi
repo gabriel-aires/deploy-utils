@@ -5,6 +5,9 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 source $install_dir/sh/include.sh || exit 1
 
 function end() {
+
+    web_footer
+
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
         rm -f $tmp_dir/*
         rmdir $tmp_dir
@@ -68,11 +71,5 @@ fi
 
 # histórico de deploy
 web_query_history
-
-# Links
-web_footer
-
-echo '  </body>'
-echo '</html>'
 
 end 0
