@@ -34,6 +34,7 @@ function web_header () {
     test "$(basename $SCRIPT_NAME)" == 'index.cgi' && start_page="$(dirname $SCRIPT_NAME)/" || start_page="$SCRIPT_NAME"
     page_name=$(basename $SCRIPT_NAME | cut -f1 -d '.')
     page_title="$(eval "echo \$cgi_${page_name}_title")"
+    test -n "$REMOTE_USER" && welcome_msg="Bem vindo, $REMOTE_USER" || welcome_msg=""
 
     echo 'Content-type: text/html'
     echo ''
@@ -44,7 +45,9 @@ function web_header () {
     echo "      <link rel=\"stylesheet\" type=\"text/css\" href=\"$apache_css_alias/default.css\">"
     echo '  </head>'
     echo "  <body>"
-    echo "      <div id=\"header\" class=\"header_color\">$page_title</div>"
+    echo "      <div id=\"header\" class=\"header_color\">"
+    echo "          <div id=\"title\">$page_title</div>"
+    echo "          <div id=\"welcome\">$welcome_msg</div>"
     echo "      <div id=\"main\">"
 
     return 0
