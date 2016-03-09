@@ -5,4 +5,4 @@ AuthGroupFile @apache_groups_file
 
 <FilesMatch "@cgi_private_regex">
     Require group admin
-</Files>
+</FilesMatch>
