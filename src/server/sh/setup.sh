@@ -80,11 +80,11 @@ fi
 test -f $cgi_dir/.htaccess && cp -f $cgi_dir/.htaccess $cgi_dir/.htaccess.bak
 cp -f $install_dir/template/htaccess.template $cgi_dir/.htaccess
 
-cgi_private_regex="$(echo "$cgi_private_pages" | sed -r 's/^( +)?(.)/\(\2/g' | sed -r 's/(.)( +)$/\1\)/g' | sed -r "s/ +/|/g")"
+cgi_private_regex="^$(echo "$cgi_private_pages" | sed -r 's/^( +)?(.)/\(\2/g' | sed -r 's/(.)( +)?$/\1\)/g' | sed -r "s/ +/|/g")\.cgi$"
 
 sed -i -r "s|@apache_users_file|$apache_users_file|" $cgi_dir/.htaccess
 sed -i -r "s|@apache_groups_file|$apache_groups_file|" $cgi_dir/.htaccess
-sed -i -r "s|@cgi_private_regex|$cgi_private_regex|" $cgi_dir/.htaccess
+sed -i -r "s/@cgi_private_regex/$cgi_private_regex/" $cgi_dir/.htaccess
 
 #backup deploy_service
 test -f $service_init_script && cp -f $service_init_script $service_init_script.bak
