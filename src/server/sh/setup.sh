@@ -60,6 +60,20 @@ sed -i -r "s|@history_dir|$history_dir|" $apache_confd_dir/$apache_vhost_filenam
 sed -i -r "s|@apache_log_dir|$apache_log_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_vhost_logname|$apache_vhost_logname|" $apache_confd_dir/$apache_vhost_filename
 
+#setup apache_authentication
+touch $apache_users_file || end 1
+touch $apache_groups_file || end 1
+
+htpassword -b "$apache_users_file" "$apache_admin_user" "$apache_admin_password" || end 1
+grep -Ex "admin:.* $apache_admin_user ?.*" "$apache_groups_file" > /dev/null || sed -i -r "s|^(admin:.*)$|\1 $apache_admin_user|" $apache_groups_file
+
+test -f $cgi_dir/.htaccess && cp -f $cgi_dir/.htaccess $cgi_dir/.htaccess.bak
+cp -f $install_dir/template/htaccess.template $cgi_dir/.htaccess
+
+sed -i -r "s|@apache_users_file|$apache_users_file|" $cgi_dir/.htaccess
+sed -i -r "s|@apache_groups_file|$apache_groups_file|" $cgi_dir/.htaccess
+sed -i -r "s|@cgi_private_pages|$cgi_private_pages|" $cgi_dir/.htaccess
+
 #backup deploy_service
 test -f $service_init_script && cp -f $service_init_script $service_init_script.bak
 
