@@ -7,7 +7,7 @@ source $install_dir/sh/include.sh || exit 1
 function end() {
 
     web_footer
-    
+
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
         rm -f $tmp_dir/*
         rmdir $tmp_dir

@@ -139,7 +139,7 @@ function web_footer () {
     echo "  </div>"
     echo '  </body>'
     echo '</html>'
-    
+
     return 0
 
 }
