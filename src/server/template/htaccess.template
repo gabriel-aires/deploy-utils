@@ -1,0 +1,8 @@
+AuthType Basic
+AuthName "Authentication"
+AuthUserFile @apache_users_file
+AuthGroupFile @apache_groups_file
+
+<Files @cgi_private_pages>
+    Require group admin
+</Files>
