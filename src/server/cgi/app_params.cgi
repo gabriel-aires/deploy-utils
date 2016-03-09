@@ -6,7 +6,7 @@ source $install_dir/sh/include.sh || exit 1
 
 function end() {
 
-    web_footer
+    test "$1" != "0" && web_footer
 
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
         rm -f $tmp_dir/*
@@ -19,7 +19,7 @@ function end() {
     exit $1
 }
 
-trap "end 1" SIGQUIT SIGINT SIGHUP EXIT
+trap "end 1" SIGQUIT SIGINT SIGHUP
 mkdir $tmp_dir
 
 ### Cabeçalho
