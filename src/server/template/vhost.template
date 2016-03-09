@@ -3,28 +3,29 @@
 
 <VirtualHost @apache_vhost_name:@apache_vhost_port>
 
-        ServerName @apache_servername
-        Alias @apache_log_alias @history_dir
-        Alias @apache_css_alias @css_dir
-        Alias @apache_cgi_alias @cgi_dir
+    ServerName @apache_servername
+    Alias @apache_log_alias @history_dir
+    Alias @apache_css_alias @css_dir
+    Alias @apache_cgi_alias @cgi_dir
 
-        Timeout @cgi_timeout
+    Timeout @cgi_timeout
 
-        <Directory @cgi_dir>
-                Options +ExecCGI
-        </Directory>
+    <Directory @cgi_dir>
+        AllowOverride All
+        Options +ExecCGI -Indexes
+    </Directory>
 
-        AddHandler cgi-script .cgi .sh
+    AddHandler cgi-script .cgi .sh
 
-        <IfModule mod_dir.c>
-                DirectoryIndex index.html index.htm index.shtml index.cgi
-        </IfModule>
+    <IfModule mod_dir.c>
+        DirectoryIndex index.html index.htm index.shtml index.cgi
+    </IfModule>
 
-        <Directory @history_dir>
-                Options +Indexes
-        </Directory>
+    <Directory @history_dir>
+        Options +Indexes
+    </Directory>
 
-        ErrorLog "@apache_log_dir/@apache_vhost_logname_error.log"
-        CustomLog "@apache_log_dir/@apache_vhost_logname_access.log" combined
+    ErrorLog "@apache_log_dir/@apache_vhost_logname_error.log"
+    CustomLog "@apache_log_dir/@apache_vhost_logname_access.log" combined
 
 </VirtualHost>

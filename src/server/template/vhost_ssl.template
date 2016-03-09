@@ -24,17 +24,18 @@
     SSLCertificateKeyFile @ssl_key_path
 
     <Directory @cgi_dir>
-            Options +ExecCGI
+        AllowOverride All
+        Options +ExecCGI -Indexes
     </Directory>
 
     AddHandler cgi-script .cgi .sh
 
     <IfModule mod_dir.c>
-            DirectoryIndex index.html index.htm index.shtml index.cgi
+        DirectoryIndex index.html index.htm index.shtml index.cgi
     </IfModule>
 
     <Directory @history_dir>
-            Options +Indexes
+        Options +Indexes
     </Directory>
 
     ErrorLog "@apache_log_dir/@apache_vhost_logname_error.log"
