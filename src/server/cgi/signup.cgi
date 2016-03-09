@@ -35,8 +35,8 @@ create_value='Criar Conta'
 # Form Select
 echo "<form action=\"$start_page\" method=\"post\">"
 echo "     <table>"
-echo "          <tr><td>Usuário:    </td><td><input type=\"text\" class=\"text_large\" name=\"user\"></td></tr>"
-echo "          <tr><td>Senha:       </td><td><input type=\"password\" class=\"text_large\" name=\"password\"></td></tr>"
+echo "          <tr><td>Usuário:    </td><td><input type=\"text\" class=\"text_small\" name=\"user\"></td></tr>"
+echo "          <tr><td>Senha:       </td><td><input type=\"password\" class=\"text_small\" name=\"password\"></td></tr>"
 echo "     </table>"
 echo "<input type=\"submit\" name=\"create\" value=\"$create_value\">"
 echo "</form>"
