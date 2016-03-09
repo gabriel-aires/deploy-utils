@@ -6,7 +6,7 @@ source $install_dir/sh/include.sh || exit 1
 
 function end() {
 
-    test "$1" != "0" && web_footer
+    web_footer
 
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
         rm -f $tmp_dir/*
