@@ -118,6 +118,8 @@ chmod 775 $common_log_dir || end 1
 chmod 755 $src_dir/common/sh/query_file.sh || end 1
 chmod 755 $service_init_script || end 1
 chmod 770 $deploy_queue || end 1
+chmod 660 $apache_users_file || end 1
+chmod 660 $apache_groups_file || end 1
 chmod 775 $history_dir || end 1
 chmod 775 $app_conf_dir || end 1
 chmod 775 $work_dir || end 1
@@ -131,6 +133,8 @@ chgrp $apache_group $common_log_dir || end 1
 chgrp $apache_group $src_dir/common/sh/query_file.sh || end 1
 chgrp $apache_group $service_init_script || end 1
 chgrp $apache_group $deploy_queue || end 1
+chgrp $apache_users_file || end 1
+chgrp $apache_groups_file || end 1
 chgrp -R $apache_group $history_dir || end 1
 chgrp -R $apache_group $app_conf_dir || end 1
 chgrp -R $apache_group $work_dir || end 1
