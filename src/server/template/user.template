@@ -8,7 +8,7 @@ app_log_max=
 global_history_size=
 service_log_size=
 # HTML
-cgi_public_pages=
+cgi_list_pages=
 cgi_private_pages
 cgi_index_title=
 cgi_search_title=

@@ -3,6 +3,6 @@ AuthName "Authentication"
 AuthUserFile @apache_users_file
 AuthGroupFile @apache_groups_file
 
-<Files @cgi_private_pages>
+<FilesMatch "@cgi_private_regex">
     Require group admin
 </Files>

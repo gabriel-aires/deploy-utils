@@ -118,17 +118,17 @@ function web_query_history () {
 
 function web_footer () {
 
-    mklist "$cgi_public_pages" $tmp_dir/cgi_public_pages
+    mklist "$cgi_list_pages" $tmp_dir/cgi_list_pages
 
     echo "      <hr>"
     echo "      <div class=\"footer\">"
     echo "          <div id=\"links\">"
     echo "              <p><a href=\"$start_page\">Início</a></p>"
     while read link_name; do
-        link_uri="$(dirname $SCRIPT_NAME)/$link_name"        
-        link_title="$(eval "echo \$cgi_$(echo "$link_name" | cut -f1 -d '.')_title")"
+        link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
+        link_title="$(eval "echo \$cgi_${link_name}_title")"
         test "$SCRIPT_NAME" != "$link_uri" && echo "          <p><a href=\"$link_uri\">"$link_title"</a></p>"
-    done < $tmp_dir/cgi_public_pages
+    done < $tmp_dir/cgi_list_pages
     echo "              <p><a href=\"$apache_log_alias\">Logs</a></p>"
     echo "          </div>"
     echo "          $navbar"

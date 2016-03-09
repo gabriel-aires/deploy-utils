@@ -14,9 +14,14 @@ function end() {
 }
 
 case "$1" in
-    --reconfigure) $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh && echo "Reconfigurando serviço..." || end 1 ;;
-    '') echo "Configurando serviço..." ;;
-    *)  echo "Argumento inválido" && end 1 ;;
+    --reconfigure)
+        echo "Reconfigurando serviço..."
+        $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
+        ;;
+    '') echo "Configurando serviço..."
+        ;;
+    *)  echo "Argumento inválido" && end 1
+        ;;
 esac
 
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || end 1
@@ -64,15 +69,22 @@ sed -i -r "s|@apache_vhost_logname|$apache_vhost_logname|" $apache_confd_dir/$ap
 touch $apache_users_file || end 1
 touch $apache_groups_file || end 1
 
-htpassword -b "$apache_users_file" "$apache_admin_user" "$apache_admin_password" || end 1
-grep -Ex "admin:.* $apache_admin_user ?.*" "$apache_groups_file" > /dev/null || sed -i -r "s|^(admin:.*)$|\1 $apache_admin_user|" $apache_groups_file
+htpasswd -b "$apache_users_file" "$apache_admin_user" "$apache_admin_password" || end 1
+
+if grep -Ex "admin:.*" "$apache_groups_file" > /dev/null; then
+    grep -Ex "admin:.* $apache_admin_user ?.*" "$apache_groups_file" > /dev/null || sed -i -r "s|^(admin:.*)$|\1 $apache_admin_user|" "$apache_groups_file"
+else
+    echo "admin: $apache_admin_user" >> "$apache_groups_file"
+fi
 
 test -f $cgi_dir/.htaccess && cp -f $cgi_dir/.htaccess $cgi_dir/.htaccess.bak
 cp -f $install_dir/template/htaccess.template $cgi_dir/.htaccess
 
+cgi_private_regex="$(echo "$cgi_private_pages" | sed -r 's/^( +)?(.)/\(\2/g' | sed -r 's/(.)( +)$/\1\)/g' | sed -r "s/ +/|/g")"
+
 sed -i -r "s|@apache_users_file|$apache_users_file|" $cgi_dir/.htaccess
 sed -i -r "s|@apache_groups_file|$apache_groups_file|" $cgi_dir/.htaccess
-sed -i -r "s|@cgi_private_pages|$cgi_private_pages|" $cgi_dir/.htaccess
+sed -i -r "s|@cgi_private_regex|$cgi_private_regex|" $cgi_dir/.htaccess
 
 #backup deploy_service
 test -f $service_init_script && cp -f $service_init_script $service_init_script.bak
