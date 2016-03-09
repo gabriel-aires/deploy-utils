@@ -133,8 +133,8 @@ chgrp $apache_group $common_log_dir || end 1
 chgrp $apache_group $src_dir/common/sh/query_file.sh || end 1
 chgrp $apache_group $service_init_script || end 1
 chgrp $apache_group $deploy_queue || end 1
-chgrp $apache_users_file || end 1
-chgrp $apache_groups_file || end 1
+chgrp $apache_group $apache_users_file || end 1
+chgrp $apache_group $apache_groups_file || end 1
 chgrp -R $apache_group $history_dir || end 1
 chgrp -R $apache_group $app_conf_dir || end 1
 chgrp -R $apache_group $work_dir || end 1
