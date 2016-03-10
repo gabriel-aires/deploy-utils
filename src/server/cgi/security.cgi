@@ -122,7 +122,7 @@ else
                         echo "          <form action=\"$start_page\" method=\"post\">"
                         echo "              <input type=\"hidden\" name=\"user\" value=\"$user\"></td></tr>"
                         echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_erase_yes\">"
-                        echo "              <input type=\"submit\" name=\"erase\" value=\"$submit_erase_no\">"
+                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_erase_no\">"
                         echo "          </form>"
                         echo "      </p>"
                         ;;
@@ -186,10 +186,6 @@ else
                         done < $tmp_dir/groups_subscribe
 
                         echo "      <p><b>Grupos do usuário '$user' atualizados com sucesso!</b></p>"
-                        ;;
-
-                    "$submit_erase_no" )
-                        echo "      <p><b>Remoção do usuário $user cancelada.</b></p>"
                         ;;
 
                 esac
