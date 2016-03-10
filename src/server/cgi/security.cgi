@@ -20,8 +20,8 @@ function membership() {
 function unsubscribe() {
 
     if [ -n "$1" ] && [ -n "$2" ]; then
-        local user_regex="$(echo "$1" | sed -r s|\.|\\.|)"
-        local group_regex="$(echo "$2" | sed -r s|\.|\\.|)"
+        local user_regex="$(echo "$1" | sed -r 's|\.|\\.|' )"
+        local group_regex="$(echo "$2" | sed -r 's|\.|\\.|' )"
         sed -i -r "s/^($group_regex:.* +)($user_regex +)(.*)$/\1\3/" "$apache_groups_file"
         sed -i -r "s/^($group_regex:)($user_regex +)(.*)$/\1\3/" "$apache_groups_file"
         sed -i -r "s/^($group_regex:.* +)($user_regex)$/\1/" "$apache_groups_file"
@@ -38,7 +38,7 @@ function subscribe() {
 
     if [ -n "$1" ] && [ -n "$2" ]; then
         local user"$1"
-        local group_regex="$(echo "$2" | sed -r s|\.|\\.|)"
+        local group_regex="$(echo "$2" | sed -r 's|\.|\\.|' )"
         sed -i -r "s/^($group_regex:.*)$/\1 $user$/" "$apache_groups_file"
     else
         return 1
@@ -153,7 +153,7 @@ else
                         echo "          Selecione os grupos desejados para o usuário $user:<br>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
                         echo "              <input type=\"hidden\" name=\"user\" value=\"$user\">"
-                        echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\"></td></tr>"                        
+                        echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\"></td></tr>"
                         cat "$tmp_dir/groups_checked" | sort | sed -r "s|(.*)|\t\t\t\t\t\t<input type=\"checkbox\" name=\"group\" value=\"\1\" checked>\1<br>|"
                         cat "$tmp_dir/groups_unchecked" | sort | sed -r "s|(.*)|\t\t\t\t\t\t<input type=\"checkbox\" name=\"group\" value=\"\1\">\1<br>|"
                         echo "              <p><input type=\"submit\" name=\"submit\" value=\"$submit_groups\"></p>"
