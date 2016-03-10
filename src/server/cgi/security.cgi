@@ -130,7 +130,10 @@ else
                         ;;
 
                     "$submit_erase_yes")
-                        membership "$user" | xargs -d '\n' -I{} unsubscribe $user {} || end 1
+                        membership "$user" | while read group; do
+                            unsubscribe "$user" "$group" || end 1
+                            echo "      <p>Usuário '$user' retirado do grupo "$group".</p>"
+                        done
                         htpasswd -D "$apache_users_file" "$user" || end 1
                         echo "      <p><b>Usuário $user removido.</b></p>"
                         ;;
