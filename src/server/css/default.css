@@ -127,6 +127,7 @@ a, p {
 /* Footer */
 
 #footer, #navbar {
+    position: relative;
     line-height: 0.5rem;
     font-size: 1rem;
 }
