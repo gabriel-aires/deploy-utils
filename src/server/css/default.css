@@ -165,26 +165,40 @@ a, p {
 
 }
 
-.footer {
+#footer, #navbar {
 
-  position: relative;
-  color: black;
-  bottom: 0;
-  line-height: 0.5rem;
-  font-size: 1rem;
+    position: relative;
+    line-height: 0.5rem;
+    font-size: 1rem;
 
 }
 
-#links {
+#nav_left, #nav_right, #links_1, #links_2, #links_3, #links_4 {
 
   position: absolute;
-  left: 0;
 
 }
 
-#navbar {
+#nav_left {
+  left: 0
+}
 
-  position: absolute;
+#nav_right {
   right: 0
+}
 
+#links_1 {
+    left: 0%;
+}
+
+#links_2 {
+    left: 25%
+}
+
+#links_3 {
+    left: 50%
+}
+
+#links_4 {
+    left: 75%
 }

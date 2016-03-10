@@ -108,7 +108,7 @@ function web_query_history () {
         echo "          </table>"
         echo "      </p>"
 
-        navbar="<div id=\"navbar\"><p>Página: $nav</p></div>"
+        nav_right="<div id=\"nav_right\"><p>Página: $nav</p></div>"
 
     else
 
@@ -122,19 +122,37 @@ function web_query_history () {
 function web_footer () {
 
     mklist "$cgi_list_pages" $tmp_dir/cgi_list_pages
+    local index=1
+    local count=0
+    local max=3
 
-    echo "      <hr>"
-    echo "      <div class=\"footer\">"
-    echo "          <div id=\"links\">"
+    echo "      <div id=\"navbar\">"
+    echo "          <div id=\"nav_left\">"
     echo "              <p><a href=\"$start_page\">Início</a></p>"
+    echo "          </div>"
+    echo "          $nav_right"
+    echo "      </div>"
+    echo "      <hr>"
+    echo "      <div id=\"footer\" class=\"header_color\">"
+    echo "          <div id=\"links_$index\">"
     while read link_name; do
+
         link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
         link_title="$(eval "echo \$cgi_${link_name}_title")"
-        test "$SCRIPT_NAME" != "$link_uri" && echo "          <p><a href=\"$link_uri\">"$link_title"</a></p>"
+        if [ "$SCRIPT_NAME" != "$link_uri" ]; then
+            ((count++))
+            echo "              <p><a href=\"$link_uri\">"$link_title"</a></p>"
+            if [ "$count" -eq "$max" ]; then
+                ((index++))
+                echo "          </div>"
+                echo "          <div id=\"links_$index\">"
+                count=0
+            fi
+        fi
+
     done < $tmp_dir/cgi_list_pages
     echo "              <p><a href=\"$apache_log_alias\">Logs</a></p>"
     echo "          </div>"
-    echo "          $navbar"
     echo "      </div>"
     echo "  </div>"
     echo '  </body>'
