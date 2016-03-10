@@ -39,7 +39,7 @@ function subscribe() {
     if [ -n "$1" ] && [ -n "$2" ]; then
         local user"$1"
         local group_regex="$(echo "$2" | sed -r 's|\.|\\.|' )"
-        sed -r "s/^($group_regex:.*)$/\1 $user$/" "$apache_groups_file" > $tmp_dir/subscribe_tmp
+        sed -r "s/^($group_regex:.*)$/\1 $user/" "$apache_groups_file" > $tmp_dir/subscribe_tmp
         cp -f $tmp_dir/subscribe_tmp "$apache_groups_file"
     else
         return 1
