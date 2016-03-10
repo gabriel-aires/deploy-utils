@@ -7,7 +7,7 @@ source $install_dir/sh/include.sh || exit 1
 function membership() {
 
     if [ -n "$1" ]; then
-        local user_regex="$(echo "$1" | sed -r s|\.|\\.|)"
+        local user_regex="$(echo "$1" | sed -r 's|\.|\\.|' )"
         grep -Ex "[^:]+:.* +$user_regex +.*|[^:]+:$user_regex +.*|[^:]+:.* +$user_regex|[^:]+:$user_regex" "$apache_groups_file" | cut -f1 -d ':'
     else
         return 1
