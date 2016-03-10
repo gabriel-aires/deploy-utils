@@ -130,6 +130,7 @@ else
                         ;;
 
                     "$submit_erase_yes")
+                        membership "$user" | xargs -d '\n' -I{} unsubscribe $user {} || end 1
                         htpasswd -D "$apache_users_file" "$user" || end 1
                         echo "      <p><b>Usuário $user removido.</b></p>"
                         ;;
