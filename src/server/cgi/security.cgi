@@ -78,7 +78,7 @@ operation_groups="Gerenciar Grupos"
 operation_permissions="Gerenciar Permissões"
 submit_continue="Continuar"
 submit_erase_yes="Sim"
-submit_erase_no="Não"
+submit_erase_no="Nao"
 submit_groups="Atualizar Grupos"
 
 if [ -z "$POST_STRING" ]; then
