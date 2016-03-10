@@ -22,10 +22,10 @@ function unsubscribe() {
     if [ -n "$1" ] && [ -n "$2" ]; then
         local user_regex="$(echo "$1" | sed -r 's|\.|\\.|' )"
         local group_regex="$(echo "$2" | sed -r 's|\.|\\.|' )"
-        sed -i -r "s/^($group_regex:.* +)($user_regex +)(.*)$/\1\3/" "$apache_groups_file"
-        sed -i -r "s/^($group_regex:)($user_regex +)(.*)$/\1\3/" "$apache_groups_file"
-        sed -i -r "s/^($group_regex:.* +)($user_regex)$/\1/" "$apache_groups_file"
-        sed -i -r "s/^($group_regex:)($user_regex)$/\1/" "$apache_groups_file"
+        sed -r "s/^($group_regex:.* +)($user_regex +)(.*)$/\1\3/" "$apache_groups_file" > $tmp_dir/unsubscribe_tmp
+        sed -i -r "s/^($group_regex:)($user_regex +)(.*)$/\1\3/" $tmp_dir/unsubscribe_tmp
+        sed -i -r "s/^($group_regex:.* +)($user_regex)$/\1/" $tmp_dir/unsubscribe_tmp
+        sed -r "s/^($group_regex:)($user_regex)$/\1/" $tmp_dir/unsubscribe_tmp > "$apache_groups_file"
     else
         return 1
     fi
@@ -39,7 +39,8 @@ function subscribe() {
     if [ -n "$1" ] && [ -n "$2" ]; then
         local user"$1"
         local group_regex="$(echo "$2" | sed -r 's|\.|\\.|' )"
-        sed -i -r "s/^($group_regex:.*)$/\1 $user$/" "$apache_groups_file"
+        sed -r "s/^($group_regex:.*)$/\1 $user$/" "$apache_groups_file" > $tmp_dir/subscribe_tmp
+        cp -f $tmp_dir/subscribe_tmp "$apache_groups_file"
     else
         return 1
     fi
