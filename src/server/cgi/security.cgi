@@ -80,27 +80,29 @@ submit_erase_yes="Sim"
 submit_erase_no="Não"
 submit_groups="Atualizar Grupos"
 
-# Formulário de pesquisa
-echo "      <p>"
-echo "          <form action=\"$start_page\" method=\"post\">"
-# Usuário...
-echo "              <p>Gerenciar usuário:</p>"
-echo "              <p>"
-echo "                  <select class=\"select_default\" name=\"user\">"
-cut -f1 -d ':' $apache_users_file | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
-echo "                  </select>"
-echo "              </p>"
-# Operação...
-echo "              <p>Operação:</p>"
-echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_erase\"> $operation_erase<br>"
-echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_groups\"> $operation_groups<br>"
-echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_permissions\" checked> $operation_permissions<br>"
-# Submit
-echo "              <p><input type=\"submit\" name=\"submit\" value=\"$submit_continue\"></p>"
-echo "          </form>"
-echo "      </p>"
+if [ -z "$POST_STRING" ]; then
 
-if [ -n "$POST_STRING" ]; then
+    # Formulário de pesquisa
+    echo "      <p>"
+    echo "          <form action=\"$start_page\" method=\"post\">"
+    # Usuário...
+    echo "              <p>Gerenciar usuário:</p>"
+    echo "              <p>"
+    echo "                  <select class=\"select_default\" name=\"user\">"
+    cut -f1 -d ':' $apache_users_file | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
+    echo "                  </select>"
+    echo "              </p>"
+    # Operação...
+    echo "              <p>Operação:</p>"
+    echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_erase\"> $operation_erase<br>"
+    echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_groups\"> $operation_groups<br>"
+    echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_permissions\" checked> $operation_permissions<br>"
+    # Submit
+    echo "              <p><input type=\"submit\" name=\"submit\" value=\"$submit_continue\"></p>"
+    echo "          </form>"
+    echo "      </p>"
+
+else
 
     arg_string="&$(web_filter "$POST_STRING")&"
     user="$(echo "$arg_string" | sed -rn "s/^.*&user=([^\&]+)&.*$/\1/p")"
@@ -152,7 +154,7 @@ if [ -n "$POST_STRING" ]; then
                         echo "              <input type=\"hidden\" name=\"user\" value=\"$user\">"
                         cat "$tmp_dir/groups_checked" | sort | sed -r "s|(.*)|\t\t\t\t\t\t<input type=\"checkbox\" name=\"group\" value=\"\1\" checked>\1<br>|"
                         cat "$tmp_dir/groups_unchecked" | sort | sed -r "s|(.*)|\t\t\t\t\t\t<input type=\"checkbox\" name=\"group\" value=\"\1\">\1<br>|"
-                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_groups\">"
+                        echo "              <p><input type=\"submit\" name=\"submit\" value=\"$submit_groups\"></p>"
                         echo "          </form>"
                         echo "      </p>"
                         ;;
