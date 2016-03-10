@@ -4,183 +4,143 @@
 /* Elements */
 
 html {
-
     font-family:'Source Sans Pro','Helvetica Neue','Helvetica','Arial','sans-serif';
     font-weight:400;
     font-size: 100%;
     color: black;
     background-color: white;
-
 }
 
 body {
-
-  margin: 0;
-  padding: 0;
-
+    margin: 0;
+    padding: 0;
 }
 
 table {
-
-  border: 0;
-  border-spacing: 0.2rem;
-  border-collapse: separate;
-
+    border: 0;
+    border-spacing: 0.2rem;
+    border-collapse: separate;
 }
 
 th, td {
-
-  height: 1.8rem;
-  padding: 0.2rem;
-
+    height: 1.8rem;
+    padding: 0.2rem;
 }
 
 th, b {
-
-  font-weight: 600;
-
+    font-weight: 600;
 }
 
 a, p {
-
-  color: black;
-
+    color: black;
 }
 
-/* IDs */
+/* Header */
+
+.header_color {
+    background-color: #2871bf; /* dark blue #2871bf dark green #2e6e67 light brown #ba9082, light green #90BA82, light blue #66a1ff */
+    color: white;
+}
 
 #header {
-
     position: fixed;
     z-index: 1;
     top: 0%;
     width: 100%;
     height: 2.5rem;
-
 }
 
 #title {
-
     padding-left: 20;
     font-weight: 200;
     font-size: 2rem;
     position: absolute;
     left: 0;
-
 }
 
-
 #welcome {
-
     padding-top: 0.5rem;
     padding-right: 20;
     font-weight: 400;
     font-size: 1rem;
     position: absolute;
     right: 0;
-
 }
+
+/* Main */
 
 #main {
-
-  position: relative;
-  z-index: 0;
-  top: 2.5rem;
-  padding: 20;
-
+    position: relative;
+    z-index: 0;
+    top: 2.5rem;
+    padding: 20;
 }
 
-/* Classes */
-
-.header_color {
-
-  background-color: #2871bf; /* dark blue #2871bf dark green #2e6e67 light brown #ba9082, light green #90BA82, light blue #66a1ff */
-  color: white;
-
-}
+/* Tables */
 
 .query_table {
-
-  text-align: center;
-  background-color: white;
-  width: 100%;
-
+    text-align: center;
+    background-color: white;
+    width: 100%;
 }
 
 .query_row_default {
-
-  background-color: #ebeae1;
-  color: black;
-
+    background-color: #ebeae1;
+    color: black;
 }
 
 .query_row_warning {
-
-  background-color: #e6c0b3;
-  color: black;
-
+    background-color: #e6c0b3;
+    color: black;
 }
 
 .cfg_table {
-
-  background-color: #EFF5F5;
-
+    background-color: #EFF5F5;
 }
 
 /* Input */
 
 .select_small {
-
-  min-width: 7rem;
-
+    min-width: 7rem;
 }
 
 .select_default {
-
-  min-width: 15rem;
-
+    min-width: 15rem;
 }
 
 .select_large {
-
-  min-width: 30rem;
-
+    min-width: 30rem;
 }
 
 .text_small {
-
-  width: 7rem;
-
+    width: 7rem;
 }
 
 .text_default {
-
-  width: 15rem;
-
+    width: 15rem;
 }
 
 .text_large {
-
-  width: 30rem;
-
+    width: 30rem;
 }
 
-#footer, #navbar {
+/* Footer */
 
-    position: relative;
+#footer, #navbar {
     line-height: 0.5rem;
     font-size: 1rem;
+}
 
+#footer {
+    height: 2.5rem;
 }
 
 #nav_left, #nav_right, #links_1, #links_2, #links_3, #links_4 {
-
-  position: absolute;
-
+    position: absolute;
 }
 
 #nav_left {
-  left: 0
+    left: 0
 }
 
 #nav_right {

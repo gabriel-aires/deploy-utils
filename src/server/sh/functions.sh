@@ -133,7 +133,7 @@ function web_footer () {
     echo "          $nav_right"
     echo "      </div>"
     echo "      <hr>"
-    echo "      <div id=\"footer\" class=\"header_color\">"
+    echo "      <div id=\"footer\">"
     echo "          <div id=\"links_$index\">"
     while read link_name; do
 
