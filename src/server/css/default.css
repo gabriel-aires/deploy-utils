@@ -141,11 +141,11 @@ a, p {
 }
 
 #nav_left {
-    left: 0
+    left: 0;
 }
 
 #nav_right {
-  right: 0
+  right: 0;
 }
 
 #links_1 {
@@ -153,13 +153,13 @@ a, p {
 }
 
 #links_2 {
-    left: 25%
+    left: 25%;
 }
 
 #links_3 {
-    left: 50%
+    left: 50%;
 }
 
 #links_4 {
-    left: 75%
+    left: 75%;
 }
