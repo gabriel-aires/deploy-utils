@@ -48,6 +48,7 @@ function web_header () {
     echo "      <div id=\"header\" class=\"header_color\">"
     echo "          <div id=\"title\">$page_title</div>"
     echo "          <div id=\"welcome\">$welcome_msg</div>"
+    echo "      </div>"
     echo "      <div id=\"main\">"
 
     return 0
