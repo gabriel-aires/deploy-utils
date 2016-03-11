@@ -164,7 +164,7 @@ else
                         touch "$tmp_dir/form_output"
                         erase_option=true
 
-                        if [ -f "$web_permissions_file" ]; then
+                        if [ "$(cat "$web_permissions_file" | wc -l)" -ge 1 ]; then
                             query_file.sh --delim "$delim" --replace-delim "</th><th>"\
                                 --select $col_resource_type $col_resource_name $col_permission \
                                 --top 1 "$web_permissions_file" \
