@@ -186,7 +186,7 @@ else
                             sed -i -r "s|value=\"(.*)</td><td>(.*)</td><td>(.*)</td></tr>\">|value=\"user$delim$user$delim\1$delim\2$delim\3$delim\">|" "$tmp_dir/permissions_user"
 
                             echo "          </p>Permissões do usuário '$user':<p>" >> "$tmp_dir/form_output"
-                            echo "          <table>" >> "$tmp_dir/form_output"
+                            echo "          <table border=1 class=\"cfg_table\">" >> "$tmp_dir/form_output"
                             cat "$tmp_dir/permissions_header" >> "$tmp_dir/form_output"
                             cat "$tmp_dir/permissions_user" >> "$tmp_dir/form_output"
                             echo "          </table>" >> "$tmp_dir/form_output"
@@ -261,7 +261,7 @@ else
                         while [ -n "$permission_string" ]; do
                             subject_type="$(echo "$permission_string" | cut -f1 -d "$delim")"
                             subject_type="$(echo "$permission_string" | cut -f2 -d "$delim")"
-                            resource_type"$(echo "$permission_string" | cut -f3 -d "$delim")"
+                            resource_type="$(echo "$permission_string" | cut -f3 -d "$delim")"
                             resource_name="$(echo "$permission_string" | cut -f4 -d "$delim")"
                             permission="$(echo "$permission_string" | cut -f5 -d "$delim")"
 
