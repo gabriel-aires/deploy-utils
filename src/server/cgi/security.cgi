@@ -165,12 +165,13 @@ else
                         erase_option=true
 
                         if [ "$(cat "$web_permissions_file" | wc -l)" -ge 1 ]; then
-                            query_file.sh --delim "$delim" --replace-delim "</th><th>"\
+                            query_file.sh --delim "$delim" --replace-delim "</th><th>" \
                                 --select $col_resource_type $col_resource_name $col_permission \
-                                --top 1 "$web_permissions_file" \
+                                --top 1 \
+                                --from "$web_permissions_file" \
                                 > $tmp_dir/permissions_header
 
-                            query_file.sh --delim "$delim" --replace-delim "</td><td>"\
+                            query_file.sh --delim "$delim" --replace-delim "</td><td>" \
                                 --select $col_resource_type $col_resource_name $col_permission \
                                 --from "$web_permissions_file" \
                                 --where $col_subject_type=='user' $col_subject_name=="$user" \
@@ -185,8 +186,10 @@ else
                             sed -i -r "s|value=\"(.*)</td><td>(.*)</td><td>(.*)</td></tr>\">|value=\"user$delim$user$delim\1$delim\2$delim\3$delim\">|" "$tmp_dir/permissions_user"
 
                             echo "          </p>Permissões do usuário '$user':<p>" >> "$tmp_dir/form_output"
+                            echo "          <table>" >> "$tmp_dir/form_output"
                             cat "$tmp_dir/permissions_header" >> "$tmp_dir/form_output"
                             cat "$tmp_dir/permissions_user" >> "$tmp_dir/form_output"
+                            echo "          </table>" >> "$tmp_dir/form_output"
 
                         else
                             erase_option=false
