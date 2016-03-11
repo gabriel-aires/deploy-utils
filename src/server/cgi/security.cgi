@@ -227,7 +227,7 @@ else
                         # Permissão
                         echo "              <p>"
                         echo "                  Permissão:<br>"
-                        echo "      		    <select class=\"select_default\" name=\"resource_type\">"
+                        echo "      		    <select class=\"select_default\" name=\"permission\">"
                         mklist "$regex_permission" | while read permission; do
                             echo "		        	<option>$permission</option>"
                         done
