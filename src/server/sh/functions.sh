@@ -170,7 +170,6 @@ function add_login() {
     if [ -n "$1" ] && [ -n "$2" ]; then
         local user="$1"
         local password="$2"
-        lock "$(basename "$web_users_file")" "Tabela de usuários bloqueada para escrita. Tente mais tarde."
         htpasswd -b "$web_users_file" "$user" "$password" || return 1
     else
         return 1
@@ -186,7 +185,6 @@ function delete_login() {
 
     if [ -n "$1" ]; then
         local user="$1"
-        lock "$(basename "$web_users_file")" "Tabela de usuários bloqueada para escrita. Tente mais tarde."
         htpasswd -D "$web_users_file" "$user" || end 1
     else
         return 1
@@ -212,7 +210,6 @@ function membership() {
 function unsubscribe() {
 
     if [ -n "$1" ] && [ -n "$2" ]; then
-        lock "$(basename "$web_groups_file")" "Arquivo de grupos bloqueado para escrita. Tente mais tarde."
         local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
         local group_regex="$(echo "$2" | sed -r 's|([\.\-])|\\\1|g' )"
         sed -r "s/^($group_regex:.* +)($user_regex +)(.*)$/\1\3/" "$web_groups_file" > $tmp_dir/unsubscribe_tmp
@@ -230,7 +227,6 @@ function unsubscribe() {
 function subscribe() {
 
     if [ -n "$1" ] && [ -n "$2" ]; then
-        lock "$(basename "$web_groups_file")" "Arquivo de grupos bloqueado para escrita. Tente mais tarde."
         local user"$1"
         local group_regex="$(echo "$2" | sed -r 's|([\.\-])|\\\1|g' )"
         sed -r "s/^($group_regex:.*)$/\1 $user/" "$web_groups_file" > $tmp_dir/subscribe_tmp
@@ -268,14 +264,18 @@ function add_permission() { #subject_type (user/group), #subject_name, #resource
 
     chk_permission $@ || return 1
     touch "$web_permissions_file" || return 1
-    lock "$(basename "$web_permissions_file")" "Tabela de permissões bloqueada para escrita. Tente mais tarde."
 
     if [ "$(cat $web_permissions_file | wc -l)" -eq 0 ]; then
         local header="$(echo "$col_subject_type$col_subject_name$col_resource_type$col_resource_name$col_permission" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
         echo "$header" >> "$web_permissions_file"
     fi
 
-    echo "$1$delim$2$delim$3$delim$4$delim$5$delim" >> "$web_permissions_file"
+    if grep -Ex "$1$delim$2$delim$3$delim$4$delim($regex_permission)$delim" "$web_permissions_file" > /dev/null; then
+        echo "<p>Já foi atribuída uma permissão correspondente ao sujeito '$2' / recurso '$4'. Favor remover a permissão conflitante e tentar novamente.</p>"
+        return 1
+    else
+        echo "$1$delim$2$delim$3$delim$4$delim$5$delim" >> "$web_permissions_file"
+    fi        
 
     return 0
 
@@ -284,7 +284,7 @@ function add_permission() { #subject_type (user/group), #subject_name, #resource
 function delete_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
 
     chk_permission $@ || return 1
-    lock "$(basename "$web_permissions_file")" "Tabela de permissões bloqueada para escrita. Tente mais tarde."
+
     touch "$web_permissions_file" || return 1
     delete_regex="$(echo "$1$delim$2$delim$3$delim$4$delim$5$delim" | sed -r 's|([\.\-])|\\\1|g')"
     sed -r "s|$delete_regex$||" "$web_permissions_file" > $tmp_dir/delete_permission_tmp || return 1
