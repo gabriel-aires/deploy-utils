@@ -35,9 +35,9 @@ submit_continue="Continuar"
 submit_erase_yes="Sim"
 submit_erase_no="Nao"
 submit_groups="Atualizar Grupos"
-submit_permision_add="Adicionar"
-submit_permision_erase="Remover"
-submit_permision_save="Salvar"
+submit_permission_add="Adicionar"
+submit_permission_erase="Remover"
+submit_permission_save="Salvar"
 
 if [ -z "$POST_STRING" ]; then
 
@@ -198,7 +198,7 @@ else
                         cat "$tmp_dir/form_output"
                         echo "              <input type=\"hidden\" name=\"user\" value=\"$user\">"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\"></td></tr>"
-                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_permision_add\">"
+                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_permission_add\">"
                         test $delete_option && echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_permission_erase\">"
                         echo "          </form>"
                         echo "      </p>"
@@ -234,7 +234,7 @@ else
                         echo "              </p>"
                         echo "              <input type=\"hidden\" name=\"user\" value=\"$user\">"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
-                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_permision_save\">"
+                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_permission_save\">"
                         echo "          </form>"
                         echo "      </p>"
                         ;;
