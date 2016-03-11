@@ -66,15 +66,15 @@ sed -i -r "s|@apache_log_dir|$apache_log_dir|" $apache_confd_dir/$apache_vhost_f
 sed -i -r "s|@apache_vhost_logname|$apache_vhost_logname|" $apache_confd_dir/$apache_vhost_filename
 
 #setup apache_authentication
-touch $apache_users_file || end 1
-touch $apache_groups_file || end 1
+touch $web_users_file || end 1
+touch $web_groups_file || end 1
 
-htpasswd -b "$apache_users_file" "$apache_admin_user" "$apache_admin_password" || end 1
+htpasswd -b "$web_users_file" "$web_admin_user" "$web_admin_password" || end 1
 
-if grep -Ex "admin:.*" "$apache_groups_file" > /dev/null; then
-    grep -Ex "admin:.* $apache_admin_user ?.*" "$apache_groups_file" > /dev/null || sed -i -r "s|^(admin:.*)$|\1 $apache_admin_user|" "$apache_groups_file"
+if grep -Ex "admin:.*" "$web_groups_file" > /dev/null; then
+    grep -Ex "admin:.* $web_admin_user ?.*" "$web_groups_file" > /dev/null || sed -i -r "s|^(admin:.*)$|\1 $web_admin_user|" "$web_groups_file"
 else
-    echo "admin: $apache_admin_user" >> "$apache_groups_file"
+    echo "admin: $web_admin_user" >> "$web_groups_file"
 fi
 
 test -f $cgi_dir/.htaccess && cp -f $cgi_dir/.htaccess $cgi_dir/.htaccess.bak
@@ -83,8 +83,8 @@ cp -f $install_dir/template/htaccess.template $cgi_dir/.htaccess
 cgi_private_regex="^$(echo "$cgi_private_pages" | sed -r 's/^( +)?(.)/\(\2/g' | sed -r 's/(.)( +)?$/\1\)/g' | sed -r "s/ +/|/g")\.cgi$"
 cgi_admin_regex="^$(echo "$cgi_admin_pages" | sed -r 's/^( +)?(.)/\(\2/g' | sed -r 's/(.)( +)?$/\1\)/g' | sed -r "s/ +/|/g")\.cgi$"
 
-sed -i -r "s|@apache_users_file|$apache_users_file|" $cgi_dir/.htaccess
-sed -i -r "s|@apache_groups_file|$apache_groups_file|" $cgi_dir/.htaccess
+sed -i -r "s|@web_users_file|$web_users_file|" $cgi_dir/.htaccess
+sed -i -r "s|@web_groups_file|$web_groups_file|" $cgi_dir/.htaccess
 sed -i -r "s/@cgi_private_regex/$cgi_private_regex/" $cgi_dir/.htaccess
 sed -i -r "s/@cgi_admin_regex/$cgi_admin_regex/" $cgi_dir/.htaccess
 
@@ -118,8 +118,8 @@ chmod 775 $common_log_dir || end 1
 chmod 755 $src_dir/common/sh/query_file.sh || end 1
 chmod 755 $service_init_script || end 1
 chmod 770 $deploy_queue || end 1
-chmod 660 $apache_users_file || end 1
-chmod 660 $apache_groups_file || end 1
+chmod 660 $web_users_file || end 1
+chmod 660 $web_groups_file || end 1
 chmod 775 $history_dir || end 1
 chmod 775 $app_conf_dir || end 1
 chmod 775 $work_dir || end 1
@@ -133,8 +133,8 @@ chgrp $apache_group $common_log_dir || end 1
 chgrp $apache_group $src_dir/common/sh/query_file.sh || end 1
 chgrp $apache_group $service_init_script || end 1
 chgrp $apache_group $deploy_queue || end 1
-chgrp $apache_group $apache_users_file || end 1
-chgrp $apache_group $apache_groups_file || end 1
+chgrp $apache_group $web_users_file || end 1
+chgrp $apache_group $web_groups_file || end 1
 chgrp -R $apache_group $history_dir || end 1
 chgrp -R $apache_group $app_conf_dir || end 1
 chgrp -R $apache_group $work_dir || end 1

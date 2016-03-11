@@ -105,9 +105,9 @@ function clean_locks () {
 
 function mklist () {
 
-    if [ ! -z "$1" ] && [ ! -z "$2" ]; then
-        local lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g')
-        echo "$lista" > $2
+    if [ -n "$1" ]; then
+        local lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/|/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g')
+        test -n "$2" && echo "$lista" > "$2" || echo -e "$lista"
     else
         end 1 2> /dev/null || exit 1
     fi

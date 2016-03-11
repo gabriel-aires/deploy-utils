@@ -1,7 +1,7 @@
 AuthType Basic
 AuthName "Authentication"
-AuthUserFile @apache_users_file
-AuthGroupFile @apache_groups_file
+AuthUserFile @web_users_file
+AuthGroupFile @web_groups_file
 
 <FilesMatch "@cgi_private_regex">
     Require valid-user

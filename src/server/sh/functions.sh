@@ -163,6 +163,136 @@ function web_footer () {
 
 }
 
+function add_login() {
+
+    test -f "$web_users_file" || return 1
+
+    if [ -n "$1" ] && [ -n "$2" ]; then
+        local user="$1"
+        local password="$2"
+        lock "$(basename "$web_users_file")" "Tabela de usuários bloqueada para escrita. Tente mais tarde."
+        htpasswd -b "$web_users_file" "$user" "$password" || return 1
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function delete_login() {
+
+    test -f "$web_users_file" || return 1
+
+    if [ -n "$1" ]; then
+        local user="$1"
+        lock "$(basename "$web_users_file")" "Tabela de usuários bloqueada para escrita. Tente mais tarde."
+        htpasswd -D "$web_users_file" "$user" || end 1
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function membership() {
+
+    if [ -n "$1" ]; then
+        local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
+        grep -Ex "[^:]+:.* +$user_regex +.*|[^:]+:$user_regex +.*|[^:]+:.* +$user_regex|[^:]+:$user_regex" "$web_groups_file" | cut -f1 -d ':'
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function unsubscribe() {
+
+    if [ -n "$1" ] && [ -n "$2" ]; then
+        lock "$(basename "$web_groups_file")" "Arquivo de grupos bloqueado para escrita. Tente mais tarde."
+        local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
+        local group_regex="$(echo "$2" | sed -r 's|([\.\-])|\\\1|g' )"
+        sed -r "s/^($group_regex:.* +)($user_regex +)(.*)$/\1\3/" "$web_groups_file" > $tmp_dir/unsubscribe_tmp
+        sed -i -r "s/^($group_regex:)($user_regex +)(.*)$/\1\3/" $tmp_dir/unsubscribe_tmp
+        sed -i -r "s/^($group_regex:.* +)($user_regex)$/\1/" $tmp_dir/unsubscribe_tmp
+        sed -r "s/^($group_regex:)($user_regex)$/\1/" $tmp_dir/unsubscribe_tmp > "$web_groups_file"
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function subscribe() {
+
+    if [ -n "$1" ] && [ -n "$2" ]; then
+        lock "$(basename "$web_groups_file")" "Arquivo de grupos bloqueado para escrita. Tente mais tarde."
+        local user"$1"
+        local group_regex="$(echo "$2" | sed -r 's|([\.\-])|\\\1|g' )"
+        sed -r "s/^($group_regex:.*)$/\1 $user/" "$web_groups_file" > $tmp_dir/subscribe_tmp
+        cp -f $tmp_dir/subscribe_tmp "$web_groups_file"
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function chk_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
+
+    test -f "$web_permissions_file" || return 1
+    test "$#" -eq 5 || return 1
+
+    local subject_type="$1"
+    local subject_name="$2"
+    local resource_type="$3"
+    local resource_name="$4"
+    local permission="$5"
+
+    valid "subject_type" "continue" || return 1
+    valid "subject_name" "continue" || return 1
+    valid "resource_type" "continue" || return 1
+    valid "resource_name" "continue" || return 1
+    valid "permission" "continue" || return 1
+
+    return 0
+
+}
+
+function add_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
+
+    if [ ! -f "$web_permissions_file" ]; then
+        local header="$(echo "$col_subject_type$col_subject_name$col_resource_type$col_resource_name$col_permission" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
+        echo "$header" > "$web_permissions_file" || return 1
+    fi
+
+    chk_permission || return 1
+    lock "$(basename "$web_permissions_file")" "Tabela de permissões bloqueada para escrita. Tente mais tarde."
+    touch "$web_permissions_file" || return 1
+    echo "$1$delim$2$delim$3$delim$4$delim$5$delim" >> "$web_permissions_file" || return 1
+
+    return 0
+
+}
+
+function delete_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
+
+    chk_permission || return 1
+    lock "$(basename "$web_permissions_file")" "Tabela de permissões bloqueada para escrita. Tente mais tarde."
+    touch "$web_permissions_file" || return 1
+    delete_regex="$(echo "$1$delim$2$delim$3$delim$4$delim$5$delim" | sed -r 's|([\.\-])|\\\1|g')"
+    sed -r "s|$delete_regex$||" "$web_permissions_file" > $tmp_dir/delete_permission_tmp || return 1
+    cat $tmp_dir/delete_permission_tmp | sed -r "s|^$||" > "$web_permissions_file" || return 1
+
+    return 0
+
+}
+
 function editconf () {      # Atualiza entrada em arquivo de configuração
 
     local exit_cmd="end 1 2> /dev/null || exit 1"

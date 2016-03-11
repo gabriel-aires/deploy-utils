@@ -51,10 +51,11 @@ apache_servername=
 apache_cgi_alias=
 apache_css_alias=
 apache_log_alias=
-apache_users_file=
-apache_groups_file=
-apache_admin_user=
-apache_admin_password=
+web_users_file=
+web_groups_file=
+web_permissions_file=
+web_admin_user=
+web_admin_password=
 cgi_timeout=
 cgi_list_pages=
 cgi_public_pages=
@@ -67,9 +68,20 @@ cgi_deploy_pages_title=
 cgi_security_title=
 cgi_signup_title=
 cgi_table_size=
+# Estrutura da tabela de permissões:
+col_subject_type=
+col_subject_name=
+col_resource_type=
+col_resource_name=
+col_permission=
 # Expressões de validação utilizadas na interface Web
 regex_user=
 regex_password=
+regex_subject_type=
+regex_subject_name=
+regex_resource_type=
+regex_resource_name=
+regex_permission=
 # Expressões de validação de diretórios utilizados no processo de deploy
 regex_tmp_dir=
 regex_bak_dir=

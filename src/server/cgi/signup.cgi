@@ -54,10 +54,10 @@ if [ -n "$POST_STRING" ]; then
         valid "user" "<p><b>Login inválido.</b></p>"
         valid "password" "<p><b>Senha inválida.</b></p>"
 
-        if grep -E "^$user:" "$apache_users_file" > /dev/null; then
+        if grep -E "^$user:" "$web_users_file" > /dev/null; then
             echo "      <p><b>O login '$user' não está disponível. Favor escolher outro nome de usuário.</b></p>"
         else
-            htpasswd -b "$apache_users_file" "$user" "$password" || end 1
+            add_login "$user" "$password" || end 1
             echo "      <p><b>Usuário '$user' adicionado com sucesso.</b></p>"
         fi
 
