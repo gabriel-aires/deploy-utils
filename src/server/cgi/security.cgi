@@ -184,6 +184,7 @@ else
                             sed -i -r "s|^(.*)$|<tr><td><input type=\"checkbox\" name=\"permission_string\" value=\"\1\"></td><td>\1|" "$tmp_dir/permissions_user"
                             sed -i -r "s|value=\"(.*)</td><td>(.*)</td><td>(.*)</td></tr>\">|value=\"user$delim$user$delim\1$delim\2$delim\3$delim\">|" "$tmp_dir/permissions_user"
 
+                            echo "          Permissões do usuário '$user':<br>" >> "$tmp_dir/form_output"
                             cat "$tmp_dir/permissions_header" >> "$tmp_dir/form_output"
                             cat "$tmp_dir/permissions_user" >> "$tmp_dir/form_output"
 
@@ -193,7 +194,6 @@ else
                         fi
 
                         echo "      <p>"
-                        echo "          Permissões do usuário '$user':<br>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
                         cat "$tmp_dir/form_output"
                         echo "              <input type=\"hidden\" name=\"user\" value=\"$user\">"
