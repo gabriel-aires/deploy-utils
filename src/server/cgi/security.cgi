@@ -30,7 +30,7 @@ test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTE
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
 operation_erase="Remover"
 operation_groups="Gerenciar Grupos"
-operation_permissions="Gerenciar Permissões"
+operation_permissions="Gerenciar Permissoes"
 submit_continue="Continuar"
 submit_erase_yes="Sim"
 submit_erase_no="Nao"
