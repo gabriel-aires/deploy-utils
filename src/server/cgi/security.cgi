@@ -208,6 +208,7 @@ else
 
                         # Formulário de permissão.
                         echo "      <p>"
+                        echo "          Editando permissões para o usuário $user...<br>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
                         # Tipo de recurso
                         echo "              <p>"
@@ -227,7 +228,7 @@ else
                         echo "              <p>"
                         echo "                  Permissão:<br>"
                         echo "      		    <select class=\"select_default\" name=\"resource_type\">"
-                        mklist "$regex_permission" | while read resource_type; do
+                        mklist "$regex_permission" | while read permission; do
                             echo "		        	<option>$permission</option>"
                         done
                         echo "		            </select>"
