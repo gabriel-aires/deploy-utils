@@ -183,7 +183,7 @@ else
 
                             sed -i -r "s|<td>$|</tr>|" "$tmp_dir/permissions_user"
                             sed -i -r "s|^(.*)$|<tr><td><input type=\"checkbox\" name=\"permission_string\" value=\"\1\"></td><td>\1|" "$tmp_dir/permissions_user"
-                            sed -i -r "s|value=\"(.*)</td><td>(.*)</td><td>(.*)</td></tr>\">|value=\"user$delim$user$delim\1$delim\2$delim\3$delim\">|" "$tmp_dir/permissions_user"
+                            sed -i -r "s|value=\"(.*)</td><td>(.*)</td><td>(.*)</td></tr>\">|value=\"user:$user:\1:\2:\3:\">|" "$tmp_dir/permissions_user"
 
                             echo "          </p>Permissões do usuário '$user':<p>" >> "$tmp_dir/form_output"
                             echo "          <table border=1 class=\"cfg_table\">" >> "$tmp_dir/form_output"
@@ -259,11 +259,11 @@ else
                         permission_string="$(echo "$arg_string" | sed -rn "s/^.*&permission_string=([^\&]+)&.*$/\1/p")"
 
                         while [ -n "$permission_string" ]; do
-                            subject_type="$(echo "$permission_string" | cut -f1 -d "$delim")"
-                            subject_type="$(echo "$permission_string" | cut -f2 -d "$delim")"
-                            resource_type="$(echo "$permission_string" | cut -f3 -d "$delim")"
-                            resource_name="$(echo "$permission_string" | cut -f4 -d "$delim")"
-                            permission="$(echo "$permission_string" | cut -f5 -d "$delim")"
+                            subject_type="$(echo "$permission_string" | cut -f1 -d ":")"
+                            subject_type="$(echo "$permission_string" | cut -f2 -d ":")"
+                            resource_type="$(echo "$permission_string" | cut -f3 -d ":")"
+                            resource_name="$(echo "$permission_string" | cut -f4 -d ":")"
+                            permission="$(echo "$permission_string" | cut -f5 -d ":")"
 
                             delete_permission "$subject_type" "$subject_name" "$resource_type" "$resource_name" "$permission" || end 1
                             echo "      <p>Permissão '$resource_type;$resource_name;$permission' removida para o usuário '$user'.</p>"
