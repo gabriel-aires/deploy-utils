@@ -269,8 +269,8 @@ else
 
                         echo "      <p></b>Permissões selecionadas removidas com sucesso.</b></p>"
                         ;;
+                esac
                 ;;
-
         esac
 
     fi
