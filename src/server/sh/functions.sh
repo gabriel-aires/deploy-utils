@@ -266,7 +266,7 @@ function chk_permission() { #subject_type (user/group), #subject_name, #resource
 
 function add_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
 
-    chk_permission || return 1
+    chk_permission $@ || return 1
     touch "$web_permissions_file" || return 1
     lock "$(basename "$web_permissions_file")" "Tabela de permissões bloqueada para escrita. Tente mais tarde."
 
@@ -283,7 +283,7 @@ function add_permission() { #subject_type (user/group), #subject_name, #resource
 
 function delete_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
 
-    chk_permission || return 1
+    chk_permission $@ || return 1
     lock "$(basename "$web_permissions_file")" "Tabela de permissões bloqueada para escrita. Tente mais tarde."
     touch "$web_permissions_file" || return 1
     delete_regex="$(echo "$1$delim$2$delim$3$delim$4$delim$5$delim" | sed -r 's|([\.\-])|\\\1|g')"
