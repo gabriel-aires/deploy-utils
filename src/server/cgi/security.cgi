@@ -198,8 +198,9 @@ else
                         cat "$tmp_dir/form_output"
                         echo "              <input type=\"hidden\" name=\"user\" value=\"$user\">"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\"></td></tr>"
+                        echo "              <br>"
                         echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_permission_add\">"
-                        test $delete_option && echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_permission_erase\">"
+                        test $erase_option && echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_permission_erase\">"
                         echo "          </form>"
                         echo "      </p>"
                         ;;
