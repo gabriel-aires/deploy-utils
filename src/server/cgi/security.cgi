@@ -208,7 +208,7 @@ else
 
                         # Formulário de permissão.
                         echo "      <p>"
-                        echo "          Editando permissões para o usuário $user...<br>"
+                        echo "          Editando permissões para o usuário '$user'<br>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
                         # Tipo de recurso
                         echo "              <p>"

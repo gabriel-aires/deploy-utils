@@ -68,6 +68,7 @@ sed -i -r "s|@apache_vhost_logname|$apache_vhost_logname|" $apache_confd_dir/$ap
 #setup apache_authentication
 touch $web_users_file || end 1
 touch $web_groups_file || end 1
+touch $web_permissions_file || end 1
 
 htpasswd -b "$web_users_file" "$web_admin_user" "$web_admin_password" || end 1
 
@@ -120,6 +121,7 @@ chmod 755 $service_init_script || end 1
 chmod 770 $deploy_queue || end 1
 chmod 660 $web_users_file || end 1
 chmod 660 $web_groups_file || end 1
+chmod 660 $web_permissions_file || end 1
 chmod 775 $history_dir || end 1
 chmod 775 $app_conf_dir || end 1
 chmod 775 $work_dir || end 1
@@ -135,6 +137,7 @@ chgrp $apache_group $service_init_script || end 1
 chgrp $apache_group $deploy_queue || end 1
 chgrp $apache_group $web_users_file || end 1
 chgrp $apache_group $web_groups_file || end 1
+chgrp $apache_group $web_permissions_file || end 1
 chgrp -R $apache_group $history_dir || end 1
 chgrp -R $apache_group $app_conf_dir || end 1
 chgrp -R $apache_group $work_dir || end 1

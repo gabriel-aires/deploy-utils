@@ -266,15 +266,16 @@ function chk_permission() { #subject_type (user/group), #subject_name, #resource
 
 function add_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
 
-    if [ ! -f "$web_permissions_file" ]; then
+    chk_permission || return 1
+    touch "$web_permissions_file" || return 1
+    lock "$(basename "$web_permissions_file")" "Tabela de permissões bloqueada para escrita. Tente mais tarde."
+
+    if [ "$(cat $web_permissions_file | wc -l)" -eq 0 ]; then
         local header="$(echo "$col_subject_type$col_subject_name$col_resource_type$col_resource_name$col_permission" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
-        echo "$header" > "$web_permissions_file" || return 1
+        echo "$header" >> "$web_permissions_file"
     fi
 
-    chk_permission || return 1
-    lock "$(basename "$web_permissions_file")" "Tabela de permissões bloqueada para escrita. Tente mais tarde."
-    touch "$web_permissions_file" || return 1
-    echo "$1$delim$2$delim$3$delim$4$delim$5$delim" >> "$web_permissions_file" || return 1
+    echo "$1$delim$2$delim$3$delim$4$delim$5$delim" >> "$web_permissions_file"
 
     return 0
 
