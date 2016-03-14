@@ -329,6 +329,10 @@ function delete_permission() { #subject_type (user/group), #subject_name, #resou
 
 function clearance() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
 
+    # Debug
+    echo "clearance $@<br>"
+    # Debug
+
     test "$1" == "user" || return 1
     test "$#" -eq "5" || return 1
     chk_permission "$1" "$2" "$3" "$4" "$5" || return 1
@@ -336,7 +340,12 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
 
     local group_name=''
     local group_permission=''
+    local permission="$5"
     local effective="$(query_file.sh -d "$delim" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="user" 2=="$2" 3=="$3" 4=="$4")" || return 1
+
+    # Debug
+    echo "user explicit permission: $effective<br>"
+    # Debug
 
     if [ -z "$effective" ]; then
         membership "$2" | while read group_name; do
@@ -346,6 +355,10 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
             fi
         done
     fi
+
+    # Debug
+    echo "effective permission: $effective<br>"
+    # Debug
 
     test "$effective" == "write" && return 0
     test "$effective" == "$permission" && return 0
