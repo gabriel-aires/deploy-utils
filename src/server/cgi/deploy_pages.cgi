@@ -13,13 +13,31 @@ function submit_deploy() {
         return 1
 
     else
+
+        local app_simulation_clearance=false
+        local env_simulation_clearance=false
+        local app_deploy_clearance=false
+        local env_deploy_clearance=false
+        local show_simulation=false
+        local show_deploy=false
+
+        clearance "user" "$REMOTE_USER" "app" "$app_name" "read" && app_simulation_clearance=true
+        clearance "user" "$REMOTE_USER" "ambiente" "$env_name" "read" && env_simulation_clearance=true
+        $app_simulation_clearance && $env_simulation_clearance && show_simulation=true
+
+        if $show_simulation; then
+            clearance "user" "$REMOTE_USER" "app" "$app_name" "write" && app_deploy_clearance=true
+            clearance "user" "$REMOTE_USER" "ambiente" "$env_name" "write" && env_deploy_clearance=true
+            $app_deploy_clearance && $env_deploy_clearance && show_deploy=true
+        fi
+
         echo "      <p>"
         echo "          <form action=\"$start_page\" method=\"post\">"
         echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
         echo "              <input type=\"hidden\" name=\"$rev_param\" value=\"$rev_name\"></td></tr>"
         echo "              <input type=\"hidden\" name=\"$env_param\" value=\"$env_name\"></td></tr>"
-        test "$proceed" != "$proceed_simulation" && echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_simulation\">"
-        echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_deploy\">"
+        $show_simulation && test "$proceed" != "$proceed_simulation" && echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_simulation\">"
+        $show_deploy && echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_deploy\">"
         echo "          </form>"
         echo "      </p>"
     fi

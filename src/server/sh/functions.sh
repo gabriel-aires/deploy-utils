@@ -327,6 +327,32 @@ function delete_permission() { #subject_type (user/group), #subject_name, #resou
 
 }
 
+function clearance() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
+
+    test "$1" == "user" || return 1
+    test "$#" -eq "5" || return 1
+    chk_permission "$1" "$2" "$3" "$4" "$5" || return 1
+    membership "$2" | grep -Ex "admin" && return 0
+
+    local group_name=''
+    local group_permission=''
+    local effective="$(query_file.sh -d "$delim" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="user" 2=="$2" 3=="$3" 4=="$4")" || return 1
+
+    if [ -z "$effective" ]; then
+        membership "$2" | while read group_name; do
+            group_permission="$(query_file.sh -d "$delim" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="group" 2=="$group_name" 3=="$3" 4=="$4")"
+            if [ -z "$effective" ] || [ "$effective" == "write" -a "$group_permission" == "read" ]; then
+                effective="$group_permission"
+            fi
+        done
+    fi
+
+    test "$effective" == "write" && return 0
+    test "$effective" == "$permission" && return 0
+    return 1
+
+}
+
 function editconf () {      # Atualiza entrada em arquivo de configuração
 
     local exit_cmd="end 1 2> /dev/null || exit 1"
