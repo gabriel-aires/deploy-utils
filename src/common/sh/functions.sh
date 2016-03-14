@@ -190,6 +190,9 @@ function valid () {
         local valor
         local regra
         local regra_inversa
+        local retry="$interactive"
+
+        test "$retry" == "true" || retry=false
 
         if [ "${!#}" == "continue" ]; then
             ((flag_count++))
@@ -242,7 +245,7 @@ function valid () {
             esac
             eval "$exit_cmd"
 
-        elif "$interactive"; then
+        elif "$retry"; then
 
             while [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; do
                 paint 'fg' 'yellow'
