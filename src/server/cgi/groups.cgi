@@ -33,6 +33,7 @@ operation_erase="Remover"
 operation_users="Gerenciar Membros"
 operation_permissions="Gerenciar Permissoes"
 submit_continue="Continuar"
+submit_add="Criar Grupo"
 submit_erase_yes="Sim"
 submit_erase_no="Nao"
 submit_users="Atualizar Membros"
@@ -79,7 +80,7 @@ else
 
                     "$submit_continue")
                         echo "      <p>"
-                        echo "          Nome do grupo:<br>"
+                        echo "          <p>Nome do grupo:</p>"
                         echo "          <input type=\"text\" class=\"text_default\" name=\"group\"></input>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\"></td></tr>"
