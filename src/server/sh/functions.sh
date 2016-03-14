@@ -196,7 +196,7 @@ function delete_login() {
 
 function add_group() {
 
-    test -f "$web_groups_file" && echo "$1" >> "$web_groups_file" || return 1
+    test -f "$web_groups_file" && echo "$1:" >> "$web_groups_file" || return 1
     return 0
 
 }
