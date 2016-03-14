@@ -194,11 +194,43 @@ function delete_login() {
 
 }
 
+function add_group() {
+
+    test -f "$web_groups_file" && echo "$1" >> "$web_groups_file" || return 1
+    return 0
+
+}
+
+function delete_group() {
+
+    test -f "$web_groups_file" || return 1
+    touch "$web_groups_file" || return 1
+    delete_regex="^$(echo "$1" | sed -r 's|([\.\-])|\\\1|g'):.*\$"
+    sed -r "/$delete_regex/d" "$web_groups_file" > $tmp_dir/delete_group_tmp || return 1
+    cp -f $tmp_dir/delete_group_tmp "$web_groups_file" || return 1
+
+    return 0
+
+}
+
 function membership() {
 
     if [ -n "$1" ]; then
         local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
         grep -Ex "[^:]+:.* +$user_regex +.*|[^:]+:$user_regex +.*|[^:]+:.* +$user_regex|[^:]+:$user_regex" "$web_groups_file" | cut -f1 -d ':'
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function members_of() {
+
+    if [ -n "$1" ]; then
+        local group_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
+        mklist "$(grep -Ex "$group_regex:.*" "$web_groups_file" | cut -f2 -d ':')"
     else
         return 1
     fi

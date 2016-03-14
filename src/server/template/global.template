@@ -65,7 +65,8 @@ cgi_index_title=
 cgi_search_title=
 cgi_app_params_title=
 cgi_deploy_pages_title=
-cgi_security_title=
+cgi_users_title=
+cgi_groups_title=
 cgi_signup_title=
 cgi_table_size=
 # Estrutura da tabela de permissões:
@@ -76,6 +77,7 @@ col_resource_name=
 col_permission=
 # Expressões de validação utilizadas na interface Web
 regex_user=
+regex_group=
 regex_password=
 regex_subject_type=
 regex_subject_name=
