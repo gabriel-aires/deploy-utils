@@ -230,7 +230,8 @@ function members_of() {
 
     if [ -n "$1" ]; then
         local group_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
-        mklist "$(grep -Ex "$group_regex:.*" "$web_groups_file" | cut -f2 -d ':')"
+        local members="$(grep -Ex "$group_regex:.*" "$web_groups_file" | cut -f2 -d ':')"
+        test -n "$members" && mklist "$members"
     else
         return 1
     fi
