@@ -260,7 +260,7 @@ function unsubscribe() {
 function subscribe() {
 
     if [ -n "$1" ] && [ -n "$2" ]; then
-        local user"$1"
+        local user="$1"
         local group_regex="$(echo "$2" | sed -r 's|([\.\-])|\\\1|g' )"
         sed -r "s/^($group_regex:.*)$/\1 $user/" "$web_groups_file" > $tmp_dir/subscribe_tmp
         cp -f $tmp_dir/subscribe_tmp "$web_groups_file"
