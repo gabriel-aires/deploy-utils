@@ -90,7 +90,7 @@ else
                         ;;
 
                     "$submit_add")
-                        valid "group" "<p><b>O nome do grupo é inválido.</b></p>"
+                        valid "group" "<p><b>O nome do grupo é inválido: '$group'.</b></p>"
                         if grep -E "^$group:" "$web_groups_file" > /dev/null; then
                             echo "      <p><b>Já existe um grupo chamado '$group'. Favor escolher outro nome.</b></p>"
                         else
