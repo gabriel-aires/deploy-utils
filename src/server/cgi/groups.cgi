@@ -218,7 +218,7 @@ else
                                 echo "          </p>Permissões do grupo '$group':<p>" >> "$tmp_dir/form_output"
                                 echo "          <table border=1>" >> "$tmp_dir/form_output"
                                 cat "$tmp_dir/permissions_header" >> "$tmp_dir/form_output"
-                                cat "$tmp_dir/permissions_user" >> "$tmp_dir/form_output"
+                                cat "$tmp_dir/permissions_group" >> "$tmp_dir/form_output"
                                 echo "          </table>" >> "$tmp_dir/form_output"
 
                             else
