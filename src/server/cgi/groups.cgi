@@ -81,8 +81,8 @@ else
                     "$submit_continue")
                         echo "      <p>"
                         echo "          <p>Nome do grupo:</p>"
-                        echo "          <p><input type=\"text\" class=\"text_default\" name=\"group\"></input></p>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
+                        echo "              <p><input type=\"text\" class=\"text_default\" name=\"group\"></input></p>"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\"></td></tr>"
                         echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_add\">"
                         echo "          </form>"
