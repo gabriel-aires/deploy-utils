@@ -49,7 +49,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>Gerenciar grupo:</p>"
     echo "              <p>"
     echo "                  <select class=\"select_default\" name=\"group\">"
-    cut -f1 -d ':' $web_users_file | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
+    cut -f1 -d ':' $web_groups_file | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
     echo "                  </select>"
     echo "              </p>"
     # Operação...
