@@ -70,7 +70,7 @@ else
     operation="$(echo "$arg_string" | sed -rn "s/^.*&operation=([^\&]+)&.*$/\1/p")"
     submit="$(echo "$arg_string" | sed -rn "s/^.*&submit=([^\&]+)&.*$/\1/p")"
 
-    if [ -n "$group" ] && [ -n "$operation" ] && [ -n "$submit" ]; then
+    if [ -n "$operation" ] && [ -n "$submit" ]; then
 
         case "$operation" in
 
@@ -82,7 +82,6 @@ else
                         echo "          Nome do grupo:<br>"
                         echo "          <input type=\"text\" class=\"text_default\" name=\"group\"></input>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
-                        echo "              <input type=\"hidden\" name=\"group\" value=\"$group\"></td></tr>"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\"></td></tr>"
                         echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_add\">"
                         echo "          </form>"
