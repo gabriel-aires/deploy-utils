@@ -341,27 +341,35 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
     local group_name=''
     local group_permission=''
     local permission="$5"
-    local effective="$(query_file.sh -d "$delim" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="user" 2=="$2" 3=="$3" 4=="$4")" || return 1
+    local effective="$(query_file.sh -d "$delim" -r "" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="user" 2=="$2" 3=="$3" 4=="$4")" || return 1
 
     # Debug
-    echo "user explicit permission: $effective<br>"
+    echo "user explicit permission: $(echo "$effective" | cat -t)<br>"
     # Debug
 
     if [ -z "$effective" ]; then
-        membership "$2" | while read group_name; do
-            group_permission="$(query_file.sh -d "$delim" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="group" 2=="$group_name" 3=="$3" 4=="$4")"
+        while read group_name; do
+            group_permission="$(query_file.sh -d "$delim" -r "" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="group" 2=="$group_name" 3=="$3" 4=="$4")"
+
+            # Debug
+            echo "grupo: $group_name<br>"
+            echo "permissao_grupo: $group_permission<br>"
+            # Debug
+
             if [ -z "$effective" ] || [ "$effective" == "write" -a "$group_permission" == "read" ]; then
                 effective="$group_permission"
+                echo "effective: $effective<br>"
             fi
-        done
+        done < <(membership "$2")
     fi
 
     # Debug
-    echo "effective permission: $effective<br>"
+    echo "effective: $(echo "$effective" | cat -t)<br>"
+    echo "permission: $(echo "$permission" | cat -t)<br>"
     # Debug
 
-    test "$effective" == "write" && return 0
-    test "$effective" == "$permission" && return 0
+    test "$effective" = "write" && return 0
+    test "$effective" = "$permission" && return 0
     return 1
 
 }
