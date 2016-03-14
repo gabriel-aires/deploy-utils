@@ -162,37 +162,43 @@ else
                     "$submit_continue")
 
                         touch "$tmp_dir/form_output"
-                        erase_option=true
+                        erase_option=false
 
-                        if [ "$(cat "$web_permissions_file" | wc -l)" -ge 1 ]; then
-                            query_file.sh --delim "$delim" --replace-delim "</th><th>" \
-                                --select $col_resource_type $col_resource_name $col_permission \
-                                --top 1 \
-                                --from "$web_permissions_file" \
-                                > $tmp_dir/permissions_header
-
-                            query_file.sh --delim "$delim" --replace-delim "</td><td>" \
+                        if [ "$(cat "$web_permissions_file" | wc -l)" -ge 2 ]; then
+                            query_file.sh --delim "$delim" --replace-delim "</td><td>" --header 1 \
                                 --select $col_resource_type $col_resource_name $col_permission \
                                 --from "$web_permissions_file" \
                                 --where $col_subject_type=='user' $col_subject_name=="$user" \
                                 --order-by $col_resource_type $col_subject_name asc \
                                 > $tmp_dir/permissions_user
 
-                            sed -i -r "s|<th>$|</tr>|" "$tmp_dir/permissions_header"
-                            sed -i -r 's|^(.*)$|<tr><th></th><th>\1|' "$tmp_dir/permissions_header"
+                            if [ "$(cat "$tmp_dir/permissions_user" | wc -l)" -ge 1 ]; then
+                                erase_option=true
 
-                            sed -i -r "s|<td>$|</tr>|" "$tmp_dir/permissions_user"
-                            sed -i -r "s|^(.*)$|<tr><td><input type=\"checkbox\" name=\"permission_string\" value=\"\1\"></td><td>\1|" "$tmp_dir/permissions_user"
-                            sed -i -r "s|value=\"(.*)</td><td>(.*)</td><td>(.*)</td></tr>\">|value=\"user:$user:\1:\2:\3:\">|" "$tmp_dir/permissions_user"
+                                query_file.sh --delim "$delim" --replace-delim "</th><th>" \
+                                    --select $col_resource_type $col_resource_name $col_permission \
+                                    --top 1 \
+                                    --from "$web_permissions_file" \
+                                    > $tmp_dir/permissions_header
 
-                            echo "          </p>Permissões do usuário '$user':<p>" >> "$tmp_dir/form_output"
-                            echo "          <table border=1>" >> "$tmp_dir/form_output"
-                            cat "$tmp_dir/permissions_header" >> "$tmp_dir/form_output"
-                            cat "$tmp_dir/permissions_user" >> "$tmp_dir/form_output"
-                            echo "          </table>" >> "$tmp_dir/form_output"
+                                sed -i -r "s|<th>$|</tr>|" "$tmp_dir/permissions_header"
+                                sed -i -r 's|^(.*)$|<tr><th></th><th>\1|' "$tmp_dir/permissions_header"
+
+                                sed -i -r "s|<td>$|</tr>|" "$tmp_dir/permissions_user"
+                                sed -i -r "s|^(.*)$|<tr><td><input type=\"checkbox\" name=\"permission_string\" value=\"\1\"></td><td>\1|" "$tmp_dir/permissions_user"
+                                sed -i -r "s|value=\"(.*)</td><td>(.*)</td><td>(.*)</td></tr>\">|value=\"user:$user:\1:\2:\3:\">|" "$tmp_dir/permissions_user"
+
+                                echo "          </p>Permissões do usuário '$user':<p>" >> "$tmp_dir/form_output"
+                                echo "          <table border=1>" >> "$tmp_dir/form_output"
+                                cat "$tmp_dir/permissions_header" >> "$tmp_dir/form_output"
+                                cat "$tmp_dir/permissions_user" >> "$tmp_dir/form_output"
+                                echo "          </table>" >> "$tmp_dir/form_output"
+
+                            else
+                                echo "<p>Não há permissões registradas para o usuário "$user".</p>"
+                            fi
 
                         else
-                            erase_option=false
                             echo "<p>Não há permissões registradas.</p>"
                         fi
 
