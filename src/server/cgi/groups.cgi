@@ -54,7 +54,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              </p>"
     # Operação...
     echo "              <p>Operação:</p>"
-    echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_erase\"> $operation_add<br>"
+    echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_add\"> $operation_add<br>"
     echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_erase\"> $operation_erase<br>"
     echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_users\"> $operation_users<br>"
     echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_permissions\" checked> $operation_permissions<br>"
