@@ -275,7 +275,7 @@ function add_permission() { #subject_type (user/group), #subject_name, #resource
         return 1
     else
         echo "$1$delim$2$delim$3$delim$4$delim$5$delim" >> "$web_permissions_file"
-    fi        
+    fi
 
     return 0
 
@@ -286,9 +286,9 @@ function delete_permission() { #subject_type (user/group), #subject_name, #resou
     chk_permission $@ || return 1
 
     touch "$web_permissions_file" || return 1
-    delete_regex="$(echo "$1$delim$2$delim$3$delim$4$delim$5$delim" | sed -r 's|([\.\-])|\\\1|g')"
-    sed -r "s|$delete_regex$||" "$web_permissions_file" > $tmp_dir/delete_permission_tmp || return 1
-    cat $tmp_dir/delete_permission_tmp | sed -r "s|^$||" > "$web_permissions_file" || return 1
+    delete_regex="^$(echo "$1$delim$2$delim$3$delim$4$delim$5$delim" | sed -r 's|([\.\-])|\\\1|g')\$"
+    sed -r "|$delete_regex|d" "$web_permissions_file" > $tmp_dir/delete_permission_tmp || return 1
+    cp -f $tmp_dir/delete_permission_tmp "$web_permissions_file" || return 1
 
     return 0
 
