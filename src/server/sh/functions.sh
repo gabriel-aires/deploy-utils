@@ -351,7 +351,7 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
         groups_regex="($(membership "$2" | tr "\n" "|" | sed -r 's|([\.\-])|\\\1|g' | sed -r "s/\|$//"))"
         groups_permissions="$(query_file.sh -d "$delim" -r "" -x 1 -s 5 -u -f $web_permissions_file -w 1=="group" 2=~"$groups_regex" 3=="$3" 4=="$4" -o 5 asc)"
         if [ -n "$groups_permissions" ]; then
-            grep -Ex "read.*" > /dev/null && effective="read" || effective="write"
+            echo "$groups_permissions" | grep -Ex "read.*" > /dev/null && effective="read" || effective="write"
         fi
     fi
 
