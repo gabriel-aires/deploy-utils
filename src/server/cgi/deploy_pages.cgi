@@ -14,32 +14,45 @@ function submit_deploy() {
 
     else
 
-        local app_simulation_clearance=false
-        local env_simulation_clearance=false
-        local app_deploy_clearance=false
-        local env_deploy_clearance=false
+        local app_simulation_clearance="$tmp_dir/app_simulation_clearance"
+        local env_simulation_clearance="$tmp_dir/env_simulation_clearance"
+        local app_deploy_clearance="$tmp_dir/app_deploy_clearance"
+        local env_deploy_clearance="$tmp_dir/env_deploy_clearance"
+        local process_group=''
         local show_simulation=false
         local show_deploy=false
+        local show_form=false
 
-        clearance "user" "$REMOTE_USER" "app" "$app_name" "read" && app_simulation_clearance=true
-        clearance "user" "$REMOTE_USER" "ambiente" "$env_name" "read" && env_simulation_clearance=true
-        $app_simulation_clearance && $env_simulation_clearance && show_simulation=true
+        rm -f $app_simulation_clearance $env_simulation_clearance $app_deploy_clearance $env_deploy_clearance
 
-        if $show_simulation; then
-            clearance "user" "$REMOTE_USER" "app" "$app_name" "write" && app_deploy_clearance=true
-            clearance "user" "$REMOTE_USER" "ambiente" "$env_name" "write" && env_deploy_clearance=true
-            $app_deploy_clearance && $env_deploy_clearance && show_deploy=true
+        { test "$proceed" != "$proceed_simulation" && clearance "user" "$REMOTE_USER" "app" "$app_name" "read" && touch "$app_simulation_clearance"; } &
+        process_group="$process_group $!"
+
+        { test "$proceed" != "$proceed_simulation" && clearance "user" "$REMOTE_USER" "ambiente" "$env_name" "read" && touch "$env_simulation_clearance"; } &
+        process_group="$process_group $!"
+
+        { clearance "user" "$REMOTE_USER" "app" "$app_name" "write" && touch "$app_deploy_clearance"; } &
+        process_group="$process_group $!"
+
+        { clearance "user" "$REMOTE_USER" "ambiente" "$env_name" "write" && touch "$env_deploy_clearance"; } &
+        process_group="$process_group $!"
+
+        wait $process_group
+        test -f $app_simulation_clearance && test -f $env_simulation_clearance && show_simulation=true && show_form=true
+        test -f $app_deploy_clearance && test -f $env_deploy_clearance && show_deploy=true && show_form=true
+
+        if $show_form; then
+            echo "      <p>"
+            echo "          <form action=\"$start_page\" method=\"post\">"
+            echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"$rev_param\" value=\"$rev_name\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"$env_param\" value=\"$env_name\"></td></tr>"
+            $show_simulation && echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_simulation\">"
+            $show_deploy && echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_deploy\">"
+            echo "          </form>"
+            echo "      </p>"
         fi
 
-        echo "      <p>"
-        echo "          <form action=\"$start_page\" method=\"post\">"
-        echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
-        echo "              <input type=\"hidden\" name=\"$rev_param\" value=\"$rev_name\"></td></tr>"
-        echo "              <input type=\"hidden\" name=\"$env_param\" value=\"$env_name\"></td></tr>"
-        $show_simulation && test "$proceed" != "$proceed_simulation" && echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_simulation\">"
-        $show_deploy && echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_deploy\">"
-        echo "          </form>"
-        echo "      </p>"
     fi
 
     return 0
