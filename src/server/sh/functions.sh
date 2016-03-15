@@ -329,10 +329,6 @@ function delete_permission() { #subject_type (user/group), #subject_name, #resou
 
 function clearance() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
 
-    # Debug
-    echo "clearance $@<br>"
-    # Debug
-
     test "$1" == "user" || return 1
     test "$#" -eq "5" || return 1
     chk_permission "$1" "$2" "$3" "$4" "$5" || return 1
@@ -343,10 +339,6 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
     local permission="$5"
     local effective="$(query_file.sh -d "$delim" -r "" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="user" 2=="$2" 3=="$3" 4=="$4")" || return 1
 
-    # Debug
-    echo "user explicit permission: $(echo "$effective" | cat -t)<br>"
-    # Debug
-
     if [ -z "$effective" ]; then
         groups_regex="($(membership "$2" | tr "\n" "|" | sed -r 's|([\.\-])|\\\1|g' | sed -r "s/\|$//"))"
         groups_permissions="$(query_file.sh -d "$delim" -r "" -x 1 -s 5 -u -f $web_permissions_file -w 1=="group" 2=~"$groups_regex" 3=="$3" 4=="$4" -o 5 asc)"
@@ -354,11 +346,6 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
             echo "$groups_permissions" | grep -Ex "read.*" > /dev/null && effective="read" || effective="write"
         fi
     fi
-
-    # Debug
-    echo "effective: $(echo "$effective" | cat -t)<br>"
-    echo "permission: $(echo "$permission" | cat -t)<br>"
-    # Debug
 
     test "$effective" = "write" && return 0
     test "$effective" = "$permission" && return 0

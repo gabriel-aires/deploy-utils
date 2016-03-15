@@ -31,19 +31,6 @@ function submit_deploy() {
             $app_deploy_clearance && $env_deploy_clearance && show_deploy=true
         fi
 
-        # Debug
-        echo "simulation<br>"
-        echo "app: $app_simulation_clearance<br>"
-        echo "env: $env_simulation_clearance<br>"
-        echo "btn: $show_simulation"
-        echo "<br>"
-        echo "deploy<br>"
-        echo "app: $app_deploy_clearance<br>"
-        echo "env: $env_deploy_clearance<br>"
-        echo "btn: $show_deploy"
-        echo "<br>"
-        # Debug
-
         echo "      <p>"
         echo "          <form action=\"$start_page\" method=\"post\">"
         echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
