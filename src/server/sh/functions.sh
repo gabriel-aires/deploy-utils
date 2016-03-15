@@ -338,8 +338,8 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
     chk_permission "$1" "$2" "$3" "$4" "$5" || return 1
     membership "$2" | grep -Ex "admin" && return 0
 
-    local group_regex=''
-    local group_permission=''
+    local groups_regex=''
+    local groups_permissions=''
     local permission="$5"
     local effective="$(query_file.sh -d "$delim" -r "" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="user" 2=="$2" 3=="$3" 4=="$4")" || return 1
 
@@ -348,14 +348,11 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
     # Debug
 
     if [ -z "$effective" ]; then
-        group_regex="($(membership "$2" | tr "\n" "|" | sed -r 's|([\.\-])|\\\1|g' | sed -r "s/\|$//"))"
-
-        while read group_permission; do
-            if [ -z "$effective" ] || [ "$effective" == "write" -a "$group_permission" == "read" ]; then
-                effective="$group_permission"
-                echo "effective: $effective<br>"
-            fi
-        done < <(query_file.sh -d "$delim" -r "" -x 1 -s 5 -u -f $web_permissions_file -w 1=="group" 2=~"$group_regex" 3=="$3" 4=="$4" -o 5)
+        groups_regex="($(membership "$2" | tr "\n" "|" | sed -r 's|([\.\-])|\\\1|g' | sed -r "s/\|$//"))"
+        groups_permissions="$(query_file.sh -d "$delim" -r "" -x 1 -s 5 -u -f $web_permissions_file -w 1=="group" 2=~"$groups_regex" 3=="$3" 4=="$4" -o 5 asc)"
+        if [ -n "$groups_permissions" ]; then
+            grep -Ex "read.*" > /dev/null && effective="read" || effective="write"
+        fi
     fi
 
     # Debug
