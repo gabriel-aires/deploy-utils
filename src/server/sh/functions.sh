@@ -348,14 +348,14 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
     # Debug
 
     if [ -z "$effective" ]; then
-        group_regex="$(membership "$2" | tr "\n" "|" | sed -r 's|([\.\-])|\\\1|g' | sed -r "s/\|$//")"
+        group_regex="\($(membership "$2" | tr "\n" "|" | sed -r 's|([\.\-])|\\\1|g' | sed -r "s/\|$//")\)"
 
         while read group_permission; do
             if [ -z "$effective" ] || [ "$effective" == "write" -a "$group_permission" == "read" ]; then
                 effective="$group_permission"
                 echo "effective: $effective<br>"
             fi
-        done < <(query_file.sh -d "$delim" -r "" -x 1 -s 5 -t 1 -f $web_permissions_file -w 1=="group" 2=~"$group_regex" 3=="$3" 4=="$4")
+        done < <(query_file.sh -d "$delim" -r "" -x 1 -s 5 -f $web_permissions_file -w 1=="group" 2=~"$group_regex" 3=="$3" 4=="$4")
     fi
 
     # Debug
