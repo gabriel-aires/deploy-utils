@@ -236,7 +236,7 @@ else
             elif [ "$proceed" == "$proceed_deploy" ]; then
 
                 ### Executar deploy
-                echo "$deploy_options" "$app_name" "$rev_name" "$env_name" "$deploy_out" >> "$deploy_queue"
+                echo "$deploy_options:$app_name:$rev_name:$env_name:$deploy_out:" >> "$deploy_queue"
 
                 echo "      <p>"
                 echo "              <table>"
