@@ -332,7 +332,7 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
     test "$1" == "user" || return 1
     test "$#" -eq "5" || return 1
     chk_permission "$1" "$2" "$3" "$4" "$5" || return 1
-    membership "$2" | grep -Ex "admin" && return 0
+    membership "$2" | grep -Ex "admin" > /dev/null && return 0
 
     local groups_regex=''
     local groups_permissions=''

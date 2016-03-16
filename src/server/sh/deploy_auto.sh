@@ -94,7 +94,7 @@ while read ambiente; do
 
         while read aplicacao; do
 
-            echo "-u 'auto' -f:$aplicacao:auto:$ambiente:" >> "$deploy_queue" &
+            echo "-u auto -f:$aplicacao:auto:$ambiente:" >> "$deploy_queue" &
 
         done < "$tmp_dir/lista_aplicacoes"
 

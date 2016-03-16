@@ -215,7 +215,7 @@ else
             sleep $cgi_timeout > "$deploy_queue" &
             sleep_pid=$!
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
-            deploy_options="-u '$user_name' -f"
+            deploy_options="-u $user_name -f"
             deploy_out="$tmp_dir/deploy.out"
             touch $deploy_out
 
