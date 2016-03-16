@@ -94,7 +94,7 @@ while read ambiente; do
 
         while read aplicacao; do
 
-            echo "-f" "$aplicacao" "auto" "$ambiente" >> "$deploy_queue" &
+            echo "-f:$aplicacao:auto:$ambiente:" >> "$deploy_queue" &
 
         done < "$tmp_dir/lista_aplicacoes"
 
@@ -115,11 +115,11 @@ while read deploy_args; do
 
      test -z "$deploy_args" && continue
 
-     opt_string=$(echo "$deploy_args" | cut -f1 -d ' ')
-     app_string=$(echo "$deploy_args" | cut -f2 -d ' ')
-     rev_string=$(echo "$deploy_args" | cut -f3 -d ' ')
-     env_string=$(echo "$deploy_args" | cut -f4 -d ' ')
-     out_string=$(echo "$deploy_args" | cut -f5 -d ' ')
+     opt_string=$(echo "$deploy_args" | cut -f1 -d ":")
+     app_string=$(echo "$deploy_args" | cut -f2 -d ":")
+     rev_string=$(echo "$deploy_args" | cut -f3 -d ":")
+     env_string=$(echo "$deploy_args" | cut -f4 -d ":")
+     out_string=$(echo "$deploy_args" | cut -f5 -d ":")
 
      async_deploy "$opt_string" "$app_string" "$rev_string" "$env_string" "$out_string"
 
