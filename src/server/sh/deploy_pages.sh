@@ -21,7 +21,7 @@ fi
 
 #### UTILIZAÇÃO: deploy_pages.sh -opções <aplicação> <revisão> <ambiente> ############
 
-while getopts ":dfnrh" opcao; do
+while getopts ":dfnru:h" opcao; do
     case $opcao in
         d)
             modo='d'
