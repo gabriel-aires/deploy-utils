@@ -279,6 +279,7 @@ function write_history () {
     local month_log=$(echo "$(date +%m)")
     local year_log=$(echo "$(date +%Y)")
     local time_log=$(echo "$(date +%Hh%Mm%Ss)")
+    local user_log="$(echo "$user_name" | tr '[:upper:]' '[:lower:]')"
     local app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
     local rev_log="$(echo "$rev" | sed -r "s|$delim|_|g")"
     local ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
@@ -291,8 +292,8 @@ function write_history () {
     valid "flag_log" "regex_flag" "'$flag_log': flag de deploy inválida." "continue" || return 1
     interactive=$aux
 
-    local header="$(echo "$col_day$col_month$col_year$col_time$col_app$col_rev$col_env$col_host$col_obs$col_flag" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
-    local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$app_log$delim$rev_log$delim$ambiente_log$delim$host_log$delim$obs_log$delim$flag_log$delim"
+    local header="$(echo "$col_day$col_month$col_year$col_time$col_user$col_app$col_rev$col_env$col_host$col_obs$col_flag" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
+    local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$user_log$delim$app_log$delim$rev_log$delim$ambiente_log$delim$host_log$delim$obs_log$delim$flag_log$delim"
 
     local lock_path
     local history_path

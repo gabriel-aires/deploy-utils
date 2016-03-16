@@ -193,7 +193,8 @@ function deploy_agent () {
                     #define variáveis a sereem utilizadas pelo agente durante o processo de deploy.
                     export pkg
                     export ext=$(echo $(basename $pkg) | sed -r "s|^.*\.([^\.]+)$|\1|" | tr '[:upper:]' '[:lower:]')
-                    export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" | tr '[:upper:]' '[:lower:]')
+                    export user_name=$(echo $(basename $pkg) | sed -rn "s|^.*%user_([^%]+)%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
+                    export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+$|\1|i" | tr '[:upper:]' '[:lower:]')
                     export host=$(echo $HOSTNAME | cut -f1 -d '.')
 
                     case $ext in
@@ -201,15 +202,14 @@ function deploy_agent () {
                             rev=$(unzip -p -a $pkg META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
                             ;;
                         *)
-                            rev=$(echo $(basename $pkg) | sed -r "s|^$app||i" | sed -r "s|$ext$||i" | sed -r "s|^[\.\-_]||")
+                            rev=$(echo $(basename $pkg) | sed -r "s|^$app||i" | sed -r "s|$ext$||i" | sed -r "s|%user_$user_name%||i" | sed -r "s|^[\.\-_]||")
                             ;;
                     esac
 
-                    if [ -z "$rev" ]; then
-                        rev="N/A"
-                    fi
-
                     export rev
+
+                    test -n "$rev" || rev="N/A"
+                    test -n "$user_name" || user_name="$(id --user --name)"
 
                     #### Diretórios onde serão armazenados os logs de deploy (define e cria os diretórios remote_app_history_dir e deploy_log_dir)
                     set_app_history_dirs

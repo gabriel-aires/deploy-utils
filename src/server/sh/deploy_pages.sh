@@ -4,6 +4,7 @@ source $install_dir/sh/include.sh || exit 1
 
 estado="validacao"
 pid=$$
+user_name="$(id --user --name)"
 interactive="true"
 auto="false"
 simulation="false"
@@ -33,6 +34,9 @@ while getopts ":dfnrh" opcao; do
             ;;
         r)
             redeploy="true"
+            ;;
+        u)
+            user_name="$OPTARG"
             ;;
         h)
             echo -e "O script requer os seguintes parâmetros: (opções) <aplicação> <revisão> <ambiente>."
