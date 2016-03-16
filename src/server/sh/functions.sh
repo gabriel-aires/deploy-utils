@@ -283,11 +283,11 @@ function chk_permission() { #subject_type (user/group), #subject_name, #resource
     local resource_name="$4"
     local permission="$5"
 
-    valid "subject_type" "continue" || return 1
-    valid "subject_name" "continue" || return 1
-    valid "resource_type" "continue" || return 1
-    valid "resource_name" "continue" || return 1
-    valid "permission" "continue" || return 1
+    valid "subject_type" "Erro: subject_type inválido<br>." "continue" || return 1
+    valid "subject_name" "Erro: subject_name inválido<br>." "continue" || return 1
+    valid "resource_type" "Erro: resource_type inválido<br>." "continue" || return 1
+    valid "resource_name" "Erro: resource_name inválido<br>." "continue" || return 1
+    valid "permission" "Erro: o parâmetro permission é inválido<br>." "continue" || return 1
 
     return 0
 
