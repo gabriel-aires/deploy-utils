@@ -28,6 +28,7 @@ col_day_name=$(echo "$col_day" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_month_name=$(echo "$col_month" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_year_name=$(echo "$col_year" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_time_name=$(echo "$col_time" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_user_name=$(echo "$col_user" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_app_name=$(echo "$col_app" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_rev_name=$(echo "$col_rev" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 col_env_name=$(echo "$col_env" | sed -r 's|(\[)||' | sed -r 's|(\])||')
@@ -43,7 +44,7 @@ TOP=''
 # Form Select
 echo "<form action=\"$start_page\" method=\"get\">"
 echo "     <table>"
-echo "          <tr><td>SELECT:    </td><td><input type=\"text\" class=\"text_large\" name=\"SELECT\" value=\"Ex: $col_tag_name $col_time_name $col_month_name $col_year_name $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT</td></tr>"
+echo "          <tr><td>SELECT:    </td><td><input type=\"text\" class=\"text_large\" name=\"SELECT\" value=\"Ex: $col_user_name $col_time_name $col_month_name $col_year_name $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT</td></tr>"
 echo "          <tr><td>TOP:       </td><td><input type=\"text\" class=\"text_large\" name=\"TOP\" value=\"Ex: 10\"></td></tr>"
 echo "          <tr><td>WHERE:     </td><td><input type=\"text\" class=\"text_large\" name=\"WHERE\" value=\"Ex: $col_host_name=%rh $col_app_name==sgq\"></td></tr>"
 echo "          <tr><td>ORDER BY:  </td><td><input type=\"text\" class=\"text_large\" name=\"ORDERBY\" value=\"Ex: $col_year_name $col_month_name $col_time_name desc\"></td></tr>"

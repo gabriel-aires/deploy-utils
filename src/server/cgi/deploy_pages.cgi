@@ -214,14 +214,15 @@ else
             test -p "$deploy_queue" || end 1
             sleep $cgi_timeout > "$deploy_queue" &
             sleep_pid=$!
-            deploy_options="-f"
+            test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
+            deploy_options="-u $user_name -f"
             deploy_out="$tmp_dir/deploy.out"
             touch $deploy_out
 
             if [ "$proceed" == "$proceed_simulation" ]; then
 
                 ### Simular deploy
-                deploy_options="${deploy_options}n"
+                deploy_options="${deploy_options} -n"
                 echo "$deploy_options" "$app_name" "$rev_name" "$env_name" "$deploy_out" >> "$deploy_queue"
 
                 echo "      <p>"
