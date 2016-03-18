@@ -37,6 +37,10 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
                 file_end=''
                 var_name=''
                 var_set=false
+
+                echo 'debug:boundary<br>'
+                echo "$line"
+                echo 'debug:boundary<br>'
                 ;;
 
             "Content-Disposition: form-data; name=*; filename=*")
@@ -45,19 +49,31 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
                 file_name="$tmp_dir/$(basename $file_name)"
                 $var_name="$file_name"
                 var_set=true
+
+                echo "debug:file:$var_name=$filename<br>"
+                echo "$line"
+                echo "debug:file:$var_name=$filename<br>"
                 ;;
 
             "Content-Disposition: form-data; name=*")
                 var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=||" | sed -r "s|\"||g")"
+
+                echo "debug:var:$var_name"
+                echo "$line"
+                echo "debug:var:$var_name"
                 ;;
 
             '')
                 test -n "$file_begin" && file_end=$((i-1))
+
+                echo "debug:blank/file_begin=$file_begin/file_end=$file_end"
+                echo "$line"
+                echo "debug:blank/file_begin=$file_begin/file_end=$file_end"
                 ;;
 
             *)
-                ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true
-                test -n $file_name && test -z "$file_begin" && file_begin=$i
+                ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true && echo "debug:var:$var_name=$line<br>"
+                test -n $file_name && test -z "$file_begin" && file_begin=$i && echo "debug:file_name=$file_name/file_begin=$file_begin/file_end=$file_end"
                 ;;
 
         esac
