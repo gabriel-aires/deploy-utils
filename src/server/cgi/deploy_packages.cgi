@@ -76,13 +76,32 @@ if [ "$REQUEST_METHOD" == "POST" ]; then
     fi
 fi
 
+#DEBUG
+echo "<p>"
+echo "  CONTENT_TYPE: <br>"
+echo "$CONTENT_TYPE"
+echo "</p>"
+echo "<p>"
+echo "  CONTENT_LENGTH: <br>"
+echo "$CONTENT_LENGTH"
+echo "</p>"
+echo "<p>"
+echo "  POST_STRING: <br>"
+echo "$POST_STRING"
+echo "</p>"
+echo "<p>"
+echo "  POST_CONTENT: <br>"
+cat $tmp_dir/POST_CONTENT
+echo "</p>"
+#DEBUG
+
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
 app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
 env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
 
-if [ -z "$POST_STRING" ]; then
+if [ -f "$tmp_dir/POST_CONTENT" ]; then
 
     # Formulário deploy
     echo "      <p>"
@@ -115,25 +134,6 @@ else
     #app_name=$(echo "$arg_string" | sed -rn "s/^.*&$app_param=([^\&]+)&.*$/\1/p")
     #env_name=$(echo "$arg_string" | sed -rn "s/^.*&$env_param=([^\&]+)&.*$/\1/p")
     #proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
-
-    #DEBUG
-    echo "<p>"
-    echo "  CONTENT_TYPE: <br>"
-    echo "$CONTENT_TYPE"
-    echo "</p>"
-    echo "<p>"
-    echo "  CONTENT_LENGTH: <br>"
-    echo "$CONTENT_LENGTH"
-    echo "</p>"
-    echo "<p>"
-    echo "  POST_STRING: <br>"
-    echo "$POST_STRING"
-    echo "</p>"
-    echo "<p>"
-    echo "  POST_CONTENT: <br>"
-    cat $tmp_dir/POST_CONTENT
-    echo "</p>"
-    #DEBUG
 
     if [ -n "$app_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
 
