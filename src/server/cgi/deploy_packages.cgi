@@ -101,7 +101,7 @@ env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
 
-if [ -f "$tmp_dir/POST_CONTENT" ]; then
+if [ "$(cat $tmp_dir/POST_CONTENT | wc -l)" -eq 0 ]; then
 
     # Formulário deploy
     echo "      <p>"
