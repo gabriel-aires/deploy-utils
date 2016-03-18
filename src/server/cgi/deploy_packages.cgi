@@ -71,7 +71,8 @@ web_header
 if [ "$REQUEST_METHOD" == "POST" ]; then
     if [ "$CONTENT_TYPE" == "application/x-www-form-urlencoded" ]; then
         test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
-    else
+    elif echo "$CONTENT_TYPE" | grep -Ex "multipart/form-data; +boundary=.*" > /dev/null; then
+        boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||")"
         cat > $tmp_dir/POST_CONTENT
     fi
 fi
@@ -88,6 +89,10 @@ echo "</p>"
 echo "<p>"
 echo "  POST_STRING: <br>"
 echo "$POST_STRING"
+echo "</p>"
+echo "<p>"
+echo "  BOUNDARY: <br>"
+echo "$boundary"
 echo "</p>"
 echo "<p>"
 echo "  POST_CONTENT: <br>"
