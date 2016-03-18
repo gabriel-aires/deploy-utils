@@ -25,59 +25,59 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
 
         ((i++))
 
-        case "$line" in
-            "$part_boundary"|"$end_boundary")
-                if [ -n "$file_name" ]; then
-                    test -z "$file_end" && file_end=$((i-1))
-                    file_cmd[$n]="sed -n '${file_begin},${file_end}p' $file > $file_name"
-                    ((n++))
-                fi
-                file_name=''
-                file_begin=''
-                file_end=''
-                var_name=''
-                var_set=false
+        if echo "$line" | grep -Ex "$part_boundary|$end_boundary" > /dev/null; then
 
-                echo 'debug:boundary<br>'
-                echo "$line"
-                echo 'debug:boundary<br>'
-                ;;
+            if [ -n "$file_name" ]; then
+                test -z "$file_end" && file_end=$((i-1))
+                file_cmd[$n]="sed -n '${file_begin},${file_end}p' $file > $file_name"
+                ((n++))
+            fi
 
-            "Content-Disposition: form-data; name=*; filename=*")
-                var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
-                file_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
-                file_name="$tmp_dir/$(basename $file_name)"
-                $var_name="$file_name"
-                var_set=true
+            file_name=''
+            file_begin=''
+            file_end=''
+            var_name=''
+            var_set=false
 
-                echo "debug:file:$var_name=$filename<br>"
-                echo "$line"
-                echo "debug:file:$var_name=$filename<br>"
-                ;;
+            echo 'debug:boundary<br>'
+            echo "$line"
+            echo 'debug:boundary<br>'
 
-            "Content-Disposition: form-data; name=*")
-                var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=||" | sed -r "s|\"||g")"
+        elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=[^;]; filename=.*" > /dev/null; then
 
-                echo "debug:var:$var_name"
-                echo "$line"
-                echo "debug:var:$var_name"
-                ;;
+            var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
+            file_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
+            file_name="$tmp_dir/$(basename $file_name)"
+            $var_name="$file_name"
+            var_set=true
 
-            '')
-                test -n "$file_begin" && file_end=$((i-1))
+            echo "debug:file:$var_name=$filename<br>"
+            echo "$line"
+            echo "debug:file:$var_name=$filename<br>"
 
-                echo "debug:blank/file_begin=$file_begin/file_end=$file_end"
-                echo "$line"
-                echo "debug:blank/file_begin=$file_begin/file_end=$file_end"
-                ;;
+        elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=.*" > /dev/null; then
 
-            *)
-                ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true && echo "debug:var:$var_name=$line<br>"
-                test -n $file_name && test -z "$file_begin" && file_begin=$i && echo "debug:file_name=$file_name/file_begin=$file_begin/file_end=$file_end"
-                ;;
+            var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=||" | sed -r "s|\"||g")"
 
-        esac
+            echo "debug:var:$var_name"
+            echo "$line"
+            echo "debug:var:$var_name"
 
+        elif [ -z "$line" ]; then
+
+            test -n "$file_begin" && file_end=$((i-1))
+
+            echo "debug:blank/file_begin=$file_begin/file_end=$file_end"
+            echo "$line"
+            echo "debug:blank/file_begin=$file_begin/file_end=$file_end"
+
+        else
+
+            ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true && echo "debug:var:$var_name=$line<br>"
+            test -n $file_name && test -z "$file_begin" && file_begin=$i && echo "debug:file_name=$file_name/file_begin=$file_begin/file_end=$file_end"
+
+        fi
+        
     done < "$file"
 
     if [ $n -gt 0 ]; then
