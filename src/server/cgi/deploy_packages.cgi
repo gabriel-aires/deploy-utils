@@ -115,7 +115,7 @@ else
     echo "</p>"
     echo "<p>"
     echo "  POST: <br>"
-    echo "$POST_CONTENT"
+    echo -e "$POST_CONTENT"
     echo "</p>"
     #DEBUG
 
