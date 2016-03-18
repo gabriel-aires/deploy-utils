@@ -7,6 +7,7 @@ bak_dir=
 history_dir=
 app_history_dir_tree=
 repo_dir=
+upload_dir=
 lock_dir=
 cgi_dir=
 css_dir=
