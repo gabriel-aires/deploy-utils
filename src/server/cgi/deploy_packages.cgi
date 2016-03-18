@@ -67,14 +67,22 @@ mkdir $tmp_dir
 web_header
 
 # Inicializar variáveis e constantes
-test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_CONTENT
+
+if [ "$REQUEST_METHOD" == "POST" ]; then
+    if [ "$CONTENT_TYPE" == "application/x-www-form-urlencoded" ]; then
+        test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
+    else
+        cat > $tmp_dir/POST_CONTENT
+    fi
+fi
+
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
 app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
 env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
 
-if [ -z "$POST_CONTENT" ]; then
+if [ -z "$POST_STRING" ]; then
 
     # Formulário deploy
     echo "      <p>"
@@ -102,20 +110,28 @@ if [ -z "$POST_CONTENT" ]; then
 
 else
 
-    # Processar POST_CONTENT
-    #arg_string="&$(web_filter "$POST_CONTENT")&"
+    # Processar POST_STRING
+    #arg_string="&$(web_filter "$POST_STRING")&"
     #app_name=$(echo "$arg_string" | sed -rn "s/^.*&$app_param=([^\&]+)&.*$/\1/p")
     #env_name=$(echo "$arg_string" | sed -rn "s/^.*&$env_param=([^\&]+)&.*$/\1/p")
     #proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
 
     #DEBUG
     echo "<p>"
-    echo "  ENVIRONMENT: <br>"
-    env
+    echo "  CONTENT_TYPE: <br>"
+    echo "$CONTENT_TYPE"
     echo "</p>"
     echo "<p>"
-    echo "  POST: <br>"
-    echo -e "$POST_CONTENT"
+    echo "  CONTENT_LENGTH: <br>"
+    echo "$CONTENT_LENGTH"
+    echo "</p>"
+    echo "<p>"
+    echo "  POST_STRING: <br>"
+    echo "$POST_STRING"
+    echo "</p>"
+    echo "<p>"
+    echo "  POST_CONTENT: <br>"
+    cat $tmp_dir/POST_CONTENT
     echo "</p>"
     #DEBUG
 
