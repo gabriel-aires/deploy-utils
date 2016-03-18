@@ -138,7 +138,6 @@ else
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
             # Realizar deploy
 
-            fi
         fi
     else
         echo "      <p><b>Erro. Os parâmetro 'Sistema' e 'Ambiente' devem ser preenchidos.</b></p>"
