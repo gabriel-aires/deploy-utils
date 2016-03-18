@@ -4,6 +4,74 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/include.sh || exit 1
 
+function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do POST, boundary
+
+    #atribui variáveis do formulário e prepara arquivos carregados para o servidor
+
+    local boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||")"
+    local part_boundary="--$boundary"
+    local end_boundary="--$boundary--"
+    local file="$1"
+    local file_begin=''
+    local file_end=''
+    local file_cmd=()
+    local file_name=''
+    local var_name=''
+    local var_set=false
+    local i=0
+    local n=0
+
+    while read line; do
+
+        ((i++))
+
+        case "$line" in
+            $part_boundary|$end_boundary)
+                if [ -n "$file_name" ]; then
+                    test -z "$file_end" && file_end=$((i-1))
+                    file_cmd[$n]="sed -n '${file_begin},${file_end}p' $file > $file_name"
+                    ((n++))
+                fi
+                file_name=''
+                file_begin=''
+                file_end=''
+                var_name=''
+                var_set=false
+                ;;
+
+            Content-Disposition: form-data; name=*; filename=*)
+                var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
+                file_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
+                file_name="$tmp_dir/$(basename $file_name)"
+                $var_name="$file_name"
+                var_set=true
+                ;;
+
+            Content-Disposition: form-data; name=*)
+                var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=||" | sed -r "s|\"||g")"
+                ;;
+
+            '')
+                test -n "$file_begin" && file_end=$((i-1))
+                ;;
+
+            *)
+                ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true
+                test -n $file_name && test -z "$file_begin" && file_begin=$i
+                ;;
+
+        esac
+
+    done < "$file"
+
+    if [ $n -gt 0 ]; then
+        for i in $(seq 0 $n); do
+            test -n "${file_cmd[$i]}" && eval ${file_cmd[$i]}
+        done
+    fi
+
+}
+
 function submit_deploy() {
 
     if [ "$proceed" != "$proceed_view" ]; then
@@ -71,9 +139,11 @@ web_header
 if [ "$REQUEST_METHOD" == "POST" ]; then
     if [ "$CONTENT_TYPE" == "application/x-www-form-urlencoded" ]; then
         test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
+
     elif echo "$CONTENT_TYPE" | grep -Ex "multipart/form-data; +boundary=.*" > /dev/null; then
-        boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||")"
-        cat > $tmp_dir/POST_CONTENT
+        cat > "$tmp_dir/POST_CONTENT"
+        parse_multipart_form "$tmp_dir/POST_CONTENT"
+
     fi
 fi
 
@@ -91,18 +161,12 @@ echo "  POST_STRING: <br>"
 echo "$POST_STRING"
 echo "</p>"
 echo "<p>"
-echo "  BOUNDARY: <br>"
-echo "$boundary"
-echo "</p>"
-echo "<p>"
 echo "  POST_CONTENT: <br>"
 cat $tmp_dir/POST_CONTENT
 echo "</p>"
 #DEBUG
 
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
-app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
-env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
 
@@ -113,17 +177,21 @@ if [ "$(cat $tmp_dir/POST_CONTENT | wc -l)" -eq 0 ]; then
     echo "          <form action=\"$start_page\" method=\"post\" enctype=\"multipart/form-data\">"
     # Sistema...
     echo "              <p>"
-    echo "      		    <select class=\"select_default\" name=\"$app_param\">"
+    echo "      		    <select class=\"select_default\" name=\"app\">"
     echo "		        	<option value=\"\" selected>Sistema...</option>"
     find $upload_dir/ -mindepth $((qtd_dir+1)) -maxdepth $((qtd_dir+1)) -type d | sort | uniq | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" 2> /dev/null
     echo "		            </select>"
     echo "              </p>"
     # Ambiente...
     echo "              <p>"
-    echo "      		<select class=\"select_default\" name=\"$env_param\">"
+    echo "      		<select class=\"select_default\" name=\"env\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
     cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
+    echo "              </p>"
+    # Pacote (teste)
+    echo "              <p>"
+    echo "              Arquivo: <input type=\"file\" name=\"pkg\">"
     echo "              </p>"
     # Submit
     echo "              <p>"
@@ -133,6 +201,25 @@ if [ "$(cat $tmp_dir/POST_CONTENT | wc -l)" -eq 0 ]; then
     echo "      </p>"
 
 else
+
+    #DEBUG
+    echo "<p>"
+    echo "  FILE_NAME: <br>"
+    echo "$pkg"
+    echo "</p>"
+    echo "<p>"
+    echo "  FILE_CONTENT: <br>"
+    cat $pkg
+    echo "</p>"
+    echo "<p>"
+    echo "  AMBIENTE: <br>"
+    echo "$app"
+    echo "</p>"
+    echo "<p>"
+    echo "  AMBIENTE: <br>"
+    echo "$env"
+    echo "</p>"
+    #DEBUG
 
     # Processar POST_STRING
     #arg_string="&$(web_filter "$POST_STRING")&"
