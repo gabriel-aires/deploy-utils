@@ -26,7 +26,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
         ((i++))
 
         case "$line" in
-            $part_boundary|$end_boundary)
+            "$part_boundary"|"$end_boundary")
                 if [ -n "$file_name" ]; then
                     test -z "$file_end" && file_end=$((i-1))
                     file_cmd[$n]="sed -n '${file_begin},${file_end}p' $file > $file_name"
@@ -39,7 +39,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
                 var_set=false
                 ;;
 
-            Content-Disposition: form-data; name=*; filename=*)
+            "Content-Disposition: form-data; name=*; filename=*")
                 var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
                 file_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
                 file_name="$tmp_dir/$(basename $file_name)"
@@ -47,7 +47,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
                 var_set=true
                 ;;
 
-            Content-Disposition: form-data; name=*)
+            "Content-Disposition: form-data; name=*")
                 var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=||" | sed -r "s|\"||g")"
                 ;;
 
