@@ -74,6 +74,10 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
         fi
 
         #DEBUG
+        echo "  <br>"
+        echo "  boundary: $boundary<br>"
+        echo "  part_boundary: $part_boundary<br>"
+        echo "  end_boundary: $end_boundary<br>"        
         echo "  text_line: $line<br>"
         echo "  num_line: $i<br>"
         echo "  var_name: $var_name<br>"
