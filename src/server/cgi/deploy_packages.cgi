@@ -8,7 +8,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
 
     #atribui variáveis do formulário e prepara arquivos carregados para o servidor
 
-    local boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||" | sed -r "s|\-|\\-|g")"
+    local boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||" | sed -r 's|\-|\\-|g')"
     local part_boundary="\-\-$boundary"
     local end_boundary="\-\-$boundary\-\-"
     local file="$1"
