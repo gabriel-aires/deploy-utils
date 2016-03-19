@@ -8,9 +8,9 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
 
     #atribui variáveis do formulário e prepara arquivos carregados para o servidor
 
-    local boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||")"
-    local part_boundary="--$boundary"
-    local end_boundary="--$boundary--"
+    local boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||" | sed -r "s|\-|\\-|g")"
+    local part_boundary="\-\-$boundary"
+    local end_boundary="\-\-$boundary\-\-"
     local file="$1"
     local file_begin=''
     local file_end=''
@@ -42,19 +42,19 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
 
             echo "  match: boundary_line"
 
-        elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=[^;]*; filename=.*" > /dev/null; then
+        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=[^;]*; filename=.*" > /dev/null; then
 
-            var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
-            file_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
+            var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
+            file_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
             file_name="$tmp_dir/$(basename $file_name)"
             $var_name="$file_name"
             var_set=true
 
             echo "  match: file_line"
 
-        elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=.*" > /dev/null; then
+        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=.*" > /dev/null; then
 
-            var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=||" | sed -r "s|\"||g")"
+            var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=||" | sed -r "s|\"||g")"
 
             echo "  match: param_line"
 
