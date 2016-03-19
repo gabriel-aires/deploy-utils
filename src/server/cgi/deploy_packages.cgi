@@ -42,7 +42,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
 
             echo "  match: boundary_line"
 
-        elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=[^;]; filename=.*" > /dev/null; then
+        elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=[^;]*; filename=.*" > /dev/null; then
 
             var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
             file_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
@@ -77,7 +77,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
         echo "  <br>"
         echo "  boundary: $boundary<br>"
         echo "  part_boundary: $part_boundary<br>"
-        echo "  end_boundary: $end_boundary<br>"        
+        echo "  end_boundary: $end_boundary<br>"
         echo "  text_line: $line<br>"
         echo "  num_line: $i<br>"
         echo "  var_name: $var_name<br>"
