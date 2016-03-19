@@ -24,6 +24,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
     while read line; do
 
         ((i++))
+        echo "<b>||debug||<br>"
 
         if echo "$line" | grep -Ex "$part_boundary|$end_boundary" > /dev/null; then
 
@@ -39,6 +40,8 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
             var_name=''
             var_set=false
 
+            echo "  match: boundary_line"
+
         elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=[^;]; filename=.*" > /dev/null; then
 
             var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
@@ -47,23 +50,30 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
             $var_name="$file_name"
             var_set=true
 
+            echo "  match: file_line"
+
         elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=.*" > /dev/null; then
 
             var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=||" | sed -r "s|\"||g")"
 
+            echo "  match: param_line"
+
         elif [ -z "$line" ]; then
 
             test -n "$file_begin" && file_end=$((i-1))
+
+            echo "  match: blank"
 
         else
 
             ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true
             test -n $file_name && test -z "$file_begin" && file_begin=$i
 
+            echo "  match: content"
+
         fi
 
         #DEBUG
-        echo "<debug><br>"
         echo "  text_line: $line<br>"
         echo "  num_line: $i<br>"
         echo "  var_name: $var_name<br>"
@@ -72,7 +82,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
         echo "  file_begin: $file_begin<br>"
         echo "  file_end: $file_begin<br>"
         echo "  file_cmd: ( ${file_cmd[*]} )<br>"
-        echo '</debug><br><br>'
+        echo '||/debug||</b><br><br>'
         #DEBUG
 
     done < "$file"
@@ -225,7 +235,7 @@ else
     cat $pkg
     echo "</p>"
     echo "<p>"
-    echo "  AMBIENTE: <br>"
+    echo "  APLICACAO: <br>"
     echo "$app"
     echo "</p>"
     echo "<p>"
