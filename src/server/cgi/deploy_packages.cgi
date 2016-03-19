@@ -24,9 +24,6 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
     while read line; do
 
         ((i++))
-        echo "debug<br>"
-        echo "text_line: $line<br>"
-        echo "num_line: $line<br>"
 
         if echo "$line" | grep -Ex "$part_boundary|$end_boundary" > /dev/null; then
 
@@ -42,8 +39,6 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
             var_name=''
             var_set=false
 
-            echo 'debug:boundary<br>'
-
         elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=[^;]; filename=.*" > /dev/null; then
 
             var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
@@ -52,26 +47,33 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
             $var_name="$file_name"
             var_set=true
 
-            echo "debug:file:$var_name=$filename<br>"
-
         elif echo "$line" | grep -Ex "Content-Disposition: form-data; name=.*" > /dev/null; then
 
             var_name="$(echo "$line" | sed -r "s|Content-Disposition: form-data; name=||" | sed -r "s|\"||g")"
-
-            echo "debug:var:$var_name<br>"
 
         elif [ -z "$line" ]; then
 
             test -n "$file_begin" && file_end=$((i-1))
 
-            echo "debug:blank/file_begin=$file_begin/file_end=$file_end<br>"
-
         else
 
-            ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true && echo "<br>debug:var:$var_name=<br>"
-            test -n $file_name && test -z "$file_begin" && file_begin=$i && echo "<br>debug:file_name=$file_name/file_begin=$file_begin/file_end=$file_end<br>"
+            ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true
+            test -n $file_name && test -z "$file_begin" && file_begin=$i
 
         fi
+
+        #DEBUG
+        echo "<debug><br>"
+        echo "  text_line: $line<br>"
+        echo "  num_line: $i<br>"
+        echo "  var_name: $var_name<br>"
+        echo "  var_set: $var_set<br>"
+        echo "  file_name: $file_name<br>"
+        echo "  file_begin: $file_begin<br>"
+        echo "  file_end: $file_begin<br>"
+        echo "  file_cmd: ( ${file_cmd[*]} )<br>"
+        echo '</debug><br><br>'
+        #DEBUG
 
     done < "$file"
 
