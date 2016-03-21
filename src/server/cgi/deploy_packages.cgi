@@ -164,7 +164,7 @@ if ! $parsed; then
     echo "              <p>"
     echo "      		    <select class=\"select_default\" name=\"app\">"
     echo "		        	<option value=\"\" selected>Sistema...</option>"
-    find $upload_dir/ -mindepth $((qtd_dir+1)) -maxdepth $((qtd_dir+1)) -type d | sort | xargs -I{} -d '\n' basename {} | uniq | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" 2> /dev/null
+    find $upload_dir/ -mindepth $((qtd_dir+1)) -maxdepth $((qtd_dir+1)) -type d | xargs -I{} -d '\n' basename {} | sort | uniq | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" 2> /dev/null
     echo "		            </select>"
     echo "              </p>"
     # Ambiente...
