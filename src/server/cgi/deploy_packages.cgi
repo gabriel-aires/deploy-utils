@@ -50,7 +50,6 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             var_set=true
             file_begin=$((i+3)) #i+1: content-type, i+2: '', i+3: file_begin
             next_boundary=$(sed -n "${file_begin},${input_size}p" "$input_file" | sed -r "s|\r$||" | grep -Exan "$part_boundary|$end_boundary" | head -n 1 | cut -d ':' -f1)
-            sed -n "${file_begin},${input_size}p" "$input_file" | sed -r "s|\r$||" | grep -Exan "$part_boundary|$end_boundary" | cut -d ':' -f1
             file_end=$((next_boundary-1))
             i="$file_end"
             file_cmd[$n]="sed -n '${file_begin},${file_end}p' $input_file > $file_name"
@@ -81,6 +80,7 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
         echo "  num_line: $i<br>"
         echo "  var_name: $var_name<br>"
         echo "  var_set: $var_set<br>"
+        echo "  input_size: $input_size<br>"
         echo "  file_name: $file_name<br>"
         echo "  file_begin: $file_begin<br>"
         echo "  file_end: $file_end<br>"
