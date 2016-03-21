@@ -80,10 +80,10 @@ function submit_deploy() {
 
         rm -f $app_deploy_clearance $env_deploy_clearance
 
-        { clearance "user" "$REMOTE_USER" "app" "$app_name" "write" && touch "$app_deploy_clearance"; } &
+        { clearance "user" "$REMOTE_USER" "app" "$app" "write" && touch "$app_deploy_clearance"; } &
         process_group="$process_group $!"
 
-        { clearance "user" "$REMOTE_USER" "ambiente" "$env_name" "write" && touch "$env_deploy_clearance"; } &
+        { clearance "user" "$REMOTE_USER" "ambiente" "$env" "write" && touch "$env_deploy_clearance"; } &
         process_group="$process_group $!"
 
         wait $process_group
@@ -92,10 +92,10 @@ function submit_deploy() {
         if $show_form; then
             echo "      <p>"
             echo "          <form action=\"$start_page\" method=\"post\" enctype=\"multipart/form-data\">"
-            echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
-            echo "              <input type=\"hidden\" name=\"$env_param\" value=\"$env_name\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"app\" value=\"$app\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"env\" value=\"$en\"></td></tr>"
             echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_deploy\">"
-            echo "              Arquivo: <input type=\"file\" name=\"file\">"
+            echo "              <input type=\"file\" name=\"pkg\">"
             echo "              <input type=\"submit\" name=\"upload\" value=\"Enviar\">"
             echo "          </form>"
             echo "      </p>"
@@ -130,14 +130,22 @@ mkdir $tmp_dir
 web_header
 
 # Inicializar variáveis e constantes
+parsed=false
 
 if [ "$REQUEST_METHOD" == "POST" ]; then
     if [ "$CONTENT_TYPE" == "application/x-www-form-urlencoded" ]; then
         test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
+        arg_string="&$(web_filter "$POST_STRING")&"
+        app=$(echo "$arg_string" | sed -rn "s/^.*&app=([^\&]+)&.*$/\1/p")
+        env=$(echo "$arg_string" | sed -rn "s/^.*&env=([^\&]+)&.*$/\1/p")
+        proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
+        parsed=true
 
     elif echo "$CONTENT_TYPE" | grep -Ex "multipart/form-data; +boundary=.*" > /dev/null; then
         cat > "$tmp_dir/POST_CONTENT"
         parse_multipart_form "$tmp_dir/POST_CONTENT"
+        rm -f "$tmp_dir/POST_CONTENT"
+        parsed=true
 
     fi
 fi
@@ -146,11 +154,11 @@ mklist "$ambientes" "$tmp_dir/lista_ambientes"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
 
-if [ "$(cat $tmp_dir/POST_CONTENT | wc -l)" -eq 0 ]; then
+if ! $parsed; then
 
     # Formulário deploy
     echo "      <p>"
-    echo "          <form action=\"$start_page\" method=\"post\" enctype=\"multipart/form-data\">"
+    echo "          <form action=\"$start_page\" method=\"post\">"
     # Sistema...
     echo "              <p>"
     echo "      		    <select class=\"select_default\" name=\"app\">"
@@ -165,10 +173,6 @@ if [ "$(cat $tmp_dir/POST_CONTENT | wc -l)" -eq 0 ]; then
     cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
-    # Pacote (teste)
-    echo "              <p>"
-    echo "              Arquivo: <input type=\"file\" name=\"pkg\">"
-    echo "              </p>"
     # Submit
     echo "              <p>"
     echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_view\">"
@@ -176,37 +180,34 @@ if [ "$(cat $tmp_dir/POST_CONTENT | wc -l)" -eq 0 ]; then
     echo "          </form>"
     echo "      </p>"
 
-else
+elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
-    # Processar POST_STRING
-    #arg_string="&$(web_filter "$POST_STRING")&"
-    #app_name=$(echo "$arg_string" | sed -rn "s/^.*&$app_param=([^\&]+)&.*$/\1/p")
-    #env_name=$(echo "$arg_string" | sed -rn "s/^.*&$env_param=([^\&]+)&.*$/\1/p")
-    #proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
+    if [ "$proceed" == "$proceed_view" ]; then
 
-    if [ -n "$app_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
+        lock "package_${app}_${env}" "Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente."
 
-        if [ "$proceed" == "$proceed_view" ]; then
+        ### Visualizar parâmetros de deploy
+        echo "      <p>"
+        echo "          <table>"
+        echo "              <tr><td>Sistema: </td><td>$app</td></tr>"
+        echo "              <tr><td>Ambiente: </td><td>$env</td></tr>"
+        echo "          </table>"
+        echo "      </p>"
 
-            ### Visualizar parâmetros de deploy
-            echo "      <p>"
-            echo "          <table>"
-            echo "              <tr><td>Sistema: </td><td>$app_name</td></tr>"
-            echo "              <tr><td>Ambiente: </td><td>$env_name</td></tr>"
-            echo "          </table>"
-            echo "      </p>"
+        submit_deploy
 
-            submit_deploy
-
-        else
-
-            test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
-            # Realizar deploy
-
-        fi
     else
-        echo "      <p><b>Erro. Os parâmetro 'Sistema' e 'Ambiente' devem ser preenchidos.</b></p>"
+
+        test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
+
+        echo "      <p> CHECKSUM DO ARQUIVO: $(mk5sum "$pkg")</p>"
+
+        # Realizar deploy
+
     fi
+
+else
+    echo "      <p><b>Erro. Os parâmetro 'Sistema' e 'Ambiente' devem ser preenchidos.</b></p>"
 fi
 
 end 0
