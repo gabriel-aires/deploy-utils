@@ -53,7 +53,7 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             next_boundary=$((next_boundary+file_begin-1))
             file_end=$((next_boundary-1))
             i="$file_end"
-            file_cmd[$n]="sed -n '${file_begin},$((file_end-1))p' $input_file > $file_name; sed -rn '${file_end}s|\r$||p' $input_file | tr -d '\n' >> $file_name"
+            file_cmd[$n]="sed -n '${file_begin},$((file_end-1))p' $input_file > $file_name && sed -rn '${file_end}s|\r$||p' $input_file | tr -d '\n' >> $file_name"
             ((n++))
 
             echo "  match: file_line"
