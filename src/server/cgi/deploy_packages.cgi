@@ -13,7 +13,7 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
     local end_boundary="\-\-$boundary\-\-"
     local next_boundary=''
     local input_file="$1"
-    local input_size="$(cat "$file" | wc -l)"
+    local input_size="$(cat "$input_file" | wc -l)"
     local file_begin=''
     local file_end=''
     local file_cmd=()
