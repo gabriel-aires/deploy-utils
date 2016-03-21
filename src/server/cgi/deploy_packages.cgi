@@ -195,10 +195,6 @@ echo "<p>"
 echo "  POST_STRING: <br>"
 echo "$POST_STRING"
 echo "</p>"
-echo "<p>"
-echo "  POST_CONTENT: <br>"
-cat $tmp_dir/POST_CONTENT
-echo "</p>"
 #DEBUG
 
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
@@ -243,8 +239,8 @@ else
     echo "$pkg"
     echo "</p>"
     echo "<p>"
-    echo "  FILE_CONTENT: <br>"
-    cat $pkg
+    echo "  FILE_MD5: <br>"
+    md5sum $pkg
     echo "</p>"
     echo "<p>"
     echo "  APLICACAO: <br>"
