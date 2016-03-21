@@ -4,7 +4,7 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/include.sh || exit 1
 
-function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do POST, boundary
+function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do POST
 
     #atribui variáveis do formulário e prepara arquivos carregados para o servidor
 
@@ -26,23 +26,16 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
     while [ "$i" -lt "$input_size" ]; do
 
         ((i++))
-
         line="$(sed -n "${i}p" "$input_file" | sed -r "s|\r$||")"
 
-        echo "<b>||debug||<br>"
-
         if echo "$line" | grep -Ex "$part_boundary|$end_boundary" > /dev/null; then
-
             file_name=''
             file_begin=''
             file_end=''
             var_name=''
             var_set=false
 
-            echo "  match: boundary_line"
-
         elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=[^;]*; filename=.*" > /dev/null; then
-
             var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
             file_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
             file_name="$tmp_dir/$(basename $file_name)"
@@ -56,38 +49,13 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             file_cmd[$n]="sed -n '${file_begin},$((file_end-1))p' $input_file > $file_name && sed -rn '${file_end}s|\r$||p' $input_file | tr -d '\n' >> $file_name"
             ((n++))
 
-            echo "  match: file_line"
-
         elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=.*" > /dev/null; then
-
             var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=||" | sed -r "s|\"||g")"
 
-            echo "  match: param_line"
-
         elif [ -n "$line" ]; then
-
             ! $var_set && test -n "$var_name" && eval "$var_name=$line" && var_set=true
 
-            echo "  match: value_line"
-
         fi
-
-        #DEBUG
-        echo "  <br>"
-        echo "  boundary: $boundary<br>"
-        echo "  part_boundary: $part_boundary<br>"
-        echo "  end_boundary: $end_boundary<br>"
-        echo "  text_line: $(echo "$line" | cat -t)<br>"
-        echo "  num_line: $i<br>"
-        echo "  var_name: $var_name<br>"
-        echo "  var_set: $var_set<br>"
-        echo "  input_size: $input_size<br>"
-        echo "  file_name: $file_name<br>"
-        echo "  file_begin: $file_begin<br>"
-        echo "  file_end: $file_end<br>"
-        echo "  file_cmd: ( ${file_cmd[*]} )<br>"
-        echo '||/debug||</b><br><br>'
-        #DEBUG
 
     done
 
@@ -174,21 +142,6 @@ if [ "$REQUEST_METHOD" == "POST" ]; then
     fi
 fi
 
-#DEBUG
-echo "<p>"
-echo "  CONTENT_TYPE: <br>"
-echo "$CONTENT_TYPE"
-echo "</p>"
-echo "<p>"
-echo "  CONTENT_LENGTH: <br>"
-echo "$CONTENT_LENGTH"
-echo "</p>"
-echo "<p>"
-echo "  POST_STRING: <br>"
-echo "$POST_STRING"
-echo "</p>"
-#DEBUG
-
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
@@ -224,25 +177,6 @@ if [ "$(cat $tmp_dir/POST_CONTENT | wc -l)" -eq 0 ]; then
     echo "      </p>"
 
 else
-
-    #DEBUG
-    echo "<p>"
-    echo "  FILE_NAME: <br>"
-    echo "$pkg"
-    echo "</p>"
-    echo "<p>"
-    echo "  FILE_MD5: <br>"
-    md5sum $pkg
-    echo "</p>"
-    echo "<p>"
-    echo "  APLICACAO: <br>"
-    echo "$app"
-    echo "</p>"
-    echo "<p>"
-    echo "  AMBIENTE: <br>"
-    echo "$env"
-    echo "</p>"
-    #DEBUG
 
     # Processar POST_STRING
     #arg_string="&$(web_filter "$POST_STRING")&"
