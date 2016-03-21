@@ -11,7 +11,9 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
     local boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||" | sed -r 's|\-|\\-|g')"
     local part_boundary="\-\-$boundary"
     local end_boundary="\-\-$boundary\-\-"
-    local file="$1"
+    local next_boundary=''
+    local input_file="$1"
+    local input_size="$(cat "$file" | wc -l)"
     local file_begin=''
     local file_end=''
     local file_cmd=()
@@ -21,18 +23,18 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
     local i=0
     local n=0
 
-    while read line; do
-
-        line="$(echo "$line" | sed -r "s|\r$||")"
+    while [ "$i" -lt "$input_size" ]; do
 
         ((i++))
+
+        line="$(sed -n "${i}p" "$input_file" | sed -r "s|\r$||")"
+
         echo "<b>||debug||<br>"
 
         if echo "$line" | grep -Ex "$part_boundary|$end_boundary" > /dev/null; then
 
             if [ -n "$file_name" ]; then
-                test -z "$file_end" && file_end=$((i-1))
-                file_cmd[$n]="sed -n '${file_begin},${file_end}p' $file > $file_name"
+                file_cmd[$n]="sed -n '${file_begin},${file_end}p' $input_file > $file_name"
                 ((n++))
             fi
 
@@ -60,18 +62,22 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
 
             echo "  match: param_line"
 
-        elif [ -z "$line" ]; then
+        elif echo "$line" | grep -Ex "Content\-Type: .*" > /dev/null; then
 
-            test -n "$file_begin" && file_end=$((i-1))
+            if [ -n "$file_name" ]; then
+                file_begin=$((i+2))
+                next_boundary=$(sed -n "${file_begin},${input_size}p" "$input_file" | grep -Exn "$part_boundary|$end_boundary" | head -n 1 | cut -d ':' -f1)
+                file_end=$((next_boundary-1))
+                i="$file_end"
+            fi
 
-            echo "  match: blank"
+            echo "  match: type_line"
 
-        else
+        elif [ -n "$line" ]; then
 
             ! $var_set && test -n "$var_name" && eval "$var_name=$line" && var_set=true
-            test -n $file_name && test -z "$file_begin" && file_begin=$i
 
-            echo "  match: content"
+            echo "  match: value_line"
 
         fi
 
@@ -91,7 +97,7 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
         echo '||/debug||</b><br><br>'
         #DEBUG
 
-    done < "$file"
+    done
 
     if [ $n -gt 0 ]; then
         for i in $(seq 0 $n); do
