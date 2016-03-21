@@ -200,13 +200,15 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
     else
 
         test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
+        pkg_name=$(basename $pkg | sed -r "s|\.[^\.]+$||")
+        pkg_ext=$(basename $pkg | sed -r "s|^.*\.([^\.]+)$|\1|")
+        pkg_new="$pkg_name%user_$user_name%.$pkg_ext"
+
+        find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" | xargs -d '\n' -I{} cp $pkg {}/$pkg_new
 
         echo "      <p> CHECKSUM DO ARQUIVO: $(md5sum "$pkg")</p>"
-        echo "      <p> DIRETÓRIOS DE DEPLOY: "
-        find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$"
-        echo "      </p>"
-
-        # Realizar deploy
+        echo "      <p> CAMINHO DE DEPLOY: $(find $upload_dir/ -type f -name "$pkg_new")</p>"
+        echo "      <p> Upload do pacote concluído. Favor aguardar a execução do agente de deploy nos hosts correspondentes.</p>"
 
     fi
 
