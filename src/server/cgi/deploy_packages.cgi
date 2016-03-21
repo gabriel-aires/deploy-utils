@@ -53,6 +53,10 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             file_name="$tmp_dir/$(basename $file_name)"
             eval "$var_name=$file_name"
             var_set=true
+            file_begin=$((i+3)) #i+1: content-type, i+2: '', i+3: file_begin
+            next_boundary=$(sed -n "${file_begin},${input_size}p" "$input_file" | grep -Exn "($part_boundary|$end_boundary)\r" | head -n 1 | cut -d ':' -f1)
+            file_end=$((next_boundary-1))
+            i="$file_end"
 
             echo "  match: file_line"
 
@@ -61,17 +65,6 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=||" | sed -r "s|\"||g")"
 
             echo "  match: param_line"
-
-        elif echo "$line" | grep -Ex "Content\-Type: .*" > /dev/null; then
-
-            if [ -n "$file_name" ]; then
-                file_begin=$((i+2))
-                next_boundary=$(sed -n "${file_begin},${input_size}p" "$input_file" | grep -Exn "$part_boundary|$end_boundary" | head -n 1 | cut -d ':' -f1)
-                file_end=$((next_boundary-1))
-                i="$file_end"
-            fi
-
-            echo "  match: type_line"
 
         elif [ -n "$line" ]; then
 
