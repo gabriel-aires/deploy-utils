@@ -49,7 +49,7 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
             file_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
             file_name="$tmp_dir/$(basename $file_name)"
-            $var_name="$file_name"
+            eval "$var_name=$file_name"
             var_set=true
 
             echo "  match: file_line"
