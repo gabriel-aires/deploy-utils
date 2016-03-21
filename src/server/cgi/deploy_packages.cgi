@@ -4,7 +4,7 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/include.sh || exit 1
 
-function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do POST, boundary
+function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do POST, boundary
 
     #atribui variáveis do formulário e prepara arquivos carregados para o servidor
 
@@ -68,7 +68,7 @@ function parse_multipart_form { #argumentos: nome de arquivo com conteúdo do PO
 
         else
 
-            ! $var_set && test -n "$var_name" && $var_name="$line" && var_set=true
+            ! $var_set && test -n "$var_name" && eval "$var_name=$line" && var_set=true
             test -n $file_name && test -z "$file_begin" && file_begin=$i
 
             echo "  match: content"
