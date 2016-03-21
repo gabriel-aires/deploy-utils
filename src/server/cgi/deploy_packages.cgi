@@ -203,7 +203,7 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
         echo "      <p> CHECKSUM DO ARQUIVO: $(md5sum "$pkg")</p>"
         echo "      <p> DIRETÓRIOS DE DEPLOY: "
-        find $upload_dir/ -mindepth $((qtd_dir+1)) -maxdepth $((qtd_dir+1)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$"
+        find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$"
         echo "      </p>"
 
         # Realizar deploy
