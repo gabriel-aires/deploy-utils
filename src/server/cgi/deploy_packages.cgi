@@ -201,7 +201,7 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
         test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
 
-        echo "      <p> CHECKSUM DO ARQUIVO: $(mk5sum "$pkg")</p>"
+        echo "      <p> CHECKSUM DO ARQUIVO: $(md5sum "$pkg")</p>"
 
         # Realizar deploy
 
