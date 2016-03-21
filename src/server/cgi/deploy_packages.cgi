@@ -202,6 +202,9 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
         test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
 
         echo "      <p> CHECKSUM DO ARQUIVO: $(md5sum "$pkg")</p>"
+        echo "      <p> DIRETÓRIOS DE DEPLOY: "
+        find $upload_dir/$env -mindepth $((qtd_dir+1)) -maxdepth $((qtd_dir+1)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$"
+        echo "      </p>"
 
         # Realizar deploy
 
