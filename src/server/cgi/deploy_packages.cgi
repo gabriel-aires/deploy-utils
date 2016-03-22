@@ -208,7 +208,7 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
         "$proceed_deploy")
 
-            test -z "$pkg" && echo "<p>Nenhum arquivo selecionado para upload.</p>" && end 1
+            test ! -f "$pkg" && echo "<p><b>Nenhum arquivo selecionado para upload.</b></p>" && end 1
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
             pkg_name=$(basename $pkg | sed -r "s|\.[^\.]+$||")
             pkg_ext=$(basename $pkg | sed -r "s|^.*\.([^\.]+)$|\1|")
