@@ -183,34 +183,44 @@ if ! $parsed; then
 
 elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
-    if [ "$proceed" == "$proceed_view" ]; then
+    case "$proceed" in
 
-        lock "package_${app}_${env}" "Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente."
+        "$proceed_view")
 
-        ### Visualizar parâmetros de deploy
-        echo "      <p>"
-        echo "          <table>"
-        echo "              <tr><td>Sistema: </td><td>$app</td></tr>"
-        echo "              <tr><td>Ambiente: </td><td>$env</td></tr>"
-        echo "          </table>"
-        echo "      </p>"
+            lock "package_${app}_${env}" "Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente."
 
-        submit_deploy
+            ### Visualizar parâmetros de deploy
+            echo "      <p>"
+            echo "          <table>"
+            echo "              <tr><td>Sistema: </td><td>$app</td></tr>"
+            echo "              <tr><td>Ambiente: </td><td>$env</td></tr>"
+            echo "          </table>"
+            echo "      </p>"
+            echo "      <p>"
+            echo "          CAMINHO DE DEPLOY:"
+            echo "          <ul>"
+            find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" | sed -r "s|^$upload_dir/(.*)$|<li>\1</li>|"
+            echo "          </ul>"
+            echo "      </p>"
 
-    else
+            submit_deploy
+            ;;
 
-        test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
-        pkg_name=$(basename $pkg | sed -r "s|\.[^\.]+$||")
-        pkg_ext=$(basename $pkg | sed -r "s|^.*\.([^\.]+)$|\1|")
-        pkg_new="$pkg_name%user_$user_name%.$pkg_ext"
+        "$proceed_deploy")
 
-        find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" | xargs -d '\n' -I{} cp $pkg {}/$pkg_new
+            test -z "$pkg" && echo "<p>Nenhum arquivo selecionado para upload.</p>" && end 1
+            test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
+            pkg_name=$(basename $pkg | sed -r "s|\.[^\.]+$||")
+            pkg_ext=$(basename $pkg | sed -r "s|^.*\.([^\.]+)$|\1|")
+            pkg_new="$pkg_name%user_$user_name%.$pkg_ext"
 
-        echo "      <p> CHECKSUM DO ARQUIVO: $(md5sum "$pkg")</p>"
-        echo "      <p> CAMINHO DE DEPLOY: $(find $upload_dir/ -type f -name "$pkg_new")</p>"
-        echo "      <p> Upload do pacote concluído. Favor aguardar a execução do agente de deploy nos hosts correspondentes.</p>"
+            find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" | xargs -d '\n' -I{} cp -f $pkg {}/$pkg_new
 
-    fi
+            echo "      <p><b> CHECKSUM DO ARQUIVO: $(md5sum "$pkg")</b></p>"
+            echo "      <p> Upload do pacote concluído. Favor aguardar a execução do agente de deploy nos hosts correspondentes.</p>"
+            ;;
+
+    esac
 
 else
     echo "      <p><b>Erro. Os parâmetro 'Sistema' e 'Ambiente' devem ser preenchidos.</b></p>"
