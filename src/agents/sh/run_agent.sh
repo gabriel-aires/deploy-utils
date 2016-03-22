@@ -384,6 +384,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
     export -f 'write_history'
     export 'regex_csv_value'
     export 'regex_flag'
+    export 'delim'
     export 'execution_mode'
     export 'verbosity'
     export 'interactive'
