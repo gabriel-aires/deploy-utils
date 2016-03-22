@@ -187,7 +187,8 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
         "$proceed_view")
 
-            lock "package_${app}_${env}" "Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente."
+            find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" > $tmp_dir/deploy_path
+            test "$(cat $tmp_dir/deploy_path | wc -l)" -eq 0 && echo "<p><b>Nenhum caminho de deploy encontrado para a aplicação '$app' no ambiente '$env'.</b></p>" && end 1
 
             ### Visualizar parâmetros de deploy
             echo "      <p>"
@@ -201,7 +202,7 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
             echo "          </ul>"
             echo "          Caminho:"
             echo "          <ul>"
-            find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" | sed -r "s|^$upload_dir/(.*)$|<li>\1</li>|"
+            cat $tmp_dir/deploy_path | sed -r "s|^$upload_dir/(.*)$|<li>\1</li>|"
             echo "          </ul>"
             echo "      </p>"
 
@@ -211,6 +212,8 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
         "$proceed_deploy")
 
             test ! -f "$pkg" && echo "<p><b>Nenhum arquivo selecionado para upload.</b></p>" && end 1
+            lock "package_${app}_${env}" "Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente."
+
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
             pkg_name=$(basename $pkg | sed -r "s|\.[^\.]+$||")
             pkg_ext=$(basename $pkg | sed -r "s|^.*\.([^\.]+)$|\1|")
