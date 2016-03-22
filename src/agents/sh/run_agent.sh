@@ -379,6 +379,7 @@ echo $arq_props_local | while read -d '|' local_conf; do
 
     # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
 
+    export -f 'valid'
     export -f 'log'
     export -f 'write_history'
     export 'execution_mode'
