@@ -6,12 +6,12 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 
 # Utilização
 if [ "$#" -ne '3' ] || [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
-    echo "Utilização: $(readlink -f $0) <nome_agente> <nome_tarefa> <lista_extensões>" && exit 1
+    echo "Utilização: $(readlink -f $0) <nome_agente> <nome_tarefa> <arquivo_de_configuração>" && exit 1
 fi
 
-agent_name="$1"
-task_name="$2"
-file_types="$3"
+agent_name_input="$1"
+agent_task="$2"
+agent_conf="$3"
 pid="$$"
 execution_mode="agent"
 verbosity="quiet"
@@ -74,10 +74,11 @@ function set_dir () {
         set_var="$set_var=$(find "$raiz" -iwholename "$dir_acima" 2> /dev/null)"
         eval $set_var
     else
-        log "ERRO" "Parâmetros incorretos no arquivo '$local_conf'."
-        continue
+        log "ERRO" "Parâmetros incorretos no arquivo '$agent_conf'."
+        return 1
     fi
 
+    return 0
 }
 
 chk_dir () {
@@ -279,7 +280,6 @@ function log_agent () {
 
 }
 
-
 ###### INICIALIZAÇÃO ######
 trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
@@ -306,123 +306,94 @@ valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles 
 
 #valida caminho para diretórios do servidor e argumentos do script
 erro=false
-
-valid 'agent_name' "'$agent_name': Nome inválido para o agente." 'continue' >> $log 2>&1 || erro=true
-valid 'task_name' "'$task_name': Nome inválido para a tarefa." 'continue' >> $log 2>&1 || erro=true
-valid 'file_types' "'$file_types': Lista de extensões inválida." 'continue' >> $log 2>&1 || erro=true
-
+valid 'agent_name' "'$agent_name_input': Nome inválido para o agente." 'continue' >> $log 2>&1 || erro=true
+valid 'agent_task' "'$agent_task': Nome inválido para a tarefa." 'continue' >> $log 2>&1 || erro=true
 valid 'remote_pkg_dir_tree' 'regex_remote_dir' "'$remote_pkg_dir_tree': Caminho inválido para o repositório de pacotes." 'continue' >> $log 2>&1 || erro=true
 valid 'remote_log_dir_tree' 'regex_remote_dir' "'$remote_log_dir_tree': Caminho inválido para o diretório raiz de cópia dos logs." 'continue' >> $log 2>&1 || erro=true
 valid 'remote_lock_dir' 'regex_remote_dir' "'$remote_log_dir': Caminho inválido para o diretório de lockfiles do servidor" 'continue' >> $log 2>&1 || erro=true
 valid 'remote_history_dir' 'regex_remote_dir' "'$remote_history_dir': Caminho inválido para o diretório de gravação do histórico" 'continue' >> $log 2>&1 || erro=true
 valid 'remote_app_history_dir_tree' 'regex_remote_dir' "'$remote_app_history_dir_tree': Caminho inválido para o histórico de deploy das aplicações" 'continue' >> $log 2>&1 || erro=true
-
+test ! -f "$agent_conf" && log 'ERRO' "'$agent_conf': Arquivo de configuração inexistente." >> $log 2>&1  && erro=true
 test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes inexistente.' >> $log 2>&1 && erro=true
 test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs inexistente.' >> $log 2>&1 && erro=true
 test ! -d "$remote_lock_dir" && log 'ERRO' 'Caminho para o diretório de lockfiles do servidor não encontrado' >> $log 2>&1 && erro=true
 test ! -d "$remote_history_dir" && log 'ERRO' 'Caminho para o diretório de gravação do histórico não encontrado' >> $log 2>&1 && erro=true
 test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o histórico de deploy das aplicações não encontrado' >> $log 2>&1 && erro=true
+$erro && end 1 || unset erro
 
-if $erro; then
+#criar lockfile
+lock "$agent_name_input $agent_task $(basename $agent_conf | cut -d '.' -f1)" "Uma tarefa concorrente já está em andamento. Aguarde..."
+
+# Valida o arquivo de configurações $agent_conf, que deve atender aos templates local.template e $agent_name.template
+chk_template "$agent_conf" 'local' >> $log 2>&1
+chk_template "$agent_conf" "$agent_name_input" >> $log 2>&1
+source "$agent_conf" || end 1
+
+# validar parâmetros do arquivo $agent_conf:
+erro=false
+valid 'ambiente' "'$ambiente': Nome inválido para o ambiente." "continue" >> $log 2>&1 || erro=true
+valid "run_${agent_task}_agent" 'regex_bool' "Valor inválido para o parâmetro 'run_${agent_task}_agent' (booleano)." "continue" >> $log 2>&1 || erro=true
+valid "${agent_task}_interval" 'regex_qtd' "Valor inválido para o intervalo de execução do agente de '${agent_task}' (inteiro)." "continue" >> $log 2>&1 || erro=true
+valid "${agent_task}_filetypes" 'regex_filetypes' "Lista de extensões inválida para o agente de '${agent_task}'." "continue" >> $log 2>&1 || erro=true
+test "$agent_name_input" != "$agent_name" && log 'ERRO' "O nome de agente informado não corresponde àquele no arquivo '$agent_conf'" >> $log 2>&1  && erro=true
+$erro && end 1 || unset erro
+
+# verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
+set_dir "$remote_pkg_dir_tree" 'origem' >> $log 2>&1 || end 1
+set_dir "$remote_log_dir_tree" 'destino' >> $log 2>&1 || end 1
+
+if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
+    log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços." >> $log 2>&1
     end 1
-else
-    unset erro
 fi
 
-# Cria lockfiles.
-mklist "$file_types" "$tmp_dir/ext_list"
-while read extension; do
-    lock "$agent_name $task_name $extension" "Uma tarefa concorrente já está em andamento. Aguarde..."
-done < $tmp_dir/ext_list
-
-# Identifica script e diretório de configuração do agente.
-dir_props_local="${install_dir}/conf/$agent_name"
+# Identifica script do agente.
 agent_script="${install_dir}/sh/$agent_name.sh"
-
-if [ -d $dir_props_local ]; then
-    arq_props_local=$(find "$dir_props_local" -type f -iname "*.conf" -print)
-    arq_props_local=$(echo "$arq_props_local" | sed -r "s%(.)$%\1|%g")
-else
-    log "ERRO" "O diretório de configuração do agente não foi encontrado."
-    end 1
-fi
-
 if [ ! -x $agent_script ]; then
     log "ERRO" "O arquivo executável correspondente ao agente $agent_name não foi identificado."
     end 1
 fi
 
-# verifica o(s) arquivo(s) de configuração do agente.
-if [ $(echo "$arq_props_local" | sed -r "s%|%%g" | wc -w) -eq 0 ]; then
-    end 1
-fi
+# exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
+export -f 'valid'
+export -f 'log'
+export -f 'write_history'
+export 'regex_csv_value'
+export 'regex_flag'
+export 'delim'
+export 'execution_mode'
+export 'verbosity'
+export 'interactive'
+export 'lock_history'
+export 'remote_lock_dir'
+export 'history_lock_file'
+export 'remote_history_dir'
+export 'history_csv_file'
+export 'tmp_dir'
 
-# Executa a tarefa especificada para cada arquivo de configuração do agente.
-echo $arq_props_local | while read -d '|' local_conf; do
-
-    # Valida o arquivo de configurações $local_conf, que deve atender aos templates local.template e $agent_name.template
-    chk_template "$local_conf" 'local' 'continue' >> $log 2>&1 || continue
-    chk_template "$local_conf" "$agent_name" 'continue' >> $log 2>&1 || continue
-    source "$local_conf" || continue
-
-    # validar parâmetro ambiente do arquivo $local_conf:
-    valid 'ambiente' "'$ambiente': Nome inválido para o ambiente." "continue" >> $log 2>&1 || continue
-
-    # verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
-    set_dir "$remote_pkg_dir_tree" 'origem' >> $log 2>&1
-    set_dir "$remote_log_dir_tree" 'destino' >> $log 2>&1
-
-    if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
-        log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços." >> $log 2>&1
-        continue
+while read l ; do
+    if [ $(echo $l | grep -Ex "[a-zA-Z0-9_]+=.*" | wc -l) -eq 1 ]; then
+        conf_var=$(echo "$l" | sed -r "s|=.*$||")
+        export $conf_var
     fi
+done < $agent_conf
 
-    # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
-
-    export -f 'valid'
-    export -f 'log'
-    export -f 'write_history'
-    export 'regex_csv_value'
-    export 'regex_flag'
-    export 'delim'
-    export 'execution_mode'
-    export 'verbosity'
-    export 'interactive'
-    export 'lock_history'
-    export 'remote_lock_dir'
-    export 'history_lock_file'
-    export 'remote_history_dir'
-    export 'history_csv_file'
-    export 'tmp_dir'
-
-    while read l ; do
-        if [ $(echo $l | grep -Ex "[a-zA-Z0-9_]+=.*" | wc -l) -eq 1 ]; then
-            conf_var=$(echo "$l" | sed -r "s|=.*$||")
-            export $conf_var
+# executar agente.
+case $agent_task in
+    'log')
+        if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep -E '^[^[:graph:]]*log\)' | wc -l)" -eq 1 ]; then
+            $run_log_agent && log_agent >> $log 2>&1 || log "INFO" "Agente de log desabilitado pelo arquivo $agent_conf" >> $log 2>&1
+        else
+            log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1 && end 1
         fi
-    done < $local_conf
-
-    # executar agente.
-
-    case $task_name in
-        'log')
-            if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep -E '^[^[:graph:]]*log\)' | wc -l)" -eq 1 ]; then
-                log_agent >> $log 2>&1
-            else
-                log "ERRO" "O script $agent_script não aceita o argumento 'log'." >> $log 2>&1
-                continue
-            fi
-            ;;
-        'deploy')
-            if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep -E '^[^[:graph:]]*deploy\)' | wc -l)" -eq 1 ]; then
-                deploy_agent >> $log 2>&1
-            else
-                log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1
-                continue
-            fi
-            ;;
-    esac
-
-done
+        ;;
+    'deploy')
+        if [ "$(cat $agent_script | sed -r 's|"||g' | sed -r "s|'||g" | grep -E '^[^[:graph:]]*deploy\)' | wc -l)" -eq 1 ]; then
+            $run_deploy_agent && deploy_agent >> $log 2>&1 || log "INFO" "Agente de deploy desabilitado pelo arquivo $agent_conf" >> $log 2>&1
+        else
+            log "ERRO" "O script $agent_script não aceita o argumento 'deploy'." >> $log 2>&1 && end 1
+        fi
+        ;;
+esac
 
 end 0

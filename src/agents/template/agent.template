@@ -1,0 +1,32 @@
+# -----------------------------------------------------------------------------------------------------
+# Local a ser monitorado no repositório de pacotes. Cada variável corresponde a um nível de diretório.
+# -----------------------------------------------------------------------------------------------------
+# ambiente: PRODUCAO, SUSTENTACAO, TESTE, DESENVOLVIMENTO, HOMOLOGACAO
+ambiente=
+# servidor_aplicacao: JBOSS_4, JBOSS_5, WILDFLY_8, etc
+servidor_aplicacao=
+# identificacao: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc
+identificacao=
+# -----------------------------------------------------------------------------------------------------
+# Parâmetros do agente.
+# -----------------------------------------------------------------------------------------------------
+# agent_name: nome do agente a ser executado.
+agent_name=
+# run_deploy_agent: valor booleano que indica se o agente de deploy deve ser executado
+run_deploy_agent=
+# run_log_agent: valor booleano que indica se o agente de log deve ser executado
+run_log_agent=
+# deploy_interval: intervalo em segundos entre duas execuções sucessivas do agente de deploy
+deploy_interval=
+# log_interval: intervalo em segundos entre duas execuções sucessivas do agente de log
+log_interval=
+# deploy_filetypes: extensões utilizadas pelo agente de deploy, separadas por espaços
+deploy_filetypes=
+# log_filetypes: extensões utilizadas pelo agente de log, separadas por espaços
+log_filetypes=
+# -----------------------------------------------------------------------------------------------------
+# Parâmetros do servidor de aplicação
+# -----------------------------------------------------------------------------------------------------
+# No lugar da expressão regular abaixo, declarar as variáveis utilizadas pelo agente de deploy/log
+# Ex: caminho_instancias_jboss , wildfly_server_groups, etc.
+[a-z][0-9a-z_]*=

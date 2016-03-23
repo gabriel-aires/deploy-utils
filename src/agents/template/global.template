@@ -9,6 +9,7 @@ interactive=
 remote_pkg_dir_tree=
 remote_log_dir_tree=
 remote_lock_dir=
+remote_conf_dir=
 remote_history_dir=
 remote_app_history_dir_tree=
 
@@ -26,5 +27,5 @@ regex_remote_dir=
 
 ### expressões regulares relacionadas a variáveis utilizadas pelo agente.
 regex_agent_name=
-regex_task_name=
+regex_agent_task=
 regex_file_types=
