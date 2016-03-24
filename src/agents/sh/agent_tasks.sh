@@ -86,6 +86,12 @@ trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 lock 'agent_tasks' "A rotina já está em execução."
 
+# Valida o arquivo global.conf e carrega configurações
+global_conf="${install_dir}/conf/global.conf"
+test -f "$global_conf" || exit 1
+chk_template "$global_conf"
+source "$global_conf" || exit 1
+
 # cria diretório temporário
 tmp_dir="$work_dir/$pid"
 valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" && mkdir -p $tmp_dir

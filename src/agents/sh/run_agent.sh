@@ -284,11 +284,10 @@ function log_agent () {
 trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
 # Valida o arquivo global.conf e carrega configurações
-arq_props_global="${install_dir}/conf/global.conf"
-test -f "$arq_props_global" || exit 1
-dos2unix "$arq_props_global" > /dev/null 2>&1
-chk_template "$arq_props_global"
-source "$arq_props_global" || exit 1
+global_conf="${install_dir}/conf/global.conf"
+test -f "$global_conf" || exit 1
+chk_template "$global_conf"
+source "$global_conf" || exit 1
 
 # cria diretório temporário
 tmp_dir="$work_dir/$pid"
