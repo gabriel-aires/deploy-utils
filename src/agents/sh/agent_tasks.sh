@@ -17,6 +17,28 @@ fi
 
 #### Funções ####
 
+function async_agent() {
+
+    test "$#" -eq "4" || return 1
+    test -d "$tmp_dir" || return 1
+
+    local agent_name="$1"
+    local agent_task="$2"
+    local agent_conf="$3"
+    local agent_wait="$4"
+    local agent_lock="$tmp_dir/${agent_name}_${agent_task}_$(basename "$agent_conf" | cut -d '.' -f1)"
+    local current_time="$(date +%s)"
+
+    if [ -f "$agent_lock" ]; then
+        start_time="$(cat "$agent_lock")"
+        test "$((current_time-start_time))" -gt "$agent_wait" && rm -f $agent_lock
+    else
+        echo "$current_time" > "$agent_lock"
+        nohup $install_dir/sh/run_agent.sh "$agent_name" "$agent_task" "$agent_conf" &
+    fi
+
+}
+
 function tasks () {
 
     mkdir -p $tmp_dir
