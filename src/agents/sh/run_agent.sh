@@ -202,7 +202,7 @@ function deploy_agent () {
                         seconds=0
                         pkg_verified=false
 
-                        while ! $pkg_verified && [ "$seconds" le "$((agent_timeout/2))" ]; do
+                        while ! $pkg_verified && [ "$seconds" -le "$((agent_timeout/2))" ]; do
                             pkg_sum="$(md5sum "$pkg" | cut -d ' ' -f1)"
                             if [ "$pkg_chk" == "$pkg_sum" ]; then
                                 pkg_verified=true
