@@ -322,7 +322,7 @@ $erro && end 1 || unset erro
 lock "$agent_name_input $agent_task $(basename $agent_conf | cut -d '.' -f1)" "Uma tarefa concorrente já está em andamento. Aguarde..."
 
 # Valida o arquivo de configurações $agent_conf, que deve atender aos templates local.template e $agent_name.template
-chk_template "$agent_conf" 'local'
+chk_template "$agent_conf" 'agent'
 chk_template "$agent_conf" "$agent_name_input"
 source "$agent_conf" || end 1
 
