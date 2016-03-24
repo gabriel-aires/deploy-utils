@@ -198,7 +198,7 @@ function deploy_agent () {
                     pkg_chk=$(echo $(basename $pkg) | sed -rn "s|^.*%user_[^%]+%md5_([^%]+)%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
 
                     if [ -n "$pkg_chk" ]; then
-                        log "INFO" "Verificando checksum md5 do pacote '$pkg'..."
+                        log "INFO" "Verificando checksum md5 do pacote..."
                         seconds=0
                         pkg_verified=false
 
@@ -212,8 +212,8 @@ function deploy_agent () {
                             fi
                         done
 
-                        ! $pkg_verified && log "ERRO" "Falha na verificação do checksum md5 do pacote '$pkg': $pkg_sum/$pkg_chk" && continue
-                        log "INFO" "Checksum md5 do pacote '$pkg' verificado com sucesso: $pkg_sum"
+                        ! $pkg_verified && log "ERRO" "Falha na verificação do checksum md5 do pacote: $pkg_sum/$pkg_chk" && continue
+                        log "INFO" "Checksum md5 do pacote verificado com sucesso: $pkg_sum"
                     fi
 
                     export user_name=$(echo $(basename $pkg) | sed -rn "s|^.*%user_([^%]+)%md5_[^%]+%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
