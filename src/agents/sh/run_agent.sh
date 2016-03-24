@@ -334,7 +334,7 @@ valid "${agent_task}_filetypes" 'regex_filetypes' "Lista de extensões inválida
 test "$agent_name_input" != "$agent_name" && log 'ERRO' "O nome de agente informado não corresponde àquele no arquivo '$agent_conf'"  && erro=true
 $erro && end 1 || unset erro
 
-filetypes=$(grep -Ex "${agent_task}_fyletypes=.*" "$agent_conf" | cut -d '=' -f2)
+filetypes=$(grep -Ex "${agent_task}_filetypes=.*" "$agent_conf" | cut -d '=' -f2 | sed -r "s/\'//g" | sed -r 's/"//g')
 
 # verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
 set_dir "$remote_pkg_dir_tree" 'origem' || end 1
