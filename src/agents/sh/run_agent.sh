@@ -225,7 +225,7 @@ function deploy_agent () {
                     #inicio deploy
                     deploy_log_file=$deploy_log_dir/deploy_${host}.log
                     qtd_log_inicio=$(cat $log | wc -l)
-                    rm -f $tmp_dir/*
+                    find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
                     $agent_script 'deploy'
                     qtd_log_fim=$(cat $log | wc -l)
                     qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
@@ -263,7 +263,7 @@ function log_agent () {
 
                 valid 'app' "'$app': Nome de aplicação inválido." "continue" || continue
 
-                rm -f $tmp_dir/*
+                find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
                 $agent_script 'log'
                 cp -f $log "$shared_log_dir/cron_$HOSTNAME.log"
                 unix2dos "$shared_log_dir/cron_$HOSTNAME.log" > /dev/null 2>&1
