@@ -303,7 +303,7 @@ valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles 
 
 #valida caminho para diretórios do servidor e argumentos do script
 erro=false
-valid 'agent_name' "'$agent_name_input': Nome inválido para o agente." 'continue' || erro=true
+valid 'agent_name_input' "'$agent_name_input': Nome inválido para o agente." 'continue' || erro=true
 valid 'agent_task' "'$agent_task': Nome inválido para a tarefa." 'continue' || erro=true
 valid 'remote_pkg_dir_tree' 'regex_remote_dir' "'$remote_pkg_dir_tree': Caminho inválido para o repositório de pacotes." 'continue' || erro=true
 valid 'remote_log_dir_tree' 'regex_remote_dir' "'$remote_log_dir_tree': Caminho inválido para o diretório raiz de cópia dos logs." 'continue' || erro=true
