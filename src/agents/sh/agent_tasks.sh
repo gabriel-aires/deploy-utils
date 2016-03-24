@@ -33,7 +33,7 @@ function async_agent() {
     test -n "$agent_wait" || return 1
 
     local agent_lock="$tmp_dir/${agent_name}_${agent_task}_$(basename "$agent_conf" | cut -d '.' -f1)"
-    local agent_cmd="$install_dir/sh/run_agent.sh '$agent_name' '$agent_task' '$agent_conf'"
+    local agent_cmd="$install_dir/sh/run_agent.sh $agent_name $agent_task $agent_conf"
     local current_time="$(date +%s)"
     local miliseconds=$(date +%s%3N)
 
