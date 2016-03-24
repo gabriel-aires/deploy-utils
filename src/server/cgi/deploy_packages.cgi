@@ -217,11 +217,12 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
             pkg_name=$(basename $pkg | sed -r "s|\.[^\.]+$||")
             pkg_ext=$(basename $pkg | sed -r "s|^.*\.([^\.]+)$|\1|")
-            pkg_new="$pkg_name%user_$user_name%.$pkg_ext"
+            pkg_md5="$(md5sum "$pkg" | cut -d ' ' -f1)"
+            pkg_new="$pkg_name%user_$user_name%md5_$pkg_md5%.$pkg_ext"
 
             find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" | xargs -d '\n' -I{} cp -f $pkg {}/$pkg_new
 
-            echo "      <p><b> CHECKSUM DO ARQUIVO: $(md5sum "$pkg")</b></p>"
+            echo "      <p><b> CHECKSUM DO ARQUIVO: $pkg_md5</b></p>"
             echo "      <p> Upload do pacote concluído. Favor aguardar a execução do agente de deploy nos hosts correspondentes.</p>"
             ;;
 

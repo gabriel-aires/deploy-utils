@@ -194,7 +194,29 @@ function deploy_agent () {
                     #define variáveis a sereem utilizadas pelo agente durante o processo de deploy.
                     export pkg
                     export ext=$(echo $(basename $pkg) | sed -r "s|^.*\.([^\.]+)$|\1|" | tr '[:upper:]' '[:lower:]')
-                    export user_name=$(echo $(basename $pkg) | sed -rn "s|^.*%user_([^%]+)%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
+
+                    pkg_chk=$(echo $(basename $pkg) | sed -rn "s|^.*%user_[^%]+%md5_([^%]+)%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
+
+                    if [ -n "$pkg_chk" ]; then
+                        log "INFO" "Verificando checksum md5 do pacote '$pkg'..."
+                        seconds=0
+                        pkg_verified=false
+
+                        while ! $pkg_verified && [ "$seconds" le "$((agent_timeout/2))" ]; do
+                            pkg_sum="$(md5sum "$pkg" | cut -d ' ' -f1)"
+                            if [ "$pkg_chk" == "$pkg_sum" ]; then
+                                pkg_verified=true
+                            else
+                                ((seconds++))
+                                sleep 1
+                            fi
+                        done
+
+                        ! $pkg_verified && log "ERRO" "Falha na verificação do checksum md5 do pacote '$pkg': $pkg_sum/$pkg_chk" && continue
+                        log "INFO" "Checksum md5 do pacote '$pkg' verificado com sucesso: $pkg_sum"
+                    fi
+
+                    export user_name=$(echo $(basename $pkg) | sed -rn "s|^.*%user_([^%]+)%md5_[^%]+%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
                     export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+$|\1|i" | tr '[:upper:]' '[:lower:]')
                     export host=$(echo $HOSTNAME | cut -f1 -d '.')
 
@@ -203,7 +225,7 @@ function deploy_agent () {
                             rev=$(unzip -p -a $pkg META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
                             ;;
                         *)
-                            rev=$(echo $(basename $pkg) | sed -r "s|^$app||i" | sed -r "s|$ext$||i" | sed -r "s|%user_$user_name%||i" | sed -r "s|^[\.\-_]||")
+                            rev=$(echo $(basename $pkg) | sed -r "s|^$app||i" | sed -r "s|$ext$||i" | sed -r "s|%user_$user_name%md5_$pkg_chk%||i" | sed -r "s|^[\.\-_]||")
                             ;;
                     esac
 
