@@ -32,4 +32,4 @@ regex_remote_dir=
 ### expressões regulares relacionadas a variáveis utilizadas pelo agente.
 regex_agent_name=
 regex_agent_task=
-regex_file_types=
+regex_filetypes=

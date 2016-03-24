@@ -118,14 +118,14 @@ function deploy_agent () {
 
     if [ $(ls "${origem}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir ${origem} "deploy" "$file_types"
+        chk_dir ${origem} "deploy" "$filetypes"
 
         # Verificar se há arquivos para deploy.
 
         log "INFO" "Procurando novos pacotes..."
 
         file_path_regex="^.*\."
-        file_path_regex="$(echo "$file_path_regex" | sed -r "s|^(.*)$|\1$file_types\$|ig" | sed -r "s: :\$\|$file_path_regex:g")"
+        file_path_regex="$(echo "$file_path_regex" | sed -r "s|^(.*)$|\1$filetypes\$|ig" | sed -r "s: :\$\|$file_path_regex:g")"
 
         find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
 
@@ -247,7 +247,7 @@ function log_agent () {
 
     if [ $(ls "${destino}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir "$destino" "log" "$file_types"
+        chk_dir "$destino" "log" "$filetypes"
 
         app_list="$(find $destino/* -type d -iname 'log' -print | sed -r "s|^${destino}/([^/]+)/log|\1|ig")"
         app_list=$(echo "$app_list" | sed -r "s%(.)$%\1|%g" | tr '[:upper:]' '[:lower:]')
@@ -330,10 +330,11 @@ source "$agent_conf" || end 1
 erro=false
 valid 'ambiente' "'$ambiente': Nome inválido para o ambiente." "continue" || erro=true
 valid "run_${agent_task}_agent" 'regex_bool' "Valor inválido para o parâmetro 'run_${agent_task}_agent' (booleano)." "continue" || erro=true
-valid "${agent_task}_interval" 'regex_qtd' "Valor inválido para o intervalo de execução do agente de '${agent_task}' (inteiro)." "continue" || erro=true
 valid "${agent_task}_filetypes" 'regex_filetypes' "Lista de extensões inválida para o agente de '${agent_task}'." "continue" || erro=true
 test "$agent_name_input" != "$agent_name" && log 'ERRO' "O nome de agente informado não corresponde àquele no arquivo '$agent_conf'"  && erro=true
 $erro && end 1 || unset erro
+
+filetypes=$(grep -Ex "${agent_task}_fyletypes=.*" "$agent_conf" | cut -d '=' -f2)
 
 # verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
 set_dir "$remote_pkg_dir_tree" 'origem' || end 1
