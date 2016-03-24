@@ -26,8 +26,8 @@ function async_agent() {
 
     local agent_task="$1"
     local agent_conf="$2"
-    local agent_name="$(grep -Ex "agent_name=[\"']?$regex_agent_name[\"']?" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')"
-    local agent_wait="$(grep -Ex "${task}_interval=[\"']?$regex_qtd[\"']?" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')"
+    local agent_name="$(grep -Ex "agent_name=[\"']?$regex_agent_name[\"']?" "$agent_conf" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')"
+    local agent_wait="$(grep -Ex "${task}_interval=[\"']?$regex_qtd[\"']?" "$agent_conf" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')"
 
     test -n "$agent_name" || return 1
     test -n "$agent_wait" || return 1
