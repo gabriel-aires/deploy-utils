@@ -6,6 +6,8 @@ lock_history=false
 interactive=false
 execution_mode="agent"
 verbosity="quiet"
+running=0
+max_running=10
 pid="$$"
 
 ##### Execução somente como usuário root ######
@@ -19,88 +21,56 @@ fi
 
 function async_agent() {
 
-    test "$#" -eq "4" || return 1
+    test "$#" -eq "2" || return 1
     test -d "$tmp_dir" || return 1
+    test -z "$1" || return 1
+    test -f "$2" || return 1
 
-    local agent_name="$1"
-    local agent_task="$2"
-    local agent_conf="$3"
-    local agent_wait="$4"
+    local agent_task="$1"
+    local agent_conf="$2"
+    local agent_name="$(grep -Ex "agent_name=$regex_agent_name" | cut -d '=' -f2)"
+    local agent_wait="$(grep -Ex "${task}_interval=$regex_qtd" | cut -d '=' -f2)"
+
+    test -n "$agent_name" || return 1
+    test -n "$agent_wait" || return 1
+
     local agent_lock="$tmp_dir/${agent_name}_${agent_task}_$(basename "$agent_conf" | cut -d '.' -f1)"
+    local agent_cmd="$install_dir/sh/run_agent.sh '$agent_name' '$agent_task' '$agent_conf'"
     local current_time="$(date +%s)"
+    local miliseconds=$(date +%s%3N)
 
     if [ -f "$agent_lock" ]; then
         start_time="$(cat "$agent_lock")"
-        test "$((current_time-start_time))" -gt "$agent_wait" && rm -f $agent_lock
+        test "$((current_time-start_time))" -gt "$agent_wait" && test -z $(pgrep -f "$agent_cmd") && rm -f $agent_lock
     else
         echo "$current_time" > "$agent_lock"
-        nohup $install_dir/sh/run_agent.sh "$agent_name" "$agent_task" "$agent_conf" &
-    fi
-
-}
-
-function tasks () {
-
-    mkdir -p $tmp_dir
-
-    ### Processar fila de deploys
-
-    auto_running=$(pgrep -f $install_dir/sh/deploy_auto.sh | wc -l)
-    test "$auto_running" -eq 0 && $install_dir/sh/deploy_auto.sh &
-
-    ### Expurgo de logs
-
-    while [ -f "$lock_dir/$history_lock_file" ]; do
-        sleep 0.001
-    done
-
-    lock_history=true
-    touch $lock_dir/$history_lock_file
-
-    # 1) Serviço
-    touch $history_dir/$service_log_file
-    tail --lines=$service_log_size $history_dir/$service_log_file > $tmp_dir/service_log_new
-    cp -f $tmp_dir/service_log_new $history_dir/$service_log_file
-
-    # 2) Histórico de deploys
-    local qtd_history
-    local qtd_purge
-
-    if [ -f "$history_dir/$history_csv_file" ]; then
-        qtd_history=$(cat "$history_dir/$history_csv_file" | wc -l)
-        if [ $qtd_history -gt $global_history_size ]; then
-            qtd_purge=$(($qtd_history - $global_history_size))
-            sed -i "2,${qtd_purge}d" "$history_dir/$history_csv_file"
+        log "INFO" "RUN_AGENT (name:$agent_name task:$agent_task conf:$agent_conf)\n" &> $tmp_dir/agent_$miliseconds.log
+        nohup $agent_cmd &>> $tmp_dir/agent_$miliseconds.log &
+        ((running++))
+        if [ "$running" -eq "$max_running" ]; then
+            wait
+            running=0
+            find $tmp_dir/ -maxdepth 1 -type f -iname 'agent_*.log' | sort | xargs cat >> $log
+            rm -f $tmp_dir/*.log
         fi
     fi
 
-    # 3) logs de deploy de aplicações
-    find ${app_history_dir_tree} -mindepth 1 -maxdepth 1 -type d > $tmp_dir/app_history_path
-    while read path; do
-        app_history_dir="${app_history_dir_tree}/$(basename $path)"
-        find "${app_history_dir}/" -mindepth 1 -maxdepth 1 -type d | sort > $tmp_dir/logs_total
-        tail $tmp_dir/logs_total --lines=${app_log_max} > $tmp_dir/logs_ultimos
-        grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo
-        cat $tmp_dir/logs_expurgo | xargs --no-run-if-empty rm -Rf
-    done < $tmp_dir/app_history_path
-
-    # Remove arquivos temporários
-    rm -f $tmp_dir/*
-    rmdir $tmp_dir
-
-    # Destrava histórico de deploy
-    rm -f $lock_dir/$history_lock_file
-    lock_history=false
+    sleep 0.001
+    return 0
 
 }
 
+
 function end {
 
+    break 10 2> /dev/null
     trap "" SIGQUIT SIGTERM SIGINT SIGHUP
     erro=$1
 
-    break 10 2> /dev/null
-    wait
+    if [ -f "$log" ]; then
+        wait
+        find $tmp_dir/ -maxdepth 1 -type f -iname 'agent_*.log' | sort | xargs cat >> $log
+    fi
 
     if [ -d $tmp_dir ]; then
         rm -f $tmp_dir/*
@@ -109,7 +79,7 @@ function end {
 
     clean_locks
 
-    return $erro
+    exit $erro
 
 }
 
@@ -117,9 +87,38 @@ trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 lock 'agent_tasks' "A rotina já está em execução."
 
-valid "service_log_size" "regex_qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas."
-valid "app_log_max" "regex_qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações."
-valid "global_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico global."
+# cria diretório temporário
+tmp_dir="$work_dir/$pid"
+valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" && mkdir -p $tmp_dir
+
+function tasks () {
+
+    ### Validação / Expurgo de logs ###
+
+    valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido"
+    mkdir -p "$remote_conf_dir"
+
+    valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs"
+    log="$log_dir/service_$(date +%F).log"
+    mkdir -p $log_dir && touch $log
+    echo "" >> $log
+    find $log_dir -type f -iname "service_*.log" | grep -v $(date "+%Y-%m") | xargs rm -f
+
+    ### Execução de agentes ###
+
+    # Deploys
+    grep -RExl "run_deploy_agent='true'" $remote_conf_dir/* > $tmp_dir/deploy_enabled.list
+    while read deploy_conf; do
+        async_agent "deploy" "$deploy_conf"
+    done < $tmp_dir/deploy_enabled.list
+
+    # Logs
+    grep -RExl "run_log_agent='true'" $remote_conf_dir/* > $tmp_dir/log_enabled.list
+    while read log_conf; do
+        async_agent "log" "$log_conf"
+    done < $tmp_dir/log_enabled.list
+
+}
 
 case "$1" in
     --test)
@@ -128,8 +127,7 @@ case "$1" in
     --daemon)
         while true; do
             sleep 1
-            touch $history_dir/$service_log_file
-            tasks &>> $history_dir/$service_log_file
+            tasks
         done
         ;;
     *)
