@@ -21,7 +21,7 @@ function async_agent() {
 
     test "$#" -eq "2" || return 1
     test -d "$tmp_dir" || return 1
-    test -z "$1" || return 1
+    test -n "$1" || return 1
     test -f "$2" || return 1
 
     local agent_task="$1"
@@ -112,13 +112,13 @@ function tasks () {
     ### Execução de agentes ###
 
     # Deploys
-    grep -RExl "run_deploy_agent='true'" $remote_conf_dir/* > $tmp_dir/deploy_enabled.list
+    grep -RExl "run_deploy_agent=[\"']?true[\"']?" $remote_conf_dir/ > $tmp_dir/deploy_enabled.list
     while read deploy_conf; do
         async_agent "deploy" "$deploy_conf"
     done < $tmp_dir/deploy_enabled.list
 
     # Logs
-    grep -RExl "run_log_agent='true'" $remote_conf_dir/* > $tmp_dir/log_enabled.list
+    grep -RExl "run_log_agent=[\"']?true[\"']?" $remote_conf_dir/ > $tmp_dir/log_enabled.list
     while read log_conf; do
         async_agent "log" "$log_conf"
     done < $tmp_dir/log_enabled.list
