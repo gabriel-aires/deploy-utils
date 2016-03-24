@@ -39,8 +39,8 @@ function async_agent() {
 
     if [ -f "$agent_lock" ]; then
         start_time="$(cat "$agent_lock")"
-        test "$((current_time-start_time))" -gt "$agent_wait" && test -z $(pgrep -f "$agent_cmd") && rm -f $agent_lock
-        test "$((current_time-start_time))" -gt "$agent_timeout" && test -n $(pgrep -f "$agent_cmd") && $(pkill -f "$agent_cmd") && rm -f $agent_lock
+        test "$((current_time-start_time))" -gt "$agent_wait" && test -z "$(pgrep -f "$agent_cmd")" && rm -f $agent_lock
+        test "$((current_time-start_time))" -gt "$agent_timeout" && test -n "$(pgrep -f "$agent_cmd")" && pkill -f "$agent_cmd" && rm -f $agent_lock
     else
         echo "$current_time" > "$agent_lock"
         echo "" > $tmp_dir/agent_$miliseconds.log
