@@ -19,6 +19,10 @@ lock_dir=
 log_dir=
 log=
 
+### parâmetros de execução de agentes
+max_running=
+agent_timeout=
+
 ### Validação de diretórios utilizados pelo agente.
 regex_tmp_dir=
 regex_log_dir=

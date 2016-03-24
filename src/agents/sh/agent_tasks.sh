@@ -7,7 +7,6 @@ interactive=false
 execution_mode="agent"
 verbosity="quiet"
 running=0
-max_running=10
 pid="$$"
 
 ##### Execução somente como usuário root ######
@@ -42,6 +41,7 @@ function async_agent() {
     if [ -f "$agent_lock" ]; then
         start_time="$(cat "$agent_lock")"
         test "$((current_time-start_time))" -gt "$agent_wait" && test -z $(pgrep -f "$agent_cmd") && rm -f $agent_lock
+        test "$((current_time-start_time))" -gt "$agent_timoeut" && test -n $(pgrep -f "$agent_cmd") && $(pkill -f "$agent_cmd") && rm -f $agent_lock
     else
         echo "$current_time" > "$agent_lock"
         log "INFO" "RUN_AGENT (name:$agent_name task:$agent_task conf:$agent_conf)\n" &> $tmp_dir/agent_$miliseconds.log
@@ -55,7 +55,7 @@ function async_agent() {
         fi
     fi
 
-    sleep 0.001
+    sleep 0.005
     return 0
 
 }
