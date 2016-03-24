@@ -43,7 +43,8 @@ function async_agent() {
         test "$((current_time-start_time))" -gt "$agent_timoeut" && test -n $(pgrep -f "$agent_cmd") && $(pkill -f "$agent_cmd") && rm -f $agent_lock
     else
         echo "$current_time" > "$agent_lock"
-        log "INFO" "RUN_AGENT (name:$agent_name task:$agent_task conf:$agent_conf)\n" &> $tmp_dir/agent_$miliseconds.log
+        echo "" > $tmp_dir/agent_$miliseconds.log
+        log "INFO" "RUN_AGENT (name:$agent_name task:$agent_task conf:$agent_conf)\n" &>> $tmp_dir/agent_$miliseconds.log
         nohup $agent_cmd &>> $tmp_dir/agent_$miliseconds.log &
         ((running++))
         if [ "$running" -eq "$max_running" ]; then
