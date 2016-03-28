@@ -189,6 +189,7 @@ else
                             test -f "$agent_conf_dir/$host/$agent_conf.conf" && form_file="$agent_conf_dir/$host/$agent_conf.conf" || form_file="$src_dir/agents/template/$agent_template.template"
 
                             echo "      <p>"
+                            echo "          <p>Modificar arquivo de configuração '$agent_conf.conf':</p>"
                             echo "          <form action=\"$start_page\" method=\"post\">"
                             echo "              <table frame=box class=\"cfg_table\">"
                             while read l; do
