@@ -12,6 +12,7 @@ lock_dir=
 cgi_dir=
 css_dir=
 app_conf_dir=
+agent_conf_dir=
 service_log_file=
 # Opções de deploy padrão
 ambientes=
@@ -65,6 +66,7 @@ cgi_admin_pages=
 cgi_index_title=
 cgi_search_title=
 cgi_app_params_title=
+cgi_agent_params_title=
 cgi_deploy_pages_title=
 cgi_deploy_packages_title=
 cgi_users_title=
