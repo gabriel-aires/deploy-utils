@@ -232,7 +232,7 @@ else
                         while read l; do
                             key="$(echo "$l" | cut -f1 -d '=')"
                             new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                            editconf "$key" "$new_value" "$app_conf_dir/$app_name.conf"
+                            editconf "$key" "$new_value" "$agent_conf_dir/$host/$agent_conf.conf"
                         done < "$agent_conf_dir/$host/$agent_conf.conf"
 
                         echo "      <p><b>Arquivo de configuração '$agent_conf.conf' atualizado.</b></p>"
