@@ -245,8 +245,8 @@ else
                         echo "              <input type=\"hidden\" name=\"host\" value=\"$host\">"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
                         echo "              <input type=\"hidden\" name=\"agent_conf\" value=\"$agent_conf\">"
-                        echo "              <input type=\"submit\" name=\"submit\" value=\"$erase_yes\">"
-                        echo "              <input type=\"submit\" name=\"submit\" value=\"$erase_no\">"
+                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_erase_yes\">"
+                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_erase_no\">"
                         echo "          </form>"
                         echo "      </p>"
                         ;;
