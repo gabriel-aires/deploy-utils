@@ -232,8 +232,9 @@ else
                         while read l; do
                             if echo "$l" | grep -Ev "^#" > /dev/null; then
                                 key="$(echo "$l" | cut -f1 -d '=')"
-                                if [ "$key" == "agent_name" ] && [ -z "$value" ]; then
-                                    new_value="$agent_template"
+                                if [ "$key" == "agent_name" ]; then
+                                    value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                                    test -z "$value" && new_value="$agent_template" || new_value="$value"
                                 else
                                     new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
                                 fi
