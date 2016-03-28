@@ -165,7 +165,7 @@ else
                             echo "                      <td>Agente: </td>"
                             echo "                      <td>"
                             echo "                          <select class=\"select_default\" name=\"agent_template\">"
-                            find $src_dir/agents/template/ -mindepth 1 -maxdepth 1 -type f -name '*.template' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | grep -Exv "local|global" | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
+                            find $src_dir/agents/template/ -mindepth 1 -maxdepth 1 -type f -name '*.template' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | grep -Exv "agent|global" | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
                             echo "                          </select>"
                             echo "                      </td>"
                             echo "                  <tr>"
@@ -194,7 +194,9 @@ else
                             while read l; do
                                 key="$(echo "$l" | cut -f1 -d '=')"
                                 value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                                if [ "$key" == "agent_name" ]; then
+                                if echo "$key" | grep -E "^#" > /dev/null; then
+                                    echo "               <tr><td colspan=\"2\">$key</td></tr>"
+                                elif [ "$key" == "agent_name" ]; then
                                     if [ -z "$value" ]; then
                                         echo "               <tr><td>$key: </td><td><input type=\"text\" disabled size=\"100\" name=\"$key\" value=\"$agent_template\"></td></tr>"
                                     else
