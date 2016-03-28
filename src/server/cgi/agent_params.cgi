@@ -232,7 +232,11 @@ else
                         while read l; do
                             if echo "$l" | grep -Ev "^#" > /dev/null; then
                                 key="$(echo "$l" | cut -f1 -d '=')"
-                                new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                                if [ "$key" == "agent_name" ] && [ -z "$value" ]; then
+                                    new_value="$agent_template"
+                                else
+                                    new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                                fi
                                 editconf "$key" "$new_value" "$agent_conf_dir/$host/$agent_conf.conf"
                             fi
                         done < "$agent_conf_dir/$host/$agent_conf.conf"
