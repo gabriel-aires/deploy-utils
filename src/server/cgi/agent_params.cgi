@@ -30,7 +30,7 @@ test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTE
 operation_add="Adicionar"
 operation_erase="Remover"
 operation_agents="Gerenciar Agentes"
-operation_apps="Gerenciar Aplicações"
+operation_apps="Gerenciar Aplicacoes"
 submit_continue="Continuar"
 submit_add="Adicionar"
 submit_edit="Configurar"
