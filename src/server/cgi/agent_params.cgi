@@ -30,13 +30,21 @@ test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTE
 operation_add="Adicionar"
 operation_erase="Remover"
 operation_agents="Gerenciar Agentes"
+operation_apps="Gerenciar Aplicações"
 submit_continue="Continuar"
-submit_add="Adicionar Host"
+submit_add="Adicionar"
 submit_edit="Configurar"
 submit_save="Salvar"
 submit_erase="Remover"
 submit_erase_yes="Sim"
 submit_erase_no="Nao"
+
+valid "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>"
+valid "agent_conf_dir" "<p><b>Erro. Caminho inválido para o diretório de configuração de agentes.</b></p>"
+test -d "$upload_dir" "<p><b>Erro. Diretório de upload inexistente.</b></p>" || end 1
+test -w "$upload_dir" "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" || end 1
+test -d "$agent_conf_dir" "<p><b>Erro. Diretório de configuração de agentes inexistente.</b></p>" || end 1
+test -w "$agent_conf_dir" "<p><b>Erro. Permissões insuficientes no diretório de configuração de agentes.</b></p>" || end 1
 
 if [ -z "$POST_STRING" ]; then
 
@@ -269,6 +277,123 @@ else
 
                 esac
                 ;;
+
+            "$operation_apps")
+                case "$submit" in
+
+                    "$submit_continue")
+
+                        echo "      <p>"
+                        echo "          <form action=\"$start_page\" method=\"post\">"
+                        echo "              <p>"
+                        echo "                  Selecionar configuração: "
+                        echo "                  <select class=\"select_default\" name=\"agent_conf\">"
+                        find $agent_conf_dir/$host/ -mindepth 1 -maxdepth 1 -type f -name '*.conf' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
+                        echo "                  </select>"
+                        echo "              </p>"
+                        echo "              <p>"
+                        echo "                  <input type=\"hidden\" name=\"host\" value=\"$host\">"
+                        echo "                  <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
+                        echo "                  <input type=\"submit\" name=\"submit\" value=\"$submit_edit\">"
+                        echo "              </p>"
+                        echo "          </form>"
+                        echo "      </p>"
+                        ;;
+
+                    "$submit_edit")
+
+                        error=false
+                        i=0
+                        path_id_regex=''
+                        upload_path="$upload_dir"
+
+                        while [ "$i" -lt "$qtd_dir" ]; do
+                            ((i++)) && path_id_regex="$path_id_regex|$(eval "echo \$dir_$i")"
+                        done
+
+                        path_id_regex="$(echo "$path_id_regex" | sed -r "s/^\|//")"
+
+                        while read l; do
+                            echo "$(echo "$l" | cut -f1 -d '=')" | grep -Exv "$path_id_regex" > /dev/null && continue
+                            subdir="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                            test -z "$subdir" && error=true && break
+                            upload_path="$path/$subdir"
+                        done < "$agent_conf_dir/$host/$agent_conf.conf"
+
+                        if ! "$error"; then
+
+                            echo "      <p>"
+                            echo "          Diretórios de aplicação associados à configuração '$agent_conf.conf':<br>"
+                            echo "          <form action=\"$start_page\" method=\"post\">"
+                            echo "              <input type=\"hidden\" name=\"host\" value=\"$host\">"
+                            echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
+                            echo "              <input type=\"hidden\" name=\"agent_conf\" value=\"$agent_conf\">"
+                            find $upload_path/ -mindepth 2 -maxdepth 2 | sort | sed -r "s|^$upload_dir(.*)$|\t\t\t\t\t\t<input type=\"checkbox\" name=\"upload_subpath\" value=\"\1\">\1<br>|"
+                            echo "              <p>"
+                            echo "                  <input type=\"submit\" name=\"submit\" value=\"$submit_add\"> "
+                            echo "                  <input type=\"submit\" name=\"submit\" value=\"$submit_erase\">"
+                            echo "              </p>"
+                            echo "          </form>"
+                            echo "      </p>"
+
+                        else
+                            echo "      <p><b>Erro. O mapeamento de diretórios do arquivo "$agent_conf_dir/$host/$agent_conf.conf" está incompleto.</b></p>"
+                        fi
+                        ;;
+
+                    "$submit_erase")
+
+                        upload_subpath="$(echo "$arg_string" | sed -rn "s/^.*&upload_subpath=([^\&]+)&.*$/\1/p")"
+
+                        while [ -n "$upload_subpath" ]; do
+                            upload_path="$upload_dir/$upload_subpath"
+                            rm -f "$upload_path"/*
+                            rmdir "$upload_path"
+                            rmdir $(dirname $upload_path) &> /dev/null
+                            echo "      <p>Diretório '$upload_subpath' removido .</p>"
+                            arg_string="$(echo "$arg_string" | sed -r "s|&upload_subpath=$upload_subpath||")"
+                            upload_subpath="$(echo "$arg_string" | sed -rn "s/^.*&upload_subpath=([^\&]+)&.*$/\1/p")"
+                        done
+                        ;;
+
+                    "$submit_add")
+
+                        echo "      <p>"
+                        echo "          <p>Aplicação:</p>"
+                        echo "          <form action=\"$start_page\" method=\"post\">"
+                        echo "              <p><input type=\"text\" class=\"text_default\" name=\"app\"></input></p>"
+                        echo "              <p>"
+                        echo "                  <input type=\"checkbox\" name=\"enable_deploy\" value=\"true\"> Deploy<br>"
+                        echo "                  <input type=\"checkbox\" name=\"enable_log\" value=\"true\"> Log<br>"
+                        echo "              </p>"
+                        echo "              <input type=\"hidden\" name=\"host\" value=\"$host\">"
+                        echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
+                        echo "              <input type=\"hidden\" name=\"upload_subpath\" value=\"$upload_subpath\">"
+                        echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_save\">"
+                        echo "          </form>"
+                        echo "      </p>"
+                        ;;
+
+                    "$submit_save")
+
+                        enable_log=false
+                        enable_deploy=false
+                        dir_created=false
+
+                        upload_subpath="$(echo "$arg_string" | sed -rn "s/^.*&upload_subpath=([^\&]+)&.*$/\1/p")"
+                        enable_log="$(echo "$arg_string" | sed -rn "s/^.*&enable_log=([^\&]+)&.*$/\1/p")"
+                        enable_deploy="$(echo "$arg_string" | sed -rn "s/^.*&enable_deploy=([^\&]+)&.*$/\1/p")"
+
+                        upload_path="$upload_dir/$upload_subpath"
+
+                        $enable_log && mkdir -p "$upload_path/$app/log" && echo "<p>Diretório '$upload_path/$app/log' criado.</p>" && dir_created=true
+                        $enable_log && mkdir -p "$upload_path/$app/deploy" && echo "<p>Diretório '$upload_path/$app/deploy' criado.</p>" && dir_created=true
+                        $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app'.</p>"
+                        ;;
+
+                esac
+                ;;
+
         esac
 
     fi

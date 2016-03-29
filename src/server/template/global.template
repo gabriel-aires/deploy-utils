@@ -94,6 +94,8 @@ regex_bak_dir=
 regex_history_dir=
 regex_cgi_dir=
 regex_repo_dir=
+regex_upload_dir=
+regex_agent_conf_dir=
 regex_lock_dir=
 # Expressões de validação de parâmetros das aplicações
 regex_hash=
