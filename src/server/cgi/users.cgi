@@ -259,7 +259,7 @@ else
                         mklist "$resource_list" | while read resource_name; do
                             resource_type="$(echo "$arg_string" | sed -rn "s/^.*&resource_type=([^\&]+)&.*$/\1/p")"
                             permission="$(echo "$arg_string" | sed -rn "s/^.*&permission=([^\&]+)&.*$/\1/p")"
-                            add_permission "user" "$user" "$resource_type" "$resource_name" "$permission" || end 1
+                            add_permission "user" "$user" "$resource_type" "$resource_name" "$permission" || continue
                             echo "      <p><b>Permissão '$resource_type;$resource_name;$permission' adicionada com sucesso para o usuário '$user'.</b></p>"
                         done
                         ;;
