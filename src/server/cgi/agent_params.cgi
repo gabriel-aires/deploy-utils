@@ -356,7 +356,7 @@ else
                     "$submit_erase")
 
                         app_path="$upload_path/$app_subpath"
-                        while [ -d "$app_path" ]; do
+                        while [ -n "$app_subpath"] && [ -d "$app_path" ]; do
                             rm -f "$app_path"/*
                             rmdir "$app_path"
                             rmdir $(dirname $app_path) &> /dev/null
