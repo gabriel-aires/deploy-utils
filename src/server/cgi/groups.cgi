@@ -260,7 +260,7 @@ else
                         # Nome do recurso
                         echo "              <p>"
                         echo "                  Nome do recurso:<br>"
-                        echo "                  <input type=\"text\" class=\"text_default\" name=\"resource_name\"></input>"
+                        echo "                  <input type=\"text\" class=\"text_default\" name=\"resource_list\"></input>"
                         echo "              </p>"
                         # Permissão
                         echo "              <p>"
@@ -280,11 +280,15 @@ else
 
                     "$submit_permission_save")
 
-                        resource_type="$(echo "$arg_string" | sed -rn "s/^.*&resource_type=([^\&]+)&.*$/\1/p")"
-                        resource_name="$(echo "$arg_string" | sed -rn "s/^.*&resource_name=([^\&]+)&.*$/\1/p")"
-                        permission="$(echo "$arg_string" | sed -rn "s/^.*&permission=([^\&]+)&.*$/\1/p")"
-                        add_permission "group" "$group" "$resource_type" "$resource_name" "$permission" || end 1
-                        echo "      <p><b>Permissão adicionada com sucesso para o grupo '$group'.</b></p>"
+                        resource_list="$(echo "$arg_string" | sed -rn "s/^.*&resource_list=([^\&]+)&.*$/\1/p")"
+                        valid 'resource_list' "      <p></b>Erro. '$resource_list' não é uma lista de recursos válida.</b></p>"
+
+                        mklist "$resource_list" | while read resource_name; do
+                            resource_type="$(echo "$arg_string" | sed -rn "s/^.*&resource_type=([^\&]+)&.*$/\1/p")"
+                            permission="$(echo "$arg_string" | sed -rn "s/^.*&permission=([^\&]+)&.*$/\1/p")"
+                            add_permission "group" "$group" "$resource_type" "$resource_name" "$permission" || end 1
+                            echo "      <p><b>Permissão adicionada com sucesso para o grupo '$group'.</b></p>"
+                        done
                         ;;
 
                     "$submit_permission_erase")
