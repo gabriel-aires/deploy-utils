@@ -314,7 +314,9 @@ else
                         upload_path="$upload_dir"
 
                         while [ "$i" -lt "$qtd_dir" ]; do
-                            ((i++)) && path_id_regex="$path_id_regex|$(eval "echo \$dir_$i")"
+                            ((i++))
+                            path_id="$(eval "echo \$dir_$i")"
+                            path_id_regex="${path_id_regex}|${path_id}"
                         done
 
                         path_id_regex="$(echo "$path_id_regex" | sed -r "s/^\|//")"
