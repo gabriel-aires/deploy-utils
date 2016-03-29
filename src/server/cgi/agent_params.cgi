@@ -78,7 +78,7 @@ else
     agent_conf="$(echo "$arg_string" | sed -rn "s/^.*&agent_conf=([^\&]+)&.*$/\1/p")"
     agent_template="$(echo "$arg_string" | sed -rn "s/^.*&agent_template=([^\&]+)&.*$/\1/p")"
     upload_path="$(echo "$arg_string" | sed -rn "s|^.*&upload_path=([^\&]+)&.*$|\1|p")"
-    app_path="$(echo "$arg_string" | sed -rn "s|^.*&app_path=([^\&]+)&.*$|\1|p")"
+    app_subpath="$(echo "$arg_string" | sed -rn "s|^.*&app_subpath=([^\&]+)&.*$|\1|p")"
     enable_log="$(echo "$arg_string" | sed -rn "s/^.*&enable_log=([^\&]+)&.*$/\1/p")"
     enable_deploy="$(echo "$arg_string" | sed -rn "s/^.*&enable_deploy=([^\&]+)&.*$/\1/p")"
     app="$(echo "$arg_string" | sed -rn "s|^.*&app=([^\&]+)&.*$|\1|p")"
@@ -339,7 +339,7 @@ else
                             echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
                             echo "              <input type=\"hidden\" name=\"agent_conf\" value=\"$agent_conf\">"
                             echo "              <input type=\"hidden\" name=\"upload_path\" value=\"$upload_path\">"
-                            find $upload_path/ -mindepth 2 -maxdepth 2 | sort | sed -r "s|^(.*)$|\t\t\t\t\t\t<input type=\"checkbox\" name=\"app_path\" value=\"\1\">\1<br>|"
+                            find $upload_path/ -mindepth 2 -maxdepth 2 | sort | sed -r "s|^$upload_path/(.*)$|\t\t\t\t\t\t<input type=\"checkbox\" name=\"app_subpath\" value=\"\1\">\1<br>|"
                             echo "              <p>"
                             echo "                  <input type=\"submit\" name=\"submit\" value=\"$submit_add\"> "
                             echo "                  <input type=\"submit\" name=\"submit\" value=\"$submit_erase\">"
@@ -354,13 +354,15 @@ else
 
                     "$submit_erase")
 
+                        app_path="$upload_path/$app_subpath"
                         while [ -d "$app_path" ]; do
                             rm -f "$app_path"/*
                             rmdir "$app_path"
                             rmdir $(dirname $app_path) &> /dev/null
                             echo "      <p>Diretório '$app_path' removido .</p>"
-                            arg_string="$(echo "$arg_string" | sed -r "s|&app_path=$app_path||")"
-                            app_path="$(echo "$arg_string" | sed -rn "s/^.*&app_path=([^\&]+)&.*$/\1/p")"
+                            arg_string="$(echo "$arg_string" | sed -r "s|&app_subpath=$app_subpath||")"
+                            app_subpath="$(echo "$arg_string" | sed -rn "s/^.*&app_subpath=([^\&]+)&.*$/\1/p")"
+                            app_path="$upload_path/$app_subpath"
                         done
                         ;;
 
