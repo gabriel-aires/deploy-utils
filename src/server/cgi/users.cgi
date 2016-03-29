@@ -224,7 +224,7 @@ else
                         # Tipo de recurso
                         echo "              <p>"
                         echo "                  Tipo de recurso:<br>"
-                        echo "      		    <select class=\"select_default\" name=\"resource_type\">"
+                        echo "      		    <select class=\"select_large\" name=\"resource_type\">"
                         mklist "$regex_resource_type" | while read resource_type; do
                             echo "		        	<option>$resource_type</option>"
                         done
@@ -233,12 +233,12 @@ else
                         # Nome do recurso
                         echo "              <p>"
                         echo "                  Nome do recurso:<br>"
-                        echo "                  <input type=\"text\" class=\"text_default\" name=\"resource_list\"></input>"
+                        echo "                  <input type=\"text\" class=\"text_large\" name=\"resource_list\"></input>"
                         echo "              </p>"
                         # Permissão
                         echo "              <p>"
                         echo "                  Permissão:<br>"
-                        echo "      		    <select class=\"select_default\" name=\"permission\">"
+                        echo "      		    <select class=\"select_large\" name=\"permission\">"
                         mklist "$regex_permission" | while read permission; do
                             echo "		        	<option>$permission</option>"
                         done
@@ -260,7 +260,7 @@ else
                             resource_type="$(echo "$arg_string" | sed -rn "s/^.*&resource_type=([^\&]+)&.*$/\1/p")"
                             permission="$(echo "$arg_string" | sed -rn "s/^.*&permission=([^\&]+)&.*$/\1/p")"
                             add_permission "user" "$user" "$resource_type" "$resource_name" "$permission" || end 1
-                            echo "      <p><b>Permissão adicionada com sucesso para o usuário '$user'.</b></p>"
+                            echo "      <p><b>Permissão '$resource_type;$resource_name;$permission' adicionada com sucesso para o usuário '$user'.</b></p>"
                         done
                         ;;
 

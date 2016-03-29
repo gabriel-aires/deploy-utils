@@ -381,7 +381,7 @@ else
                         echo "      <p>"
                         echo "          <p>Aplicação:</p>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
-                        echo "              <p><input type=\"text\" class=\"text_default\" name=\"app\"></input></p>"
+                        echo "              <p><input type=\"text\" class=\"text_large\" name=\"app\"></input></p>"
                         echo "              <p>"
                         echo "                  <input type=\"checkbox\" name=\"enable_deploy\" value=\"true\"> Deploy<br>"
                         echo "                  <input type=\"checkbox\" name=\"enable_log\" value=\"true\"> Log<br>"
