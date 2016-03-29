@@ -387,13 +387,15 @@ else
 
                     "$submit_save")
 
-                        dir_created=false
                         test -n "$enable_log" || enable_log=false
                         test -n "$enable_deploy" || enable_deploy=false
 
-                        $enable_log && mkdir -p "$upload_path/$app/log" && echo "<p>Diretório '$upload_path/$app/log' criado.</p>" && dir_created=true
-                        $enable_deploy && mkdir -p "$upload_path/$app/deploy" && echo "<p>Diretório '$upload_path/$app/deploy' criado.</p>" && dir_created=true
-                        $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app'.</p>"
+                        mklist "$app" | while read app_name; do
+                            dir_created=false
+                            $enable_log && mkdir -p "$upload_path/$app_name/log" && echo "<p>Diretório '$upload_path/$app_name/log' criado.</p>" && dir_created=true
+                            $enable_deploy && mkdir -p "$upload_path/$app_name/deploy" && echo "<p>Diretório '$upload_path/$app_name/deploy' criado.</p>" && dir_created=true
+                            $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app_name'.</p>"
+                        done
                         ;;
 
                 esac
