@@ -77,7 +77,7 @@ else
     submit="$(echo "$arg_string" | sed -rn "s/^.*&submit=([^\&]+)&.*$/\1/p")"
     agent_conf="$(echo "$arg_string" | sed -rn "s/^.*&agent_conf=([^\&]+)&.*$/\1/p")"
     agent_template="$(echo "$arg_string" | sed -rn "s/^.*&agent_template=([^\&]+)&.*$/\1/p")"
-    upload_subpath="$(echo "$arg_string" | sed -rn "s/^.*&upload_subpath=([^\&]+)&.*$/\1/p")"
+    upload_subpath="$(echo "$arg_string" | sed -rn "s|^.*&upload_subpath=([^\&]+)&.*$|\1|p")"
     enable_log="$(echo "$arg_string" | sed -rn "s/^.*&enable_log=([^\&]+)&.*$/\1/p")"
     enable_deploy="$(echo "$arg_string" | sed -rn "s/^.*&enable_deploy=([^\&]+)&.*$/\1/p")"
 
