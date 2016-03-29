@@ -329,11 +329,12 @@ else
                         done < "$agent_conf_dir/$host/$agent_conf.conf"
 
                         mkdir -p "$upload_path"
+                        upload_subpath="$(echo $upload_path | sed -r "s|^$upload_dir/||")"
 
                         if ! "$error"; then
 
                             echo "      <p>"
-                            echo "          Diretórios de aplicação associados à configuração '$agent_conf.conf':<br>"
+                            echo "          Diretórios de aplicação associados à configuração '$agent_conf.conf' ($upload_subpath):<br>"
                             echo "          <form action=\"$start_page\" method=\"post\">"
                             echo "              <input type=\"hidden\" name=\"host\" value=\"$host\">"
                             echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
