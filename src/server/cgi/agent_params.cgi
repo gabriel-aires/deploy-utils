@@ -41,10 +41,10 @@ submit_erase_no="Nao"
 
 valid "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>"
 valid "agent_conf_dir" "<p><b>Erro. Caminho inválido para o diretório de configuração de agentes.</b></p>"
-test -d "$upload_dir" "<p><b>Erro. Diretório de upload inexistente.</b></p>" || end 1
-test -w "$upload_dir" "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" || end 1
-test -d "$agent_conf_dir" "<p><b>Erro. Diretório de configuração de agentes inexistente.</b></p>" || end 1
-test -w "$agent_conf_dir" "<p><b>Erro. Permissões insuficientes no diretório de configuração de agentes.</b></p>" || end 1
+test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p>" && end 1
+test ! -w "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" && end 1
+test ! -d "$agent_conf_dir" && "<p><b>Erro. Diretório de configuração de agentes inexistente.</b></p>" && end 1
+test ! -w "$agent_conf_dir" && "<p><b>Erro. Permissões insuficientes no diretório de configuração de agentes.</b></p>" && end 1
 
 if [ -z "$POST_STRING" ]; then
 
