@@ -87,6 +87,7 @@ regex_subject_type=
 regex_subject_name=
 regex_resource_type=
 regex_resource_name=
+regex_resource_list=
 regex_permission=
 # Expressões de validação de diretórios utilizados no processo de deploy
 regex_tmp_dir=
