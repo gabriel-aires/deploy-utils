@@ -1,7 +1,7 @@
 # Local a ser monitorado no repositório de pacotes. Cada variável corresponde a um nível de diretório.
 ambiente=
 servidor_aplicacao=
-identificacao=
+hostname=
 # Parâmetros do agente.
 agent_name=
 run_deploy_agent=

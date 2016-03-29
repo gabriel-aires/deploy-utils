@@ -5,8 +5,8 @@
 ambiente=
 # servidor_aplicacao: JBOSS_4, JBOSS_5, WILDFLY_8, etc
 servidor_aplicacao=
-# identificacao: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc
-identificacao=
+# hostname: informar hostname da máquina onde será executado o agente
+hostname=
 # -----------------------------------------------------------------------------------------------------
 # Parâmetros do agente.
 # -----------------------------------------------------------------------------------------------------
