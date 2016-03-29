@@ -77,6 +77,9 @@ else
     submit="$(echo "$arg_string" | sed -rn "s/^.*&submit=([^\&]+)&.*$/\1/p")"
     agent_conf="$(echo "$arg_string" | sed -rn "s/^.*&agent_conf=([^\&]+)&.*$/\1/p")"
     agent_template="$(echo "$arg_string" | sed -rn "s/^.*&agent_template=([^\&]+)&.*$/\1/p")"
+    upload_subpath="$(echo "$arg_string" | sed -rn "s/^.*&upload_subpath=([^\&]+)&.*$/\1/p")"
+    enable_log="$(echo "$arg_string" | sed -rn "s/^.*&enable_log=([^\&]+)&.*$/\1/p")"
+    enable_deploy="$(echo "$arg_string" | sed -rn "s/^.*&enable_deploy=([^\&]+)&.*$/\1/p")"
 
     if [ -n "$operation" ] && [ -n "$submit" ]; then
 
@@ -344,8 +347,6 @@ else
 
                     "$submit_erase")
 
-                        upload_subpath="$(echo "$arg_string" | sed -rn "s/^.*&upload_subpath=([^\&]+)&.*$/\1/p")"
-
                         while [ -n "$upload_subpath" ]; do
                             upload_path="$upload_dir/$upload_subpath"
                             rm -f "$upload_path"/*
@@ -377,15 +378,11 @@ else
 
                     "$submit_save")
 
-                        enable_log=false
-                        enable_deploy=false
                         dir_created=false
-
-                        upload_subpath="$(echo "$arg_string" | sed -rn "s/^.*&upload_subpath=([^\&]+)&.*$/\1/p")"
-                        enable_log="$(echo "$arg_string" | sed -rn "s/^.*&enable_log=([^\&]+)&.*$/\1/p")"
-                        enable_deploy="$(echo "$arg_string" | sed -rn "s/^.*&enable_deploy=([^\&]+)&.*$/\1/p")"
-
                         upload_path="$upload_dir/$upload_subpath"
+
+                        test -n "$enable_log" || enable_log=false
+                        test -n "$enable_deploy" || enable_deploy=false
 
                         $enable_log && mkdir -p "$upload_path/$app/log" && echo "<p>Diretório '$upload_path/$app/log' criado.</p>" && dir_created=true
                         $enable_log && mkdir -p "$upload_path/$app/deploy" && echo "<p>Diretório '$upload_path/$app/deploy' criado.</p>" && dir_created=true
