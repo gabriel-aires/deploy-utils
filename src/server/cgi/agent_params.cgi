@@ -77,7 +77,8 @@ else
     submit="$(echo "$arg_string" | sed -rn "s/^.*&submit=([^\&]+)&.*$/\1/p")"
     agent_conf="$(echo "$arg_string" | sed -rn "s/^.*&agent_conf=([^\&]+)&.*$/\1/p")"
     agent_template="$(echo "$arg_string" | sed -rn "s/^.*&agent_template=([^\&]+)&.*$/\1/p")"
-    upload_subpath="$(echo "$arg_string" | sed -rn "s|^.*&upload_subpath=([^\&]+)&.*$|\1|p")"
+    upload_path="$(echo "$arg_string" | sed -rn "s|^.*&upload_path=([^\&]+)&.*$|\1|p")"
+    app_path="$(echo "$arg_string" | sed -rn "s|^.*&app_path=([^\&]+)&.*$|\1|p")"
     enable_log="$(echo "$arg_string" | sed -rn "s/^.*&enable_log=([^\&]+)&.*$/\1/p")"
     enable_deploy="$(echo "$arg_string" | sed -rn "s/^.*&enable_deploy=([^\&]+)&.*$/\1/p")"
     app="$(echo "$arg_string" | sed -rn "s|^.*&app=([^\&]+)&.*$|\1|p")"
@@ -322,8 +323,10 @@ else
                             echo "$(echo "$l" | cut -f1 -d '=')" | grep -Exv "$path_id_regex" > /dev/null && continue
                             subdir="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
                             test -z "$subdir" && error=true && break
-                            upload_path="$path/$subdir"
+                            upload_path="$upload_path/$subdir"
                         done < "$agent_conf_dir/$host/$agent_conf.conf"
+
+                        mkdir -p "$upload_path"
 
                         if ! "$error"; then
 
@@ -333,7 +336,8 @@ else
                             echo "              <input type=\"hidden\" name=\"host\" value=\"$host\">"
                             echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
                             echo "              <input type=\"hidden\" name=\"agent_conf\" value=\"$agent_conf\">"
-                            find $upload_path/ -mindepth 2 -maxdepth 2 | sort | sed -r "s|^$upload_dir(.*)$|\t\t\t\t\t\t<input type=\"checkbox\" name=\"upload_subpath\" value=\"\1\">\1<br>|"
+                            echo "              <input type=\"hidden\" name=\"upload_path\" value=\"$upload_path\">"
+                            find $upload_path/ -mindepth 2 -maxdepth 2 | sort | sed -r "s|^(.*)$|\t\t\t\t\t\t<input type=\"checkbox\" name=\"app_path\" value=\"\1\">\1<br>|"
                             echo "              <p>"
                             echo "                  <input type=\"submit\" name=\"submit\" value=\"$submit_add\"> "
                             echo "                  <input type=\"submit\" name=\"submit\" value=\"$submit_erase\">"
@@ -348,14 +352,13 @@ else
 
                     "$submit_erase")
 
-                        while [ -n "$upload_subpath" ]; do
-                            upload_path="$upload_dir/$upload_subpath"
-                            rm -f "$upload_path"/*
-                            rmdir "$upload_path"
-                            rmdir $(dirname $upload_path) &> /dev/null
-                            echo "      <p>Diretório '$upload_subpath' removido .</p>"
-                            arg_string="$(echo "$arg_string" | sed -r "s|&upload_subpath=$upload_subpath||")"
-                            upload_subpath="$(echo "$arg_string" | sed -rn "s/^.*&upload_subpath=([^\&]+)&.*$/\1/p")"
+                        while [ -d "$app_path" ]; do
+                            rm -f "$app_path"/*
+                            rmdir "$app_path"
+                            rmdir $(dirname $app_path) &> /dev/null
+                            echo "      <p>Diretório '$app_path' removido .</p>"
+                            arg_string="$(echo "$arg_string" | sed -r "s|&app_path=$app_path||")"
+                            app_path="$(echo "$arg_string" | sed -rn "s/^.*&app_path=([^\&]+)&.*$/\1/p")"
                         done
                         ;;
 
@@ -371,7 +374,7 @@ else
                         echo "              </p>"
                         echo "              <input type=\"hidden\" name=\"host\" value=\"$host\">"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
-                        echo "              <input type=\"hidden\" name=\"upload_subpath\" value=\"$upload_subpath\">"
+                        echo "              <input type=\"hidden\" name=\"upload_path\" value=\"$upload_path\">"
                         echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_save\">"
                         echo "          </form>"
                         echo "      </p>"
@@ -380,8 +383,6 @@ else
                     "$submit_save")
 
                         dir_created=false
-                        upload_path="$upload_dir/$upload_subpath"
-
                         test -n "$enable_log" || enable_log=false
                         test -n "$enable_deploy" || enable_deploy=false
 
