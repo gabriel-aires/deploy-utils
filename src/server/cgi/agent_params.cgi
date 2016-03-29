@@ -80,6 +80,7 @@ else
     upload_subpath="$(echo "$arg_string" | sed -rn "s|^.*&upload_subpath=([^\&]+)&.*$|\1|p")"
     enable_log="$(echo "$arg_string" | sed -rn "s/^.*&enable_log=([^\&]+)&.*$/\1/p")"
     enable_deploy="$(echo "$arg_string" | sed -rn "s/^.*&enable_deploy=([^\&]+)&.*$/\1/p")"
+    app="$(echo "$arg_string" | sed -rn "s|^.*&app=([^\&]+)&.*$|\1|p")"
 
     if [ -n "$operation" ] && [ -n "$submit" ]; then
 
