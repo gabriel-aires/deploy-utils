@@ -387,7 +387,7 @@ else
                         test -n "$enable_deploy" || enable_deploy=false
 
                         $enable_log && mkdir -p "$upload_path/$app/log" && echo "<p>Diretório '$upload_path/$app/log' criado.</p>" && dir_created=true
-                        $enable_log && mkdir -p "$upload_path/$app/deploy" && echo "<p>Diretório '$upload_path/$app/deploy' criado.</p>" && dir_created=true
+                        $enable_deploy && mkdir -p "$upload_path/$app/deploy" && echo "<p>Diretório '$upload_path/$app/deploy' criado.</p>" && dir_created=true
                         $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app'.</p>"
                         ;;
 
