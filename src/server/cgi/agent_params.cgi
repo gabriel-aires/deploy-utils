@@ -211,6 +211,12 @@ else
                                 value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
                                 if echo "$key" | grep -E "^#" > /dev/null; then
                                     echo "               <tr><td colspan=\"2\">$key</td></tr>"
+                                elif [ "$key" == "hostname" ]; then
+                                    if [ -z "$value" ]; then
+                                        echo "               <tr><td>$key: </td><td><input type=\"text\" disabled size=\"100\" name=\"$key\" value=\"$host\"></td></tr>"
+                                    else
+                                        echo "               <tr><td>$key: </td><td><input type=\"text\" disabled size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
+                                    fi
                                 elif [ "$key" == "agent_name" ]; then
                                     if [ -z "$value" ]; then
                                         echo "               <tr><td>$key: </td><td><input type=\"text\" disabled size=\"100\" name=\"$key\" value=\"$agent_template\"></td></tr>"
@@ -246,7 +252,10 @@ else
                         while read l; do
                             if echo "$l" | grep -Ev "^#" > /dev/null; then
                                 key="$(echo "$l" | cut -f1 -d '=')"
-                                if [ "$key" == "agent_name" ]; then
+                                if [ "$key" == "hostname" ]; then
+                                    value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                                    test -z "$value" && new_value="$host" || new_value="$value"
+                                elif [ "$key" == "agent_name" ]; then
                                     value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
                                     test -z "$value" && new_value="$agent_template" || new_value="$value"
                                 else
