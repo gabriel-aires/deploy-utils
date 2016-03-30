@@ -84,8 +84,6 @@ function end {
 
 trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
-lock 'agent_tasks' "A rotina já está em execução."
-
 # Verifica o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
 test -f "$global_conf" || exit 1
@@ -94,15 +92,24 @@ source "$global_conf" || exit 1
 
 # Validações
 tmp_dir="$work_dir/$pid"
-valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" && mkdir -p $tmp_dir
-valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido" && mkdir -p "$remote_conf_dir"
-valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs" && mkdir -p $log_dir
-log="$log_dir/service_$(date +%F).log" && touch $log
+valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários"
+valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido"
+valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs"
+valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles"
+valid "max_running" "regex_qtd" "Valor inválido para a quantidade máxima de tarefas simultâneas"
+valid "agent_timeout" "regex_qtd" "Valor inválido para o timeout de tarefas global"
+valid "service_log_size" "regex_qtd" "Valor inválido para o tamanho máximo do log do agente"
+
+mkdir -p "$tmp_dir" "$remote_conf_dir" "$log_dir" "$lock_dir" || end 1
+lock 'agent_tasks' "A rotina já está em execução."
+log="$log_dir/service.log" && touch "$log"
 
 function tasks () {
 
-    log="$log_dir/service_$(date +%F).log" && touch $log
-    find $log_dir -type f -iname "service_*.log" | grep -v $(date "+%Y-%m") | xargs rm -f
+    # Expurgo de log
+    touch $log
+    tail --lines=$service_log_size $log > $tmp_dir/service_log_new
+    cp -f $tmp_dir/service_log_new $log
 
     # Deploys
     grep -RExl "run_deploy_agent=[\"']?true[\"']?" $remote_conf_dir/ > $tmp_dir/deploy_enabled.list

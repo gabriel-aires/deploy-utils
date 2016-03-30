@@ -23,6 +23,7 @@ service_init_script=
 ### parâmetros de execução de agentes
 max_running=
 agent_timeout=
+service_log_size=
 
 ### Validação de diretórios utilizados pelo agente.
 regex_tmp_dir=
