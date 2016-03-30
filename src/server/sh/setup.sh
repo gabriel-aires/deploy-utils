@@ -98,6 +98,7 @@ test -w $service_init_script || end 1
 
 sed -i -r "s|@src_dir|$src_dir|" $service_init_script
 sed -i -r "s|@daemon_log|$history_dir/$service_log_file|" $service_init_script
+sed -i -r "s|@service_init_script|$service_init_script|" $service_init_script
 
 #create directories
 mkdir -p $common_work_dir || end 1

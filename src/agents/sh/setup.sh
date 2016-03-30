@@ -53,6 +53,7 @@ cp -f $install_dir/template/service.template $service_init_script || end 1
 test -w $service_init_script || end 1
 sed -i -r "s|@src_dir|$src_dir|" $service_init_script
 sed -i -r "s|@log_dir|$log_dir|" $service_init_script
+sed -i -r "s|@service_init_script|$service_init_script|" $service_init_script
 
 #create directories
 mkdir -p "$common_work_dir" || end 1
