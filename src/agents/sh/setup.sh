@@ -46,7 +46,10 @@ valid "remote_app_history_dir_tree" "regex_remote_dir" "\nErro. Diretório de hi
 $error && end 1
 
 #backup agent
-test -f $service_init_script && cp -f $service_init_script $service_init_script.bak
+if [ -f $service_init_script ]; then
+    cp -f $service_init_script $service_init_script.bak
+    $service_init_script stop || end 1
+fi
 
 #setup agent
 cp -f $install_dir/template/service.template $service_init_script || end 1

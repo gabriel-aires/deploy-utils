@@ -90,7 +90,10 @@ sed -i -r "s/@cgi_private_regex/$cgi_private_regex/" $cgi_dir/.htaccess
 sed -i -r "s/@cgi_admin_regex/$cgi_admin_regex/" $cgi_dir/.htaccess
 
 #backup deploy_service
-test -f $service_init_script && cp -f $service_init_script $service_init_script.bak
+if [ -f $service_init_script ]; then
+    cp -f $service_init_script $service_init_script.bak
+    $service_init_script stop || end 1
+fi
 
 #setup deploy_service
 cp -f $install_dir/template/service.template $service_init_script || end 1
