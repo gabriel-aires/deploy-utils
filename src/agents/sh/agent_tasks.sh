@@ -50,7 +50,7 @@ function async_agent() {
         if [ "$running" -eq "$max_running" ]; then
             wait
             running=0
-            find $tmp_dir/ -maxdepth 1 -type f -iname 'agent_*.log' | sort | xargs cat >> $log
+            find $tmp_dir/ -maxdepth 1 -type f -iname 'agent_*.log' | sort | xargs cat
             rm -f $tmp_dir/*.log
         fi
     fi
@@ -68,7 +68,7 @@ function end {
 
     if [ -f "$log" ]; then
         wait
-        find $tmp_dir/ -maxdepth 1 -type f -iname 'agent_*.log' | sort | xargs cat >> $log
+        find $tmp_dir/ -maxdepth 1 -type f -iname 'agent_*.log' | sort | xargs cat
     fi
 
     if [ -d $tmp_dir ]; then
@@ -97,6 +97,7 @@ tmp_dir="$work_dir/$pid"
 valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" && mkdir -p $tmp_dir
 valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido" && mkdir -p "$remote_conf_dir"
 valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs" && mkdir -p $log_dir
+log="$log_dir/service_$(date +%F).log" && touch $log
 
 function tasks () {
 
@@ -123,7 +124,7 @@ case "$1" in
         ;;
     --daemon)
         while true; do
-            tasks
+            tasks &>> $log
             sleep 5
         done
         ;;
