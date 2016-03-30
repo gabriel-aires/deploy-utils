@@ -54,24 +54,32 @@ test -w $service_init_script || end 1
 sed -i -r "s|@src_dir|$src_dir|" $service_init_script
 
 #create directories
-mkdir -p $common_work_dir || end 1
-mkdir -p $common_log_dir || end 1
-mkdir -p $history_dir || end 1
-mkdir -p $app_conf_dir || end 1
-mkdir -p $agent_conf_dir || end 1
-mkdir -p $work_dir || end 1
-mkdir -p $upload_dir || end 1
-mkdir -p $log_dir || end 1
-mkdir -p $lock_dir || end 1
+mkdir -p "$common_work_dir" || end 1
+mkdir -p "$common_log_dir" || end 1
+mkdir -p "$work_dir" || end 1
+mkdir -p "$log_dir" || end 1
+mkdir -p "$lock_dir" || end 1
+mkdir -p "$remote_pkg_dir_tree" || end 1
+mkdir -p "$remote_log_dir_tree" || end 1
+mkdir -p "$remote_lock_dir" || end 1
+mkdir -p "$remote_conf_dir" || end 1
+mkdir -p "$remote_history_dir" || end 1
+mkdir -p "$remote_app_history_dir_tree" || end 1
 
 #setup owner/permissions
-chmod 775 $common_work_dir || end 1
-chmod 775 $common_log_dir || end 1
-chmod 755 $src_dir/common/sh/query_file.sh || end 1
-chmod 755 $service_init_script || end 1
-chmod 775 $work_dir || end 1
-chmod 775 $log_dir || end 1
-chmod 775 $lock_dir || end 1
+chmod 775 "$common_work_dir" || end 1
+chmod 775 "$common_log_dir" || end 1
+chmod 755 "$src_dir/common/sh/query_file.sh" || end 1
+chmod 755 "$service_init_script" || end 1
+chmod 775 "$work_dir" || end 1
+chmod 775 "$log_dir" || end 1
+chmod 775 "$lock_dir" || end 1
+chmod 770 "$remote_pkg_dir_tree" || end 1
+chmod 770 "$remote_log_dir_tree" || end 1
+chmod 770 "$remote_lock_dir" || end 1
+chmod 770 "$remote_conf_dir" || end 1
+chmod 770 "$remote_history_dir" || end 1
+chmod 770 "$remote_app_history_dir_tree" || end 1
 
 #restart services
 $service_init_script restart || end 1
