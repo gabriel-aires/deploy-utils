@@ -18,6 +18,7 @@ work_dir=
 lock_dir=
 log_dir=
 log=
+service_init_script=
 
 ### parâmetros de execução de agentes
 max_running=

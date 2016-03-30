@@ -55,11 +55,10 @@ function async_agent() {
         fi
     fi
 
-    sleep 0.005
+    sleep 0.1
     return 0
 
 }
-
 
 function end {
 
@@ -87,30 +86,22 @@ trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 lock 'agent_tasks' "A rotina já está em execução."
 
-# Valida o arquivo global.conf e carrega configurações
+# Verifica o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
 test -f "$global_conf" || exit 1
 chk_template "$global_conf"
 source "$global_conf" || exit 1
 
-# cria diretório temporário
+# Validações
 tmp_dir="$work_dir/$pid"
 valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" && mkdir -p $tmp_dir
+valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido" && mkdir -p "$remote_conf_dir"
+valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs" && mkdir -p $log_dir
 
 function tasks () {
 
-    ### Validação / Expurgo de logs ###
-
-    valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido"
-    mkdir -p "$remote_conf_dir"
-
-    valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs"
-    log="$log_dir/service_$(date +%F).log"
-    mkdir -p $log_dir && touch $log
-    echo "" >> $log
+    log="$log_dir/service_$(date +%F).log" && touch $log
     find $log_dir -type f -iname "service_*.log" | grep -v $(date "+%Y-%m") | xargs rm -f
-
-    ### Execução de agentes ###
 
     # Deploys
     grep -RExl "run_deploy_agent=[\"']?true[\"']?" $remote_conf_dir/ > $tmp_dir/deploy_enabled.list
@@ -132,8 +123,8 @@ case "$1" in
         ;;
     --daemon)
         while true; do
-            sleep 1
             tasks
+            sleep 5
         done
         ;;
     *)

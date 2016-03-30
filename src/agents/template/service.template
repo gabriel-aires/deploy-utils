@@ -1,0 +1,105 @@
+#!/bin/bash
+if [ "$(id -u)" -ne "0" ]; then
+    echo "Requer usuário root."
+    exit 1
+fi
+
+daemon_cmd="@src_dir/agents/sh/agent_tasks.sh --daemon"
+daemon_dir="$(dirname "$daemon_cmd")"
+daemon_name="$(basename "$daemon_cmd" | cut -f1 -d ' ')"
+daemon_lock="/var/lock/subsys/$(basename "$0")"
+
+function status() {
+
+    if [ -z "$daemon_cmd" ] || [ ! -x "$daemon_dir/$daemon_name" ]; then
+        echo "O comando '$daemon_cmd' não pode ser executado."
+        return 1
+    fi
+
+    test "$(pgrep -f "$daemon_cmd" | wc -l)" -gt 0 && service_running=true || service_running=false
+    test -f $daemon_lock && service_locked=true || service_locked=false
+
+    if $service_locked && $service_running; then
+        echo "Agente em execução..."
+    elif $service_locked && ! $service_running; then
+        echo "Agente parado, porém bloqueado ($daemon_lock)."
+    elif ! $service_locked && ! $service_running; then
+        echo "Agente parado."
+    else # ! $service_locked && $service_running; then
+        echo "Agente em execução, porém não bloqueado ($daemon_lock)."
+    fi
+
+    return 0
+
+}
+
+function start() {
+
+    status > /dev/null
+
+    if [ "$?" -ne 0 ]; then
+        echo $(status) && return 1
+    elif $service_locked && $service_running; then
+        echo $(status)
+    elif $service_locked && ! $service_running; then
+        echo $(status) && return 1
+    elif ! $service_locked && ! $service_running; then
+        echo "Iniciando agente..."
+        touch $daemon_lock || return 1
+        nohup $daemon_cmd &
+    else # ! $service_locked && $service_running; then
+        echo $(status) && return 1
+    fi
+
+    return 0
+
+}
+
+function force-stop() {
+
+    pkill -9 -f "$daemon_cmd" || return 1
+    rm -f $daemon_lock || return 1
+
+    return 0
+
+}
+
+function stop() {
+
+    status > /dev/null
+
+    if [ "$?" -ne 0 ]; then
+        echo $(status) && return 1
+    elif $service_locked && $service_running; then
+        pkill -f "$daemon_cmd"
+        local t=0
+        status > /dev/null
+        while $service_running; do
+            echo "Aguarde..."
+            sleep 1
+            ((t++))
+            test "$2" ==  "$t" && force-stop
+            status > /dev/null
+        done
+        rm -f $daemon_lock || return 1
+        echo "Agente encerrado."
+    elif $service_locked && ! $service_running; then
+        echo $(status) && return 1
+    elif ! $service_locked && ! $service_running; then
+        echo $(status)
+    else # ! $service_locked && $service_running; then
+        echo $(status) && return 1
+    fi
+
+    return 0
+
+}
+
+case "$1" in
+    'status') status ;;
+    'start') start ;;
+    'restart') stop && start ;;
+    'stop') stop ;;
+    'force-stop') force-stop ;;
+    *) echo "'$1':Argumento inválido." 1>&2 && exit 1
+esac
