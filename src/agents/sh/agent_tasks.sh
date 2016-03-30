@@ -105,6 +105,7 @@ valid "service_log_size" "regex_qtd" "Valor inválido para o tamanho máximo do 
 mkdir -p "$tmp_dir" "$remote_conf_dir" "$log_dir" "$lock_dir" || end 1
 lock 'agent_tasks' "A rotina já está em execução."
 log="$log_dir/service.log" && touch "$log"
+host="$(echo $HOSTNAME | cut -d '.' -f1)"
 
 function tasks () {
 
@@ -114,13 +115,13 @@ function tasks () {
     cp -f $tmp_dir/service_log_new $log
 
     # Deploys
-    grep -RExl "run_deploy_agent=[\"']?true[\"']?" $remote_conf_dir/ > $tmp_dir/deploy_enabled.list
+    grep -RExl "run_deploy_agent=[\"']?true[\"']?" "$remote_conf_dir/$host/" > $tmp_dir/deploy_enabled.list
     while read deploy_conf; do
         async_agent "deploy" "$deploy_conf"
     done < $tmp_dir/deploy_enabled.list
 
     # Logs
-    grep -RExl "run_log_agent=[\"']?true[\"']?" $remote_conf_dir/ > $tmp_dir/log_enabled.list
+    grep -RExl "run_log_agent=[\"']?true[\"']?" "$remote_conf_dir/$host/" > $tmp_dir/log_enabled.list
     while read log_conf; do
         async_agent "log" "$log_conf"
     done < $tmp_dir/log_enabled.list
