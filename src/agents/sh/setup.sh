@@ -34,7 +34,7 @@ chk_template "$global_conf"
 source "$global_conf" || end 1
 
 error=false
-valid "tmp_dir" "\nErro. Diretório temporário informado incorretamente." "continue" || error=true
+valid "work_dir" "regex_tmp_dir" "\nErro. Diretório 'work' informado incorretamente." "continue" || error=true
 valid "log_dir" "\nErro. Diretório de lockfiles informado incorretamente." "continue" || error=true
 valid "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente." "continue" || error=true
 valid "remote_pkg_dir_tree" "regex_remote_dir" "\nErro. Repositório de pacotes remoto informado incorretamente." "continue" || error=true
