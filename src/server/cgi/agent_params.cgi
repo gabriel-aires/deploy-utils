@@ -185,7 +185,7 @@ else
                             echo "                      <td>Agente: </td>"
                             echo "                      <td>"
                             echo "                          <select class=\"select_default\" name=\"agent_template\">"
-                            find $src_dir/agents/template/ -mindepth 1 -maxdepth 1 -type f -name '*.template' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | grep -Exv "agent|global" | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
+                            find $src_dir/agents/template/ -mindepth 1 -maxdepth 1 -type f -name '*.template' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | grep -Exv "agent|global|service" | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
                             echo "                          </select>"
                             echo "                      </td>"
                             echo "                  <tr>"
@@ -312,6 +312,7 @@ else
                         echo "              <p>"
                         echo "                  Selecionar configuração: "
                         echo "                  <select class=\"select_default\" name=\"agent_conf\">"
+                        echo "		                <option value=\"\" selected>Selecionar Configuração...</option>"
                         find $agent_conf_dir/$host/ -mindepth 1 -maxdepth 1 -type f -name '*.conf' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
                         echo "                  </select>"
                         echo "              </p>"
@@ -326,6 +327,7 @@ else
 
                     "$submit_edit")
                         test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
+                        test -n "$agent_conf" && echo "      <p>Configuração selecionada: <b>$agent_conf</b></p>" || end 1
                         error=false
                         i=0
                         path_id_regex=''
@@ -373,6 +375,7 @@ else
 
                     "$submit_erase")
                         test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
+                        test -n "$agent_conf" && echo "      <p>Configuração selecionada: <b>$agent_conf</b></p>" || end 1
                         app_path="$upload_path/$app_subpath"
                         while [ -n "$app_subpath" ] && [ -d "$app_path" ]; do
                             rm -f "$app_path"/*
@@ -387,6 +390,7 @@ else
 
                     "$submit_add")
                         test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
+                        test -n "$agent_conf" && echo "      <p>Configuração selecionada: <b>$agent_conf</b></p>" || end 1
                         echo "      <p>"
                         echo "          <p>Aplicação:</p>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
@@ -396,6 +400,7 @@ else
                         echo "                  <input type=\"checkbox\" name=\"enable_log\" value=\"true\"> Log<br>"
                         echo "              </p>"
                         echo "              <input type=\"hidden\" name=\"host\" value=\"$host\">"
+                        echo "              <input type=\"hidden\" name=\"agent_conf\" value=\"$agent_conf\">"
                         echo "              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
                         echo "              <input type=\"hidden\" name=\"upload_path\" value=\"$upload_path\">"
                         echo "              <input type=\"submit\" name=\"submit\" value=\"$submit_save\">"
@@ -405,6 +410,7 @@ else
 
                     "$submit_save")
                         test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
+                        test -n "$agent_conf" && echo "      <p>Configuração selecionada: <b>$agent_conf</b></p>" || end 1
                         test -n "$enable_log" || enable_log=false
                         test -n "$enable_deploy" || enable_deploy=false
 
