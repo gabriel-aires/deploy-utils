@@ -126,7 +126,10 @@ else
             "$proceed_log")
                 log_subpath=$(echo "$arg_string" | sed -rn "s/^.*&log_subpath=([^\&]+)&.*$/\1/p")
                 echo "$log_subpath" | grep -Ei "/log$" > /dev/null || end 1
-                find $upload_dir/$log_subpath/ -maxdepth 1 -type f | sed -r "s|(.*)|<a href=\"\1\">\1</a>|" || end 1
+                echo "          <p>Sistema: $app</p>"
+                echo "          <p>Ambiente: $env</p>"
+                echo "          <p>Caminho: $log_subpath</p>"
+                find $upload_dir/$log_subpath/ -maxdepth 1 -type f | sed -r "s|(.*)|<p><a href=\"\1\">\1</a></p>|" || end 1
                 ;;
 
         esac
