@@ -61,7 +61,7 @@ sed -i -r "s|@apache_servername|$apache_servername|" $apache_confd_dir/$apache_v
 sed -i -r "s|@cgi_dir|$cgi_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@cgi_timeout|$cgi_timeout|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@css_dir|$css_dir|" $apache_confd_dir/$apache_vhost_filename
-sed -i -r "s|@history_dir|$history_dir|" $apache_confd_dir/$apache_vhost_filename
+sed -i -r "s|@upload_dir|$upload_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_log_dir|$apache_log_dir|" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_vhost_logname|$apache_vhost_logname|" $apache_confd_dir/$apache_vhost_filename
 

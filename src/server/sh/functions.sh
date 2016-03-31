@@ -152,7 +152,6 @@ function web_footer () {
         fi
 
     done < $tmp_dir/cgi_list_pages
-    echo "              <p><a href=\"$apache_log_alias\">Logs</a></p>"
     echo "          </div>"
     echo "      </div>"
     echo "  </div>"
