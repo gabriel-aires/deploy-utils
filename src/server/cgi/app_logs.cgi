@@ -109,8 +109,8 @@ else
 
     # Processar POST_STRING
     arg_string="&$(web_filter "$POST_STRING")&"
-    app_name=$(echo "$arg_string" | sed -rn "s/^.*&app=([^\&]+)&.*$/\1/p")
-    env_name=$(echo "$arg_string" | sed -rn "s/^.*&env=([^\&]+)&.*$/\1/p")
+    app=$(echo "$arg_string" | sed -rn "s/^.*&app=([^\&]+)&.*$/\1/p")
+    env=$(echo "$arg_string" | sed -rn "s/^.*&env=([^\&]+)&.*$/\1/p")
     proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
 
     if [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
