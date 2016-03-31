@@ -35,6 +35,7 @@
     </IfModule>
 
     <Directory @upload_dir>
+        ForceType application/octet-stream
         Options +Indexes
     </Directory>
 
