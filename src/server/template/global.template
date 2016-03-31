@@ -66,6 +66,7 @@ cgi_admin_pages=
 cgi_index_title=
 cgi_search_title=
 cgi_app_params_title=
+cgi_app_logs_title=
 cgi_agent_params_title=
 cgi_deploy_pages_title=
 cgi_deploy_packages_title=
