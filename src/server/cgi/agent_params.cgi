@@ -5,7 +5,7 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 source $install_dir/sh/include.sh || exit 1
 
 function end() {
-
+    test "$1" == "0" || echo "      <p><b>Operação inválida.</b></p>"
     web_footer
 
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -138,7 +138,7 @@ else
                         test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         rm -f "$agent_conf_dir"/"$host"/* || end 1
                         rmdir "$agent_conf_dir"/"$host" || end 1
-                        find "$upload_dir/" -mindepth "$qtd_dir" -maxdepth "$qtd_dir" -name "$host" | xargs -r -d '\n' rm -Rf || end 1
+                        find "$upload_dir/" -mindepth "$qtd_dir" -maxdepth "$qtd_dir" -type d -name "$host" | xargs -r -d '\n' rm -Rf || end 1
                         echo "      <p><b>Host '$host' removido.</b></p>"
                         ;;
 
