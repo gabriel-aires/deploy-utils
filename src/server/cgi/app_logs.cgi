@@ -17,10 +17,10 @@ function submit_log() {
 
         rm -f $app_log_clearance $env_log_clearance
 
-        { clearance "user" "$REMOTE_USER" "app" "$app_name" "read" && touch "$app_log_clearance"; } &
+        { clearance "user" "$REMOTE_USER" "app" "$app" "read" && touch "$app_log_clearance"; } &
         process_group="$process_group $!"
 
-        { clearance "user" "$REMOTE_USER" "ambiente" "$env_name" "read" && touch "$env_log_clearance"; } &
+        { clearance "user" "$REMOTE_USER" "ambiente" "$env" "read" && touch "$env_log_clearance"; } &
         process_group="$process_group $!"
 
         wait $process_group
@@ -29,8 +29,8 @@ function submit_log() {
         if $show_form; then
             echo "      <p>"
             echo "          <form action=\"$start_page\" method=\"post\">"
-            echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
-            echo "              <input type=\"hidden\" name=\"$env_param\" value=\"$env_name\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"app\" value=\"$app\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"env\" value=\"$env\"></td></tr>"
             echo "                  <select class=\"select_large\" name=\"log_subpath\">"
             echo "		                <option value=\"\" selected>Selecionar Caminho...</option>"
             cat $tmp_dir/log_path | sed -r "s|^$upload_dir/(.*)$|\t\t\t\t\t\t<option>\1</option>|"
@@ -70,8 +70,6 @@ web_header
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
-app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
-env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_log="Acessar"
 
@@ -119,7 +117,7 @@ else
 
             "$proceed_view")
                 find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/log$" > $tmp_dir/log_path
-                test "$(cat $tmp_dir/log_path | wc -l)" -eq 0 && echo "<p><b>Nenhum caminho de de acesso a logs encontrado para a aplicação '$app' no ambiente '$env'.</b></p>" && end 1
+                test "$(cat $tmp_dir/log_path | wc -l)" -eq 0 && echo "<p><b>Nenhum caminho de de acesso a logs encontrado para a aplicação '$app' no ambiente '$env'.</b></p>" && end 0
                 echo "          <p>Sistema: $app</p>"
                 echo "          <p>Ambiente: $env</p>"
                 submit_log || end 1
