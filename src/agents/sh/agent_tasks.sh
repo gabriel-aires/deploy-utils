@@ -114,8 +114,8 @@ function tasks () {
 
     # Expurgo de log
     local qtd_log=$(cat "$log" | wc -l)
-    local qtd_purge=$(($qtd_log - $service_log_size))
-    test $qtd_purge -gt 0 && sed -i "1,${qtd_purge}d" "$log"
+    local qtd_purge=$((qtd_log - service_log_size))
+    test $qtd_purge -gt 0 && sed -i 1,"$qtd_purge"d "$log"
 
     # Deploys
     grep -RExl "run_deploy_agent=[\"']?true[\"']?" "$remote_conf_dir/$host/" > $tmp_dir/deploy_enabled.list
@@ -128,8 +128,6 @@ function tasks () {
     while read log_conf; do
         async_agent "log" "$log_conf"
     done < $tmp_dir/log_enabled.list
-
-    return 0
 
 }
 
