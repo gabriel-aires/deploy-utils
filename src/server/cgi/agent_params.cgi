@@ -39,6 +39,7 @@ submit_erase="Remover"
 submit_erase_yes="Sim"
 submit_erase_no="Nao"
 
+valid "qtd_dir" "regex_qtd" "<p><b>Erro. Valor inválido para a quantidade de subníveis do diretório de upload.</b></p>"
 valid "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>"
 valid "agent_conf_dir" "<p><b>Erro. Caminho inválido para o diretório de configuração de agentes.</b></p>"
 test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p>" && end 1
@@ -55,6 +56,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>Gerenciar host:</p>"
     echo "              <p>"
     echo "                  <select class=\"select_default\" name=\"host\">"
+    echo "		                <option value=\"\" selected>Selecionar Host...</option>"
     find $agent_conf_dir/ -mindepth 1 -maxdepth 1 -type d | sort | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
     echo "                  </select>"
     echo "              </p>"
@@ -102,7 +104,7 @@ else
                         ;;
 
                     "$submit_add")
-                        valid "host" "<p><b>O hostname é inválido: '$hostname'.</b></p>"
+                        valid "host" "<p><b>O hostname é inválido: '$host'.</b></p>"
                         if find $agent_conf_dir/ -mindepth 1 -maxdepth 1 -type d | grep -Ex "$host" > /dev/null; then
                             echo "      <p><b>Já existe um host chamado '$host'. Favor escolher outro nome.</b></p>"
                         else
@@ -117,6 +119,7 @@ else
                 case "$submit" in
 
                     "$submit_continue")
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         echo "      <p>"
                         echo "          <b>Tem certeza de que deseja remover o host '$host'? As configurações abaixo serão deletadas:</b>"
                         find $agent_conf_dir/$host/ -mindepth 1 -maxdepth 1 -type f -iname '*.conf' | xargs -r -I{} basename {} | while read conf; do
@@ -132,12 +135,15 @@ else
                         ;;
 
                     "$submit_erase_yes")
-                        rm -f $agent_conf_dir/$host/* || end 1
-                        rmdir $agent_conf_dir/$host || end 1
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
+                        rm -f "$agent_conf_dir"/"$host"/* || end 1
+                        rmdir "$agent_conf_dir"/"$host" || end 1
+                        find "$upload_dir/" -mindepth "$qtd_dir" -maxdepth "$qtd_dir" -name "$host" | xargs -r -d '\n' rm -Rf || end 1
                         echo "      <p><b>Host '$host' removido.</b></p>"
                         ;;
 
                     "$submit_erase_no" )
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         echo "      <p><b>Remoção do host '$host' cancelada.</b></p>"
                         ;;
 
@@ -148,7 +154,7 @@ else
                 case "$submit" in
 
                     "$submit_continue")
-
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         echo "      <p>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
                         echo "              <p>"
@@ -168,7 +174,7 @@ else
                         ;;
 
                     "$submit_edit")
-
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         if [ -z "$agent_conf" ]; then
 
                             echo "      <p>"
@@ -245,7 +251,7 @@ else
                         ;;
 
                     "$submit_save")
-
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         test -f "$agent_conf_dir/$host/$agent_conf.conf" || cp "$src_dir/agents/template/$agent_template.template" "$agent_conf_dir/$host/$agent_conf.conf"
                         lock "${host}_${agent_conf}" "Arquivo de configuração '$agent_conf.conf' do host '$host' bloqueado para para edição."
 
@@ -269,6 +275,7 @@ else
                         ;;
 
                     "$submit_erase")
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         echo "      <p>"
                         echo "          <b>Tem certeza de que deseja remover o arquivo de configuração '$agent_conf.conf'?</b>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
@@ -282,11 +289,13 @@ else
                         ;;
 
                     "$submit_erase_yes")
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         rm -f "$agent_conf_dir/$host/$agent_conf.conf" || end 1
                         echo "      <p><b>Arquivo de configuração '$agent_conf.conf' removido.</b></p>"
                         ;;
 
                     "$submit_erase_no")
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         echo "      <p><b>Remoção do arquivo de configuração '$agent_conf.conf' cancelada.</b></p>"
                         ;;
 
@@ -297,7 +306,7 @@ else
                 case "$submit" in
 
                     "$submit_continue")
-
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         echo "      <p>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
                         echo "              <p>"
@@ -316,7 +325,7 @@ else
                         ;;
 
                     "$submit_edit")
-
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         error=false
                         i=0
                         path_id_regex=''
@@ -363,7 +372,7 @@ else
                         ;;
 
                     "$submit_erase")
-
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         app_path="$upload_path/$app_subpath"
                         while [ -n "$app_subpath" ] && [ -d "$app_path" ]; do
                             rm -f "$app_path"/*
@@ -377,7 +386,7 @@ else
                         ;;
 
                     "$submit_add")
-
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         echo "      <p>"
                         echo "          <p>Aplicação:</p>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
@@ -395,7 +404,7 @@ else
                         ;;
 
                     "$submit_save")
-
+                        test -n "$host" && echo "      <p>Host selecionado: <b>$host</b></p>" || end 1
                         test -n "$enable_log" || enable_log=false
                         test -n "$enable_deploy" || enable_deploy=false
 
