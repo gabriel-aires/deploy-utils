@@ -36,7 +36,7 @@ if [ -z "$QUERY_STRING" ]; then
 
     # Formulário deploy
     echo "      <p>"
-    echo "          <form action=\"$start_page\" method=\"post\">"
+    echo "          <form action=\"$start_page\" method=\"get\">"
     # Sistema...
     echo "              <p>"
     echo "      		    <select class=\"select_default\" name=\"app\">"
