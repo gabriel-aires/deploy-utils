@@ -239,6 +239,7 @@ function deploy_agent () {
 
                     export remote_app_history_dir
                     export deploy_log_dir
+                    export deploy_id
 
                     #valida variáveis antes da chamada do agente.
                     valid 'app' "'$app': Nome de aplicação inválido" "continue" || continue
