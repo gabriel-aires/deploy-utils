@@ -75,7 +75,7 @@ else
             echo "          <p>Sistema: $app</p>"
             echo "          <p>Ambiente: $env</p>"
             echo "          <ul>"
-            cat $tmp_dir/log_path | sed -r "s|^$app_history_dir_tree/$env/$app/(.*)$|<li><a href=\"$web_context_path/deploy_logs.cgi?app=$app\&env=$ambiente\&deploy_id=\1\">\1</a></li>|"
+            cat $tmp_dir/log_path | sed -r "s|^$app_history_dir_tree/$env/$app/(.*)$|<li><a href=\"$web_context_path/deploy_logs.cgi?app=$app\&env=$env\&deploy_id=\1\">\1</a></li>|"
             echo "          </ul>"
 
         else
