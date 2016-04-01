@@ -6,7 +6,8 @@
     ServerName @apache_servername
     Alias @apache_log_alias @upload_dir
     Alias @apache_css_alias @css_dir
-    Alias @apache_cgi_alias @cgi_dir
+    Alias @apache_history_alias @app_history_dir_tree
+    Alias @web_context_path @cgi_dir
 
     Timeout @cgi_timeout
 
@@ -23,6 +24,10 @@
 
     <Directory @upload_dir>
         ForceType application/octet-stream
+        Options -Indexes
+    </Directory>
+
+    <Directory @app_history_dir_tree>
         Options -Indexes
     </Directory>
 

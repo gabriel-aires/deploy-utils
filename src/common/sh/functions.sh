@@ -284,7 +284,7 @@ function write_history () {
     local rev_log="$(echo "$rev" | sed -r "s|$delim|_|g")"
     local ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
     local host_log="$(echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
-    local obs_log="$1"
+    local obs_log="<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=$ambiente&deploy_id=$deploy_id\">$1</a>"
     local flag_log="$2"
 
     local aux="$interactive"; interactive=false
@@ -334,15 +334,15 @@ function write_history () {
 
 function set_app_history_dirs () {
 
-    deploy_id=$(echo $(date +%F_%Hh%Mm%Ss)_${rev}_${ambiente} | sed -r "s|[/;]|_|g" | tr '[:upper:]' '[:lower:]')
+    deploy_id=$(echo "date-$(date +%F-%Hh%Mm%Ss)-rev-${rev}" | sed -r "s|[^a-zA-Z0-9\._-]|_|g" | tr '[:upper:]' '[:lower:]')
 
     case $execution_mode in
         'server')
-            app_history_dir="${app_history_dir_tree}/${app}"
+            app_history_dir="${app_history_dir_tree}/${ambiente}/${app}"
             deploy_log_dir="${app_history_dir}/${deploy_id}"
             ;;
         'agent')
-            remote_app_history_dir="${remote_app_history_dir_tree}/${app}"
+            remote_app_history_dir="${remote_app_history_dir_tree}/${ambiente}/${app}"
             deploy_log_dir="${remote_app_history_dir}/${deploy_id}"
             ;;
     esac

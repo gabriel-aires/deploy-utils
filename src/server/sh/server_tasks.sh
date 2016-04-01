@@ -53,9 +53,8 @@ function tasks () {
     fi
 
     # 3) logs de deploy de aplicações
-    find ${app_history_dir_tree} -mindepth 1 -maxdepth 1 -type d > $tmp_dir/app_history_path
-    while read path; do
-        app_history_dir="${app_history_dir_tree}/$(basename $path)"
+    find ${app_history_dir_tree} -mindepth 2 -maxdepth 2 -type d > $tmp_dir/app_history_path
+    while read app_history_dir; do
         find "${app_history_dir}/" -mindepth 1 -maxdepth 1 -type d | sort > $tmp_dir/logs_total
         tail $tmp_dir/logs_total --lines=${app_log_max} > $tmp_dir/logs_ultimos
         grep -vxF --file=$tmp_dir/logs_ultimos $tmp_dir/logs_total > $tmp_dir/logs_expurgo

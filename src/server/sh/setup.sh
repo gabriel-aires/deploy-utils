@@ -48,7 +48,7 @@ $set_apache_listen_directive && apache_listen_directive="Listen $apache_vhost_po
 cp -f $vhost_template $apache_confd_dir/$apache_vhost_filename || end 1
 test -w $vhost_template || end 1
 
-sed -i -r "s|@apache_cgi_alias|$apache_cgi_alias|g" $apache_confd_dir/$apache_vhost_filename
+sed -i -r "s|@web_context_path|$web_context_path|g" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_log_alias|$apache_log_alias|g" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@apache_css_alias|$apache_css_alias|g" $apache_confd_dir/$apache_vhost_filename
 sed -i -r "s|@ssl_crt_path|$ssl_crt_path|" $apache_confd_dir/$apache_vhost_filename

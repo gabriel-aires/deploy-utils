@@ -129,7 +129,7 @@ else
                 echo "          <p>Sistema: $app</p>"
                 echo "          <p>Ambiente: $env</p>"
                 echo "          <ul>"
-                find $upload_dir/$log_subpath/ -maxdepth 1 -type f | sed -r "s|^$upload_dir/(.*)$|<li><a href=\"$apache_log_alias/\1\">\1</li></p>|" || end 1
+                find $upload_dir/$log_subpath/ -maxdepth 1 -type f | sed -r "s|^$upload_dir/(.*)$|<li><a href=\"$apache_log_alias/\1\">\1</a></li>|" || end 1
                 echo "          </ul>"
                 ;;
 
