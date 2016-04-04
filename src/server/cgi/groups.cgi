@@ -120,7 +120,10 @@ else
                         ;;
 
                     "$submit_erase_yes")
-                        delete_group "$group" && echo "      <p><b>Grupo '$group' removido.</b></p>" || end 1
+                        delete_group "$group" || end 1
+                        group_regex="$(echo "$group_regex" | sed -r 's|([\.\-])|\\\1|g' )"
+                        sed -i -r "/^group$delim$group_regex$delim/d" "$web_permissions_file" || end 1
+                        echo "      <p><b>Grupo '$group' removido.</b></p>"
                         ;;
 
                     "$submit_erase_no" )

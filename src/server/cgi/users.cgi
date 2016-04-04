@@ -93,6 +93,8 @@ else
                             echo "      <p>Usuário '$user' retirado do grupo "$group".</p>"
                         done
                         delete_login "$user" || end 1
+                        user_regex="$(echo "$user" | sed -r 's|([\.\-])|\\\1|g' )"
+                        sed -i -r "/^user$delim$user_regex$delim/d" "$web_permissions_file" || end 1
                         echo "      <p><b>Usuário $user removido.</b></p>"
                         ;;
 
