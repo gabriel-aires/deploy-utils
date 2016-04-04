@@ -38,6 +38,8 @@ function submit_log() {
             echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_log\">"
             echo "          </form>"
             echo "      </p>"
+        else
+            echo "      <p><b>Acesso negado.</b></p>"
         fi
 
     fi

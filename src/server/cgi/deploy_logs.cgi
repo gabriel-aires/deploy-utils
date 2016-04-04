@@ -104,6 +104,8 @@ else
                 echo "          <ul>"
                 find "$app_history_dir_tree/$env/$app/$deploy_id/" -maxdepth 1 -type f | sed -r "s|^$app_history_dir_tree/($env/$app/$deploy_id/)(.*)$|<li><a href=\"$apache_history_alias/\1\2\">\2</a></li>|" || end 1
                 echo "          </ul>"
+            else
+                echo "      <p><b>Acesso negado.</b></p>"
             fi
 
         fi

@@ -51,6 +51,8 @@ function submit_deploy() {
             $show_deploy && echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_deploy\">"
             echo "          </form>"
             echo "      </p>"
+        else
+            echo "      <p><b>Acesso negado.</b></p>"
         fi
 
     fi

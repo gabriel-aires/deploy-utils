@@ -100,6 +100,8 @@ function submit_deploy() {
             echo "              </p>"
             echo "          </form>"
             echo "      </p>"
+        else
+            echo "      <p><b>Acesso negado.</b></p>"
         fi
 
     fi
