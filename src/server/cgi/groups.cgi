@@ -6,7 +6,6 @@ source $install_dir/sh/include.sh || exit 1
 
 function end() {
     test "$1" == "0" || echo "      <p><b>Operação inválida.</b></p>"
-    break 10 &> /dev/null
     web_footer
 
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -172,16 +171,16 @@ else
                         grep -vxF --file=$tmp_dir/users_checked $tmp_dir/users_group > $tmp_dir/users_unsubscribe
 
                         while read remove_user; do
-                            unsubscribe "$remove_user" "$group"
-                            echo "      <p>Usuário '$remove_user' removido do grupo "$group".</p>"
+                            unsubscribe "$remove_user" "$group" && echo "      <p>Usuário '$remove_user' removido do grupo "$group".</p>" || touch $tmp_dir/error
                         done < $tmp_dir/users_unsubscribe
+                        test -f $tmp_dir/error && end 1
 
                         grep -vxF --file=$tmp_dir/users_group $tmp_dir/users_checked > $tmp_dir/users_subscribe
 
                         while read add_user; do
-                            subscribe "$add_user" "$group"
-                            echo "      <p>Usuário '$add_user' adicionado ao grupo "$group".</p>"
+                            subscribe "$add_user" "$group" && echo "      <p>Usuário '$add_user' adicionado ao grupo "$group".</p>" || touch $tmp_dir/error
                         done < $tmp_dir/users_subscribe
+                        test -f $tmp_dir/error && end 1
 
                         echo "      <p><b>Membros do grupo '$group' atualizados com sucesso!</b></p>"
                         ;;
@@ -292,9 +291,10 @@ else
                         mklist "$resource_list" | while read resource_name; do
                             resource_type="$(echo "$arg_string" | sed -rn "s/^.*&resource_type=([^\&]+)&.*$/\1/p")"
                             permission="$(echo "$arg_string" | sed -rn "s/^.*&permission=([^\&]+)&.*$/\1/p")"
-                            add_permission "group" "$group" "$resource_type" "$resource_name" "$permission" || continue
-                            echo "      <p><b>Permissão '$resource_type;$resource_name;$permission' adicionada com sucesso para o grupo '$group'.</b></p>"
+                            add_permission "group" "$group" "$resource_type" "$resource_name" "$permission" && \
+                            echo "      <p><b>Permissão '$resource_type;$resource_name;$permission' adicionada com sucesso para o grupo '$group'.</b></p>" || touch $tmp_dir/error
                         done
+                        test -f $tmp_dir/error && end 1
                         ;;
 
                     "$submit_permission_erase")
@@ -308,13 +308,14 @@ else
                             resource_name="$(echo "$permission_string" | cut -f4 -d ":")"
                             permission="$(echo "$permission_string" | cut -f5 -d ":")"
 
-                            delete_permission "$subject_type" "$subject_name" "$resource_type" "$resource_name" "$permission" || end 1
-                            echo "      <p>Permissão '$resource_type;$resource_name;$permission' removida para o grupo '$group'.</p>"
+                            delete_permission "$subject_type" "$subject_name" "$resource_type" "$resource_name" "$permission" && \
+                            echo "      <p>Permissão '$resource_type;$resource_name;$permission' removida para o grupo '$group'.</p>" || touch $tmp_dir/error
 
                             arg_string="$(echo "$arg_string" | sed -r "s/&permission_string=$permission_string//")"
                             permission_string="$(echo "$arg_string" | sed -rn "s/^.*&permission_string=([^\&]+)&.*$/\1/p")"
 
                         done
+                        test -f $tmp_dir/error && end 1
 
                         echo "      <p></b>Permissões selecionadas removidas com sucesso.</b></p>"
                         ;;
