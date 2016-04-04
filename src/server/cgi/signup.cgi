@@ -5,7 +5,7 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 source $install_dir/sh/include.sh || exit 1
 
 function end() {
-
+    test "$1" == "0" || echo "      <p><b>Operação inválida.</b></p>"
     web_footer
 
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
