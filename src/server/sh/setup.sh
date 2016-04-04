@@ -109,7 +109,6 @@ sed -i -r "s|@daemon_log|$history_dir/$service_log_file|" $service_init_script
 sed -i -r "s|@service_init_script|$service_init_script|" $service_init_script
 
 #create directories
-mkdir -p $install_dir/conf || end 1
 mkdir -p $common_work_dir || end 1
 mkdir -p $common_log_dir || end 1
 mkdir -p $history_dir || end 1
