@@ -109,6 +109,7 @@ sed -i -r "s|@daemon_log|$history_dir/$service_log_file|" $service_init_script
 sed -i -r "s|@service_init_script|$service_init_script|" $service_init_script
 
 #create directories
+mkdir -p $install_dir/conf || end 1
 mkdir -p $common_work_dir || end 1
 mkdir -p $common_log_dir || end 1
 mkdir -p $history_dir || end 1
@@ -125,6 +126,8 @@ if [ ! -p "$deploy_queue" ]; then
 fi
 
 #setup owner/permissions
+chmod 775 $install_dir/conf || end 1
+chmod 640 $install_dir/conf/global.conf || end 1
 chmod 775 $common_work_dir || end 1
 chmod 775 $common_log_dir || end 1
 chmod 755 $src_dir/common/sh/query_file.sh || end 1
@@ -146,6 +149,8 @@ chmod 775 $lock_dir || end 1
 chmod 755 $src_dir/server/cgi/* || end 1
 chmod 644 $src_dir/server/css/* || end 1
 
+chgrp $apache_group $install_dir/conf || end 1
+chgrp $apache_group $install_dir/conf/global.conf || end 1
 chgrp $apache_group $common_work_dir || end 1
 chgrp $apache_group $common_log_dir || end 1
 chgrp $apache_group $src_dir/common/sh/query_file.sh || end 1
