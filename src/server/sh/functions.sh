@@ -164,12 +164,15 @@ function web_footer () {
 
 function add_login() {
 
-    test -f "$web_users_file" || return 1
+    test -w "$web_users_file" || return 1
 
     if [ -n "$1" ] && [ -n "$2" ]; then
         local user="$1"
         local password="$2"
-        htpasswd -b "$web_users_file" "$user" "$password" || return 1
+        local error=false
+        cp -f "$web_users_file" "$web_users_file.bak" || return 1
+        htpasswd -b "$web_users_file" "$user" "$password" || error=true
+        $error && cp -f "$web_users_file.bak" "$web_users_file" && return 1
     else
         return 1
     fi
@@ -180,11 +183,14 @@ function add_login() {
 
 function delete_login() {
 
-    test -f "$web_users_file" || return 1
+    test -w "$web_users_file" || return 1
 
     if [ -n "$1" ]; then
         local user="$1"
-        htpasswd -D "$web_users_file" "$user" || end 1
+        local error=false
+        cp -f "$web_users_file" "$web_users_file.bak" || return 1
+        htpasswd -D "$web_users_file" "$user" || error=true
+        $error && cp -f "$web_users_file.bak" "$web_users_file" && return 1
     else
         return 1
     fi
@@ -195,18 +201,36 @@ function delete_login() {
 
 function add_group() {
 
-    test -f "$web_groups_file" && echo "$1:" >> "$web_groups_file" || return 1
+    test -w "$web_groups_file" || return 1
+
+    if [ -n "$1" ]; then
+        local group="$1"
+        local error=false
+        cp -f "$web_groups_file" "$web_groups_file.bak" || return 1
+        echo "$group:" >> "$web_groups_file" || error=true
+        $error && cp -f "$web_groups_file.bak" "$web_groups_file" && return 1
+    else
+        return 1
+    fi
+
     return 0
 
 }
 
 function delete_group() {
 
-    test -f "$web_groups_file" || return 1
-    touch "$web_groups_file" || return 1
-    delete_regex="^$(echo "$1" | sed -r 's|([\.\-])|\\\1|g'):.*\$"
-    sed -r "/$delete_regex/d" "$web_groups_file" > $tmp_dir/delete_group_tmp || return 1
-    cp -f $tmp_dir/delete_group_tmp "$web_groups_file" || return 1
+    test -w "$web_groups_file" || return 1
+
+    if [ -n "$1" ]; then
+        local group="$1"
+        local error=false
+        local delete_regex="^$(echo "$group" | sed -r 's|([\.\-])|\\\1|g'):.*\$"
+        cp -f "$web_groups_file" "$web_groups_file.bak" || return 1
+        sed -i.bak -r "/$delete_regex/d" "$web_groups_file" || error=true
+        $error && cp -f "$web_groups_file.bak" "$web_groups_file" && return 1
+    else
+        return 1
+    fi
 
     return 0
 
@@ -241,13 +265,18 @@ function members_of() {
 
 function unsubscribe() {
 
+    test -w "$web_groups_file" || return 1
+
     if [ -n "$1" ] && [ -n "$2" ]; then
         local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
         local group_regex="$(echo "$2" | sed -r 's|([\.\-])|\\\1|g' )"
-        sed -r "s/^($group_regex:.* +)($user_regex +)(.*)$/\1\3/" "$web_groups_file" > $tmp_dir/unsubscribe_tmp
-        sed -i -r "s/^($group_regex:)($user_regex +)(.*)$/\1\3/" $tmp_dir/unsubscribe_tmp
-        sed -i -r "s/^($group_regex:.* +)($user_regex)$/\1/" $tmp_dir/unsubscribe_tmp
-        sed -r "s/^($group_regex:)($user_regex)$/\1/" $tmp_dir/unsubscribe_tmp > "$web_groups_file"
+        local error=false
+        cp -f "$web_groups_file" "$web_groups_file.bak" || return 1
+        sed -i.bak -r "s/^($group_regex:.* +)($user_regex +)(.*)$/\1\3/" "$web_groups_file" || error=true
+        sed -i.bak -r "s/^($group_regex:)($user_regex +)(.*)$/\1\3/" "$web_groups_file" || error=true
+        sed -i.bak -r "s/^($group_regex:.* +)($user_regex)$/\1/" "$web_groups_file" || error=true
+        sed -i.bak -r "s/^($group_regex:)($user_regex)$/\1/" "$web_groups_file" || error=true
+        $error && cp -f "$web_groups_file.bak" "$web_groups_file" && return 1
     else
         return 1
     fi
@@ -258,11 +287,15 @@ function unsubscribe() {
 
 function subscribe() {
 
+    test -w "$web_groups_file" || return 1
+
     if [ -n "$1" ] && [ -n "$2" ]; then
         local user="$1"
         local group_regex="$(echo "$2" | sed -r 's|([\.\-])|\\\1|g' )"
-        sed -r "s/^($group_regex:.*)$/\1 $user/" "$web_groups_file" > $tmp_dir/subscribe_tmp
-        cp -f $tmp_dir/subscribe_tmp "$web_groups_file"
+        local error=false
+        cp -f "$web_groups_file" "$web_groups_file.bak" || return 1
+        sed -i.bak -r "s/^($group_regex:.*)$/\1 $user/" "$web_groups_file" || error=true
+        $error && cp -f "$web_groups_file.bak" "$web_groups_file" && return 1
     else
         return 1
     fi
@@ -295,18 +328,22 @@ function chk_permission() { #subject_type (user/group), #subject_name, #resource
 function add_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
 
     chk_permission $@ || return 1
-    touch "$web_permissions_file" || return 1
+    test -w "$web_permissions_file" || return 1
+    cp -f "$web_permissions_file" "$web_permissions_file.bak" || return 1
+    local error=false
 
     if [ "$(cat $web_permissions_file | wc -l)" -eq 0 ]; then
         local header="$(echo "$col_subject_type$col_subject_name$col_resource_type$col_resource_name$col_permission" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
-        echo "$header" >> "$web_permissions_file"
+        echo "$header" >> "$web_permissions_file" || error=true
+        $error && cp -f "$web_permissions_file.bak" "$web_permissions_file" && return 1
     fi
 
     if grep -Ex "$1$delim$2$delim$3$delim$4$delim($regex_permission)$delim" "$web_permissions_file" > /dev/null; then
         echo "<p>Já foi atribuída uma permissão correspondente ao sujeito '$2' / recurso '$4'. Favor remover a permissão conflitante e tentar novamente.</p>"
         return 1
     else
-        echo "$1$delim$2$delim$3$delim$4$delim$5$delim" >> "$web_permissions_file"
+        echo "$1$delim$2$delim$3$delim$4$delim$5$delim" >> "$web_permissions_file" || error=true
+        $error && cp -f "$web_permissions_file.bak" "$web_permissions_file" && return 1
     fi
 
     return 0
@@ -316,11 +353,12 @@ function add_permission() { #subject_type (user/group), #subject_name, #resource
 function delete_permission() { #subject_type (user/group), #subject_name, #resource_type, #resource_name, #permission (read/write)
 
     chk_permission $@ || return 1
-
-    touch "$web_permissions_file" || return 1
-    delete_regex="^$(echo "$1$delim$2$delim$3$delim$4$delim$5$delim" | sed -r 's|([\.\-])|\\\1|g')\$"
-    sed -r "/$delete_regex/d" "$web_permissions_file" > $tmp_dir/delete_permission_tmp || return 1
-    cp -f $tmp_dir/delete_permission_tmp "$web_permissions_file" || return 1
+    test -w "$web_permissions_file" || return 1
+    cp -f "$web_permissions_file" "$web_permissions_file.bak" || return 1
+    local error=false
+    local delete_regex="^$(echo "$1$delim$2$delim$3$delim$4$delim$5$delim" | sed -r 's|([\.\-])|\\\1|g')\$"
+    sed -i.bak -r "/$delete_regex/d" "$web_permissions_file" || error=true
+    $error && cp -f "$web_permissions_file.bak" "$web_permissions_file" && return 1
 
     return 0
 

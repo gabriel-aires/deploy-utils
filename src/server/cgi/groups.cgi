@@ -121,8 +121,10 @@ else
 
                     "$submit_erase_yes")
                         delete_group "$group" || end 1
+                        test -w "$web_permissions_file" || end 1
+                        cp -f "$web_permissions_file" "$web_permissions_file.bak" || end 1
                         group_regex="$(echo "$group_regex" | sed -r 's|([\.\-])|\\\1|g' )"
-                        sed -i -r "/^group$delim$group_regex$delim/d" "$web_permissions_file" || end 1
+                        sed -i.bak -r "/^group$delim$group_regex$delim/d" "$web_permissions_file" || end 1
                         echo "      <p><b>Grupo '$group' removido.</b></p>"
                         ;;
 
