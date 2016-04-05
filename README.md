@@ -8,19 +8,19 @@ Sistema para automatização e rastreabilidade do processo de implantação de r
 
 O sistema foi testado com os pacotes abaixo.
 
-**Pacote**  **Versão**
-
-bash 		4.1.2
-coreutils   8.4
-findutils	4.4.2
-grep		2.6.3
-cifs-utils	4.8.1
-nfs-utils   1.2.3
-git         1.7.1
-rsync		3.0.6
-samba		3.6.23
-sed         4.2.1
-perl        5.10.1
+**Pacote**|**Versão**
+----------|----------
+bash      |     4.1.2
+coreutils |       8.4
+findutils |     4.4.2
+grep      |     2.6.3
+cifs-utils|     4.8.1
+nfs-utils |     1.2.3
+git       |     1.7.1
+rsync     |     3.0.6
+samba     |    3.6.23
+sed       |     4.2.1
+perl      |    5.10.1
 
 ## Instalação:
 
