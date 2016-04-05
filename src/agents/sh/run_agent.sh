@@ -291,6 +291,7 @@ function log_agent () {
                 echo -e "Log de execução do agente:\n\n" > "$shared_log_dir/agent_$HOSTNAME.log"
                 test -f "$log_dir/service.log" && cat "$log_dir/service.log" >> "$shared_log_dir/agent_$HOSTNAME.log"
                 cat "$log" >> "$shared_log_dir/agent_$HOSTNAME.log"
+                unix2dos "$shared_log_dir/agent_$HOSTNAME.log" &> /dev/null
 
             else
                 log "ERRO" "O diretório para cópia de logs da aplicação $app não foi encontrado".
