@@ -31,14 +31,14 @@ function paint () {
 
 function log () {    ##### log de execução detalhado.
 
-    local msg="$(date +"%F %Hh%Mm%Ss")  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
+    local msg="$(date +"%F %Hh%Mm%Ss")  $1  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
     local len=$(echo "$msg" | wc -c)
 
-    if [ $len -lt 80 ]; then
-        local fill=$((80 - $len))
-        echo -e "$msg" | sed -r "s|(.)$|\1                    |" | sed -r "s| {$((20-$fill))}$|$1\t$2|"
+    if [ $len -lt 90 ]; then
+        local fill=$((90 - $len))
+        echo -e "$msg" | sed -r "s|(.)$|\1          |" | sed -r "s| {$((10-$fill))}$|\t$2|"
     else
-        echo -e "$msg    $1\t$2"
+        echo -e "$msg    \t$2"
     fi
 
 }
