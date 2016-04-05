@@ -360,9 +360,6 @@ function end () {
                 fi
             fi
         fi
-
-        mv "$deploy_log_dir" "${deploy_log_dir}_PENDENTE"
-
     fi
 
     wait
@@ -481,13 +478,10 @@ done < $tmp_dir/hosts_$ambiente
 #### Diretórios onde serão armazenados os logs de deploy (define e cria os diretórios app_history_dir e deploy_log_dir)
 set_app_history_dirs
 
-if [ -d "${deploy_log_dir}_PENDENTE" ]; then
-    rm -f ${deploy_log_dir}_PENDENTE/*
-    rmdir ${deploy_log_dir}_PENDENTE
-fi
-
 echo -e "\nSistema:\t$app"
 echo -e "Revisão:\t$rev"
+echo -e "Ambiente:\t$ambiente"
+echo -e "Deploy ID:\t$deploy_id\n"
 
 ##### MODO DE DEPLOY #####
 
