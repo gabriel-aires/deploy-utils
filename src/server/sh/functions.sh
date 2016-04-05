@@ -13,6 +13,7 @@ function web_filter() {   # Filtra o input de formulários cgi
     echo "$1" | \
         sed -r 's|\+| |g' | \
         sed -r 's|%21|\!|g' | \
+        sed -r 's|%24|\$|g' | \
         sed -r 's|%25|::percent::|g' | \
         sed -r 's|%2C|,|g' | \
         sed -r 's|%2F|/|g' | \
