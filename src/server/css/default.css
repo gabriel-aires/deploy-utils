@@ -98,6 +98,16 @@ a, p {
     background-color: #EFF5F5;
 }
 
+.cmd_table {
+    width: 100%;
+    border: 0;
+    border-spacing: 0.1rem;
+    border-collapse: collapse;
+    font-family: monospace;
+    background-color: black;
+    color: white;
+}
+
 /* Input */
 
 .select_small {
