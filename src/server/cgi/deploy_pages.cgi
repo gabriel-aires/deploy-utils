@@ -228,9 +228,9 @@ else
                 echo "$deploy_options:$app_name:$rev_name:$env_name:$deploy_out:" >> "$deploy_queue"
 
                 echo "      <p>"
-                echo "              <table class=\"cmd_table\">"
-                cat_eof "$deploy_out" "$end_msg" | sed -r "s|^$|<br>|" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
-                echo "              </table>"
+                echo "              <pre class=\"cfg_color\">"
+                cat_eof "$deploy_out" "$end_msg"
+                echo "              </pre>"
                 echo "      </p>"
 
                 submit_deploy
@@ -241,9 +241,9 @@ else
                 echo "$deploy_options:$app_name:$rev_name:$env_name:$deploy_out:" >> "$deploy_queue"
 
                 echo "      <p>"
-                echo "              <table class=\"cmd_table\">"
-                cat_eof "$deploy_out" "$end_msg" | sed -r "s|^$|<br>|" | sed -r "s|^(.*)$|\t\t\t\t<tr><td>\1</td></tr>|"
-                echo "              </table>"
+                echo "              <pre class=\"cfg_color\">"
+                cat_eof "$deploy_out" "$end_msg"
+                echo "              </pre>"
                 echo "      </p>"
 
             fi

@@ -94,16 +94,8 @@ a, p {
     color: black;
 }
 
-.cfg_table {
-    background-color: #EFF5F5;
-}
-
-.cmd_table {
-    border: 0;
-    border-spacing: 0.05rem;
-    border-collapse: collapse;
-    font-family: monospace;
-    background-color: #EFF5F5;
+.cfg_color {
+    background-color: #eff4fa;
 }
 
 /* Input */

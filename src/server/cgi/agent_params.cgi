@@ -211,7 +211,7 @@ else
                             echo "      <p>"
                             echo "          <p>Modificar arquivo de configuração '$agent_conf.conf':</p>"
                             echo "          <form action=\"$start_page\" method=\"post\">"
-                            echo "              <table frame=box class=\"cfg_table\">"
+                            echo "              <table frame=box class=\"cfg_color\">"
                             while read l; do
                                 key="$(echo "$l" | cut -f1 -d '=')"
                                 value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
