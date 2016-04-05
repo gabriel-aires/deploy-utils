@@ -197,7 +197,7 @@ else
             echo "      </p>"
             echo "      <p><b>Parâmetros de deploy:</b></p>"
             echo "      <p>"
-            echo "              <table>"
+            echo "              <table class=\"cfg_color\">"
             while read l; do
                 show_param=true
                 key="$(echo "$l" | cut -f1 -d '=')"
