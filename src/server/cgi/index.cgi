@@ -38,7 +38,7 @@ echo "          <form action=\"$start_page\" method=\"get\">"
 # Sistema...
 echo "      		<select class=\"select_small\" name=\"$app_param\">"
 echo "		        	<option value=\"\" selected>Sistema...</option>"
-find $app_history_dir_tree/ -mindepth 1 -maxdepth 1 -type d | sort | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+find $app_history_dir_tree/ -mindepth 2 -maxdepth 2 -type d | sort | xargs -I{} -d '\n' basename {} | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
 echo "		        </select>"
 # Ambiente...
 echo "      		<select class=\"select_small\" name=\"$env_param\">"
