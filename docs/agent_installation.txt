@@ -2,7 +2,7 @@
 DESCRIÇÃO
 ---------
 
-Este script destina-se a automatizar atividades corriqueiras relativas à gestão de servidores de aplicação JBOSS, tal qual o deploy de pacotes .war e a disponibilização de logs das instâncias.
+A utilização de agentes destina-se a automatizar atividades corriqueiras relativas à gestão de servidores de aplicação, tal qual o deploy de pacotes .war e a disponibilização de logs de instâncias.
 
 ------------
 DEPENDÊNCIAS
@@ -53,27 +53,27 @@ OBS: Os procedimentos de 3 a 7 são desnecessários para uma instalação limpa,
 15) Editar cada arquivo *.conf, preenchendo cada campo conforme o exemplo abaixo:
 
 	Ex: \\cetaskspdin01\jboss_conf\cejb4ds01\
-	
+
 		Arquivo jboss4.conf:
 		--------------------
 		# Definir abaixo os parâmetros da instalação JBOSS:
-		
+
 		# Caminho para os diretórios de configuração das instâncias JBOSS. Ex: /opt/jboss/server (o caminho não deve terminar em "/" )
 		CAMINHO_INSTANCIAS_JBOSS='/opt/jboss/server'
-		
+
 		# Versão do Jboss. Ex: 4, 5
 		VERSAO_JBOSS='JBOSS_4'
-		
-		# Ex: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc																			
+
+		# Ex: INTRANET, INTERNET, iNTRANET_INTERNET, INTERNET_1, INTRANET_2, HOSTNAME, etc
 		IDENTIFICACAO='INTRANET'
-		
-		# Tipo de ambiente. Ex: DESENVOLVIMENTO, HOMOLOGAÇÃO, TESTES										
+
+		# Tipo de ambiente. Ex: DESENVOLVIMENTO, HOMOLOGAÇÃO, TESTES
 		AMBIENTE='DESENVOLVIMENTO'
-		
+
 		------------------
-	
-	OBS: 
-	
+
+	OBS:
+
 	- O caminho para as instâncias do jboss deve ser informado utilizando o padrão de diretórios do Linux (diretórios separados por '/' em vez de '\'), não obstante a observação constante da etapa 8.
 	- Os campos subsequentes devem corresponder a uma estrutura de diretórios no compartilhamento \\wifspdin01\jboss_linux$ (maiores esclarecimentos no passo a seguir).
 	- Os valores de cada campo devem ser informados sem espaços ou caracteres especiais. O uso das aspas simples é recomendado.
@@ -98,7 +98,7 @@ OBS: Os procedimentos de 3 a 7 são desnecessários para uma instalação limpa,
 		. . | . . *-----jboss_5
 		. . | . . *-----jboss_8
 		. . *-----homologacao
-		. . *-----producao   
+		. . *-----producao
 
 	------------------------------------------
 
@@ -116,14 +116,14 @@ Dessa maneira, deverão ser criados nesse compartilhamento os diretórios especi
 
 	Arquivo node_jboss4.pp
 	-----------------------
-	
+
 	node "cejb4ds01" {
-	
+
 	        include linux_server
 	        include anatel_jboss::autodeploy
-	
+
 	}
-	
+
 	-----------------------
 
 22) Salvar arquivo (pressionar 'Esc' para sair do modo de inserção, executar ':wq')
