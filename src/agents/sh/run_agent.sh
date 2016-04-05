@@ -288,8 +288,9 @@ function log_agent () {
 
                 find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
                 $agent_script 'log'
-                cp -f $log "$shared_log_dir/cron_$HOSTNAME.log"
-                unix2dos "$shared_log_dir/cron_$HOSTNAME.log" > /dev/null 2>&1
+                echo -e "Log de execução do agente:\n\n" > "$shared_log_dir/agent_$HOSTNAME.log"
+                test -f "$log_dir/service.log" && cat "$log_dir/service.log" >> "$shared_log_dir/agent_$HOSTNAME.log"
+                cat "$log" >> "$shared_log_dir/agent_$HOSTNAME.log"
 
             else
                 log "ERRO" "O diretório para cópia de logs da aplicação $app não foi encontrado".
