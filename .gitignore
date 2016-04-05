@@ -1,9 +1,20 @@
-/src/server/conf/user.conf
-/src/server/conf/global.conf
-/src/server/conf/app/**
-/src/server/bak/**
+# common
+/src/common/log/**
+/src/common/tmp/**
+/src/agents/conf/global.conf
+
+# agents
+/src/agents/log/**
+/src/agents/tmp/**
+/src/agents/conf/global.conf
+
+# server
 /src/server/log/**
 /src/server/tmp/**
+/src/server/bak/**
 /src/server/repo/**
-/src/client/log/**
-/src/client/conf/local.d/**
+/src/server/upload/**
+/src/server/conf/global.conf
+/src/server/conf/user.conf
+/src/server/conf/app/**
+/src/server/conf/agents/**
