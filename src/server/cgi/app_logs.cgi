@@ -57,7 +57,6 @@ function end() {
         rmdir $tmp_dir
     fi
 
-    clean_locks
     wait &> /dev/null
 
     exit $1

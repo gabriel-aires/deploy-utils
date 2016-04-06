@@ -185,6 +185,8 @@ if ! $parsed; then
 
 elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
+    lock "package_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>"
+
     case "$proceed" in
 
         "$proceed_view")
@@ -214,15 +216,13 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
         "$proceed_deploy")
 
             test ! -f "$pkg" && echo "<p><b>Nenhum arquivo selecionado para upload.</b></p>" && end 1
-            lock "package_${app}_${env}" "Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente."
-
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
+
             pkg_name=$(basename $pkg | sed -r "s|\.[^\.]+$||")
             pkg_ext=$(basename $pkg | sed -r "s|^.*\.([^\.]+)$|\1|")
             pkg_md5="$(md5sum "$pkg" | cut -d ' ' -f1)"
             pkg_new="$pkg_name%user_$user_name%md5_$pkg_md5%.$pkg_ext"
-
-            find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" | xargs -d '\n' -I{} cp -f $pkg {}/$pkg_new
+            find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/deploy$" | xargs -d '\n' -I{} cp -f "$pkg" {}/"$pkg_new"
 
             echo "      <p><b> CHECKSUM DO ARQUIVO: $pkg_md5</b></p>"
             echo "      <p> Upload do pacote concluído. Favor aguardar a execução do agente de deploy nos hosts correspondentes.</p>"

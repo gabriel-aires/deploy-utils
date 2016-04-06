@@ -13,8 +13,6 @@ function end() {
         rmdir $tmp_dir
     fi
 
-    clean_locks
-
     wait
     exit $1
 }

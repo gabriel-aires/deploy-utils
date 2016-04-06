@@ -185,6 +185,8 @@ else
 
     if [ -n "$app_name" ] && [ -n "$rev_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
 
+        lock "pages_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>"
+
         if [ "$proceed" == "$proceed_view" ]; then
 
             ### Visualizar parâmetros de deploy

@@ -103,17 +103,16 @@ elif [ -n "$POST_STRING" ]; then
     erase=$(echo "$arg_string" | sed -rn "s/^.*&erase=([^\&]+)&.*$/\1/p")
 
     if [ -n "$app_name" ]; then
+        valid "app_name" "regex_app" "<p><b>O nome da aplicação é inválido: '$app_name'.</b></p>"
+        lock "edit_app_$app_name" "<p><b>Aplicação '$app_name' bloqueada para edição.</b></p>"
 
         if [ "$save" == "$save_value" ]; then
             test -f $app_conf_dir/$app_name.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$app_name.conf"
-            lock "$app_name" "Aplicação $app_name bloqueada para edição"
-
             while read l; do
                 key="$(echo "$l" | cut -f1 -d '=')"
                 new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
                 editconf "$key" "$new_value" "$app_conf_dir/$app_name.conf"
             done < "$app_conf_dir/$app_name.conf"
-
             echo "      <p><b>Parâmetros da aplicação $app_name atualizados.</b></p>"
 
         elif [ "$erase" == "$erase_value" ]; then

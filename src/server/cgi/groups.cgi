@@ -73,6 +73,8 @@ else
 
     if [ -n "$operation" ] && [ -n "$submit" ]; then
 
+        test -n "$group" && valid "group" "<p><b>O nome do grupo é inválido: '$group'.</b></p>" && lock "edit_group_$group" "<p><b>Grupo $group bloqueado para edição</b></p>" && echo "      <p>Grupo: <b>$group</b></p>"
+
         case "$operation" in
 
             "$operation_add")
