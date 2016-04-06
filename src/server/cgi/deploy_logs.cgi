@@ -70,7 +70,7 @@ else
 
         if [ -z "$deploy_id" ]; then
 
-            find $app_history_dir_tree/ -mindepth 3 -maxdepth 3 -type d -regextype posix-extended -iregex "^$app_history_dir_tree/$env/$app/.*$" | sort > $tmp_dir/log_path
+            find $app_history_dir_tree/ -mindepth 3 -maxdepth 3 -type d -regextype posix-extended -iregex "^$app_history_dir_tree/$env/$app/.*$" | sort -r > $tmp_dir/log_path
             test "$(cat $tmp_dir/log_path | wc -l)" -eq 0 && echo "<p><b>Nenhum caminho de de acesso a logs encontrado para a aplicação '$app' no ambiente '$env'.</b></p>" && end 0
             echo "          <p>Sistema: $app</p>"
             echo "          <p>Ambiente: $env</p>"
