@@ -67,6 +67,9 @@ else
 
     if [ -n "$app" ] && [ -n "$env" ]; then
 
+        valid "app" "Erro. Nome de aplicação inválido."
+        valid "env" "regex_ambiente" "Erro. Nome de ambiente inválido."
+
         if [ -z "$deploy_id" ]; then
 
             find $app_history_dir_tree/ -mindepth 3 -maxdepth 3 -type d -regextype posix-extended -iregex "^$app_history_dir_tree/$env/$app/.*$" | sort -r > $tmp_dir/log_path
@@ -78,6 +81,9 @@ else
             echo "          </ul>"
 
         else
+
+            valid "deploy_id" "Erro. 'Deploy ID' inválido."
+            test ! -d "$app_history_dir_tree/$env/$app/$deploy_id/" && echo "Diretório de log não encontrado." && end 0
 
             echo "          <p>Sistema: $app</p>"
             echo "          <p>Ambiente: $env</p>"
@@ -101,7 +107,7 @@ else
 
             if $show_links; then
                 echo "          <ul>"
-                find "$app_history_dir_tree/$env/$app/$deploy_id/" -maxdepth 1 -type f | sed -r "s|^$app_history_dir_tree/($env/$app/$deploy_id/)(.*)$|<li><a href=\"$apache_history_alias/\1\2\">\2</a></li>|" || end 1
+                find "$app_history_dir_tree/$env/$app/$deploy_id/" -maxdepth 1 -type f | sed -r "s|^$app_history_dir_tree/($env/$app/$deploy_id/)(.*)$|<li><a href=\"$apache_history_alias/\1\2\">\2</a></li>|"
                 echo "          </ul>"
             else
                 echo "      <p><b>Acesso negado.</b></p>"

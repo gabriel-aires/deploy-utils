@@ -26,7 +26,7 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
     while [ "$i" -lt "$input_size" ]; do
 
         ((i++))
-        line="$(sed -n "${i}p" "$input_file" | sed -r "s|\r$||")"
+        line="$(sed -n "${i}p" "$input_file" | sed -r "s|[\$\`\(\)\{\}\<\>\~\*\r&']||g")"
 
         if echo "$line" | grep -Ex "$part_boundary|$end_boundary" > /dev/null; then
             file_name=''
@@ -35,9 +35,9 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             var_name=''
             var_set=false
 
-        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=[^;]*; filename=.*" > /dev/null; then
-            var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=([^;]*); filename=.*|\1|" | sed -r "s|\"||g")"
-            file_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=[^;]*; filename=||" | sed -r "s|\"||g")"
+        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"; filename=\"[a-zA-Z0-9\._-]+\"" > /dev/null; then
+            var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=([^;]+); filename=.+|\1|" | sed -r "s|\"||g")"
+            file_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=[^;]+; filename=||" | sed -r "s|\"||g")"
             file_name="$tmp_dir/$(basename $file_name)"
             eval "$var_name=$file_name"
             var_set=true
@@ -49,10 +49,10 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             file_cmd[$n]="sed -n '${file_begin},$((file_end-1))p' $input_file > $file_name && sed -rn '${file_end}s|\r$||p' $input_file | tr -d '\n' >> $file_name"
             ((n++))
 
-        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=.*" > /dev/null; then
+        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"" > /dev/null; then
             var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=||" | sed -r "s|\"||g")"
 
-        elif [ -n "$line" ]; then
+        elif echo "$line" | grep -Ex "[a-zA-Z0-9\._ -]+" > /dev/null ; then
             ! $var_set && test -n "$var_name" && eval "$var_name=$line" && var_set=true
 
         fi
@@ -185,6 +185,9 @@ if ! $parsed; then
 
 elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
+    valid "app" "Erro. Nome de aplicação inválido."
+    valid "env" "regex_ambiente" "Erro. Nome de ambiente inválido."
+
     lock "package_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>"
 
     case "$proceed" in
@@ -215,7 +218,7 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
         "$proceed_deploy")
 
-            test ! -f "$pkg" && echo "<p><b>Nenhum arquivo selecionado para upload.</b></p>" && end 1
+            test ! -f "$pkg" && echo "<p><b>Erro. Arquivo inválido ou inexistente.</b></p>" && end 1
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
 
             pkg_name=$(basename $pkg | sed -r "s|\.[^\.]+$||")

@@ -114,6 +114,9 @@ else
 
     if [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
+        valid "app" "Erro. Nome de aplicação inválido."
+        valid "env" "regex_ambiente" "Erro. Nome de ambiente inválido."
+
         case "$proceed" in
 
             "$proceed_view")
@@ -126,11 +129,13 @@ else
 
             "$proceed_log")
                 log_subpath=$(echo "$arg_string" | sed -rn "s/^.*&log_subpath=([^\&]+)&.*$/\1/p")
-                echo "$log_subpath" | grep -Ei "/log$" > /dev/null || end 1
+                test "$(echo "$log_subpath" | grep -Ei "/log$" | wc -w)" -eq 1 || end 1
+                test -d "$upload_dir/$log_subpath/" || end 1
+
                 echo "          <p>Sistema: $app</p>"
                 echo "          <p>Ambiente: $env</p>"
                 echo "          <ul>"
-                find $upload_dir/$log_subpath/ -maxdepth 1 -type f | sed -r "s|^$upload_dir/(.*)$|<li><a href=\"$apache_log_alias/\1\">\1</a></li>|" || end 1
+                find "$upload_dir/$log_subpath/" -maxdepth 1 -type f | sed -r "s|^$upload_dir/(.*)$|<li><a href=\"$apache_log_alias/\1\">\1</a></li>|"
                 echo "          </ul>"
                 ;;
 

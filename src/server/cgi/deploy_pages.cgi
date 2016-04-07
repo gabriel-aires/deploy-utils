@@ -185,6 +185,10 @@ else
 
     if [ -n "$app_name" ] && [ -n "$rev_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
 
+        valid "app_name" "regex_app" "Erro. Nome de aplicação inválido."
+        valid "rev_name" "regex_rev" "Erro. Nome de revisão inválido."
+        valid "env_name" "regex_ambiente" "Erro. Nome de ambiente inválido."
+
         lock "pages_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>"
 
         if [ "$proceed" == "$proceed_view" ]; then
