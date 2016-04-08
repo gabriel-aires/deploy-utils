@@ -158,8 +158,8 @@ else
 
                         echo "      <p>"
                         echo "          <form action=\"$start_page\" method=\"post\">"
+                        echo "              <p>Parâmetros de agente: </p>"
                         echo "              <p>"
-                        echo "                  Parâmetros de agente: "
                         echo "                  <select class=\"select_default\" name=\"agent_conf\">"
                         echo "		                <option value=\"\" selected>Adicionar...</option>"
                         find $agent_conf_dir/$host/ -mindepth 1 -maxdepth 1 -type f -name '*.conf' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
@@ -186,6 +186,7 @@ else
                             echo "                      <td>Agente: </td>"
                             echo "                      <td>"
                             echo "                          <select class=\"select_default\" name=\"agent_template\">"
+                            echo "		                        <option value=\"\" selected>Selecionar template...</option>"
                             find $src_dir/agents/template/ -mindepth 1 -maxdepth 1 -type f -name '*.template' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | grep -Exv "agent|global|service" | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
                             echo "                          </select>"
                             echo "                      </td>"
@@ -207,7 +208,13 @@ else
 
                         else
 
-                            test -f "$agent_conf_dir/$host/$agent_conf.conf" && form_file="$agent_conf_dir/$host/$agent_conf.conf" || form_file="$src_dir/agents/template/$agent_template.template"
+                            if [ -f "$agent_conf_dir/$host/$agent_conf.conf" ]; then
+                                form_file="$agent_conf_dir/$host/$agent_conf.conf"
+                            elif [ -z "$agent_template" ] && [ -f "$src_dir/agents/template/$agent_template.template" ]; then
+                                form_file="$src_dir/agents/template/$agent_template.template"
+                            else
+                                end 1
+                            fi
 
                             echo "      <p>"
                             echo "          <p>Modificar arquivo de configuração '$agent_conf.conf':</p>"
