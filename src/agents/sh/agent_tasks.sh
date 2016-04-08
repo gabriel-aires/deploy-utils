@@ -110,7 +110,7 @@ host="$(echo $HOSTNAME | cut -d '.' -f1)"
 
 function tasks () {
 
-    test -f "$remote_lock_dir/edit_agent_$host" || return 1
+    test -f "$remote_lock_dir/edit_agent_$host" && return 1
     test -d "$remote_conf_dir/$host/" || return 1
     touch "$log" || return 1
 
