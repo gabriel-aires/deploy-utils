@@ -96,19 +96,21 @@ source "$global_conf" || exit 1
 tmp_dir="$work_dir/$pid"
 valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários"
 valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido"
+valid "remote_lock_dir" "regex_remote_dir" "Diretório de lockfiles remoto inválido"
 valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs"
 valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles"
 valid "max_running" "regex_qtd" "Valor inválido para a quantidade máxima de tarefas simultâneas"
 valid "agent_timeout" "regex_qtd" "Valor inválido para o timeout de tarefas global"
 valid "service_log_size" "regex_qtd" "Valor inválido para o tamanho máximo do log do agente"
 
-mkdir -p "$tmp_dir" "$remote_conf_dir" "$log_dir" "$lock_dir" || end 1
+mkdir -p "$tmp_dir" "$remote_conf_dir" "$remote_lock_dir" "$log_dir" "$lock_dir" || end 1
 lock 'agent_tasks' "A rotina já está em execução."
 log="$log_dir/service.log" && touch "$log"
 host="$(echo $HOSTNAME | cut -d '.' -f1)"
 
 function tasks () {
 
+    test -f "$remote_lock_dir/edit_agent_$host" || return 1
     test -d "$remote_conf_dir/$host/" || return 1
     touch "$log" || return 1
 

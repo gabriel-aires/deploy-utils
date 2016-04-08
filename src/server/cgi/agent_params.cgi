@@ -91,6 +91,7 @@ else
             valid "host" "<p><b>O hostname é inválido: '$host'.</b></p>"
             lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>"
             test "$operation" == "$operation_add" || test "$operation" == "$operation_erase" || echo "<p>Host: <b>$host</b></p>"
+            running_tasks="$(find "$lock_dir"/ -maxdepth 1 -type f -name "run_agent_${host}_*" | wc -l)"
         fi
 
         case "$operation" in
@@ -145,6 +146,7 @@ else
 
                     "$submit_erase_yes")
 
+                        test "$running_tasks" -ge 1 && echo "Há $running_tasks tarefas em execução no host $host. Favor desabilitar os respectivos agentes antes de prosseguir." && end 0
                         rm -f "$agent_conf_dir"/"$host"/* || end 1
                         rmdir "$agent_conf_dir"/"$host" || end 1
                         find "$upload_dir/" -mindepth "$qtd_dir" -maxdepth "$qtd_dir" -type d -name "$host" | xargs -r -d '\n' rm -Rf || end 1
@@ -308,6 +310,7 @@ else
 
                     "$submit_erase_yes")
 
+                        test "$running_tasks" -ge 1 && echo "Há $running_tasks tarefas em execução no host $host. Favor desabilitar os respectivos agentes antes de prosseguir." && end 0
                         rm -f "$agent_conf_dir/$host/$agent_conf.conf" || end 1
                         echo "      <p><b>Arquivo de configuração '$agent_conf.conf' removido.</b></p>"
                         ;;
@@ -397,6 +400,8 @@ else
                     "$submit_erase")
 
                         test -n "$agent_conf" && echo "      <p>Configuração selecionada: <b>$agent_conf</b></p>" || end 1
+                        test "$running_tasks" -ge 1 && echo "Há $running_tasks tarefas em execução no host $host. Favor desabilitar os respectivos agentes antes de prosseguir." && end 0
+
                         app_path="$upload_path/$app_subpath"
                         while [ -n "$app_subpath" ] && [ -d "$app_path" ]; do
                             rm -f "$app_path"/*

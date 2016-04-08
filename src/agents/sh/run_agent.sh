@@ -5,7 +5,7 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 # Utilização
-if [ "$#" -ne '3' ] || [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+if [ "$#" -ne '3' ] || [ -z "$1" ] || [ -z "$2" ] || [ -f "$3" ]; then
     echo "Utilização: $(readlink -f $0) <nome_agente> <nome_tarefa> <arquivo_de_configuração>" && exit 1
 fi
 
@@ -16,16 +16,14 @@ pid="$$"
 execution_mode="agent"
 verbosity="quiet"
 interactive=false
+host=$(echo $HOSTNAME | cut -f1 -d '.')
 
 ###### FUNÇÕES ######
 
 function end () {
 
-    if [ -d "$tmp_dir" ]; then
-        rm -f ${tmp_dir}/*
-        rmdir ${tmp_dir}
-    fi
-
+    test -d "$tmp_dir" && rm -f ${tmp_dir}/* && rmdir ${tmp_dir}
+    test -d "$remote_lock_dir" && rm -f "$remote_lock_dir/run_agent_${host}_${pid}"
     clean_locks
 
     exit "$1"
@@ -218,7 +216,6 @@ function deploy_agent () {
 
                     export user_name=$(echo $(basename $pkg) | sed -rn "s|^.*%user_([^%]+)%md5_[^%]+%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
                     export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+$|\1|i" | tr '[:upper:]' '[:lower:]')
-                    export host=$(echo $HOSTNAME | cut -f1 -d '.')
 
                     case $ext in
                         war|ear|sar)
@@ -288,10 +285,10 @@ function log_agent () {
 
                 find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
                 $agent_script 'log'
-                echo -e "Log de execução do agente:\n\n" > "$shared_log_dir/agent_$HOSTNAME.log"
-                test -f "$log_dir/service.log" && cat "$log_dir/service.log" >> "$shared_log_dir/agent_$HOSTNAME.log"
-                cat "$log" >> "$shared_log_dir/agent_$HOSTNAME.log"
-                unix2dos "$shared_log_dir/agent_$HOSTNAME.log" &> /dev/null
+                echo -e "Log de execução do agente:\n\n" > "$shared_log_dir/agent_$host.log"
+                test -f "$log_dir/service.log" && cat "$log_dir/service.log" >> "$shared_log_dir/agent_$host.log"
+                cat "$log" >> "$shared_log_dir/agent_$host.log"
+                unix2dos "$shared_log_dir/agent_$host.log" &> /dev/null
 
             else
                 log "ERRO" "O diretório para cópia de logs da aplicação $app não foi encontrado".
@@ -331,7 +328,7 @@ valid 'agent_name_input' 'regex_agent_name' "'$agent_name_input': Nome inválido
 valid 'agent_task' "'$agent_task': Nome inválido para a tarefa." 'continue' || erro=true
 valid 'remote_pkg_dir_tree' 'regex_remote_dir' "'$remote_pkg_dir_tree': Caminho inválido para o repositório de pacotes." 'continue' || erro=true
 valid 'remote_log_dir_tree' 'regex_remote_dir' "'$remote_log_dir_tree': Caminho inválido para o diretório raiz de cópia dos logs." 'continue' || erro=true
-valid 'remote_lock_dir' 'regex_remote_dir' "'$remote_log_dir': Caminho inválido para o diretório de lockfiles do servidor" 'continue' || erro=true
+valid 'remote_lock_dir' 'regex_remote_dir' "'$remote_lock_dir': Caminho inválido para o diretório de lockfiles do servidor" 'continue' || erro=true
 valid 'remote_history_dir' 'regex_remote_dir' "'$remote_history_dir': Caminho inválido para o diretório de gravação do histórico" 'continue' || erro=true
 valid 'remote_app_history_dir_tree' 'regex_remote_dir' "'$remote_app_history_dir_tree': Caminho inválido para o histórico de deploy das aplicações" 'continue' || erro=true
 test ! -f "$agent_conf" && log 'ERRO' "'$agent_conf': Arquivo de configuração inexistente."  && erro=true
@@ -344,6 +341,7 @@ $erro && end 1 || unset erro
 
 #criar lockfile
 lock "$agent_name_input $agent_task $(basename $agent_conf | cut -d '.' -f1)" "Uma tarefa concorrente já está em andamento. Aguarde..."
+test ! -f "$remote_lock_dir/edit_agent_${host}" && touch "$remote_lock_dir/run_agent_${host}_${pid}" || end 1
 
 # Valida o arquivo de configurações $agent_conf, que deve atender aos templates local.template e $agent_name.template
 chk_template "$agent_conf" 'agent'
@@ -386,6 +384,7 @@ export 'delim'
 export 'execution_mode'
 export 'verbosity'
 export 'interactive'
+export 'host'
 export 'lock_history'
 export 'remote_lock_dir'
 export 'history_lock_file'
