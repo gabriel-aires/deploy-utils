@@ -44,10 +44,10 @@ TOP=''
 # Form Select
 echo "<form action=\"$start_page\" method=\"get\">"
 echo "     <table>"
-echo "          <tr><td>SELECT:    </td><td><input type=\"text\" class=\"text_large\" name=\"SELECT\" value=\"Ex: $col_user_name $col_time_name $col_month_name $col_year_name $col_app_name $col_env_name $col_host_name\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT</td></tr>"
-echo "          <tr><td>TOP:       </td><td><input type=\"text\" class=\"text_large\" name=\"TOP\" value=\"Ex: 10\"></td></tr>"
-echo "          <tr><td>WHERE:     </td><td><input type=\"text\" class=\"text_large\" name=\"WHERE\" value=\"Ex: $col_host_name=%rh $col_app_name==sgq\"></td></tr>"
-echo "          <tr><td>ORDER BY:  </td><td><input type=\"text\" class=\"text_large\" name=\"ORDERBY\" value=\"Ex: $col_year_name $col_month_name $col_time_name desc\"></td></tr>"
+echo "          <tr><td>SELECT:    </td><td><input type=\"text\" class=\"text_large\" name=\"SELECT\" value=\"\"> <input type=\"checkbox\" name=\"DISTINCT\" value=\"1\">DISTINCT</td></tr>"
+echo "          <tr><td>TOP:       </td><td><input type=\"text\" class=\"text_large\" name=\"TOP\" value=\"\"></td></tr>"
+echo "          <tr><td>WHERE:     </td><td><input type=\"text\" class=\"text_large\" name=\"WHERE\" value=\"\"></td></tr>"
+echo "          <tr><td>ORDER BY:  </td><td><input type=\"text\" class=\"text_large\" name=\"ORDERBY\" value=\"\"></td></tr>"
 # Paginação
 echo "          <tr>"
 echo "              <td>PAGINAÇÃO: </td>"
@@ -75,7 +75,8 @@ if [ -z "$QUERY_STRING" ]; then
     echo "<tr><th>DISTINCT:</th><td>Marcar para suprimir linhas repetidas.<b> Deve ser utilizada em conjunto com a opção ORDER BY. (padrão=desmarcado)</b></td></tr>"
     echo "<tr><th>TOP:</th><td>Especificar a quantidade de linhas a serem retornadas.<b> Ex: 10 500, etc (padrão=retornar todas as linhas)</b></td></tr>"
     echo "<tr><th>WHERE:</th><td>Especificar filtro(s) .<b> Ex: nome_coluna2==valor_exato nome_coluna3!=diferente_valor nome_coluna4=%contem_valor, etc (padrão=sem filtros)</b></td></tr>"
-    echo "<tr><th>ORDER BY</th><td>Especificar ordenação dos resultados.<b> Ex: nome_coluna3 nome_coluna4 asc, nome_coluna1 desc, etc (padrão=Ano Mes Dia desc)</b></td></tr>"
+    echo "<tr><th>ORDER BY:</th><td>Especificar ordenação dos resultados.<b> Ex: nome_coluna3 nome_coluna4 asc, nome_coluna1 desc, etc (padrão=Ano Mes Dia desc)</b></td></tr>"
+    test -f $history_dir/$history_csv_file && echo "<tr><th>OBS:</th><td>Campos disponíveis para seleção: <b>$(query_file.sh -d "$delim" -r ' ' -s all -t 1 -f $history_dir/$history_csv_file)</b></td></tr>"
     echo "</table>"
 
 else
