@@ -126,6 +126,7 @@ elif [ -n "$POST_STRING" ]; then
             echo "      </p>"
 
         elif [ "$erase" == "$erase_yes" ]; then
+            lock "$app_name" "<p><b>Deploy da aplicação '$app_name' em andamento. Tente mais tarde.</b></p>"
             rm -f "$app_conf_dir/$app_name.conf"
             echo "      <p><b>Parâmetros da aplicação $app_name removidos.</b></p>"
 
