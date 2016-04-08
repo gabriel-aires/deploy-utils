@@ -36,7 +36,8 @@ function log () {    ##### log de execução detalhado.
 
     if [ $len -lt 90 ]; then
         local fill=$((90 - $len))
-        echo -e "$msg" | sed -r "s|(.)$|\1          |" | sed -r "s| {$((10-$fill))}$|\t$2|"
+        local spaces="$(seq -s ' ' 0 $fill | sed -r "s|[0-9]||g")"
+        echo -e "$msg$spaces"
     else
         echo -e "$msg    \t$2"
     fi
