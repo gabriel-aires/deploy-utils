@@ -107,7 +107,7 @@ else
 
                     "$submit_add")
                         test -n "$host" || end 1
-                        if find $agent_conf_dir/ -mindepth 1 -maxdepth 1 -type d | grep -Ex "$host" > /dev/null; then
+                        if find $agent_conf_dir/ -mindepth 1 -maxdepth 1 -type d | grep -Ex "$agent_conf_dir/$host" > /dev/null; then
                             echo "      <p><b>Já existe um host chamado '$host'. Favor escolher outro nome.</b></p>"
                         else
                             mkdir "$agent_conf_dir/$host" && echo "      <p><b>Host '$host' adicionado com sucesso.</b></p>" || end 1
