@@ -87,12 +87,7 @@ else
 
     if [ -n "$operation" ] && [ -n "$submit" ]; then
 
-        if [ -n "$host" ]; then
-            valid "host" "<p><b>O hostname é inválido: '$host'.</b></p>"
-            lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>"
-            echo "      <p>Host: <b>$host</b></p>"
-            test "$operation" == "$operation_add" || test -d "$agent_conf_dir/$host" || end 1
-        fi
+        test -n "$host" && valid "host" "<p><b>O hostname é inválido: '$host'.</b></p>" && lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>" && echo "<p>Host: <b>$host</b></p>"
 
         case "$operation" in
 
@@ -111,6 +106,7 @@ else
                         ;;
 
                     "$submit_add")
+                        test -n "$host" || end 1
                         if find $agent_conf_dir/ -mindepth 1 -maxdepth 1 -type d | grep -Ex "$host" > /dev/null; then
                             echo "      <p><b>Já existe um host chamado '$host'. Favor escolher outro nome.</b></p>"
                         else
@@ -122,6 +118,9 @@ else
                 ;;
 
             "$operation_erase")
+                test -n "$host" || end 1
+                test -d "$agent_conf_dir/$host" || end 1
+
                 case "$submit" in
 
                     "$submit_continue")
@@ -157,6 +156,9 @@ else
                 ;;
 
             "$operation_agents")
+                test -n "$host" || end 1
+                test -d "$agent_conf_dir/$host" || end 1
+
                 case "$submit" in
 
                     "$submit_continue")
@@ -315,6 +317,9 @@ else
                 ;;
 
             "$operation_apps")
+                test -n "$host" || end 1
+                test -d "$agent_conf_dir/$host" || end 1
+
                 case "$submit" in
 
                     "$submit_continue")
