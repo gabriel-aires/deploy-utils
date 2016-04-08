@@ -5,7 +5,7 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 # Utilização
-if [ "$#" -ne '3' ] || [ -z "$1" ] || [ -z "$2" ] || [ -f "$3" ]; then
+if [ "$#" -ne '3' ] || [ -z "$1" ] || [ -z "$2" ] || [ ! -f "$3" ]; then
     echo "Utilização: $(readlink -f $0) <nome_agente> <nome_tarefa> <arquivo_de_configuração>" && exit 1
 fi
 
