@@ -87,7 +87,12 @@ else
 
     if [ -n "$operation" ] && [ -n "$submit" ]; then
 
-        test -n "$host" && valid "host" "<p><b>O hostname é inválido: '$host'.</b></p>" && lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>" && echo "      <p>Host: <b>$host</b></p>"
+        if [ -n "$host" ]; then
+            valid "host" "<p><b>O hostname é inválido: '$host'.</b></p>"
+            lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>"
+            echo "      <p>Host: <b>$host</b></p>"
+            test "$operation" == "$operation_add" || test -d "$agent_conf_dir/$host" || end 1
+        fi
 
         case "$operation" in
 
