@@ -9,10 +9,7 @@ function submit_deploy() {
     if [ -z "$proceed" ]; then
         return 1
 
-    elif [ "$proceed" == "$proceed_deploy" ]; then
-        return 1
-
-    else
+    elif [ "$proceed" == "$proceed_view" ] || [ "$proceed" == "$proceed_simulation" ]; then
 
         local app_simulation_clearance="$tmp_dir/app_simulation_clearance"
         local env_simulation_clearance="$tmp_dir/env_simulation_clearance"
@@ -42,20 +39,22 @@ function submit_deploy() {
         test -f $app_deploy_clearance && test -f $env_deploy_clearance && show_deploy=true && show_form=true
 
         if $show_form; then
-
-            echo "      <p><b>Parâmetros de deploy:</b></p>"
-            echo "      <p>"
-            echo "              <table class=\"cfg_color\">"
-            while read l; do
-                show_param=true
-                key="$(echo "$l" | cut -f1 -d '=')"
-                value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
-                ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
-                $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
-            done < "$app_conf_dir/$app_name.conf"
-            echo "              </table>"
-            echo "      </p>"
+            
+            if [ "$proceed" == "$proceed_view" ]; then
+                echo "      <p><b>Parâmetros de deploy:</b></p>"
+                echo "      <p>"
+                echo "              <table class=\"cfg_color\">"
+                while read l; do
+                    show_param=true
+                    key="$(echo "$l" | cut -f1 -d '=')"
+                    value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                    echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
+                    ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
+                    $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
+                done < "$app_conf_dir/$app_name.conf"
+                echo "              </table>"
+                echo "      </p>"
+            fi
 
             echo "      <p>"
             echo "          <form action=\"$start_page\" method=\"post\">"
@@ -70,6 +69,8 @@ function submit_deploy() {
             echo "      <p><b>Acesso negado.</b></p>"
         fi
 
+    else
+        return 1
     fi
 
     return 0
