@@ -39,7 +39,7 @@ function submit_deploy() {
         test -f $app_deploy_clearance && test -f $env_deploy_clearance && show_deploy=true && show_form=true
 
         if $show_form; then
-            
+
             if [ "$proceed" == "$proceed_view" ]; then
                 echo "      <p><b>Parâmetros de deploy:</b></p>"
                 echo "      <p>"
@@ -66,7 +66,7 @@ function submit_deploy() {
             echo "          </form>"
             echo "      </p>"
         else
-            echo "      <p><b>Acesso negado.</b></p>"
+            echo "      <p><b>Você não possui permissão de deploy.</b></p>"
         fi
 
     else
