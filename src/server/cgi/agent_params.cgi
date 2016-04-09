@@ -223,7 +223,7 @@ else
 
                             if [ -f "$agent_conf_dir/$host/$agent_conf.conf" ]; then
                                 form_file="$agent_conf_dir/$host/$agent_conf.conf"
-                            elif [ -z "$agent_template" ] && [ -f "$src_dir/agents/template/$agent_template.template" ]; then
+                            elif [ -n "$agent_template" ] && [ -f "$src_dir/agents/template/$agent_template.template" ]; then
                                 form_file="$src_dir/agents/template/$agent_template.template"
                             else
                                 end 1
