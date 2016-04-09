@@ -41,7 +41,7 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             next_boundary=$(sed -n "${file_begin},${input_size}p" "$input_file" | cat -t | grep -En "^$part_boundary" | head -n 1 | cut -d ':' -f1)
             next_boundary=$((next_boundary+file_begin-1))
             file_end=$((next_boundary-1))
-            $var_set && sed -n '${file_begin},$((file_end-1))p' "$input_file" > "$tmp_dir/$file_name" && sed -rn '${file_end}s|\r$||p' "$input_file" | tr -d '\n' >> "$tmp_dir/$file_name"
+            $var_set && sed -n "${file_begin},$((file_end-1))p" "$input_file" > "$tmp_dir/$file_name" && sed -rn "${file_end}s|\r$||p" "$input_file" | tr -d '\n' >> "$tmp_dir/$file_name"
             i="$file_end"
 
         elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"" > /dev/null; then
