@@ -71,12 +71,11 @@ if [ -z "$QUERY_STRING" ]; then
     echo "<table class=\"cfg_color\">"
     echo "<tr><th colspan=\"3\">UTILIZAÇÃO:</th></tr>"
     echo "<tr><th>INSTRUÇÃO</th><th>DESCRIÇÃO</th><th>EXEMPLO</th></tr>"
-    echo "<tr><td>SELECT:</td><td>Especificar a colunas a serem selecionadas.</td><td><b> Ex: nome_coluna1 nome_coluna2 all, etc (padrão=all)</b></td></tr>"
-    echo "<tr><td>DISTINCT:</td><td>Marcar para suprimir linhas repetidas.</td><td><b> Deve ser utilizada em conjunto com a opção ORDER BY. (padrão=desmarcado)</b></td></tr>"
-    echo "<tr><td>TOP:</td><td>Especificar a quantidade de linhas a serem retornadas.</td><td><b> Ex: 10 500, etc (padrão=retornar todas as linhas)</b></td></tr>"
-    echo "<tr><td>WHERE:</td><td>Especificar filtro(s) .</td><td><b> Ex: nome_coluna2==valor_exato nome_coluna3!=diferente_valor nome_coluna4=%contem_valor, etc (padrão=sem filtros)</b></td></tr>"
-    echo "<tr><td>ORDER BY:</td><td>Especificar ordenação dos resultados.</td><td><b> Ex: nome_coluna3 nome_coluna4 asc, nome_coluna1 desc, etc (padrão=Ano Mes Dia desc)</b></td></tr>"
-    test -f $history_dir/$history_csv_file && echo "<tr><td>OBS:</td><td>Campos disponíveis para seleção: </td><td><b>$(query_file.sh -d "$delim" -r ' ' -s all -t 1 -f $history_dir/$history_csv_file)</b></td></tr>"
+    echo "<tr><td>SELECT:</td><td>Especificar a colunas a serem selecionadas.</td><td> Ex: $(test -f $history_dir/$history_csv_file && query_file.sh -d "$delim" -r ' ' -s all -t 1 -f $history_dir/$history_csv_file) (padrão=all)</td></tr>"
+    echo "<tr><td>DISTINCT:</td><td>Marcar para suprimir linhas repetidas.</td><td> Deve ser utilizada em conjunto com a opção ORDER BY. (padrão=desmarcado)</td></tr>"
+    echo "<tr><td>TOP:</td><td>Especificar a quantidade de linhas a serem retornadas.</td><td> Ex: 10 500, etc (padrão=retornar todas as linhas)</td></tr>"
+    echo "<tr><td>WHERE:</td><td>Especificar filtro(s) .</td><td> Ex: nome_coluna2==valor_exato nome_coluna3!=diferente_valor nome_coluna4=%contem_valor, etc (padrão=sem filtros)</td></tr>"
+    echo "<tr><td>ORDER BY:</td><td>Especificar ordenação dos resultados.</td><td> Ex: nome_coluna3 nome_coluna4 asc, nome_coluna1 desc, etc (padrão=Ano Mes Dia desc)</td></tr>"
     echo "</table>"
 
 else
