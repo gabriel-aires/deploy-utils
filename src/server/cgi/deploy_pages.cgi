@@ -42,6 +42,21 @@ function submit_deploy() {
         test -f $app_deploy_clearance && test -f $env_deploy_clearance && show_deploy=true && show_form=true
 
         if $show_form; then
+
+            echo "      <p><b>Parâmetros de deploy:</b></p>"
+            echo "      <p>"
+            echo "              <table class=\"cfg_color\">"
+            while read l; do
+                show_param=true
+                key="$(echo "$l" | cut -f1 -d '=')"
+                value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
+                ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
+                $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
+            done < "$app_conf_dir/$app_name.conf"
+            echo "              </table>"
+            echo "      </p>"
+
             echo "      <p>"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
@@ -200,19 +215,6 @@ else
             echo "              <tr><td>Revisão: </td><td>$rev_name</td></tr>"
             echo "              <tr><td>Ambiente: </td><td>$env_name</td></tr>"
             echo "          </table>"
-            echo "      </p>"
-            echo "      <p><b>Parâmetros de deploy:</b></p>"
-            echo "      <p>"
-            echo "              <table class=\"cfg_color\">"
-            while read l; do
-                show_param=true
-                key="$(echo "$l" | cut -f1 -d '=')"
-                value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
-                ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
-                $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
-            done < "$app_conf_dir/$app_name.conf"
-            echo "              </table>"
             echo "      </p>"
 
             submit_deploy
