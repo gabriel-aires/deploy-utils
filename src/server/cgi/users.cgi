@@ -48,6 +48,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>Gerenciar usuário:</p>"
     echo "              <p>"
     echo "                  <select class=\"select_default\" name=\"user\">"
+    echo "		                <option value=\"\" selected>Selecionar Usuário...</option>"
     cut -f1 -d ':' $web_users_file | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
     echo "                  </select>"
     echo "              </p>"

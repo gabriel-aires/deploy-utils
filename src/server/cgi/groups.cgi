@@ -50,6 +50,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>Gerenciar grupo:</p>"
     echo "              <p>"
     echo "                  <select class=\"select_default\" name=\"group\">"
+    echo "		                <option value=\"\" selected>Selecionar Grupo...</option>"
     cut -f1 -d ':' $web_groups_file | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
     echo "                  </select>"
     echo "              </p>"
@@ -92,7 +93,7 @@ else
                         ;;
 
                     "$submit_add")
-                        valid "group" "<p><b>O nome do grupo é inválido: '$group'.</b></p>"
+                        test -n "$group" || end 1
                         if grep -E "^$group:" "$web_groups_file" > /dev/null; then
                             echo "      <p><b>Já existe um grupo chamado '$group'. Favor escolher outro nome.</b></p>"
                         else
@@ -104,6 +105,8 @@ else
                 ;;
 
             "$operation_erase")
+                test -n "$group" || end 1
+
                 case "$submit" in
 
                     "$submit_continue")
@@ -138,6 +141,8 @@ else
                 ;;
 
             "$operation_users")
+                test -n "$group" || end 1
+
                 case "$submit" in
 
                     "$submit_continue")
@@ -191,6 +196,8 @@ else
                 ;;
 
             "$operation_permissions")
+                test -n "$group" || end 1
+
                 case "$submit" in
 
                     "$submit_continue")
