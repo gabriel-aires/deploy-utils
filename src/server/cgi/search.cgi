@@ -68,9 +68,9 @@ echo "</form>"
 echo "      <p>"
 if [ -z "$QUERY_STRING" ]; then
     # Exibir texto explicativo
-    echo "<table class=\"cfg_table\">"
+    echo "<table class=\"cfg_color\">"
     echo "<tr><th colspan=\"3\">UTILIZAÇÃO:</th></tr>"
-    echo "<tr><td><br></td></tr>"
+    echo "<tr><th>INSTRUÇÃO</th><th>DESCRIÇÃO</th><th>EXEMPLO</th></tr>"
     echo "<tr><td>SELECT:</td><td>Especificar a colunas a serem selecionadas.</td><td><b> Ex: nome_coluna1 nome_coluna2 all, etc (padrão=all)</b></td></tr>"
     echo "<tr><td>DISTINCT:</td><td>Marcar para suprimir linhas repetidas.</td><td><b> Deve ser utilizada em conjunto com a opção ORDER BY. (padrão=desmarcado)</b></td></tr>"
     echo "<tr><td>TOP:</td><td>Especificar a quantidade de linhas a serem retornadas.</td><td><b> Ex: 10 500, etc (padrão=retornar todas as linhas)</b></td></tr>"
