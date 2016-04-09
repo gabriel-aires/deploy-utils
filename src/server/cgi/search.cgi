@@ -74,8 +74,8 @@ if [ -z "$QUERY_STRING" ]; then
     echo "<tr><td>SELECT:</td><td>Especificar a colunas a serem selecionadas.</td><td> Ex: $(test -f $history_dir/$history_csv_file && query_file.sh -d "$delim" -r ' ' -s all -t 1 -f $history_dir/$history_csv_file) (padrão=all)</td></tr>"
     echo "<tr><td>DISTINCT:</td><td>Marcar para suprimir linhas repetidas.</td><td> Deve ser utilizada em conjunto com a opção ORDER BY. (padrão=desmarcado)</td></tr>"
     echo "<tr><td>TOP:</td><td>Especificar a quantidade de linhas a serem retornadas.</td><td> Ex: 10 500, etc (padrão=retornar todas as linhas)</td></tr>"
-    echo "<tr><td>WHERE:</td><td>Especificar filtro(s) .</td><td> Ex: nome_coluna2==valor_exato nome_coluna3!=diferente_valor nome_coluna4=%contem_valor, etc (padrão=sem filtros)</td></tr>"
-    echo "<tr><td>ORDER BY:</td><td>Especificar ordenação dos resultados.</td><td> Ex: nome_coluna3 nome_coluna4 asc, nome_coluna1 desc, etc (padrão=Ano Mes Dia desc)</td></tr>"
+    echo "<tr><td>WHERE:</td><td>Especificar filtro(s) .</td><td> Ex: Coluna2<b>==</b>valor_exato Coluna3<b>!=</b>diferente_valor Coluna4<b>=%</b>contem_valor, etc (padrão=sem filtros)</td></tr>"
+    echo "<tr><td>ORDER BY:</td><td>Especificar ordenação dos resultados.</td><td> Ex: Coluna3 Coluna4 asc, Coluna1 desc, etc (padrão=Ano Mes Dia desc)</td></tr>"
     echo "</table>"
 
 else
