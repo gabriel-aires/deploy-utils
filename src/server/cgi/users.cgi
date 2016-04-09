@@ -300,6 +300,8 @@ else
                 ;;
         esac
 
+    else
+        end 1
     fi
 
 fi
