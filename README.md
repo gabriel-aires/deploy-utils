@@ -20,7 +20,7 @@ nfs-utils |     1.2.3
 samba     |    3.6.23
 git       |     1.7.1
 rsync     |     3.0.6
-grep      |     2.6.3
+grep      |      2.20
 sed       |     4.2.1
 perl      |    5.10.1
 httpd     |    2.2.15
