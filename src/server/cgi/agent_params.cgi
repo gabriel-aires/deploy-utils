@@ -62,7 +62,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              </p>"
     # Operação...
     echo "              <p>Operação:</p>"
-    echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_add\" selected> $operation_add<br>"
+    echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_add\" checked> $operation_add<br>"
     echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_erase\"> $operation_erase<br>"
     echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_agents\"> $operation_agents<br>"
     echo "              <input type=\"radio\" name=\"operation\" value=\"$operation_apps\"> $operation_apps<br>"
