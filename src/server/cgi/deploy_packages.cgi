@@ -16,12 +16,10 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
     local input_size="$(cat "$input_file" | wc -l)"
     local file_begin=''
     local file_end=''
-    local file_cmd=()
     local file_name=''
     local var_name=''
     local var_set=false
     local i=0
-    local n=0
 
     while [ "$i" -lt "$input_size" ]; do
 
@@ -35,19 +33,16 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
             var_name=''
             var_set=false
 
-        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"; filename=\"[a-zA-Z0-9\._-]+\"" > /dev/null; then
-            var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=([^;]+); filename=.+|\1|" | sed -r "s|\"||g")"
-            file_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=[^;]+; filename=||" | sed -r "s|\"||g")"
-            file_name="$tmp_dir/$(basename $file_name)"
-            eval "$var_name=$file_name"
-            var_set=true
+        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"; filename=\"[^\"]+\"" > /dev/null; then
+            var_name="$(echo "$line" | sed -rn "s|Content\-Disposition: form\-data; name=([^;]+); filename=.+|\1|p" | sed -r "s|\"||g")"
+            file_name="$(echo "$line" | sed -rn "s|Content\-Disposition: form\-data; name=[^;]+; filename=\"([a-zA-Z0-9\._-]+)\"|\1|p")"
+            test -n "$var_name" && test -n "$file_name" && eval "$var_name=$tmp_dir/$file_name" && var_set=true
             file_begin=$((i+3)) #i+1: content-type, i+2: '', i+3: file_begin
             next_boundary=$(sed -n "${file_begin},${input_size}p" "$input_file" | cat -t | grep -En "^$part_boundary" | head -n 1 | cut -d ':' -f1)
             next_boundary=$((next_boundary+file_begin-1))
             file_end=$((next_boundary-1))
+            $var_set && sed -n '${file_begin},$((file_end-1))p' "$input_file" > "$tmp_dir/$file_name" && sed -rn '${file_end}s|\r$||p' "$input_file" | tr -d '\n' >> "$tmp_dir/$file_name"
             i="$file_end"
-            file_cmd[$n]="sed -n '${file_begin},$((file_end-1))p' $input_file > $file_name && sed -rn '${file_end}s|\r$||p' $input_file | tr -d '\n' >> $file_name"
-            ((n++))
 
         elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"" > /dev/null; then
             var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=||" | sed -r "s|\"||g")"
@@ -58,12 +53,6 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
         fi
 
     done
-
-    if [ $n -gt 0 ]; then
-        for i in $(seq 0 $n); do
-            test -n "${file_cmd[$i]}" && eval ${file_cmd[$i]}
-        done
-    fi
 
 }
 
