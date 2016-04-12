@@ -25,22 +25,20 @@ sed       |     4.2.1
 perl      |    5.10.1
 httpd     |    2.2.15
 
-## Instalação:
+## Instalação do Servidor:
 
 A última versão estável do sistema pode ser obtida a partir do git. Para a primeira instalação, executar os comandos abaixo como administrador:
 
 ### Atualização de pacotes
 ```
-yum update -y
-shutdown -r now
+yum update bash dos2unix unix2dos coreutils findutils cifs-utils nfs-utils samba git rsync grep sed perl httpd -y
 ```
 
 ### Instalação do servidor de deploy
 ```
 cd /opt
 git clone git@git.anatel.gov.br:producao/deploy-utils.git
-cd /opt/deploy-utils/
-./src/server/sh/setup.sh --reconfigure
+/opt/deploy-utils/src/server/sh/setup.sh --reconfigure
 chkconfig --add deploy_server
 chkconfig deploy_server on
 ```
@@ -71,7 +69,33 @@ vim /etc/exports # editar cada entrada conforme o exemplo a seguir: /var/lock/de
 service nfs restart
 ```
 
-Para a instalação dos agentes propriamente ditos, referir-se à documentação correspondente no diretório docs.
+## Instalação do Agente:
+
+O procedimento deve ser executado em todos os hosts para os quais se deseja habilitar o deploy de pacotes e o acesso a logs através do servidor de deploy:
+
+### Atualização de pacotes
+```
+yum update bash dos2unix unix2dos coreutils findutils cifs-utils nfs-utils samba git rsync grep sed perl -y
+```
+
+### Montagem de diretórios compartilhados no servidor de deploy
+```
+cd /mnt
+mkdir deploy_upload deploy_lock deploy_log deploy_conf
+mount -t nfs servidor_deploy:/opt/deploy-utils/src/server/conf/agents deploy_conf
+mount -t nfs servidor_deploy:/opt/deploy-utils/src/server/log deploy_log
+mount -t nfs servidor_deploy:/opt/deploy-utils/src/server/upload deploy_upload
+mount -t nfs servidor_deploy:/var/lock/deploy-utils deploy_lock
+```
+
+### Instalação do agente de deploy
+```
+cd /opt
+git clone git@git.anatel.gov.br:producao/deploy-utils.git
+/opt/deploy-utils/src/agents/sh/setup.sh --reconfigure
+chkconfig --add deploy_agent
+chkconfig deploy_agent on
+```
 
 ## Autor:
 
