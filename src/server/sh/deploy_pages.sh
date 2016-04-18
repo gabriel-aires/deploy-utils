@@ -65,15 +65,16 @@ ambiente=$3
 
 #### Funções ##########
 
-function checkout () {                                            # o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
+function checkout () {                                                   #o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
     if [ ! -d "$repo_dir/$nomerepo/.git" ]; then
         echo " "
-        git clone --progress "$repo" "$repo_dir/$nomerepo" || end 1                #clona o repositório, caso ainda não tenha sido feito.
+        git clone --progress "$repo" "$repo_dir/$nomerepo" || end 1      #clona o repositório, caso ainda não tenha sido feito.
     fi
 
     cd "$repo_dir/$nomerepo"
-    git fetch --tags --force --quiet origin || end 1
+    git fetch origin --force --quiet || end 1                            #atualiza commits (nesse caso, o fetch é realizado com o refspec default do repositório, normalmente é +refs/heads/*:refs/remotes/origin/*)
+    git fetch origin --force --quiet +refs/tags/*:refs/tags/* || end 1   #atualiza tags (a opção --tags não foi utilizada, pq seu comportamento foi alterado a partir do git 1.9)
 
     if $auto; then
 
