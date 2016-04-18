@@ -51,7 +51,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>"
     echo "                  <select class=\"select_default\" name=\"group\">"
     echo "		                <option value=\"\" selected>Selecionar Grupo...</option>"
-    cut -f1 -d ':' $web_groups_file | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
+    cut -f1 -d ':' $web_groups_file | sort | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
     echo "                  </select>"
     echo "              </p>"
     # Operação...
