@@ -47,6 +47,7 @@ test ! -w "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório 
 test ! -d "$agent_conf_dir" && "<p><b>Erro. Diretório de configuração de agentes inexistente.</b></p>" && end 1
 test ! -w "$agent_conf_dir" && "<p><b>Erro. Permissões insuficientes no diretório de configuração de agentes.</b></p>" && end 1
 test ! -n "$regex_bool" && "<p><b>Erro. A expressão regular 'regex_bool' não foi definida.</b></p>" && end 1
+test ! -n "$regex_ambiente" && "<p><b>Erro. A expressão regular 'regex_ambiente' não foi definida.</b></p>" && end 1
 test ! -n "$regex_agent_interval" && "<p><b>Erro. A expressão regular 'regex_agent_interval' não foi definida.</b></p>" && end 1
 
 if [ -z "$POST_STRING" ]; then
@@ -266,6 +267,16 @@ else
 
                                         'password')
                                             field_type="password"
+                                            ;;
+
+                                        'ambiente')
+                                            field_tag="select"
+                                            echo "                  <select class=\"select_large\" name=\"$key\">"
+                                            test -z "$value" && echo "               <option value=\"\">selecionar...</option>"
+                                            mklist "$regex_ambiente" | while read option; do
+                                                test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
+                                            done
+                                            echo "                  </select>"
                                             ;;
 
                                         'run_deploy_agent'|'run_log_agent')
