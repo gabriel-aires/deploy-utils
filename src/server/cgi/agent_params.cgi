@@ -46,6 +46,8 @@ test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p
 test ! -w "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" && end 1
 test ! -d "$agent_conf_dir" && "<p><b>Erro. Diretório de configuração de agentes inexistente.</b></p>" && end 1
 test ! -w "$agent_conf_dir" && "<p><b>Erro. Permissões insuficientes no diretório de configuração de agentes.</b></p>" && end 1
+test ! -n "$regex_bool" && "<p><b>Erro. A expressão regular 'regex_bool' não foi definida.</b></p>" && end 1
+test ! -n "$regex_agent_interval" && "<p><b>Erro. A expressão regular 'regex_agent_interval' não foi definida.</b></p>" && end 1
 
 if [ -z "$POST_STRING" ]; then
 
@@ -233,27 +235,69 @@ else
                             echo "          <p>Modificar arquivo de configuração '$agent_conf.conf':</p>"
                             echo "          <form action=\"$start_page\" method=\"post\">"
                             echo "              <table frame=box class=\"cfg_color\">"
+
                             while read l; do
+                                echo "              <tr>"
                                 key="$(echo "$l" | cut -f1 -d '=')"
                                 value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+
                                 if echo "$key" | grep -E "^#" > /dev/null; then
-                                    echo "               <tr><td colspan=\"2\">$key</td></tr>"
-                                elif [ "$key" == "hostname" ]; then
-                                    if [ -z "$value" ]; then
-                                        echo "               <tr><td>$key: </td><td><input type=\"text\" disabled size=\"100\" name=\"$key\" value=\"$host\"></td></tr>"
-                                    else
-                                        echo "               <tr><td>$key: </td><td><input type=\"text\" disabled size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
-                                    fi
-                                elif [ "$key" == "agent_name" ]; then
-                                    if [ -z "$value" ]; then
-                                        echo "               <tr><td>$key: </td><td><input type=\"text\" disabled size=\"100\" name=\"$key\" value=\"$agent_template\"></td></tr>"
-                                    else
-                                        echo "               <tr><td>$key: </td><td><input type=\"text\" disabled size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
-                                    fi
+                                    echo "                  <td colspan=\"2\">$key</td>"
+
                                 else
-                                    echo "               <tr><td>$key: </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
+                                    echo "                  <td>$key:</td>"
+                                    echo "                  <td>"
+
+                                    field_tag="input"
+                                    field_type="text"
+                                    field_attributes="class=\"text_large\" name=\"$key\" value=\"$value\""
+
+                                    case "$key" in
+
+                                        'hostname')
+                                            test -z "$value" && value="$host"
+                                            field_attributes="$field_attributes disabled"
+                                            ;;
+
+                                        'agent_name')
+                                            test -z "$value" && value="$agent_template"
+                                            field_attributes="$field_attributes disabled"
+                                            ;;
+
+                                        'password')
+                                            field_type="password"
+                                            ;;
+
+                                        'run_deploy_agent'|'run_log_agent')
+                                            test -z "$value" && value="true"
+                                            field_tag="select"
+                                            echo "                  <select class=\"select_large\" name=\"$key\">"
+                                            mklist "$regex_bool" | while read option; do
+                                                test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
+                                            done
+                                            echo "                  </select>"
+                                            ;;
+
+                                        'deploy_interval'|'log_interval')
+                                            test -z "$value" && value="15"
+                                            field_tag="select"
+                                            echo "                  <select class=\"select_large\" name=\"$key\">"
+                                            mklist "$regex_agent_interval" | while read option; do
+                                                test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
+                                            done
+                                            echo "                  </select>"
+                                            ;;
+
+                                    esac
+
+                                    test "$field_tag" == "input" && echo "                  <$field_tag type=\"$field_type\" $field_attributes>"
+                                    echo "                  <td>"
                                 fi
+
+                                echo "              </tr>"
+
                             done < "$form_file"
+
                             echo "                  <tr>"
                             echo "                      <td>"
                             echo "                          <input type=\"hidden\" name=\"host\" value=\"$host\">"
