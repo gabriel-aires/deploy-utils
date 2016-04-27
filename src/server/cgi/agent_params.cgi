@@ -250,7 +250,7 @@ else
 
                                     field_tag="input"
                                     field_type="text"
-                                    field_attributes="class=\"text_large\" name=\"$key\" value=\"$value\""
+                                    field_attributes="class=\"text_large\" name=\"$key\""
 
                                     case "$key" in
 
@@ -290,7 +290,7 @@ else
 
                                     esac
 
-                                    test "$field_tag" == "input" && echo "                  <$field_tag type=\"$field_type\" $field_attributes>"
+                                    test "$field_tag" == "input" && echo "                  <$field_tag type=\"$field_type\" $field_attributes value=\"$value\">"
                                     echo "                  <td>"
                                 fi
 
