@@ -495,7 +495,7 @@ else
                         test -n "$enable_deploy" || enable_deploy=false
 
                         mklist "$app" | while read app_name; do
-                            valid "app_name" "regex_app" "Erro. Nome de aplicação inválido: $app_name." "continue" && dir_created=false || break
+                            valid "app_name" "regex_app" "Erro. Nome de aplicação inválido: $app_name." "continue" && dir_created=false || continue
                             $enable_log && mkdir -p "$upload_path/$app_name/log" && echo "<p>Diretório '$upload_path/$app_name/log' criado.</p>" && dir_created=true
                             $enable_deploy && mkdir -p "$upload_path/$app_name/deploy" && echo "<p>Diretório '$upload_path/$app_name/deploy' criado.</p>" && dir_created=true
                             $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app_name'.</p>"
