@@ -4,6 +4,22 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/include.sh || exit 1
 
+function get_path_id_regex() {
+
+    local i=0
+    local path_id=''
+    path_id_regex=''
+
+    while [ "$i" -lt "$qtd_dir" ]; do
+        ((i++))
+        path_id="$(eval "echo \$dir_$i")"
+        path_id_regex="${path_id_regex}|${path_id}"
+    done
+
+    path_id_regex="$(echo "$path_id_regex" | sed -r "s/^\|//")"
+
+}
+
 function end() {
     test "$1" == "0" || echo "      <p><b>Operação inválida.</b></p>"
     web_footer
@@ -232,6 +248,8 @@ else
                                 end 1
                             fi
 
+                            get_path_id_regex
+
                             echo "      <p>"
                             echo "          <p>Modificar arquivo de configuração '$agent_conf.conf':</p>"
                             echo "          <form action=\"$start_page\" method=\"post\">"
@@ -271,8 +289,8 @@ else
 
                                         'ambiente')
                                             field_tag="select"
-                                            echo "                  <select class=\"select_large\" name=\"$key\">"
-                                            test -z "$value" && echo "               <option value=\"\">selecionar...</option>"
+                                            test -z "$value" && echo "                  <select class=\"select_large\" name=\"$key\">" || echo "                  <select class=\"select_large\" name=\"$key\" disabled>"
+                                            echo "               <option value=\"\">selecionar...</option>"
                                             mklist "$regex_ambiente" | while read option; do
                                                 test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
@@ -297,6 +315,10 @@ else
                                                 test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
                                             echo "                  </select>"
+                                            ;;
+
+                                        *)
+                                            echo "$key" | grep -Ex "$path_id_regex" > /dev/null && test -n "$value" && field_attributes="$field_attributes disabled"
                                             ;;
 
                                     esac
@@ -407,18 +429,10 @@ else
 
                         test -n "$agent_conf" && echo "      <p>Configuração selecionada: <b>$agent_conf</b></p>" || end 1
                         error=false
-                        i=0
-                        path_id_regex=''
+
+                        get_path_id_regex
+
                         upload_path="$upload_dir"
-
-                        while [ "$i" -lt "$qtd_dir" ]; do
-                            ((i++))
-                            path_id="$(eval "echo \$dir_$i")"
-                            path_id_regex="${path_id_regex}|${path_id}"
-                        done
-
-                        path_id_regex="$(echo "$path_id_regex" | sed -r "s/^\|//")"
-
                         while read l; do
                             echo "$(echo "$l" | cut -f1 -d '=')" | grep -Exv "$path_id_regex" > /dev/null && continue
                             subdir="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
