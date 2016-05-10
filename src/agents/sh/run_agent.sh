@@ -69,7 +69,7 @@ function set_dir () {
     done
 
     if [ "$nivel" == "$qtd_dir" ]; then
-        set_var="$set_var=$(find "$raiz" -iwholename "$dir_acima" 2> /dev/null)"
+        set_var="$set_var=$(find "$raiz" -wholename "$dir_acima" 2> /dev/null)"
         eval $set_var
     else
         log "ERRO" "Parâmetros incorretos no arquivo '$agent_conf'."
@@ -269,12 +269,12 @@ function log_agent () {
 
         chk_dir "$destino" "log" "$filetypes"
 
-        app_list="$(find $destino/* -type d -iname 'log' -print | sed -r "s|^${destino}/([^/]+)/log|\1|ig")"
+        app_list="$(find $destino/* -type d -name 'log' -print | sed -r "s|^${destino}/([^/]+)/log|\1|ig")"
         app_list=$(echo "$app_list" | sed -r "s%(.)$%\1|%g" | tr '[:upper:]' '[:lower:]')
 
         echo $app_list | while read -d '|' app; do
 
-            shared_log_dir=$(find "$destino/" -type d -iwholename "$destino/$app/log" 2> /dev/null)
+            shared_log_dir=$(find "$destino/" -type d -wholename "$destino/$app/log" 2> /dev/null)
 
             if [ -d "$shared_log_dir" ]; then
 
