@@ -4,6 +4,22 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 source $install_dir/sh/include.sh || exit 1
 
+function get_path_id_regex() {
+
+    local i=0
+    local path_id=''
+    path_id_regex=''
+
+    while [ "$i" -lt "$qtd_dir" ]; do
+        ((i++))
+        path_id="$(eval "echo \$dir_$i")"
+        path_id_regex="${path_id_regex}|${path_id}"
+    done
+
+    path_id_regex="$(echo "$path_id_regex" | sed -r "s/^\|//")"
+
+}
+
 function end() {
     test "$1" == "0" || echo "      <p><b>Operação inválida.</b></p>"
     web_footer
@@ -232,6 +248,8 @@ else
                                 end 1
                             fi
 
+                            get_path_id_regex
+
                             echo "      <p>"
                             echo "          <p>Modificar arquivo de configuração '$agent_conf.conf':</p>"
                             echo "          <form action=\"$start_page\" method=\"post\">"
@@ -252,17 +270,18 @@ else
                                     field_tag="input"
                                     field_type="text"
                                     field_attributes="class=\"text_large\" name=\"$key\""
+                                    field_disabled=false
 
                                     case "$key" in
 
                                         'hostname')
                                             test -z "$value" && value="$host"
-                                            field_attributes="$field_attributes disabled"
+                                            field_disabled=true
                                             ;;
 
                                         'agent_name')
                                             test -z "$value" && value="$agent_template"
-                                            field_attributes="$field_attributes disabled"
+                                            field_disabled=true
                                             ;;
 
                                         'password')
@@ -271,37 +290,47 @@ else
 
                                         'ambiente')
                                             field_tag="select"
-                                            echo "                  <select class=\"select_large\" name=\"$key\">"
-                                            test -z "$value" && echo "               <option value=\"\">selecionar...</option>"
+                                            field_attributes="class=\"select_large\" name=\"$key\""
+                                            test -n "$value" && field_disabled=true && field_attributes="$field_attributes disabled"
+                                            echo "                  <$field_tag $field_attributes>"
+                                            echo "                      <option value=\"\">selecionar...</option>"
                                             mklist "$regex_ambiente" | while read option; do
-                                                test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
+                                                test "$option" == "$value" && echo "                      <option selected>$value</option>" || echo "                      <option>$option</option>"
                                             done
-                                            echo "                  </select>"
+                                            echo "                  </$field_tag>"
                                             ;;
 
                                         'run_deploy_agent'|'run_log_agent')
                                             test -z "$value" && value="true"
                                             field_tag="select"
-                                            echo "                  <select class=\"select_large\" name=\"$key\">"
+                                            field_attributes="class=\"select_large\" name=\"$key\""
+                                            echo "                  <$field_tag $field_attributes>"
                                             mklist "$regex_bool" | while read option; do
                                                 test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
-                                            echo "                  </select>"
+                                            echo "                  </$field_tag>"
                                             ;;
 
                                         'deploy_interval'|'log_interval')
                                             test -z "$value" && value="15"
                                             field_tag="select"
-                                            echo "                  <select class=\"select_large\" name=\"$key\">"
+                                            field_attributes="class=\"select_large\" name=\"$key\""
+                                            echo "                  <$field_tag $field_attributes>"
                                             mklist "$regex_agent_interval" | while read option; do
                                                 test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
-                                            echo "                  </select>"
+                                            echo "                  </$field_tag>"
+                                            ;;
+
+                                        *)
+                                            echo "$key" | grep -Ex "$path_id_regex" > /dev/null && test -n "$value" && field_disabled=true
                                             ;;
 
                                     esac
 
+                                    $field_disabled && field_attributes="$field_attributes disabled" && echo "                  <input type=\"hidden\" name=\"$key\" value=\"$value\">"
                                     test "$field_tag" == "input" && echo "                  <$field_tag type=\"$field_type\" $field_attributes value=\"$value\">"
+
                                     echo "                  <td>"
                                 fi
 
@@ -333,15 +362,7 @@ else
                         while read l; do
                             if echo "$l" | grep -Ev "^#" > /dev/null; then
                                 key="$(echo "$l" | cut -f1 -d '=')"
-                                if [ "$key" == "hostname" ]; then
-                                    value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                                    test -z "$value" && new_value="$host" || new_value="$value"
-                                elif [ "$key" == "agent_name" ]; then
-                                    value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                                    test -z "$value" && new_value="$agent_template" || new_value="$value"
-                                else
-                                    new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                                fi
+                                new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
                                 editconf "$key" "$new_value" "$agent_conf_dir/$host/$agent_conf.conf"
                             fi
                         done < "$agent_conf_dir/$host/$agent_conf.conf"
@@ -407,18 +428,10 @@ else
 
                         test -n "$agent_conf" && echo "      <p>Configuração selecionada: <b>$agent_conf</b></p>" || end 1
                         error=false
-                        i=0
-                        path_id_regex=''
+
+                        get_path_id_regex
+
                         upload_path="$upload_dir"
-
-                        while [ "$i" -lt "$qtd_dir" ]; do
-                            ((i++))
-                            path_id="$(eval "echo \$dir_$i")"
-                            path_id_regex="${path_id_regex}|${path_id}"
-                        done
-
-                        path_id_regex="$(echo "$path_id_regex" | sed -r "s/^\|//")"
-
                         while read l; do
                             echo "$(echo "$l" | cut -f1 -d '=')" | grep -Exv "$path_id_regex" > /dev/null && continue
                             subdir="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
@@ -495,7 +508,7 @@ else
                         test -n "$enable_deploy" || enable_deploy=false
 
                         mklist "$app" | while read app_name; do
-                            dir_created=false
+                            valid "app_name" "regex_app" "<p><b>Erro. Nome de aplicação inválido: $app_name.</b></p>" "continue" && dir_created=false || continue
                             $enable_log && mkdir -p "$upload_path/$app_name/log" && echo "<p>Diretório '$upload_path/$app_name/log' criado.</p>" && dir_created=true
                             $enable_deploy && mkdir -p "$upload_path/$app_name/deploy" && echo "<p>Diretório '$upload_path/$app_name/deploy' criado.</p>" && dir_created=true
                             $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app_name'.</p>"
