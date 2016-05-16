@@ -16,3 +16,4 @@ controller_hostname=
 controller_port=
 user=
 password=
+log_limit=
