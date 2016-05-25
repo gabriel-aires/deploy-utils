@@ -17,23 +17,39 @@ function deploy_pkg () {
             echo "$app_srvgroup" | while read group; do
 
                 log "INFO" "Removendo a aplicação $app do grupo $group..."
-                $wildfly_cmd --command="undeploy $app.$ext --server-groups=$group" || exit 1
+                $wildfly_cmd --command="undeploy $app.$ext --server-groups=$group"
+                if [ "$?" -ne "0" ]; then
+                    log "ERRO" "Falha ao remover a aplicação $app.$ext do server-group $group"
+                    write_history "Falha ao remover a aplicação $app.$ext do server-group $group" "0"
+                    continue
+                fi
+
                 log "INFO" "Implantando a nova versão da aplicação $app no grupo $group"
-                $wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group" || exit 1
+                $wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group"
+                if [ "$?" -ne "0" ]; then
+                    log "ERRO" "Falha ao implantar a aplicação $app.$ext no server-group $group"
+                    write_history "Falha ao implantar a aplicação $app.$ext no server-group $group" "0"
+                    continue
+                fi
+
                 log "INFO" "Deploy do arquivo $pkg realizado com sucesso no server-group '$group'"
                 write_history "Deploy concluído com sucesso no grupo '$group'" "1"
 
             done
 
         else
-            log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && exit 1
+            log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)"
+            write_history "A aplicação $app não foi localizada pelo domain controller" "0"
+            exit 1
         fi
 
         # finalizado o deploy, remover pacote do diretório de origem
         rm -f $pkg
 
     else
-        log "ERRO" "O deploy deve ser realizado através domain controller ($controller_host)" && exit 1
+        log "ERRO" "O deploy deve ser realizado através domain controller ($controller_host)"
+        write_history "O deploy deve ser realizado através domain controller ($controller_host)" "0"
+        exit 1
     fi
 }
 
@@ -89,7 +105,7 @@ test -n $password || exit 1
 test "$log_limit" -ge 0 || exit 1
 
 # testar a conexão com o domain controller
-wildfly_cmd="$wildfly_dir/bin/jboss-cli.sh --connect --controller=$controller_hostname:$controller_port --user=$user --password=$password"
+wildfly_cmd="timeout -s KILL $((agent_timeout/2)) $wildfly_dir/bin/jboss-cli.sh --connect --controller=$controller_hostname:$controller_port --user=$user --password=$password"
 $wildfly_cmd --command="deployment-info --server-group=*" > /dev/null || exit 1
 
 # executar função de deploy ou cópia de logs

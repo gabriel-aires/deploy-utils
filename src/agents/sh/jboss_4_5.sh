@@ -118,12 +118,12 @@ function deploy_pkg () {
                 log "INFO" "Diretório de deploy:    \t$dir_deploy"
                 log "INFO" "Script de inicialização:\t$script_init"
 
-                parar_instancia="$script_init stop"
-                iniciar_instancia="$script_init start"
+                parar_instancia="timeout -s KILL $((agent_timeout/2)) $script_init stop"
+                iniciar_instancia="timeout -s KILL $((agent_timeout/2)) $script_init start"
 
-                eval $parar_instancia && wait
+                $parar_instancia
 
-                if [ $(pgrep -f "$(dirname $caminho_instancias_jboss).*-c $instancia_jboss" | wc -l) -ne 0 ]; then
+                if [ $? -ne 0 ] || [ $(pgrep -f "$(dirname $caminho_instancias_jboss).*-c $instancia_jboss" | wc -l) -ne 0 ]; then
                     log "ERRO" "Não foi possível parar a instância $instancia_jboss do JBOSS. Deploy abortado."
                     write_history "Deploy abortado. Impossível parar a instância $instancia_jboss." "0"
                 else
@@ -141,9 +141,9 @@ function deploy_pkg () {
                         rm -Rf $jboss_data/*
                     fi
 
-                    eval $iniciar_instancia && wait
+                    $iniciar_instancia
 
-                    if [ $(pgrep -f "$(dirname $caminho_instancias_jboss).*-c $instancia_jboss" | wc -l) -eq 0 ]; then
+                    if [ $? -ne 0 ] || [ $(pgrep -f "$(dirname $caminho_instancias_jboss).*-c $instancia_jboss" | wc -l) -eq 0 ]; then
                         log "ERRO" "O deploy do arquivo $war foi concluído, porém não foi possível reiniciar a instância do JBOSS."
                         write_history "Deploy não concluído. Erro ao reiniciar a instância $instancia_jboss." "0"
                     else
