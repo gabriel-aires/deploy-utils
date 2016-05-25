@@ -105,7 +105,7 @@ test -n $password || exit 1
 test "$log_limit" -ge 0 || exit 1
 
 # testar a conexão com o domain controller
-wildfly_cmd="$wildfly_dir/bin/jboss-cli.sh --connect --controller=$controller_hostname:$controller_port --user=$user --password=$password"
+wildfly_cmd="timeout -s KILL $((agent_timeout/2)) $wildfly_dir/bin/jboss-cli.sh --connect --controller=$controller_hostname:$controller_port --user=$user --password=$password"
 $wildfly_cmd --command="deployment-info --server-group=*" > /dev/null || exit 1
 
 # executar função de deploy ou cópia de logs
