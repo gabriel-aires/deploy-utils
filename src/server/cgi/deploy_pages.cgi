@@ -181,7 +181,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              </p>"
     # Revisão...
     echo "              <p>"
-    echo "              <input type=\"text\" class=\"text_default\" name=\"$rev_param\" value=\"Revisão...\"></input>"
+    echo "              <input type=\"text\" class=\"text_default\" name=\"$rev_param\" placeholder=\" Revisão...\"></input>"
     echo "              </p>"
     # Submit
     echo "              <p>"
