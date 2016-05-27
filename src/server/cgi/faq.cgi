@@ -85,8 +85,19 @@ fi
 
 if ! $parsed; then
 
+    query_file.sh -d "%" -r "</td><td>" -s 1 2 3 -f $tmp_dir/files.list | \
+    sed -r "s|^$faq_dir_tree/|<tr><td>|;s|/<tr><td>|<tr><td>|;s|<td>$|</tr>|;$sed_decode_question_cmd" | \
+    sed -r "s|^<tr><td>(.*)</td><td>(.*)</td><td>(.*)</td></tr>$|<tr><td><a href=\"$start_page?category=\1\">\1</a></td><td><a href=\"$start_page?category=\1&question=\2&tags=\3\">\2</a></td><td>\3</td></tr>|" | \
+    > $tmp_dir/results.list
+
+    while grep -Ex "<tr><td>.*</td><td>.*</td><td>.* .*</td></tr>" $tmp_dir/results.list > /dev/null; do
+        sed -i -r "s|^(<tr><td>.*</td><td>.*</td><td>[^ ]*)([a-zA-Z0-9\.-]+) (.*)</td></tr>$|\1<a_href=\"$start_page?tag=\2\">\2</a>\3</td></tr>|" $tmp_dir/results.list
+    done
+
+    sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results.list
+
     echo "<table>"
-    query_file.sh -d "%" -r "</td><td>" -s 1 2 3 -f $tmp_dir/files.list | sed -r "s|^$faq_dir_tree/|<tr><td>|;s|<td>$|</tr>|;$sed_decode_question_cmd"
+    cat $tmp_dir/results.list
     echo "</table>"
 
 fi
