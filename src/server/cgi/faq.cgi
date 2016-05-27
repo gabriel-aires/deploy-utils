@@ -40,7 +40,7 @@ find $faq_dir_tree/ -mindepth 2 -type f | sort > $tmp_dir/files.list
 find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
 
 touch $tmp_dir/tags.list
-tags="$(find $faq_dir_tree/ -mindepth 2 -type f | cut -d '%' -f 2 | sed -r 's/(.)$/\1 /;s/ +/ /g' | tr -d "\n")"
+tags="$(find $faq_dir_tree/ -mindepth 2 -type f | cut -d '%' -f 3 | sed -r 's/(.)$/\1 /;s/ +/ /g' | tr -d "\n")"
 test -n "$tags" && mklist "$tags" | sort | uniq > $tmp_dir/tags.list
 
 # Formulário de pesquisa
@@ -86,7 +86,7 @@ fi
 if ! $parsed; then
 
     echo "<table>"
-    query_file.sh -d "%" -r "</td><td>" -s all -f $tmp_dir/files.list | sed -r "s|^$faq_dir_tree/|<tr><td>\1|;s|<td>$|</tr>|;$sed_decode_question_cmd" || end 1
+    query_file.sh -d "%" -r "</td><td>" -s 1 2 3 -f $tmp_dir/files.list | sed -r "s|^$faq_dir_tree/|<tr><td>|;s|<td>$|</tr>|;$sed_decode_question_cmd"
     echo "</table>"
 
 fi
