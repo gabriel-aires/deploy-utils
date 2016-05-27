@@ -26,6 +26,8 @@ mkdir $tmp_dir
 # Cabeçalho
 web_header
 
+test -d "$faq_dir_tree" || end 1
+
 regex_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
 code_question_mark="___________"
 code_exclamation_mark="_______"
@@ -35,17 +37,17 @@ sed_decode_question_cmd="s|$code_question_mark|\?|g;s|$code_exclamation_mark|\!|
 
 # listas de tópicos, categorias e tags
 find $faq_dir_tree/ -mindepth 2 -type f | sort > $tmp_dir/files.list
-find $faq_dir_tree/ -mindepth 1 -type d | sort > $tmp_dir/categories.list
+find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
 mklist "$(find $faq_dir_tree/ -mindepth 2 -type f | cut -d '%' -f 2 | sed -r 's/(.)$/\1 /;s/ +/ /g' | tr -d "\n")" | sort | uniq > $tmp_dir/tags.list
 
 # Formulário de pesquisa
 echo "      <p>"
 echo "          <form action=\"$start_page\" method=\"get\">"
-echo "      		<select class=\"select_default\" name=\"category\">"
+echo "      		<select class=\"select_small\" name=\"category\">"
 echo "		        	<option value=\"\" selected>Categoria...</option>"
 sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" $tmp_dir/categories.list
 echo "		        </select>"
-echo "      		<select class=\"select_default\" name=\"tag\">"
+echo "      		<select class=\"select_small\" name=\"tag\">"
 echo "		        	<option value=\"\" selected>Tag...</option>"
 sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" $tmp_dir/tags.list
 echo "		        </select>"

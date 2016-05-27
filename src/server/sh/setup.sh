@@ -116,6 +116,7 @@ mkdir -p $app_conf_dir || end 1
 mkdir -p $agent_conf_dir || end 1
 mkdir -p $work_dir || end 1
 mkdir -p $upload_dir || end 1
+mkdir -p $faq_dir_tree || end 1
 mkdir -p $log_dir || end 1
 mkdir -p $lock_dir || end 1
 
@@ -143,6 +144,7 @@ chmod 775 $app_conf_dir || end 1
 chmod 775 $agent_conf_dir || end 1
 chmod 775 $work_dir || end 1
 chmod 775 $upload_dir || end 1
+chmod 775 $faq_dir_tree || end 1
 chmod 775 $log_dir || end 1
 chmod 775 $lock_dir || end 1
 chmod 755 $src_dir/server/cgi/* || end 1
@@ -166,6 +168,7 @@ chgrp -R $apache_group $app_conf_dir || end 1
 chgrp -R $apache_group $agent_conf_dir || end 1
 chgrp -R $apache_group $work_dir || end 1
 chgrp -R $apache_group $upload_dir || end 1
+chgrp -R $apache_group $faq_dir_tree || end 1
 chgrp -R $apache_group $log_dir || end 1
 chgrp -R $apache_group $lock_dir || end 1
 chgrp -R $apache_group $src_dir/server/cgi || end 1
