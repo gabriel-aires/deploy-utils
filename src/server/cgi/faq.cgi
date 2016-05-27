@@ -85,7 +85,9 @@ fi
 
 if ! $parsed; then
 
-    query_file.sh -d "%" -r "</td><td>" -s all -f $tmp_dir/files.list | sed -r "s|^(.)|<tr><td>\1|;s|<td>$|</tr>|;$sed_decode_question_cmd" || end 1
+    echo "<table>"
+    query_file.sh -d "%" -r "</td><td>" -s all -f $tmp_dir/files.list | sed -r "s|^$faq_dir_tree/|<tr><td>\1|;s|<td>$|</tr>|;$sed_decode_question_cmd" || end 1
+    echo "</table>"
 
 fi
 
