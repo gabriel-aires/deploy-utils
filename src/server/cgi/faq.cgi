@@ -38,7 +38,10 @@ sed_decode_question_cmd="s|$code_question_mark|\?|g;s|$code_exclamation_mark|\!|
 # listas de tópicos, categorias e tags
 find $faq_dir_tree/ -mindepth 2 -type f | sort > $tmp_dir/files.list
 find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
-mklist "$(find $faq_dir_tree/ -mindepth 2 -type f | cut -d '%' -f 2 | sed -r 's/(.)$/\1 /;s/ +/ /g' | tr -d "\n")" | sort | uniq > $tmp_dir/tags.list
+
+touch $tmp_dir/tags.list
+tags="$(find $faq_dir_tree/ -mindepth 2 -type f | cut -d '%' -f 2 | sed -r 's/(.)$/\1 /;s/ +/ /g' | tr -d "\n")"
+test -n "$tags" && mklist "$tags" | sort | uniq > $tmp_dir/tags.list
 
 # Formulário de pesquisa
 echo "      <p>"
@@ -82,6 +85,8 @@ fi
 
 if ! $parsed; then
 
-    query_file.sh -d "%" -r "</td><td>" -s all -f $tmp_dir/files.list | sed -r "s|^(.)|<tr><td>\1|;s|<td>$|</tr>|;$sed_decode_question_cmd"
+    query_file.sh -d "%" -r "</td><td>" -s all -f $tmp_dir/files.list | sed -r "s|^(.)|<tr><td>\1|;s|<td>$|</tr>|;$sed_decode_question_cmd" || end 1
 
 fi
+
+end 0
