@@ -32,7 +32,7 @@ regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
 
 # listas de tópicos, categorias e tags
-find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr ":" "%" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
+find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
 find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
 cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
 
