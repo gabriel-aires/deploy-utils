@@ -83,15 +83,15 @@ if ! $parsed; then
     sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\">\4</a>;\3;|" \
     > $tmp_dir/results
 
-    while grep -Ex "([^;]*;){2}(<a_href.*/a>)?$regex_faq_tag [^;]+;" $tmp_dir/results > /dev/null; do
-        sed -i -r "s|^(([^;]*;){2}(<a_href.*/a>)?)($regex_faq_tag) ([^;]+;)$|\1<a_href=\"$start_page\?tag=\3\">\2</a>\4|" $tmp_dir/results
+    while grep -Ex "([^;]*;){2}(<a_href.*/a> )?$regex_faq_tag [^;]*;" $tmp_dir/results > /dev/null; do
+        sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag) ([^;]*;)$|\1<a_href=\"$start_page\?tag=\4\">\4</a> \5|" $tmp_dir/results
     done
 
+    sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag);$|\1<a_href=\"$start_page\?tag=\4\">\4</a>;|" $tmp_dir/results
     sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results
     sed -i -r "s|;|</td><td>|g" $tmp_dir/results
     sed -i -r "s|^(.)|<tr><td>\1|" $tmp_dir/results
     sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
-
 
     echo "<table>"
     echo "<tr><th>Categoria</th><th>Tópico</th><th>Tags</th></tr>"
