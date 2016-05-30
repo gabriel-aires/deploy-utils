@@ -85,7 +85,7 @@ if ! $parsed; then
     > $tmp_dir/results.list
 
     while grep -Ex "<tr><td>.*</td><td>.*</td><td>.* .*</td></tr>" $tmp_dir/results.list > /dev/null; do
-        sed -i -r "s|^(<tr><td>.*</td><td>.*</td><td>[^ ]*)($regex_faq_tag) +(.*</td></tr>)$|\1<a_href=\"$start_page?tag=\2\">\2</a>\3|" $tmp_dir/results.list
+        sed -i -r "s|^(<tr><td>.*</td><td>.*</td><td[^ ]*)>($regex_faq_tag) +(.*</td></tr>)$|\1><a_href=\"$start_page?tag=\2\">\2</a>\3|" $tmp_dir/results.list
     done
 
     sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results.list
