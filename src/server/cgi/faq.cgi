@@ -78,20 +78,23 @@ fi
 
 if ! $parsed; then
 
-    query_file.sh -d "%" -r "</td><td>" -s 1 2 3 4 -f $tmp_dir/questions.list -o 4 asc | \
-    sed -r "s|^$faq_dir_tree/|<tr><td>|" | \
-    sed -r "s|<td>$|</tr>|" | \
-    sed -r "s|^<tr><td>(.*)</td><td>(.*)</td><td>(.*)</td><td>(.*)</td></tr>$|<tr><td><a href=\"$start_page?category=\1\">\1</a></td><td><a href=\"$start_page?category=\1&question=\2&tags=\3\">\4</a></td><td>\3</td></tr>|" \
-    > $tmp_dir/results.list
+    query_file.sh -d "%" -r ";" -s 1 2 3 4 -f $tmp_dir/questions.list -o 1 4 asc | \
+    sed -r "s|^$faq_dir_tree/||" | \
+    sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\">\4</a>;\3;|" \
+    > $tmp_dir/results
 
-    while grep -Ex "<tr><td>.*</td><td>.*</td><td>.* .*</td></tr>" $tmp_dir/results.list > /dev/null; do
-        sed -i -r "s|^(<tr><td>.*</td><td>.*</td><td[^ ]*)>($regex_faq_tag) +(.*</td></tr>)$|\1><a_href=\"$start_page?tag=\2\">\2</a>\3|" $tmp_dir/results.list
+    while grep -Ex "([^;]*;){3}(<a_href.*/a>)?$regex_faq_tag [^;]+;" $tmp_dir/results > /dev/null; do
+        sed -i -r "s|^(([^;]*;){3}(<a_href.*/a>)?)($regex_faq_tag) ([^;]+;)$|\1<a_href=\"$start_page?tag=\2\">\2</a>\3|" $tmp_dir/results
     done
 
-    sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results.list
+    sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results
+    sed -i -r "s|;|</td><td>|g" $tmp_dir/results
+    sed -i -r "s|^(.)|<tr><td>\1|" $tmp_dir/results
+    sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
+
 
     echo "<table>"
-    cat $tmp_dir/results.list
+    cat $tmp_dir/results
     echo "</table>"
 
 fi
