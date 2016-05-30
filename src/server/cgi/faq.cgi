@@ -28,20 +28,13 @@ web_header
 
 test -d "$faq_dir_tree" || end 1
 
-regex_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
-code_question_mark="___________"
-code_exclamation_mark="_______"
-code_comma="_____"
-code_space="___"
-sed_decode_question_cmd="s|$code_question_mark|\?|g;s|$code_exclamation_mark|\!|g;s|$code_comma|,|g;s|$code_space| |g"
+regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
+regex_faq_tag="[a-zA-Z0-9\.-]+"
 
 # listas de tópicos, categorias e tags
-find $faq_dir_tree/ -mindepth 2 -type f | sort > $tmp_dir/files.list
+find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr ":" "%" > $tmp_dir/questions.list
 find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
-
-touch $tmp_dir/tags.list
-tags="$(find $faq_dir_tree/ -mindepth 2 -type f | cut -d '%' -f 3 | sed -r 's/(.)$/\1 /;s/ +/ /g' | tr -d "\n")"
-test -n "$tags" && mklist "$tags" | sort | uniq > $tmp_dir/tags.list
+cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
 
 # Formulário de pesquisa
 echo "      <p>"
@@ -85,13 +78,13 @@ fi
 
 if ! $parsed; then
 
-    query_file.sh -d "%" -r "</td><td>" -s 1 2 3 -f $tmp_dir/files.list | \
-    sed -r "s|^$faq_dir_tree/|<tr><td>|;s|/<tr><td>|<tr><td>|;s|<td>$|</tr>|;$sed_decode_question_cmd" | \
-    sed -r "s|^<tr><td>(.*)</td><td>(.*)</td><td>(.*)</td></tr>$|<tr><td><a href=\"$start_page?category=\1\">\1</a></td><td><a href=\"$start_page?category=\1&question=\2&tags=\3\">\2</a></td><td>\3</td></tr>|" | \
+    query_file.sh -d "%" -r "</td><td>" -s 1 2 3 4 -f $tmp_dir/questions.list -o 4 asc | \
+    sed -r "s|^$faq_dir_tree/|<tr><td>|;s|/<tr><td>|<tr><td>|;s|<td>$|</tr>|" | \
+    sed -r "s|^<tr><td>(.*)</td><td>(.*)</td><td>(.*)</td><td>(.*)</td></tr>$|<tr><td><a href=\"$start_page?category=\1\">\1</a></td><td><a href=\"$start_page?category=\1&question=\2&tags=\3\">\4</a></td><td>\3</td></tr>|" \
     > $tmp_dir/results.list
 
     while grep -Ex "<tr><td>.*</td><td>.*</td><td>.* .*</td></tr>" $tmp_dir/results.list > /dev/null; do
-        sed -i -r "s|^(<tr><td>.*</td><td>.*</td><td>[^ ]*)([a-zA-Z0-9\.-]+) (.*)</td></tr>$|\1<a_href=\"$start_page?tag=\2\">\2</a>\3</td></tr>|" $tmp_dir/results.list
+        sed -i -r "s|^(<tr><td>.*</td><td>.*</td><td>[^ ]*)($regex_faq_tag) +(.*</td></tr>)$|\1<a_href=\"$start_page?tag=\2\">\2</a>\3|" $tmp_dir/results.list
     done
 
     sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results.list
