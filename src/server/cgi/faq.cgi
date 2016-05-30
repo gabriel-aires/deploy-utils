@@ -32,7 +32,7 @@ regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
 
 # listas de tópicos, categorias e tags
-find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr ":" "%" > $tmp_dir/questions.list
+find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr ":" "%" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
 find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
 cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
 
@@ -79,7 +79,8 @@ fi
 if ! $parsed; then
 
     query_file.sh -d "%" -r "</td><td>" -s 1 2 3 4 -f $tmp_dir/questions.list -o 4 asc | \
-    sed -r "s|^$faq_dir_tree/|<tr><td>|;s|/<tr><td>|<tr><td>|;s|<td>$|</tr>|" | \
+    sed -r "s|^$faq_dir_tree/|<tr><td>|" | \
+    sed -r "s|<td>$|</tr>|" | \
     sed -r "s|^<tr><td>(.*)</td><td>(.*)</td><td>(.*)</td><td>(.*)</td></tr>$|<tr><td><a href=\"$start_page?category=\1\">\1</a></td><td><a href=\"$start_page?category=\1&question=\2&tags=\3\">\4</a></td><td>\3</td></tr>|" \
     > $tmp_dir/results.list
 
