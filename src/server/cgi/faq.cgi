@@ -126,13 +126,14 @@ else
         "$proceed_search")
 
             where=''
+            no_results_msg="<p>Sua busca não retornou resultados.</p>"
 
-            test -n "$search" && find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -l "$search" {} | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
+            test -n "$search" && find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -ilF "$search" {} | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
 
             if [ "$(cat $tmp_dir/questions.list | wc -l)" -ge "1" ]; then
 
-                test -n "$category" && where="$where 1=~$faq_dir_tree/$category.*"
-                test -n "$tag" && where="$where 3=~($regex_faq_tag )*$tag( $regex_faq_tag)*"
+                test -n "$category" && where="$where 1=%$category"
+                test -n "$tag" && where="$where 3=%$tag"
                 test -n "$where" && where="-w $where"
 
                 query_file.sh -d "%" -r ";" \
@@ -142,10 +143,10 @@ else
                     -o 1 4 asc \
                     > $tmp_dir/results
 
-                display_faq
+                test "$(cat $tmp_dir/questions.list | wc -l)" -ge "1" && display_faq || echo "$no_results_msg"
 
             else
-                echo "<p>Sua busca não retornou resultados.</p>"
+                echo "$no_results_msg"
             fi
 
         ;;
