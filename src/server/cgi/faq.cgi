@@ -132,8 +132,8 @@ else
 
             if [ "$(cat $tmp_dir/questions.list | wc -l)" -ge "1" ]; then
 
-                test -n "$category" && where="$where 1=%$category"
-                test -n "$tag" && where="$where 3=~($tag|.* $tag|$tag .*|.* $tag .*)"
+                test -n "$category" && category_aux="$(echo "$category" | sed -r 's|([\.-])|\\\1|g')" && where="$where 1=~$faq_dir_tree/${category_aux}/.*"
+                test -n "$tag" && tag_aux="$(echo "$tag" | sed -r 's|([\.-])|\\\1|g')" && where="$where 3=~(.+[[:blank:]])*${tag_aux}([[:blank:]].+)*"
                 test -n "$where" && where="-w $where"
 
                 query_file.sh -d "%" -r ";" \
