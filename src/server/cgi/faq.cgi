@@ -32,6 +32,7 @@ function display_faq() {
     done
 
     sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag);$|\1<a_href=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a>;|" $tmp_dir/results
+    sed -i -r "s|(<a_href=\"[^\"]*)/([^\"]*\">)|\1%2F\2|g" $tmp_dir/results
     sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results
     sed -i -r "s|;|</td><td>|g" $tmp_dir/results
     sed -i -r "s|^(.)|<tr><td>\1|" $tmp_dir/results
