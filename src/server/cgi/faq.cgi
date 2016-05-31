@@ -20,6 +20,32 @@ function end() {
     exit $1
 }
 
+function display_faq() {
+
+    test -f $tmp_dir/results || return 1
+
+    sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
+    sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\">\4</a>;\3;|" $tmp_dir/results
+
+    while grep -Ex "([^;]*;){2}(<a_href.*/a> )?$regex_faq_tag [^;]*;" $tmp_dir/results > /dev/null; do
+        sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag) ([^;]*;)$|\1<a_href=\"$start_page\?tag=\4\">\4</a> \5|" $tmp_dir/results
+    done
+
+    sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag);$|\1<a_href=\"$start_page\?tag=\4\">\4</a>;|" $tmp_dir/results
+    sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results
+    sed -i -r "s|;|</td><td>|g" $tmp_dir/results
+    sed -i -r "s|^(.)|<tr><td>\1|" $tmp_dir/results
+    sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
+
+    echo "<table>"
+    echo "<tr><th>Categoria</th><th>Tópico</th><th>Tags</th></tr>"
+    cat $tmp_dir/results
+    echo "</table>"
+
+    return 0
+
+}
+
 trap "end 1" SIGQUIT SIGINT SIGHUP
 mkdir $tmp_dir
 
@@ -27,6 +53,11 @@ mkdir $tmp_dir
 web_header
 
 test -d "$faq_dir_tree" || end 1
+
+proceed_search="Buscar"
+proceed_view="Exibir"
+proceed_new="Novo"
+proceed_edit="Editar"
 
 regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
@@ -48,55 +79,83 @@ echo "		        	<option value=\"\" selected>Tag...</option>"
 sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" $tmp_dir/tags.list
 echo "		        </select>"
 echo "              <input type=\"text\" class=\"text_large\" placeholder=\"Pesquisar nos artigos...\" name=\"search\"></input>"
-echo "              <input type=\"submit\" name=\"proceed\" value=\"Buscar\">"
+echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_search\">"
 echo "          </form>"
 echo "      </p>"
 
 parsed=false
+var_string=false
 
 if [ "$REQUEST_METHOD" == "POST" ]; then
+
     if [ "$CONTENT_TYPE" == "application/x-www-form-urlencoded" ]; then
         test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
+        var_string=true
         arg_string="&$(web_filter "$POST_STRING")&"
-        proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
-        test -n "$proceed" && parsed=true
 
     elif echo "$CONTENT_TYPE" | grep -Ex "multipart/form-data; +boundary=.*" > /dev/null; then
         cat > "$tmp_dir/POST_CONTENT"
         parse_multipart_form "$tmp_dir/POST_CONTENT"
         rm -f "$tmp_dir/POST_CONTENT"
-        test -n "$proceed" && parsed=true
-
     fi
 
 else
+    var_string=true
     arg_string="&$(web_filter "$QUERY_STRING")&"
-    proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
-    test -n "$proceed" && parsed=true
-
 fi
+
+if $var_string; then
+    category=$(echo "$arg_string" | sed -rn "s/^.*&category=([^\&]+)&.*$/\1/p")
+    tag=$(echo "$arg_string" | sed -rn "s/^.*&tag=([^\&]+)&.*$/\1/p")
+    question=$(echo "$arg_string" | sed -rn "s/^.*&question=([^\&]+)&.*$/\1/p")
+    search=$(echo "$arg_string" | sed -rn "s/^.*&search=([^\&]+)&.*$/\1/p")
+    proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
+fi
+
+test -n "$proceed" && parsed=true
 
 if ! $parsed; then
 
-    query_file.sh -d "%" -r ";" -s 1 2 3 4 -f $tmp_dir/questions.list -o 1 4 asc | \
-    sed -r "s|^$faq_dir_tree/||" | \
-    sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\">\4</a>;\3;|" \
-    > $tmp_dir/results
+    query_file.sh -d "%" -r ";" -s 1 2 3 4 -f $tmp_dir/questions.list -o 1 4 asc > $tmp_dir/results
+    display_faq
 
-    while grep -Ex "([^;]*;){2}(<a_href.*/a> )?$regex_faq_tag [^;]*;" $tmp_dir/results > /dev/null; do
-        sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag) ([^;]*;)$|\1<a_href=\"$start_page\?tag=\4\">\4</a> \5|" $tmp_dir/results
-    done
+else
 
-    sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag);$|\1<a_href=\"$start_page\?tag=\4\">\4</a>;|" $tmp_dir/results
-    sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results
-    sed -i -r "s|;|</td><td>|g" $tmp_dir/results
-    sed -i -r "s|^(.)|<tr><td>\1|" $tmp_dir/results
-    sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
+    case "$proceed" in
 
-    echo "<table>"
-    echo "<tr><th>Categoria</th><th>Tópico</th><th>Tags</th></tr>"
-    cat $tmp_dir/results
-    echo "</table>"
+        "$proceed_search")
+
+            where=''
+
+            test -n "$search" && find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -l "$search" {} | tr -d ":" | sed -r "s|(.)$|\1\%|" > $tmp_dir/questions.list
+
+            if [ "$(wc -l $tmp_dir/questions.list)" -ge "1" ]; then
+
+                test -n "$category" && where="$where 1=~$faq_dir_tree/$category.*"
+                test -n "$tag" && where="$where 3=~($regex_faq_tag )*$tag( $regex_faq_tag)*"
+                test -n "$where" && where="-w $where"
+
+                query_file.sh -d "%" -r ";" \
+                    -s 1 2 3 4 \
+                    -f $tmp_dir/questions.list \
+                    $where \
+                    -o 1 4 asc \
+                    > $tmp_dir/results
+
+                display_faq
+
+            else
+                echo "<p>Sua busca não retornou resultados.</p>"
+            fi
+
+        ;;
+
+        "$proceed_view") ;;
+        "$proceed_new") ;;
+        "$proceed_edit") ;;
+        *) echo "Operação inválida." ;;
+
+    esac
 
 fi
 
