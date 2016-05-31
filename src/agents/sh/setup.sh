@@ -1,5 +1,4 @@
 #!/bin/bash
-source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 interactive='false'
 verbosity='verbose'
@@ -26,6 +25,8 @@ case "$1" in
     *)  echo "Argumento inválido" && end 1
         ;;
 esac
+
+source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 # Valida o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
