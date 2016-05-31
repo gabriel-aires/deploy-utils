@@ -127,7 +127,9 @@ else
 
             where=''
 
-            test -n "$search" && find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -l "$search" {} | tr -d ":" | sed -r "s|(.)$|\1\%|" > $tmp_dir/questions.list
+            if [ -n "$search" ]; then
+
+                find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -l "$search" {} | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
 
             if [ "$(cat $tmp_dir/questions.list | wc -l)" -ge "1" ]; then
 
