@@ -133,7 +133,7 @@ else
             if [ "$(cat $tmp_dir/questions.list | wc -l)" -ge "1" ]; then
 
                 test -n "$category" && where="$where 1=%$category"
-                test -n "$tag" && where="$where 3=%$tag"
+                test -n "$tag" && where="$where 3=~($tag|.* $tag|$tag .*|.* $tag .*)"
                 test -n "$where" && where="-w $where"
 
                 query_file.sh -d "%" -r ";" \
@@ -143,7 +143,7 @@ else
                     -o 1 4 asc \
                     > $tmp_dir/results
 
-                test "$(cat $tmp_dir/questions.list | wc -l)" -ge "1" && display_faq || echo "$no_results_msg"
+                test "$(cat $tmp_dir/results | wc -l)" -ge "1" && display_faq || echo "$no_results_msg"
 
             else
                 echo "$no_results_msg"
