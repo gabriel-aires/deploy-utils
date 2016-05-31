@@ -129,7 +129,7 @@ else
 
             test -n "$search" && find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -l "$search" {} | tr -d ":" | sed -r "s|(.)$|\1\%|" > $tmp_dir/questions.list
 
-            if [ "$(wc -l $tmp_dir/questions.list)" -ge "1" ]; then
+            if [ "$(cat $tmp_dir/questions.list | wc -l)" -ge "1" ]; then
 
                 test -n "$category" && where="$where 1=~$faq_dir_tree/$category.*"
                 test -n "$tag" && where="$where 3=~($regex_faq_tag )*$tag( $regex_faq_tag)*"
