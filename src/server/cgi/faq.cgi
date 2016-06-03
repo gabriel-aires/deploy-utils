@@ -24,7 +24,7 @@ function display_faq() {
 
     test -f $tmp_dir/results || return 1
 
-    content_file="$(head -n 1 | $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|")"
+    content_file="$(head -n 1 | $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
 
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
@@ -43,15 +43,15 @@ function display_faq() {
 
     if [ $(cat $tmp_dir/results | wc -l) -eq 1 ]; then
 
-        category_href="$(sed -r "s|^([^;]*);[^;]*;[^;]*;[^;]*;$|\1|" $tmp_dir/results)"
-        tag_href="$(sed -r "s|^[^;]*;[^;]*;([^;]*);[^;]*;$|\1|" $tmp_dir/results)"
-        question="$(head -n 1 $content_file)"
-        answer_cmd="tail -n +2 $content_file"
-
-        echo "<h3>$question</h3>"
+        category_href="$(sed -r "s|^([^;]*);[^;]*;[^;]*;$|\1|" $tmp_dir/results)"
+        tag_href="$(sed -r "s|^[^;]*;[^;]*;([^;]*);$|\1|" $tmp_dir/results)"
+                
+        echo "<h3>"
+        head -n 1 "$content_file"
+        echo "</h3>"
         echo "<p>"
         echo "  <pre>"
-        $answer_cmd
+        tail -n +2 $content_file
         echo "  </pre>"
         echo "</p>"
         echo "<p><b>Categoria:</b> $category_href</p>"
