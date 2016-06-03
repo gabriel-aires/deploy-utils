@@ -51,7 +51,7 @@ function display_faq() {
         echo "</h3>"
         echo "<p>"
         echo "  <pre>"
-        tail -n +2 $content_file
+        tail -n +2 "$content_file"
         echo "  </pre>"
         echo "</p>"
         echo "<p><b>Categoria:</b> $category_href</p>"
