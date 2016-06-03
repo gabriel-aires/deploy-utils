@@ -24,7 +24,7 @@ function display_faq() {
 
     test -f $tmp_dir/results || return 1
 
-    content_file="$(head -n 1 | $tmp_dir/results sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|")"
+    content_file="$(head -n 1 | $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|")"
 
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
@@ -40,12 +40,11 @@ function display_faq() {
     done
 
     sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results
-    sed -i -r "s|^([^;]*;)([^;]*;)([^;]*;)$|\2\1\3|" $tmp_dir/results
 
     if [ $(cat $tmp_dir/results | wc -l) -eq 1 ]; then
 
-        category_href="$(sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|" $tmp_dir/results)"
-        tag_href="$(sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|" $tmp_dir/results)"
+        category_href="$(sed -r "s|^([^;]*);[^;]*;[^;]*;[^;]*;$|\1|" $tmp_dir/results)"
+        tag_href="$(sed -r "s|^[^;]*;[^;]*;([^;]*);[^;]*;$|\1|" $tmp_dir/results)"
         question="$(head -n 1 $content_file)"
         answer_cmd="tail -n +2 $content_file"
 
@@ -55,11 +54,12 @@ function display_faq() {
         $answer_cmd
         echo "  </pre>"
         echo "</p>"
-        echo "<p>Categoria: $category_href</p>"
-        echo "<p>Tags: $tag_href</p>"
+        echo "<p><b>Categoria:</b> $category_href</p>"
+        echo "<p><b>Tags:</b> $tag_href</p>"
 
     elif [ $(cat $tmp_dir/results | wc -l) -ge 2 ]; then
 
+        sed -i -r "s|^([^;]*;)([^;]*;)([^;]*;)$|\2\1\3|" $tmp_dir/results
         sed -i -r "s|;|</td><td>|g" $tmp_dir/results
         sed -i -r "s|^(.)|<tr class=\"cfg_color\"><td width=80%>\1|" $tmp_dir/results
         sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
