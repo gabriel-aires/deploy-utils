@@ -22,13 +22,9 @@ function end() {
 
 function display_faq() {
 
-    local answer=''
-
     test -f $tmp_dir/results || return 1
 
-    if [ $(cat $tmp_dir/results | wc -l) -eq 1 ]; then
-        answer="$(sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|" $tmp_dir/results)"
-    fi
+    content_file="$(head -n 1 | $tmp_dir/results sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|")"
 
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
@@ -45,21 +41,40 @@ function display_faq() {
 
     sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results
     sed -i -r "s|^([^;]*;)([^;]*;)([^;]*;)$|\2\1\3|" $tmp_dir/results
-    sed -i -r "s|;|</td><td>|g" $tmp_dir/results
-    sed -i -r "s|^(.)|<tr class=\"cfg_color\"><td width=80%>\1|" $tmp_dir/results
-    sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
 
-    echo "<table id=\"faq\" width=100%>"
-    echo "<tr class=\"header_color\"><td width=80%>Tópico</td><td>Categoria</td><td>Tags</td></tr>"
-    cat $tmp_dir/results
+    if [ $(cat $tmp_dir/results | wc -l) -eq 1 ]; then
 
-    if [ -n "$answer" ]; then
-        echo "<tr class=\"cfg_color\"><td colspan=\"3\"><pre>"
-        cat "$answer"
-        echo "</pre></td></tr>"
+        category_href="$(sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|" $tmp_dir/results)"
+        tag_href="$(sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|" $tmp_dir/results)"
+        question="$(head -n 1 $content_file)"
+        answer_cmd="tail -n +2 $content_file"
+
+        echo "<h3>$question</h3>"
+        echo "<p>"
+        echo "  <pre>"
+        $answer_cmd
+        echo "  </pre>"
+        echo "</p>"
+        echo "<p>Categoria: $category_href</p>"
+        echo "<p>Tags: $tag_href</p>"
+
+    elif [ $(cat $tmp_dir/results | wc -l) -ge 2 ]; then
+
+        sed -i -r "s|;|</td><td>|g" $tmp_dir/results
+        sed -i -r "s|^(.)|<tr class=\"cfg_color\"><td width=80%>\1|" $tmp_dir/results
+        sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
+
+        echo "<table id=\"faq\" width=100%>"
+        echo "<tr class=\"header_color\"><td width=80%>Tópico</td><td>Categoria</td><td>Tags</td></tr>"
+        cat $tmp_dir/results
+        echo "</table>"
+
+    else
+
+        echo "<p>Sua busca não retornou resultados.</p>"
+        return 1
+
     fi
-
-    echo "</table>"
 
     return 0
 
@@ -80,8 +95,6 @@ proceed_edit="Editar"
 
 regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
-
-no_results_msg="<p>Sua busca não retornou resultados.</p>"
 
 # listas de tópicos, categorias e tags
 find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
@@ -155,44 +168,31 @@ else
             where=''
 
             test -n "$search" && find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -ilF "$search" {} | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
+            test -n "$category" && category_aux="$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')" && where="$where 1=~$faq_dir_tree/${category_aux}/.*"
+            test -n "$tag" && tag_aux="$(echo "$tag" | sed -r 's|([\.-])|\\\1|g')" && where="$where 3=~(.+[[:blank:]])*${tag_aux}([[:blank:]].+)*"
+            test -n "$where" && where="-w $where"
 
-            if [ "$(cat $tmp_dir/questions.list | wc -l)" -ge "1" ]; then
+            query_file.sh -d "%" -r ";" \
+                -s 1 2 3 4 \
+                -f $tmp_dir/questions.list \
+                $where \
+                -o 1 4 asc \
+                > $tmp_dir/results
 
-                test -n "$category" && category_aux="$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')" && where="$where 1=~$faq_dir_tree/${category_aux}/.*"
-                test -n "$tag" && tag_aux="$(echo "$tag" | sed -r 's|([\.-])|\\\1|g')" && where="$where 3=~(.+[[:blank:]])*${tag_aux}([[:blank:]].+)*"
-                test -n "$where" && where="-w $where"
-
-                query_file.sh -d "%" -r ";" \
-                    -s 1 2 3 4 \
-                    -f $tmp_dir/questions.list \
-                    $where \
-                    -o 1 4 asc \
-                    > $tmp_dir/results
-
-                test "$(cat $tmp_dir/results | wc -l)" -ge "1" && display_faq || echo "$no_results_msg"
-
-            else
-                echo "$no_results_msg"
-            fi
+            display_faq
 
         ;;
 
         "$proceed_view")
 
-            if [ -n "$category" ] && [ -n "$question" ]; then
+            query_file.sh -d "%" -r ";" \
+                -s 1 2 3 4 \
+                -f $tmp_dir/questions.list \
+                -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question" | sed -r 's|([\.-])|\\\1|g')" \
+                -o 1 4 asc \
+                > $tmp_dir/results
 
-                query_file.sh -d "%" -r ";" \
-                    -s 1 2 3 4 \
-                    -f $tmp_dir/questions.list \
-                    -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question" | sed -r 's|([\.-])|\\\1|g')" \
-                    -o 1 4 asc \
-                    > $tmp_dir/results
-
-                test "$(cat $tmp_dir/results | wc -l)" -ge "1" && display_faq || echo "$no_results_msg"
-
-            else
-                echo "$no_results_msg"
-            fi
+            display_faq
 
         ;;
 
