@@ -24,7 +24,7 @@ function display_faq() {
 
     test -f $tmp_dir/results || return 1
 
-    content_file="$(head -n 1 | $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
+    content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
 
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
@@ -45,7 +45,7 @@ function display_faq() {
 
         category_href="$(sed -r "s|^([^;]*);[^;]*;[^;]*;$|\1|" $tmp_dir/results)"
         tag_href="$(sed -r "s|^[^;]*;[^;]*;([^;]*);$|\1|" $tmp_dir/results)"
-                
+
         echo "<h3>"
         head -n 1 "$content_file"
         echo "</h3>"
