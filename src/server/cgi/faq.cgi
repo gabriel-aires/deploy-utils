@@ -38,12 +38,12 @@ function display_faq() {
     done
 
     sed -i -r "s|<a_href=|<a href=|g" $tmp_dir/results
+    sed -i -r "s|^([^;]*;)([^;]*;)([^;]*;)$|\2\1\3|" $tmp_dir/results
     sed -i -r "s|;|</td><td>|g" $tmp_dir/results
-    sed -i -r "s|^(.)|<tr><td>\1|" $tmp_dir/results
+    sed -i -r "s|^(.)|<tr class=\"cfg_color\"><td width=80%>\1|" $tmp_dir/results
     sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
-
-    echo "<table>"
-    echo "<tr><th>Categoria</th><th>Tópico</th><th>Tags</th></tr>"
+    echo "<table id=\"faq\" width=100%>"
+    echo "<tr class=\"header_color\"><td width=80%>Tópico</td><td>Categoria</td><td>Tags</td></tr>"
     cat $tmp_dir/results
     echo "</table>"
 
@@ -73,20 +73,26 @@ find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > 
 cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
 
 # Formulário de pesquisa
-echo "      <p>"
 echo "          <form action=\"$start_page\" method=\"get\">"
-echo "      		<select class=\"select_small\" name=\"category\">"
-echo "		        	<option value=\"\" selected>Categoria...</option>"
+echo "              <p>"
+echo "                  <select class=\"select_default\" name=\"category\">"
+echo "                          <option value=\"\" selected>Categoria...</option>"
 sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" $tmp_dir/categories.list
-echo "		        </select>"
-echo "      		<select class=\"select_small\" name=\"tag\">"
-echo "		        	<option value=\"\" selected>Tag...</option>"
+echo "                  </select>"
+echo "              </p>"
+echo "              <p>"
+echo "                  <select class=\"select_default\" name=\"tag\">"
+echo "                          <option value=\"\" selected>Tag...</option>"
 sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" $tmp_dir/tags.list
-echo "		        </select>"
-echo "              <input type=\"text\" class=\"text_large\" placeholder=\"Pesquisar nos artigos...\" name=\"search\"></input>"
-echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_search\">"
+echo "                  </select>"
+echo "              </p>"
+echo "              <p>"
+echo "                  <input type=\"text\" class=\"text_default\" placeholder=\"Pesquisar nos artigos...\" name=\"search\"></input>"
+echo "              </p>"
+echo "              <p>"
+echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_search\">"
+echo "              </p>"
 echo "          </form>"
-echo "      </p>"
 
 parsed=false
 var_string=false
