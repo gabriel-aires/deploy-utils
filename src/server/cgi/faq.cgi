@@ -22,7 +22,13 @@ function end() {
 
 function display_faq() {
 
+    local answer=''
+
     test -f $tmp_dir/results || return 1
+
+    if [ $(cat $tmp_dir/results | wc -l) -eq 1 ]; then
+        answer="$(sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|\1\%\2\%\3\%|" $tmp_dir/results)"
+    fi
 
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
@@ -42,9 +48,17 @@ function display_faq() {
     sed -i -r "s|;|</td><td>|g" $tmp_dir/results
     sed -i -r "s|^(.)|<tr class=\"cfg_color\"><td width=80%>\1|" $tmp_dir/results
     sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
+
     echo "<table id=\"faq\" width=100%>"
     echo "<tr class=\"header_color\"><td width=80%>Tópico</td><td>Categoria</td><td>Tags</td></tr>"
     cat $tmp_dir/results
+
+    if [ -n "$answer" ]; then
+        echo "<tr class=\"cfg_color\"><td colspan=\"3\"><pre>"
+        cat "$answer"
+        echo "</pre></td></tr>"
+    fi
+
     echo "</table>"
 
     return 0
@@ -66,6 +80,8 @@ proceed_edit="Editar"
 
 regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
+
+no_results_msg="<p>Sua busca não retornou resultados.</p>"
 
 # listas de tópicos, categorias e tags
 find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
@@ -137,7 +153,6 @@ else
         "$proceed_search")
 
             where=''
-            no_results_msg="<p>Sua busca não retornou resultados.</p>"
 
             test -n "$search" && find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -ilF "$search" {} | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
 
@@ -162,7 +177,25 @@ else
 
         ;;
 
-        "$proceed_view") ;;
+        "$proceed_view")
+
+            if [ -n "$category" ] && [ -n "$question" ]; then
+
+                query_file.sh -d "%" -r ";" \
+                    -s 1 2 3 4 \
+                    -f $tmp_dir/questions.list \
+                    -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question" | sed -r 's|([\.-])|\\\1|g')" \
+                    -o 1 4 asc \
+                    > $tmp_dir/results
+
+                test "$(cat $tmp_dir/results | wc -l)" -ge "1" && display_faq || echo "$no_results_msg"
+
+            else
+                echo "$no_results_msg"
+            fi
+
+        ;;
+
         "$proceed_new") ;;
         "$proceed_edit") ;;
         *) echo "Operação inválida." ;;
