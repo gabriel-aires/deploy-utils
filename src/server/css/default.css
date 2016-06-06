@@ -120,28 +120,28 @@ a, p {
 
 /* Input */
 
-.select_small {
+.select_small, .text_small {
     min-width: 7rem;
 }
 
-.select_default {
+.select_default, .text_default {
     min-width: 15rem;
 }
 
-.select_large {
+.select_large, .text_large {
     min-width: 30rem;
 }
 
-.text_small {
-    width: 7rem;
+.select_small_percent, .text_small_percent {
+    min-width: 20%;
 }
 
-.text_default {
-    width: 15rem;
+.select_default_percent, .text_default_percent {
+    min-width: 40%;
 }
 
-.text_large {
-    width: 30rem;
+.select_large_percent, .text_large_percent {
+    min-width: 80%;
 }
 
 /* Footer */
