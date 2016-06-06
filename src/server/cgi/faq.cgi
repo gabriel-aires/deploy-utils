@@ -65,6 +65,7 @@ function display_faq() {
         sed -i -r "s|^(.)|<tr class=\"cfg_color\"><td width=80%>\1|" $tmp_dir/results
         sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
 
+        echo "<h3>Tópicos:</h3>"
         echo "<table id=\"faq\" width=100%>"
         echo "<tr class=\"header_color\"><td width=80%>Tópico</td><td>Categoria</td><td>Tags</td></tr>"
         cat $tmp_dir/results
@@ -95,6 +96,8 @@ proceed_search="Buscar"
 proceed_view="Exibir"
 proceed_new="Novo"
 proceed_edit="Editar"
+show_edit=false
+membership "$REMOTE_USER" | grep -Ex 'admin' && allow_edit=true
 
 regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
@@ -104,8 +107,10 @@ find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr -
 find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
 cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
 
-# Formulário de pesquisa
+# Sidebar
 echo "      <div class=\"column_small\" id=\"faq_sidebar\">"
+
+# Formulário de pesquisa
 echo "          <h3>Busca:</h3>"
 echo "          <form action=\"$start_page\" method=\"get\">"
 echo "              <p>"
@@ -127,6 +132,26 @@ echo "              <p>"
 echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_search\">"
 echo "              </p>"
 echo "          </form>"
+
+# Formulário de upload
+if "$allow_edit"; then
+    echo "          <h3>Adicionar:</h3>"
+    echo "          <form action=\"$start_page\" method=\"post\" enctype=\"multipart/form-data\">"
+    echo "              <p>"
+    echo "                  <input type=\"text\" class=\"text_large_percent\" placeholder=\" Categoria...\" name=\"category\"></input>"
+    echo "              </p>"
+    echo "              <p>"
+    echo "                  <input type=\"text\" class=\"text_large_percent\" placeholder=\" Tags...\" name=\"tag\"></input>"
+    echo "              </p>"
+    echo "              <p>"
+    echo "                  <input type=\"file\" class=\"text_large_percent\" placeholder=\" Arquivo...\" name=\"question\"></input>"
+    echo "              </p>"
+    echo "              <p>"
+    echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_new\">"
+    echo "              </p>"
+    echo "          </form>"
+fi
+
 echo "      </div>"
 
 parsed=false
