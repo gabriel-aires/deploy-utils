@@ -53,7 +53,7 @@ function display_faq() {
         head -n 1 "$content_file"
         echo "</h3>"
         echo "<div class=\"cfg_color\">"
-        tail -n +2 "$content_file"
+        tail -n +2 "$content_file" | tr "\n" '<' | sed -r 's|<|<br>|g'
         echo "</div>"
         echo "<p><b>Categoria:</b> $category_href</p>"
         echo "<p><b>Tags:</b> $tag_href</p>"
