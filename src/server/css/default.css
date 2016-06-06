@@ -146,12 +146,8 @@ a, p {
 
 /* Faq */
 
-#faq_sidebar {
-    text-align: right;
-}
-
-#faq_topics {
-    margin-left: 5%;
+#faq_sidebar, #faq_topics {
+    margin: 0% 1%;
 }
 
 /* Footer */
