@@ -24,7 +24,10 @@ function display_faq() {
 
     test -f $tmp_dir/results || return 1
 
-    content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
+    echo "<div class=\"column_large\">"
+
+    local error=0
+    local content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
 
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
@@ -72,11 +75,13 @@ function display_faq() {
     else
 
         echo "<p>Sua busca não retornou resultados.</p>"
-        return 1
+        error=1
 
     fi
 
-    return 0
+    echo "</div>"
+
+    return "$error"
 
 }
 
@@ -102,6 +107,7 @@ find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > 
 cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
 
 # Formulário de pesquisa
+echo "      <div class=\"column_small\">"
 echo "          <form action=\"$start_page\" method=\"get\">"
 echo "              <p>"
 echo "                  <select class=\"select_default\" name=\"category\">"
@@ -122,6 +128,7 @@ echo "              <p>"
 echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_search\">"
 echo "              </p>"
 echo "          </form>"
+echo "      </div>"
 
 parsed=false
 var_string=false

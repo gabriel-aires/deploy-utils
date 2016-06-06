@@ -76,6 +76,25 @@ a, p {
     padding: 20;
 }
 
+/* Columns */
+
+.column_small, .column_default, .column_large {
+    display:inline-block;
+}
+
+.column_small {
+    width: 15%;
+}
+
+.column_default {
+    width: 40%;
+}
+
+.column_large {
+    width: 80%;
+}
+
+
 /* Tables */
 
 .query_table {
