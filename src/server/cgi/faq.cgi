@@ -97,7 +97,7 @@ proceed_view="Exibir"
 proceed_new="Novo"
 proceed_edit="Editar"
 show_edit=false
-membership "$REMOTE_USER" | grep -Ex 'admin' && allow_edit=true
+membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && allow_edit=true
 
 regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
