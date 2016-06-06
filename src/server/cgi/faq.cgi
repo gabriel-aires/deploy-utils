@@ -108,6 +108,7 @@ cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/t
 
 # Formulário de pesquisa
 echo "      <div class=\"column_small\">"
+echo "          <h3>Busca:</h3>"
 echo "          <form action=\"$start_page\" method=\"get\">"
 echo "              <p>"
 echo "                  <select class=\"select_default\" name=\"category\">"

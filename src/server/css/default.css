@@ -80,6 +80,7 @@ a, p {
 
 .column_small, .column_default, .column_large {
     display:inline-block;
+    vertical-align: top;
 }
 
 .column_small {
