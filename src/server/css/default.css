@@ -144,6 +144,16 @@ a, p {
     min-width: 90%;
 }
 
+/* Faq */
+
+#faq_sidebar {
+    text-align: right;
+}
+
+#faq_topics {
+    margin-left: 5%;
+}
+
 /* Footer */
 
 #footer, #navbar {

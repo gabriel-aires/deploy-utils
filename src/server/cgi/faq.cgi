@@ -24,7 +24,7 @@ function display_faq() {
 
     test -f $tmp_dir/results || return 1
 
-    echo "<div class=\"column_large\">"
+    echo "<div class=\"column_large\" id=\"faq_topics\">"
 
     local error=0
     local content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
@@ -107,7 +107,7 @@ find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > 
 cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
 
 # Formulário de pesquisa
-echo "      <div class=\"column_small\">"
+echo "      <div class=\"column_small\" id=\"faq_sidebar\">"
 echo "          <h3>Busca:</h3>"
 echo "          <form action=\"$start_page\" method=\"get\">"
 echo "              <p>"
