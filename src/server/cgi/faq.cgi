@@ -123,7 +123,7 @@ sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|" $tmp_dir/tags.list
 echo "                  </select>"
 echo "              </p>"
 echo "              <p>"
-echo "                  <input type=\"text\" class=\"text_large_percent\" placeholder=\"Pesquisar nos artigos...\" name=\"search\"></input>"
+echo "                  <input type=\"text\" class=\"text_large_percent\" placeholder=\" Pesquisar...\" name=\"search\"></input>"
 echo "              </p>"
 echo "              <p>"
 echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_search\">"

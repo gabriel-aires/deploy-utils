@@ -141,7 +141,7 @@ a, p {
 }
 
 .select_large_percent, .text_large_percent {
-    min-width: 80%;
+    min-width: 90%;
 }
 
 /* Footer */
