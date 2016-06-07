@@ -230,7 +230,7 @@ else
             query_file.sh -d "%" -r ";" \
                 -s 1 2 3 4 \
                 -f $tmp_dir/questions.list \
-                -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question" | sed -r 's|([\.-])|\\\1|g')" \
+                -w "1==$faq_dir_tree/$category" "2==$question" \
                 -o 1 4 asc \
                 > $tmp_dir/results
 
@@ -248,7 +248,7 @@ else
             query_file.sh -d "%" -r ";" \
                 -s 1 2 3 4 \
                 -f $tmp_dir/questions.list \
-                -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question_filename" | sed -r 's|([\.-])|\\\1|g')" \
+                -w "1==$faq_dir_tree/$category" "2==${question_filename}" \
                 -o 1 4 asc \
                 > $tmp_dir/results
 
@@ -257,7 +257,7 @@ else
                 question_txt="$(head -n 1 "$question_file")"
                 question_dir="$(echo "$faq_dir_tree/$category" | sed -r "s|/+|/|g;s|/$||")"
                 mkdir -p "$question_dir"
-                cp "$question_file" "$question_dir/%$question_filename%$tag%"
+                cp "$question_file" "$question_dir/%${question_filename}%$tag%"
 
                 echo "<p><b>Tópico '$question_txt' adicionado com sucesso.</b></p>"
 
