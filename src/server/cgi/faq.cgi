@@ -246,8 +246,9 @@ else
             test -f "$question_file" || end 1
 
             question_txt="$(head -n 1 "$content_file")"
+            question_dir="$(dirname "$question_file")"
             rm -f "$question_file"
-            rmdir "$(dirname "$question_file")" &> /dev/null
+            rmdir "$question_dir" &> /dev/null
             question_dir="$(dirname "$question_dir")"
 
             while [ "$question_dir" != "$faq_dir_tree" ]; do
