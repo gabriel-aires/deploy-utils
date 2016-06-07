@@ -105,7 +105,6 @@ proceed_remove="Remover"
 show_edit=false
 membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && allow_edit=true
 
-regex_faq_filename="[a-zA-Z0-9][a-zA-Z0-9\._-]*"
 regex_faq_category="([a-z0-9]+/?)+"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
 regex_faq_taglist="$regex_faq_tag( $regex_faq_tag)*"
@@ -244,13 +243,12 @@ else
             test -f "$question_file" && question_filename="$(basename $question_file)" || end 1
             test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$tag'</b></p>"
 
-            valid "question_filename" "regex_faq_filename" "<p><b<Erro. Nome de arquivo inválido: '$question'</b></p>"
             valid "category" "regex_faq_category" "<p><b<Erro. Categoria inválida: '$category'</b></p>"
 
-            query_file.sh -d "%" -r "" \
+            query_file.sh -d "%" -r ";" \
                 -s 1 2 3 4 \
                 -f $tmp_dir/questions.list \
-                -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question" | sed -r 's|([\.-])|\\\1|g')" \
+                -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question_file" | sed -r 's|([\.-])|\\\1|g')" \
                 -o 1 4 asc \
                 > $tmp_dir/results
 
