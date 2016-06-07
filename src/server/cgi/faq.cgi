@@ -248,7 +248,7 @@ else
             query_file.sh -d "%" -r ";" \
                 -s 1 2 3 4 \
                 -f $tmp_dir/questions.list \
-                -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question_file" | sed -r 's|([\.-])|\\\1|g')" \
+                -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question_filename" | sed -r 's|([\.-])|\\\1|g')" \
                 -o 1 4 asc \
                 > $tmp_dir/results
 
