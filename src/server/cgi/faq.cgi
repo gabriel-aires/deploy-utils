@@ -6,6 +6,7 @@ source $install_dir/sh/include.sh || exit 1
 
 function end() {
     test "$1" == "0" || echo "      <p><b>Operação inválida.</b></p>"
+    echo "</div>"
     web_footer
 
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -23,8 +24,6 @@ function end() {
 function display_faq() {
 
     test -f $tmp_dir/results || return 1
-
-    echo "<div class=\"column_large\" id=\"faq_topics\">"
 
     local error=0
     local content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
@@ -57,6 +56,15 @@ function display_faq() {
         echo "</div>"
         echo "<p><b>Categoria:</b> $category_href</p>"
         echo "<p><b>Tags:</b> $tag_href</p>"
+        # Formulário de remoção
+        if "$allow_edit"; then
+            echo "          <form action=\"$start_page\" method=\"post\">"
+            echo "              <p>"
+            echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
+            echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_remove\">"
+            echo "              </p>"
+            echo "          </form>"
+        fi
 
     elif [ $(cat $tmp_dir/results | wc -l) -ge 2 ]; then
 
@@ -78,8 +86,6 @@ function display_faq() {
 
     fi
 
-    echo "</div>"
-
     return "$error"
 
 }
@@ -95,7 +101,7 @@ test -d "$faq_dir_tree" || end 1
 proceed_search="Buscar"
 proceed_view="Exibir"
 proceed_new="Novo"
-proceed_edit="Editar"
+proceed_remove="Remover"
 show_edit=false
 membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && allow_edit=true
 
@@ -179,11 +185,15 @@ if $var_string; then
     category=$(echo "$arg_string" | sed -rn "s/^.*&category=([^\&]+)&.*$/\1/p")
     tag=$(echo "$arg_string" | sed -rn "s/^.*&tag=([^\&]+)&.*$/\1/p")
     question=$(echo "$arg_string" | sed -rn "s/^.*&question=([^\&]+)&.*$/\1/p")
+    question_file=$(echo "$arg_string" | sed -rn "s/^.*&question_file=([^\&]+)&.*$/\1/p")
     search=$(echo "$arg_string" | sed -rn "s/^.*&search=([^\&]+)&.*$/\1/p")
     proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
 fi
 
 test -n "$proceed" && parsed=true
+
+# Tópicos
+echo "<div class=\"column_large\" id=\"faq_topics\">"
 
 if ! $parsed; then
 
@@ -227,9 +237,29 @@ else
 
         ;;
 
-        "$proceed_new") ;;
-        "$proceed_edit") ;;
-        *) echo "Operação inválida." ;;
+        "$proceed_new")
+
+        ;;
+
+        "$proceed_remove")
+
+            test -f "$question_file" || end 1
+
+            question_txt="$(head -n 1 "$content_file")"
+            rm -f "$question_file"
+            rmdir "$(dirname "$question_file")" &> /dev/null
+            question_dir="$(dirname "$question_dir")"
+
+            while [ "$question_dir" != "$faq_dir_tree" ]; do
+                rmdir "$question_dir" &> /dev/null
+                question_dir="$(dirname "$question_dir")"
+            done
+
+            echo "<p><b>Tópico '$question_txt' removido.</b></p>"
+
+        ;;
+
+        *) end 1 ;;
 
     esac
 
