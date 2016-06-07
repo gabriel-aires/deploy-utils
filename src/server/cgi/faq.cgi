@@ -241,10 +241,11 @@ else
 
         "$proceed_new")
 
-            test -f "$question_file" || end 1
-            test -n "$category" && valid "category" "regex_faq_category" "<p><b<Erro. Categoria inválida: '$category'</b></p>" || end 1
+            test -f "$question_file" && question_filename="$(basename $question_file)" || end 1
             test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$tag'</b></p>"
 
+            valid "question_filename" "regex_faq_filename" "<p><b<Erro. Nome de arquivo inválido: '$question'</b></p>"
+            valid "category" "regex_faq_category" "<p><b<Erro. Categoria inválida: '$category'</b></p>"
 
             query_file.sh -d "%" -r "" \
                 -s 1 2 3 4 \
@@ -252,6 +253,22 @@ else
                 -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question" | sed -r 's|([\.-])|\\\1|g')" \
                 -o 1 4 asc \
                 > $tmp_dir/results
+
+            if [ "$(cat $tmp_dir/results | wc -l)" -eq 0 ]; then
+
+                question_txt="$(head -n 1 "$question_file")"
+                question_dir="$(echo "$faq_dir_tree/$category" | sed -r "s|/+|/|g;s|/$||")"
+                mkdir -p "$question_dir"
+                cp "$question_file" "$question_dir/%$question_filename%$tag%"
+
+                echo "<p><b>Tópico '$question_txt' adicionado com sucesso.</b></p>"
+
+            else
+
+                echo "<p><b>Há um tópico conflitante. Favor removê-lo antes de continuar:</b></p>"
+                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|arquivo: \'\2\'; tópico: \'\4\'; categoria: \'\1\'; tags: \'\3\'|" | sed -r "s|(; categoria: \')$faq_dir_tree/|\1|"
+
+            fi
 
         ;;
 
