@@ -105,8 +105,10 @@ proceed_remove="Remover"
 show_edit=false
 membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && allow_edit=true
 
-regex_faq_question="[a-zA-Z0-9][a-zA-Z0-9 \.\?\!_,-]*"
+regex_faq_filename="[a-zA-Z0-9][a-zA-Z0-9\._-]*"
+regex_faq_category="([a-z0-9]+/?)+"
 regex_faq_tag="[a-zA-Z0-9\.-]+"
+regex_faq_taglist="$regex_faq_tag( $regex_faq_tag)*"
 
 # listas de tópicos, categorias e tags
 find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
@@ -146,7 +148,7 @@ if "$allow_edit"; then
     echo "          <form action=\"$start_page\" method=\"post\" enctype=\"multipart/form-data\">"
     echo "              <p>"
     echo "                  <button type=\"button\" class=\"text_large_percent\"><label for=\"question_file\">Selecionar Arquivo...</label></button>"
-    echo "                  <input type=\"file\" style=\"visibility: hidden\" id=\"question_file\" name=\"question\"></input>"
+    echo "                  <input type=\"file\" style=\"visibility: hidden\" id=\"question_file\" name=\"question_file\"></input>"
     echo "                  <input type=\"text\" class=\"text_large_percent\" placeholder=\" Categoria (obrigatório)\" name=\"category\"></input>"
     echo "              </p>"
     echo "              <p>"
@@ -238,6 +240,18 @@ else
         ;;
 
         "$proceed_new")
+
+            test -f "$question_file" || end 1
+            test -n "$category" && valid "category" "regex_faq_category" "<p><b<Erro. Categoria inválida: '$category'</b></p>" || end 1
+            test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$tag'</b></p>"
+
+
+            query_file.sh -d "%" -r "" \
+                -s 1 2 3 4 \
+                -f $tmp_dir/questions.list \
+                -w "1=~$faq_dir_tree/$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')/" "2==$(echo "$question" | sed -r 's|([\.-])|\\\1|g')" \
+                -o 1 4 asc \
+                > $tmp_dir/results
 
         ;;
 
