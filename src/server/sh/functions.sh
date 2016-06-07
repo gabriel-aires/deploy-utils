@@ -45,7 +45,7 @@ function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do 
         elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"" > /dev/null; then
             var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=||" | sed -r "s|\"||g")"
 
-        elif echo "$line" | grep -Ex "[a-zA-Z0-9\._ -]+" > /dev/null ; then
+        elif echo "$line" | grep -Ex "[a-zA-Z0-9\._/ -]+" > /dev/null ; then
             ! $var_set && test -n "$var_name" && eval "$var_name='$line'" && var_set=true
 
         fi
