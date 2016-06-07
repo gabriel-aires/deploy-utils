@@ -264,9 +264,9 @@ else
                 echo "<p><b>Há um tópico conflitante. Favor removê-lo antes de continuar:</b></p>"
                 echo "<pre>"
                 cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|arquivo:\t\2|"
-                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tópico:\t\4|" | tr -d "\n"
+                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tópico: \t\4|" | tr -d "\n"
                 cat $tmp_dir/results | sed -r "s|^$faq_dir_tree/([^;]*);([^;]*);([^;]*);([^;]*);$|categoria:\t\1|"
-                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tags:\t\3|"
+                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tags:   \t\3|"
                 echo "</pre>"
 
             fi
