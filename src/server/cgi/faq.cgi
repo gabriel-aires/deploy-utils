@@ -262,7 +262,12 @@ else
 
             else
                 echo "<p><b>Há um tópico conflitante. Favor removê-lo antes de continuar:</b></p>"
-                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|arquivo: \'\2\'; tópico: \'\4\'; categoria: \'\1\'; tags: \'\3\'|" | sed -r "s|(; categoria: \')$faq_dir_tree/|\1|"
+                echo "<pre>"
+                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|arquivo: \'\2\'|"
+                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tópico: \'\4\'|"
+                cat $tmp_dir/results | sed -r "s|^$faq_dir_tree/([^;]*);([^;]*);([^;]*);([^;]*);$|categoria: \'\1\'|"
+                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tags: \'\3\'|"
+                echo "</pre>"
 
             fi
 
