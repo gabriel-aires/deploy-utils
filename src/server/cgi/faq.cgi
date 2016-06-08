@@ -26,6 +26,8 @@ function display_faq() {
     test -f $tmp_dir/results || return 1
 
     local content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
+    local category_txt="$(sed -r "s|^$faq_dir_tree/([^;]*);[^;]*;[^;]*;[^;]*;$|\1|" $tmp_dir/results)"
+    local tag_txt="$(sed -r "s|^[^;]*;[^;]*;([^;]*);[^;]*;$|\1|" $tmp_dir/results)"
 
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
@@ -44,8 +46,8 @@ function display_faq() {
 
     if [ $(cat $tmp_dir/results | wc -l) -eq 1 ]; then
 
-        category_href="$(sed -r "s|^([^;]*);[^;]*;[^;]*;$|\1|" $tmp_dir/results)"
-        tag_href="$(sed -r "s|^[^;]*;[^;]*;([^;]*);$|\1|" $tmp_dir/results)"
+        local category_href="$(sed -r "s|^([^;]*);[^;]*;[^;]*;$|\1|" $tmp_dir/results)"
+        local tag_href="$(sed -r "s|^[^;]*;[^;]*;([^;]*);$|\1|" $tmp_dir/results)"
 
         echo "<h3>"
         head -n 1 "$content_file"
@@ -63,8 +65,9 @@ function display_faq() {
 
             # Sobrescrever
             echo "      <div class=\"column faq_override\">"
-            echo "          <form action=\"$start_page\" method=\"post\">"
+            echo "          <form action=\"$start_page\" method=\"post\" enctype=\"multipart/form-data\">"
             echo "              <p>"
+            echo "                  <b>Atualizar tópico:</b>"
             echo "                  <input type=\"file\" name=\"update_file\"></input>"
             echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
             echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_overwrite\">"
@@ -76,8 +79,10 @@ function display_faq() {
             echo "      <div class=\"column faq_override\">"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
-            echo "                  <input type=\"text\" placeholder=\" Categoria (obrigatório)\" name=\"category\"></input>"
-            echo "                  <input type=\"text\" placeholder=\" Lista de tags\" name=\"tag\"></input>"
+            echo "                  <b>Categoria:</b>"
+            echo "                  <input type=\"text\" placeholder=\" Categoria (obrigatório)\" name=\"category\">$category_txt</input>"
+            echo "                  <b>Tags:</b>"
+            echo "                  <input type=\"text\" placeholder=\" Lista de tags\" name=\"tag\">$tag_txt</input>"
             echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
             echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_modify\">"
             echo "              </p>"
@@ -88,6 +93,7 @@ function display_faq() {
             echo "      <div class=\"column faq_override\">"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
+            echo "                  <b>Excluir tópico:</b>"
             echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
             echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_remove\">"
             echo "              </p>"
