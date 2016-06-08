@@ -123,7 +123,7 @@ function web_tr_pagination () {
     local next_uri
     local prev_uri
     local nav
-    local no_results_msg='<tr><td colspan=\"100\">Nenhum registro encontrado.</td></tr>'
+    local no_results_msg='<tr><td colspan="100">Nenhum registro encontrado.</td></tr>'
 
     test "$#" -eq "2" || { echo "web_tr_pagination(): favor informar dois argumentos." ; return 1 ; }
     test -f "$table_content" || { echo "web_tr_pagination(): o primeiro argumento deve ser um arquivo." ; return 1 ; }
