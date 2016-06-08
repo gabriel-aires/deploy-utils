@@ -80,9 +80,11 @@ function display_faq() {
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
             echo "                  <b>Categoria:</b>"
-            echo "                  <input type=\"text\" placeholder=\" Categoria (obrigatório)\" name=\"category\">$category_txt</input>"
+            echo "                  <input type=\"text\" name=\"update_category\" value=\"$category_txt\"></input>"
+            echo "                  <input type=\"hidden\" name=\"category\" value=\"$category_txt\">"
             echo "                  <b>Tags:</b>"
-            echo "                  <input type=\"text\" placeholder=\" Lista de tags\" name=\"tag\">$tag_txt</input>"
+            echo "                  <input type=\"text\" name=\"update_tag\" value=\"$tag_txt\"></input>"
+            echo "                  <input type=\"hidden\" name=\"tag\" value=\"$category_txt\">"
             echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
             echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_modify\">"
             echo "              </p>"
@@ -225,6 +227,9 @@ if $var_string; then
     tag=$(echo "$arg_string" | sed -rn "s/^.*&tag=([^\&]+)&.*$/\1/p")
     question=$(echo "$arg_string" | sed -rn "s/^.*&question=([^\&]+)&.*$/\1/p")
     question_file=$(echo "$arg_string" | sed -rn "s/^.*&question_file=([^\&]+)&.*$/\1/p")
+    update_category=$(echo "$arg_string" | sed -rn "s/^.*&update_category=([^\&]+)&.*$/\1/p")
+    update_tag=$(echo "$arg_string" | sed -rn "s/^.*&update_category=([^\&]+)&.*$/\1/p")
+    update_file=$(echo "$arg_string" | sed -rn "s/^.*&update_file=([^\&]+)&.*$/\1/p")
     search=$(echo "$arg_string" | sed -rn "s/^.*&search=([^\&]+)&.*$/\1/p")
     proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
 fi
