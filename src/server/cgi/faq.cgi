@@ -59,10 +59,10 @@ function display_faq() {
         if "$allow_edit"; then
 
             echo "<fieldset>"
-            echo "  <legend> Editar... <legend>"
+            echo "  <legend> Editar... </legend>"
 
             # Sobrescrever
-            echo "      <div class=\"column\">"
+            echo "      <div class=\"column faq_override\">"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
             echo "                  <input type=\"file\" name=\"update_file\"></input>"
@@ -73,7 +73,7 @@ function display_faq() {
             echo "      </div>"
 
             # Modificar
-            echo "      <div class=\"column\">"
+            echo "      <div class=\"column faq_override\">"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
             echo "                  <input type=\"text\" placeholder=\" Categoria (obrigatório)\" name=\"category\"></input>"
@@ -85,7 +85,7 @@ function display_faq() {
             echo "      </div>"
 
             # Remover
-            echo "      <div class=\"column\">"
+            echo "      <div class=\"column faq_override\">"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
             echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"

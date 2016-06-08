@@ -79,8 +79,13 @@ a, p {
 /* Columns */
 
  .column, .column_small, .column_default, .column_large {
-    display:inline-block;
+    display: inline-block;
     vertical-align: top;
+}
+
+.column.faq_override {
+    vertical-align: bottom;
+    margin: 2rem 4rem;
 }
 
 .column_small {
