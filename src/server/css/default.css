@@ -85,7 +85,10 @@ a, p {
 
 .column.faq_override {
     vertical-align: bottom;
-    margin: 2rem 4rem;
+    margin: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    box-shadow: 0.1rem 0.1rem 0.3rem #888888;
 }
 
 .column_small {
