@@ -25,7 +25,6 @@ function display_faq() {
 
     test -f $tmp_dir/results || return 1
 
-    local error=0
     local content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
 
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
@@ -66,27 +65,24 @@ function display_faq() {
             echo "          </form>"
         fi
 
-    elif [ $(cat $tmp_dir/results | wc -l) -ge 2 ]; then
+    else
 
         sed -i -r "s|^([^;]*;)([^;]*;)([^;]*;)$|\2\1\3|" $tmp_dir/results
         sed -i -r "s|;|</td><td>|g" $tmp_dir/results
         sed -i -r "s|^(.)|<tr class=\"cfg_color\"><td width=80%>\1|" $tmp_dir/results
         sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
 
+        web_tr_pagination "$tmp_dir/results" "0"
+
         echo "<h3>Tópicos:</h3>"
         echo "<table id=\"faq\" width=100%>"
         echo "<tr class=\"header_color\"><td width=80%>Tópico</td><td>Categoria</td><td>Tags</td></tr>"
-        cat $tmp_dir/results
+        eval "$print_page_cmd"
         echo "</table>"
-
-    else
-
-        echo "<p>Sua busca não retornou resultados.</p>"
-        error=1
 
     fi
 
-    return "$error"
+    return 0
 
 }
 
