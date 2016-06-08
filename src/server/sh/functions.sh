@@ -2,6 +2,58 @@
 
 # Funções comuns do servidor
 
+function parse_multipart_form() { #argumentos: nome de arquivo com conteúdo do POST
+
+    #atribui variáveis do formulário e prepara arquivos carregados para o servidor
+
+    local boundary="$(echo "$CONTENT_TYPE" | sed -r "s|multipart/form-data; +boundary=||" | sed -r 's|\-|\\-|g')"
+    local part_boundary="\-\-$boundary"
+    local end_boundary="\-\-$boundary\-\-"
+    local next_boundary=''
+    local input_file="$1"
+    local input_size="$(cat "$input_file" | wc -l)"
+    local file_begin=''
+    local file_end=''
+    local file_name=''
+    local var_name=''
+    local var_set=false
+    local i=0
+
+    while [ "$i" -lt "$input_size" ]; do
+
+        ((i++))
+        line="$(sed -n "${i}p" "$input_file" | sed -r "s|[\$\`\(\)\{\}\<\>\~\*\r&']||g")"
+
+        if echo "$line" | grep -Ex "$part_boundary|$end_boundary" > /dev/null; then
+            file_name=''
+            file_begin=''
+            file_end=''
+            var_name=''
+            var_set=false
+
+        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"; filename=\"[^\"]+\"" > /dev/null; then
+            var_name="$(echo "$line" | sed -rn "s|Content\-Disposition: form\-data; name=([^;]+); filename=.+|\1|p" | sed -r "s|\"||g")"
+            file_name="$(echo "$line" | sed -rn "s|Content\-Disposition: form\-data; name=[^;]+; filename=\"([a-zA-Z0-9][a-zA-Z0-9\._-]*)\"|\1|p")"
+            test -n "$var_name" && test -n "$file_name" && eval "$var_name=$tmp_dir/$file_name" && var_set=true
+            file_begin=$((i+3)) #i+1: content-type, i+2: '', i+3: file_begin
+            next_boundary=$(sed -n "${file_begin},${input_size}p" "$input_file" | cat -t | grep -En "^$part_boundary" | head -n 1 | cut -d ':' -f1)
+            next_boundary=$((next_boundary+file_begin-1))
+            file_end=$((next_boundary-1))
+            $var_set && sed -n "${file_begin},$((file_end-1))p" "$input_file" > "$tmp_dir/$file_name" && sed -rn "${file_end}s|\r$||p" "$input_file" | tr -d '\n' >> "$tmp_dir/$file_name"
+            i="$file_end"
+
+        elif echo "$line" | grep -Ex "Content\-Disposition: form\-data; name=\"[a-zA-Z0-9_]+\"" > /dev/null; then
+            var_name="$(echo "$line" | sed -r "s|Content\-Disposition: form\-data; name=||" | sed -r "s|\"||g")"
+
+        elif echo "$line" | grep -Ex "[a-zA-Z0-9\._/ -]+" > /dev/null ; then
+            ! $var_set && test -n "$var_name" && eval "$var_name='$line'" && var_set=true
+
+        fi
+
+    done
+
+}
+
 function web_filter() {   # Filtra o input de formulários cgi
 
     set -f
@@ -56,6 +108,66 @@ function web_header () {
     return 0
 }
 
+function web_tr_pagination () {
+
+    local table_content="$1"
+    local header_line="$2"
+    local data_size
+    local view_size
+    local print_size
+    local page
+    local min_page
+    local max_page
+    local next
+    local prev
+    local next_uri
+    local prev_uri
+    local nav
+    local no_results_msg='<tr><td colspan="100">Nenhum registro encontrado.</td></tr>'
+
+    test "$#" -eq "2" || { echo "web_tr_pagination(): favor informar dois argumentos." ; return 1 ; }
+    test -f "$table_content" || { echo "web_tr_pagination(): o primeiro argumento deve ser um arquivo." ; return 1 ; }
+    test "$header_line" -ge "0" 2> /dev/null || { echo "web_tr_pagination(): o segundo argumento deve ser o número da linha de cabeçalho." ; return 1 ; }
+
+    if [ -z "$QUERY_STRING" ]; then
+        view_size="$cgi_table_size"
+        page=1
+        next=2
+        prev=0
+        next_uri="$start_page?p=$next"
+    else
+        view_size=$(echo "$arg_string" | sed -rn "s/^.*&n=([^\&]+)&.*$/\1/p")
+        test -z "$view_size" && view_size="$cgi_table_size"
+
+        page=$(echo "$arg_string" | sed -rn "s/^.*&p=([^\&]+)&.*$/\1/p")
+        test -z "$page" && page=1
+
+        next=$(($page+1))
+        prev=$(($page-1))
+
+        next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$next\2/p")"
+        test -z "$next_uri" && next_uri="$REQUEST_URI&p=$next"
+
+        prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$prev\2/p")"
+        test -z "$prev_uri" && prev_uri="$REQUEST_URI&p=$prev"
+    fi
+
+    # define comando de exibição das linhas
+    data_size=$(($(cat "$table_content" | wc -l)-$header_line))
+    min_page=1
+    max_page=$(($data_size/$view_size))
+    test $(($max_page*$view_size)) -lt $data_size && ((max_page++))
+    test $page -eq $max_page && print_size=$(($view_size-($view_size*$max_page-$data_size))) || print_size=$view_size
+    test $data_size -ge 1 && print_page_cmd="head -n '$((($page*$view_size)+$header_line))' '$table_content' | tail -n '$print_size'" || print_page_cmd="echo '$no_results_msg'"
+
+    # define links para navegação
+    nav="$page"
+    test $next -le $max_page && nav="$nav <a href=\"$next_uri\">$next</a>"
+    test $prev -ge $min_page && nav="<a href=\"$prev_uri\">$prev</a> $nav"
+    nav_right="<div id=\"nav_right\"><p>Página: $nav</p></div>"
+
+}
+
 function web_query_history () {
 
     file=$history_dir/$history_csv_file
@@ -65,58 +177,17 @@ function web_query_history () {
         export 'SELECT' 'DISTINCT' 'TOP' 'WHERE' 'ORDERBY'
         table_content="$tmp_dir/html_table"
         $install_dir/cgi/table_data.cgi $file > $table_content
-
-        if [ -z "$QUERY_STRING" ]; then
-            view_size="$cgi_table_size"
-            page=1
-            next=2
-            prev=0
-            next_uri="$start_page?p=$next"
-        else
-            view_size=$(echo "$arg_string" | sed -rn "s/^.*&n=([^\&]+)&.*$/\1/p")
-            test -z "$view_size" && view_size="$cgi_table_size"
-
-            page=$(echo "$arg_string" | sed -rn "s/^.*&p=([^\&]+)&.*$/\1/p")
-            test -z "$page" && page=1
-
-            next=$(($page+1))
-            prev=$(($page-1))
-
-            next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$next\2/p")"
-            test -z "$next_uri" && next_uri="$REQUEST_URI&p=$next"
-
-            prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$prev\2/p")"
-            test -z "$prev_uri" && prev_uri="$REQUEST_URI&p=$prev"
-        fi
-
-        data_size=$(($(cat "$table_content" | wc -l)-1))
-        min_page=1
-        max_page=$(($data_size/$view_size))
-        test $(($max_page*$view_size)) -lt $data_size && ((max_page++))
-        test $page -eq $max_page && print_size=$(($view_size-($view_size*$max_page-$data_size))) || print_size=$view_size
-        nav="$page"
-
-        if [ $next -le $max_page ]; then
-            nav="$nav <a href=\"$next_uri\">$next</a>"
-        fi
-
-        if [ $prev -ge $min_page ]; then
-            nav="<a href=\"$prev_uri\">$prev</a> $nav"
-        fi
+        web_tr_pagination "$table_content" "1"
 
         echo "      <p>"
         echo "          <table class=\"query_table\">"
         head -n 1 "$table_content"
-        test $data_size -ge 1 && head -n $((($page*$view_size)+1)) "$table_content" | tail -n "$print_size" || echo "<tr><td colspan=\"100\">Nenhum registro encontrado.</td></tr>"
+        eval "$print_page_cmd"
         echo "          </table>"
         echo "      </p>"
 
-        nav_right="<div id=\"nav_right\"><p>Página: $nav</p></div>"
-
     else
-
         echo "<p>Arquivo de histórico inexistente</p>"
-
     fi
 
     return 0
