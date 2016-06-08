@@ -78,7 +78,7 @@ a, p {
 
 /* Columns */
 
-.column_small, .column_default, .column_large {
+ .column, .column_small, .column_default, .column_large {
     display:inline-block;
     vertical-align: top;
 }

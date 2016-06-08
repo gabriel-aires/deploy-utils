@@ -55,14 +55,46 @@ function display_faq() {
         echo "</div>"
         echo "<p><b>Categoria:</b> $category_href</p>"
         echo "<p><b>Tags:</b> $tag_href</p>"
-        # Formulário de remoção
+        # Formulário de Edição
         if "$allow_edit"; then
+
+            echo "<fieldset>"
+            echo "  <legend> Editar... <legend>"
+
+            # Sobrescrever
+            echo "      <div class=\"column\">"
+            echo "          <form action=\"$start_page\" method=\"post\">"
+            echo "              <p>"
+            echo "                  <input type=\"file\" name=\"update_file\"></input>"
+            echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
+            echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_overwrite\">"
+            echo "              </p>"
+            echo "          </form>"
+            echo "      </div>"
+
+            # Modificar
+            echo "      <div class=\"column\">"
+            echo "          <form action=\"$start_page\" method=\"post\">"
+            echo "              <p>"
+            echo "                  <input type=\"text\" placeholder=\" Categoria (obrigatório)\" name=\"category\"></input>"
+            echo "                  <input type=\"text\" placeholder=\" Lista de tags\" name=\"tag\"></input>"
+            echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
+            echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_modify\">"
+            echo "              </p>"
+            echo "          </form>"
+            echo "      </div>"
+
+            # Remover
+            echo "      <div class=\"column\">"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
             echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
             echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_remove\">"
             echo "              </p>"
             echo "          </form>"
+            echo "      </div>"
+
+            echo "</fieldset>"
         fi
 
     else
@@ -96,6 +128,8 @@ proceed_search="Buscar"
 proceed_view="Exibir"
 proceed_new="Novo"
 proceed_remove="Remover"
+proceed_overwrite="Sobrescrever"
+proceed_modify="Modificar Atributos"
 allow_edit=false
 membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && allow_edit=true
 
