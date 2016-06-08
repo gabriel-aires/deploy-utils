@@ -96,26 +96,25 @@ mkdir $tmp_dir
 # Cabeçalho
 web_header
 
-test -d "$faq_dir_tree" || end 1
-
 proceed_search="Buscar"
 proceed_view="Exibir"
 proceed_new="Novo"
 proceed_remove="Remover"
-show_edit=false
+allow_edit=false
 membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && allow_edit=true
 
-regex_faq_category="([a-z0-9]+/?)+"
-regex_faq_tag="[a-zA-Z0-9\.-]+"
-regex_faq_taglist="$regex_faq_tag( $regex_faq_tag)*"
+# Sidebar
+echo "      <div class=\"column_small\" id=\"faq_sidebar\">"
+
+test -d "$faq_dir_tree" || end 1
+test -n "$regex_faq_category" || end 1
+test -n "$regex_faq_tag" || end 1
+test -n "$regex_faq_taglist" || end 1
 
 # listas de tópicos, categorias e tags
 find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
 find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
 cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
-
-# Sidebar
-echo "      <div class=\"column_small\" id=\"faq_sidebar\">"
 
 # Formulário de pesquisa
 echo "          <h3>Busca:</h3>"
@@ -161,6 +160,9 @@ fi
 
 echo "      </div>"
 
+# Tópicos
+echo "<div class=\"column_large\" id=\"faq_topics\">"
+
 parsed=false
 var_string=false
 
@@ -192,9 +194,6 @@ if $var_string; then
 fi
 
 test -n "$proceed" && parsed=true
-
-# Tópicos
-echo "<div class=\"column_large\" id=\"faq_topics\">"
 
 if ! $parsed; then
 
