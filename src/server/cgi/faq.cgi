@@ -258,9 +258,17 @@ else
 
         "$proceed_search")
 
-            where=''
+            if [ -n "$search" ]; then
+                i=0
+                cp -f $tmp_dir/questions.list $tmp_dir/questions.aux
+                while read l; do
+                    ((i++))
+                    file="$(echo "$l" | cut -f1,2 -d '%' --output-delimiter='')"
+                    grep -ilF "$search" "$file" &> /dev/null || sed -i ${i}d $tmp_dir/questions.list
+                done < $tmp_dir/questions.aux
+            fi
 
-            test -n "$search" && find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -ilF "$search" {} | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
+            where=''
             test -n "$category" && category_aux="$(echo "$category" | sed -r 's|([\.-])|\\\1|g;s|/$||')" && where="$where 1=~$faq_dir_tree/${category_aux}/.*"
             test -n "$tag" && tag_aux="$(echo "$tag" | sed -r 's|([\.-])|\\\1|g')" && where="$where 3=~(.+[[:blank:]])*${tag_aux}([[:blank:]].+)*"
             test -n "$where" && where="-w $where"
