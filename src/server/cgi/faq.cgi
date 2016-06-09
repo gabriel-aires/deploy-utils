@@ -54,7 +54,6 @@ function display_faq() {
         echo "</h3>"
         echo "<div class=\"cfg_color column faq_override\">"
         sed '1d;$d' "$content_file" | tr "\n" '<' | sed -r 's|<|<br>|g'
-        echo "<br><br>"
         echo "</div>"
         echo "<p><b>Categoria:</b> $category_href</p>"
         echo "<p><b>Tags:</b> $tag_href</p>"
