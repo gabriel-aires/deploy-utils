@@ -151,9 +151,21 @@ test -n "$regex_faq_tag" || end 1
 test -n "$regex_faq_taglist" || end 1
 
 # listas de tópicos, categorias e tags
-find $faq_dir_tree/ -mindepth 2 -type f | xargs -I{} grep -m 1 -H ".*" {} | tr -d ":" | sed -r "s|(.)$|\1\%|"> $tmp_dir/questions.list
-find $faq_dir_tree/ -mindepth 1 -type d | sed -r "s|^$faq_dir_tree/||" | sort > $tmp_dir/categories.list
-cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq > $tmp_dir/tags.list
+touch $tmp_dir/questions.list
+touch $tmp_dir/categories.list
+touch $tmp_dir/tags.list
+
+find $faq_dir_tree/ -mindepth 2 -type f | while read file; do
+    file_question="$(sed -n '1p' "$file")"
+    file_tags="$(sed -n '$p' "$file")"
+    file_category="$(dirname "$file" | sed -r "s|^$faq_dir_tree/||")"
+    file_name="$(basename "$file")"
+
+    echo "$faq_dir_tree/$file_category/%$file_name%$file_tags%$file_question%" >> $tmp_dir/questions.list
+    echo "$file_category" >> $tmp_dir/categories.list
+done
+
+cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq >> $tmp_dir/tags.list
 
 # Formulário de pesquisa
 echo "          <h3>Busca:</h3>"
