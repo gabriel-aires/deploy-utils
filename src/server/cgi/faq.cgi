@@ -25,7 +25,7 @@ function display_faq() {
 
     test -f $tmp_dir/results || return 1
 
-    local content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);[^;]*;$|\1\%\2\%\3\%|")"
+    local content_file="$(head -n 1 $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);[^;]*;[^;]*;$|\1\2|")"
     local category_txt="$(sed -r "s|^$faq_dir_tree/([^;]*);[^;]*;[^;]*;[^;]*;$|\1|" $tmp_dir/results)"
     local tag_txt="$(sed -r "s|^[^;]*;[^;]*;([^;]*);[^;]*;$|\1|" $tmp_dir/results)"
 
@@ -53,7 +53,7 @@ function display_faq() {
         head -n 1 "$content_file"
         echo "</h3>"
         echo "<div class=\"cfg_color column faq_override\">"
-        tail -n +2 "$content_file" | tr "\n" '<' | sed -r 's|<|<br>|g'
+        sed '1d;$d' "$content_file" | tr "\n" '<' | sed -r 's|<|<br>|g'
         echo "<br><br>"
         echo "</div>"
         echo "<p><b>Categoria:</b> $category_href</p>"
