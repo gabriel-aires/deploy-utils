@@ -284,7 +284,7 @@ if $var_string; then
     question=$(echo "$arg_string" | sed -rn "s/^.*&question=([^\&]+)&.*$/\1/p")
     question_file=$(echo "$arg_string" | sed -rn "s/^.*&question_file=([^\&]+)&.*$/\1/p")
     update_category=$(echo "$arg_string" | sed -rn "s/^.*&update_category=([^\&]+)&.*$/\1/p")
-    update_tag=$(echo "$arg_string" | sed -rn "s/^.*&update_category=([^\&]+)&.*$/\1/p")
+    update_tag=$(echo "$arg_string" | sed -rn "s/^.*&update_tag=([^\&]+)&.*$/\1/p")
     update_file=$(echo "$arg_string" | sed -rn "s/^.*&update_file=([^\&]+)&.*$/\1/p")
     search=$(echo "$arg_string" | sed -rn "s/^.*&search=([^\&]+)&.*$/\1/p")
     proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
@@ -415,7 +415,7 @@ else
             # Alterar tags
             if [ "$update_tag" != "$tag" ]; then
                 test -n "$update_tag" && valid "update_tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$update_tag'</b></p>"
-                sed -i -r "\$s|$tag|$update_tag|" "$question_file"
+                sed -i -r "\$s|^$tag$|$update_tag|" "$question_file"
                 echo "<p><b>Tags atualizadas para o tópico '$question_txt'.</b></p>"
             fi
 
