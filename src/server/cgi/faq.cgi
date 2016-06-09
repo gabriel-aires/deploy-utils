@@ -259,13 +259,14 @@ else
         "$proceed_search")
 
             if [ -n "$search" ]; then
-                i=0
-                cp -f $tmp_dir/questions.list $tmp_dir/questions.aux
-                while read l; do
-                    ((i++))
+                touch $tmp_dir/questions.aux
+
+                cat $tmp_dir/questions.list | while read l; do
                     file="$(echo "$l" | cut -f1,2 -d '%' --output-delimiter='')"
-                    grep -ilF "$search" "$file" &> /dev/null || sed -i ${i}d $tmp_dir/questions.list
-                done < $tmp_dir/questions.aux
+                    grep -ilF "$search" "$file" &> /dev/null && echo "$l" >> $tmp_dir/questions.aux
+                done
+
+                mv -f $tmp_dir/questions.aux $tmp_dir/questions.list
             fi
 
             where=''
