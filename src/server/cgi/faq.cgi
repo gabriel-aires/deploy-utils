@@ -21,6 +21,51 @@ function end() {
     exit $1
 }
 
+function chk_conflict() {
+
+    local test_filename="$1"
+    local test_dir="$2"
+
+    test -d "$faq_dir_tree" || end 1
+    test -f "$tmp_dir/questions.list" || end 1
+    test -n "$test_filename" || end 1
+    test -n "$test_dir" || end 1
+
+    query_file.sh -d "%" -r ";" \
+        -s 1 2 3 4 \
+        -f $tmp_dir/questions.list \
+        -w "1==$test_dir/" "2==$test_filename" \
+        -o 1 4 asc \
+        > $tmp_dir/results
+
+    if [ "$(cat $tmp_dir/results | wc -l)" -ne 0 ]; then
+        echo "<p><b>Há um tópico conflitante. Favor removê-lo antes de continuar:</b></p>"
+        echo "<pre>"
+        cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|arquivo:\t\2|"
+        cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tópico: \t\4|"
+        cat $tmp_dir/results | sed -r "s|^$faq_dir_tree/([^;]*);([^;]*);([^;]*);([^;]*);$|categoria:\t\1|"
+        cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tags:   \t\3|"
+        echo "</pre>"
+    fi
+}
+
+function clean_category() {
+
+    local clean_dir="$1"
+
+    test -d "$faq_dir_tree" || end 1
+    test -d "$clean_dir" || end 1
+
+    rmdir "$clean_dir" &> /dev/null
+    clean_dir="$(dirname "$clean_dir")"
+
+    while [ "$clean_dir" != "$faq_dir_tree" ]; do
+        rmdir "$clean_dir" &> /dev/null
+        clean_dir="$(dirname "$clean_dir")"
+    done
+
+}
+
 function display_faq() {
 
     test -f $tmp_dir/results || return 1
@@ -84,7 +129,7 @@ function display_faq() {
             echo "                  <input type=\"hidden\" name=\"category\" value=\"$category_txt\">"
             echo "                  <b>Tags:</b>"
             echo "                  <input type=\"text\" name=\"update_tag\" value=\"$tag_txt\"></input>"
-            echo "                  <input type=\"hidden\" name=\"tag\" value=\"$category_txt\">"
+            echo "                  <input type=\"hidden\" name=\"tag\" value=\"$tag_txt\">"
             echo "                  <input type=\"hidden\" name=\"question_file\" value=\"$content_file\">"
             echo "                  <input type=\"submit\" name=\"proceed\" value=\"$proceed_modify\">"
             echo "              </p>"
@@ -300,6 +345,7 @@ else
 
         "$proceed_new")
 
+            $allow_edit || end 1
             test -f "$question_file" && question_filename="$(basename $question_file)" || end 1
             test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$tag'</b></p>"
 
@@ -309,48 +355,81 @@ else
             question_txt="$(head -n 1 "$question_file")"
             question_dir="$(echo "$faq_dir_tree/$category" | sed -r "s|/+|/|g;s|/$||")"
 
-            query_file.sh -d "%" -r ";" \
-                -s 1 2 3 4 \
-                -f $tmp_dir/questions.list \
-                -w "1==$question_dir/" "2==${question_filename}" \
-                -o 1 4 asc \
-                > $tmp_dir/results
+            chk_conflict "$question_filename" "$question_dir"
 
-            if [ "$(cat $tmp_dir/results | wc -l)" -eq 0 ]; then
-                mkdir -p "$question_dir"
-                echo "$tag" >> "$question_file"
-                cp "$question_file" "$question_dir/${question_filename}"
-                echo "<p><b>Tópico '$question_txt' adicionado com sucesso.</b></p>"
-
-            else
-                echo "<p><b>Há um tópico conflitante. Favor removê-lo antes de continuar:</b></p>"
-                echo "<pre>"
-                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|arquivo:\t\2|"
-                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tópico: \t\4|"
-                cat $tmp_dir/results | sed -r "s|^$faq_dir_tree/([^;]*);([^;]*);([^;]*);([^;]*);$|categoria:\t\1|"
-                cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tags:   \t\3|"
-                echo "</pre>"
-
-            fi
+            mkdir -p "$question_dir"
+            echo "$tag" >> "$question_file"
+            cp "$question_file" "$question_dir/${question_filename}"
+            echo "<p><b>Tópico '$question_txt' adicionado com sucesso.</b></p>"
 
         ;;
 
         "$proceed_remove")
 
+            $allow_edit || end 1
             test -f "$question_file" || end 1
 
             question_txt="$(head -n 1 "$question_file")"
             question_dir="$(dirname "$question_file")"
-            rm -f "$question_file"
-            rmdir "$question_dir" &> /dev/null
-            question_dir="$(dirname "$question_dir")"
 
-            while [ "$question_dir" != "$faq_dir_tree" ]; do
-                rmdir "$question_dir" &> /dev/null
-                question_dir="$(dirname "$question_dir")"
-            done
+            rm -f "$question_file"
+            clean_category "$question_dir"
 
             echo "<p><b>Tópico '$question_txt' removido.</b></p>"
+
+        ;;
+
+        "$proceed_overwrite")
+
+            $allow_edit || end 1
+            test -f "$question_file" || end 1
+            test -f "$update_file" || end 1
+
+            dos2unix "$update_file" &> /dev/null
+            update_txt="$(head -n 1 "$update_file")"
+            question_txt="$(head -n 1 "$question_file")"
+            question_tag="$(tail -n 1 "$question_file")"
+
+            if [ "$update_txt" != "$question_txt" ]; then
+                echo "<p><b>Erro. O tópico '$update_txt' não corresponde ao original: '$question_txt'.</b></p>"
+                end 1
+            else
+                cp -f "$update_file" "$question_file"
+                echo "$question_tag" >> "$question_file"
+                echo "<p><b>Tópico '$question_txt' atualizado.</b></p>"
+            fi
+
+        ;;
+
+        "$proceed_modify")
+
+            $allow_edit || end 1
+            test -f "$question_file" || end 1
+            test -n "$category" || end 1
+            test -n "$update_category" || end 1
+            valid "update_category" "regex_faq_category" "<p><b<Erro. Categoria inválida: '$category'</b></p>"
+            question_txt="$(head -n 1 "$question_file")"
+            category="$(echo "$category" | sed -r "s|/+|/|g;s|/$||")"
+            update_category="$(echo "$update_category" | sed -r "s|/+|/|g;s|/$||")"
+
+            # Alterar tags
+            if [ "$update_tag" != "$tag" ]; then
+                test -n "$update_tag" && valid "update_tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$update_tag'</b></p>"
+                sed -i -r "\$s|$tag|$update_tag/" "$question_file"
+                echo "<p><b>Tags atualizadas para o tópico '$question_txt'.</b></p>"
+            fi
+
+            # Alterar Categoria
+            if [ "$update_category" != "$category" ]; then
+                question_dir="$(dirname "$question_file")"
+                question_filename="$(basename "$question_file")"
+                update_dir="$faq_dir_tree/$update_category"
+                chk_conflict "$question_filename" "$update_dir"
+                mkdir -p "$update_dir"
+                mv "$question_file" "$update_dir/${question_filename}"
+                clean_category "$question_dir"
+                echo "<p><b>Categoria atualizada para o tópico '$question_txt'.</b></p>"
+            fi
 
         ;;
 
