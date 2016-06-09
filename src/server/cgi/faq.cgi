@@ -297,6 +297,7 @@ else
 
             valid "category" "regex_faq_category" "<p><b<Erro. Categoria inválida: '$category'</b></p>"
 
+            dos2unix "$question_file" &> /dev/null
             question_txt="$(head -n 1 "$question_file")"
             question_dir="$(echo "$faq_dir_tree/$category" | sed -r "s|/+|/|g;s|/$||")"
 
@@ -309,7 +310,8 @@ else
 
             if [ "$(cat $tmp_dir/results | wc -l)" -eq 0 ]; then
                 mkdir -p "$question_dir"
-                cp "$question_file" "$question_dir/%${question_filename}%$tag%"
+                echo "$tag" >> "$question_file"
+                cp "$question_file" "$question_dir/${question_filename}"
                 echo "<p><b>Tópico '$question_txt' adicionado com sucesso.</b></p>"
 
             else
