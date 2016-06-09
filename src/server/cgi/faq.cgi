@@ -46,6 +46,7 @@ function chk_conflict() {
         cat $tmp_dir/results | sed -r "s|^$faq_dir_tree/([^;]*);([^;]*);([^;]*);([^;]*);$|categoria:\t\1|"
         cat $tmp_dir/results | sed -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|tags:   \t\3|"
         echo "</pre>"
+        end 1
     fi
 }
 
