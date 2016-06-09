@@ -411,12 +411,14 @@ else
             question_txt="$(head -n 1 "$question_file")"
             category="$(echo "$category" | sed -r "s|/+|/|g;s|/$||")"
             update_category="$(echo "$update_category" | sed -r "s|/+|/|g;s|/$||")"
+            question_updated=false
 
             # Alterar tags
             if [ "$update_tag" != "$tag" ]; then
                 test -n "$update_tag" && valid "update_tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$update_tag'</b></p>"
                 sed -i -r "\$s|^$tag$|$update_tag|" "$question_file"
                 echo "<p><b>Tags atualizadas para o tópico '$question_txt'.</b></p>"
+                question_updated=true
             fi
 
             # Alterar Categoria
@@ -429,7 +431,10 @@ else
                 mv "$question_file" "$update_dir/${question_filename}"
                 clean_category "$question_dir"
                 echo "<p><b>Categoria atualizada para o tópico '$question_txt'.</b></p>"
+                question_updated=true
             fi
+
+            $question_updated || echo "<p><b>Nenhuma alteração indicada para o tópico '$question_txt'.</b></p>"
 
         ;;
 
