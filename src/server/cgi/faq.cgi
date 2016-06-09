@@ -415,7 +415,7 @@ else
             # Alterar tags
             if [ "$update_tag" != "$tag" ]; then
                 test -n "$update_tag" && valid "update_tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$update_tag'</b></p>"
-                sed -i -r "\$s|$tag|$update_tag/" "$question_file"
+                sed -i -r "\$s|$tag|$update_tag|" "$question_file"
                 echo "<p><b>Tags atualizadas para o tópico '$question_txt'.</b></p>"
             fi
 
