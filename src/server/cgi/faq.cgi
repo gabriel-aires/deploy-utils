@@ -160,12 +160,11 @@ find $faq_dir_tree/ -mindepth 2 -type f | while read file; do
     file_tags="$(sed -n '$p' "$file")"
     file_category="$(dirname "$file" | sed -r "s|^$faq_dir_tree/||")"
     file_name="$(basename "$file")"
-
     echo "$faq_dir_tree/$file_category/%$file_name%$file_tags%$file_question%" >> $tmp_dir/questions.list
-    echo "$file_category" >> $tmp_dir/categories.list
 done
 
 cut -d '%' -f 3 $tmp_dir/questions.list | tr " " "\n" | sort | uniq >> $tmp_dir/tags.list
+cut -d '%' -f 1 $tmp_dir/questions.list | sed -r "s|^$faq_dir_tree/||;s|/$||" | sort | uniq >> $tmp_dir/categories.list
 
 # Formulário de pesquisa
 echo "          <h3>Busca:</h3>"
