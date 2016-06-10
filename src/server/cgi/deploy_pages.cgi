@@ -205,7 +205,7 @@ else
         valid "rev_name" "regex_rev" "Erro. Nome de revisão inválido."
         valid "env_name" "regex_ambiente" "Erro. Nome de ambiente inválido."
 
-        lock "pages_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>"
+        lock "pages_${app_name}_${env_name}" "<p><b>Há outro deploy da aplicação '$app_name' no ambiente '$env_name' em execução. Tente novamente.</b></p>"
 
         if [ "$proceed" == "$proceed_view" ]; then
 
