@@ -78,9 +78,17 @@ a, p {
 
 /* Columns */
 
-.column_small, .column_default, .column_large {
-    display:inline-block;
+ .column, .column_small, .column_default, .column_large {
+    display: inline-block;
     vertical-align: top;
+}
+
+.column.faq_override {
+    vertical-align: bottom;
+    margin: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    box-shadow: 0.1rem 0.1rem 0.3rem #888888;
 }
 
 .column_small {
