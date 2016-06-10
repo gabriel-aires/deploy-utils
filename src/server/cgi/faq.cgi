@@ -408,7 +408,7 @@ else
             test -f "$question_file" || end 1
             test -n "$category" || end 1
             test -n "$update_category" || end 1
-            valid "update_category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>"
+            valid "update_category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$update_category'</b></p>"
             question_txt="$(head -n 1 "$question_file")"
             category="$(echo "$category" | sed -r "s|/+|/|g;s|/$||")"
             update_category="$(echo "$update_category" | sed -r "s|/+|/|g;s|/$||")"
