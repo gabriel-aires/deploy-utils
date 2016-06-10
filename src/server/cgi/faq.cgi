@@ -348,9 +348,9 @@ else
 
             $allow_edit || end 1
             test -f "$question_file" && question_filename="$(basename $question_file)" || end 1
-            test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$tag'</b></p>"
+            test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b>Erro. Lista de tags inválida: '$tag'</b></p>"
 
-            valid "category" "regex_faq_category" "<p><b<Erro. Categoria inválida: '$category'</b></p>"
+            valid "category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>"
 
             dos2unix "$question_file" &> /dev/null
             question_txt="$(head -n 1 "$question_file")"
@@ -408,7 +408,7 @@ else
             test -f "$question_file" || end 1
             test -n "$category" || end 1
             test -n "$update_category" || end 1
-            valid "update_category" "regex_faq_category" "<p><b<Erro. Categoria inválida: '$category'</b></p>"
+            valid "update_category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>"
             question_txt="$(head -n 1 "$question_file")"
             category="$(echo "$category" | sed -r "s|/+|/|g;s|/$||")"
             update_category="$(echo "$update_category" | sed -r "s|/+|/|g;s|/$||")"
@@ -416,7 +416,7 @@ else
 
             # Alterar tags
             if [ "$update_tag" != "$tag" ]; then
-                test -n "$update_tag" && valid "update_tag" "regex_faq_taglist" "<p><b<Erro. Lista de tags inválida: '$update_tag'</b></p>"
+                test -n "$update_tag" && valid "update_tag" "regex_faq_taglist" "<p><b>Erro. Lista de tags inválida: '$update_tag'</b></p>"
                 sed -i -r "\$s|^$tag$|$update_tag|" "$question_file"
                 echo "<p><b>Tags atualizadas para o tópico '$question_txt'.</b></p>"
                 question_updated=true
