@@ -349,6 +349,7 @@ else
             $allow_edit || end 1
             test -f "$question_file" || end 1
 
+            dos2unix "$question_file" &> /dev/null
             question_filename="$(basename "$question_file")"
             question_filetype="$(file -bi "$question_file")"
             question_txt="$(head -n 1 "$question_file")"
@@ -360,7 +361,6 @@ else
             chk_conflict "$question_filename" "$question_dir"
 
             mkdir -p "$question_dir"
-            dos2unix "$question_file" &> /dev/null
             echo "$tag" >> "$question_file"
             cp "$question_file" "$question_dir/${question_filename}"
             echo "<p><b>Tópico '$question_txt' adicionado com sucesso.</b></p>"
@@ -388,6 +388,7 @@ else
             test -f "$question_file" || end 1
             test -f "$update_file" || end 1
 
+            dos2unix "$update_file" &> /dev/null
             update_filetype="$(file -bi "$update_file")"
             update_txt="$(head -n 1 "$update_file")"
             question_txt="$(head -n 1 "$question_file")"
@@ -399,7 +400,6 @@ else
                 echo "<p><b>Erro. O tópico '$update_txt' não corresponde ao original: '$question_txt'.</b></p>"
                 end 1
             else
-                dos2unix "$update_file" &> /dev/null
                 cp -f "$update_file" "$question_file"
                 echo "$question_tag" >> "$question_file"
                 echo "<p><b>Tópico '$question_txt' atualizado.</b></p>"
