@@ -347,18 +347,20 @@ else
         "$proceed_new")
 
             $allow_edit || end 1
-            test -f "$question_file" && question_filename="$(basename $question_file)" || end 1
-            test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b>Erro. Lista de tags inválida: '$tag'</b></p>"
+            test -f "$question_file" || end 1
 
-            valid "category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>"
-
-            dos2unix "$question_file" &> /dev/null
+            question_filename="$(basename "$question_file")"
+            question_filetype="$(file -bi "$question_file")"
             question_txt="$(head -n 1 "$question_file")"
             question_dir="$(echo "$faq_dir_tree/$category" | sed -r "s|/+|/|g;s|/$||")"
 
+            test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b>Erro. Lista de tags inválida: '$tag'</b></p>"
+            valid "category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>"
+            valid "question_filetype" "regex_faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$question_filetype'</b></p>"
             chk_conflict "$question_filename" "$question_dir"
 
             mkdir -p "$question_dir"
+            dos2unix "$question_file" &> /dev/null
             echo "$tag" >> "$question_file"
             cp "$question_file" "$question_dir/${question_filename}"
             echo "<p><b>Tópico '$question_txt' adicionado com sucesso.</b></p>"
@@ -386,15 +388,18 @@ else
             test -f "$question_file" || end 1
             test -f "$update_file" || end 1
 
-            dos2unix "$update_file" &> /dev/null
+            update_filetype="$(file -bi "$update_file")"
             update_txt="$(head -n 1 "$update_file")"
             question_txt="$(head -n 1 "$question_file")"
             question_tag="$(tail -n 1 "$question_file")"
+
+            valid "update_filetype" "regex_faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$update_filetype'</b></p>"
 
             if [ "$update_txt" != "$question_txt" ]; then
                 echo "<p><b>Erro. O tópico '$update_txt' não corresponde ao original: '$question_txt'.</b></p>"
                 end 1
             else
+                dos2unix "$update_file" &> /dev/null
                 cp -f "$update_file" "$question_file"
                 echo "$question_tag" >> "$question_file"
                 echo "<p><b>Tópico '$question_txt' atualizado.</b></p>"

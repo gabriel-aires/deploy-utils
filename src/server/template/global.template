@@ -96,6 +96,7 @@ regex_permission=
 regex_faq_category=
 regex_faq_tag=
 regex_faq_taglist=
+regex_faq_filetype=
 regex_agent_interval=
 # Expressões de validação de diretórios utilizados no processo de deploy
 regex_tmp_dir=
