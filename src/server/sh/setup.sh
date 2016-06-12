@@ -139,16 +139,16 @@ chmod 660 $web_permissions_file || end 1
 chmod 660 $web_users_file.bak || end 1
 chmod 660 $web_groups_file.bak || end 1
 chmod 660 $web_permissions_file.bak || end 1
-chmod 775 -R $history_dir || end 1
-chmod 775 -R $app_conf_dir || end 1
-chmod 775 -R $agent_conf_dir || end 1
-chmod 775 -R $work_dir || end 1
-chmod 775 -R $upload_dir || end 1
-chmod 775 -R $faq_dir_tree || end 1
-chmod 775 -R $log_dir || end 1
-chmod 775 -R $lock_dir || end 1
-chmod 755 -R $src_dir/server/cgi/* || end 1
-chmod 644 -R $src_dir/server/css/* || end 1
+chmod 775 $history_dir || end 1
+chmod 775 $app_conf_dir || end 1
+chmod 775 $agent_conf_dir || end 1
+chmod 775 $work_dir || end 1
+chmod 775 $upload_dir || end 1
+chmod 775 $faq_dir_tree || end 1
+chmod 775 $log_dir || end 1
+chmod 775 $lock_dir || end 1
+chmod 755 $src_dir/server/cgi/* || end 1
+chmod 644 $src_dir/server/css/* || end 1
 
 chgrp $apache_group $install_dir/conf || end 1
 chgrp $apache_group $install_dir/conf/global.conf || end 1
