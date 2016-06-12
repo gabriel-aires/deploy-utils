@@ -6,6 +6,7 @@ work_dir=
 bak_dir=
 history_dir=
 app_history_dir_tree=
+faq_dir_tree=
 repo_dir=
 upload_dir=
 lock_dir=
@@ -74,6 +75,7 @@ cgi_deploy_logs_title=
 cgi_users_title=
 cgi_groups_title=
 cgi_signup_title=
+cgi_faq_title=
 cgi_table_size=
 # Estrutura da tabela de permissões:
 col_subject_type=
@@ -91,6 +93,10 @@ regex_resource_type=
 regex_resource_name=
 regex_resource_list=
 regex_permission=
+regex_faq_category=
+regex_faq_tag=
+regex_faq_taglist=
+regex_faq_filetype=
 regex_agent_interval=
 # Expressões de validação de diretórios utilizados no processo de deploy
 regex_tmp_dir=
