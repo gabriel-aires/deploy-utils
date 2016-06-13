@@ -5,6 +5,7 @@
 
     ServerName @apache_servername
     Alias @apache_log_alias @upload_dir
+    Alias @apache_doc_alias @doc_dir
     Alias @apache_css_alias @css_dir
     Alias @apache_history_alias @app_history_dir_tree
     Alias @web_context_path @cgi_dir
@@ -23,6 +24,11 @@
     </IfModule>
 
     <Directory @upload_dir>
+        ForceType application/octet-stream
+        Options -Indexes
+    </Directory>
+
+    <Directory @doc_dir>
         ForceType application/octet-stream
         Options -Indexes
     </Directory>

@@ -53,6 +53,7 @@ apache_vhost_port=
 apache_servername=
 apache_css_alias=
 apache_log_alias=
+apache_doc_alias=
 apache_history_alias=
 web_users_file=
 web_groups_file=
