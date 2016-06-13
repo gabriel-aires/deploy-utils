@@ -3,6 +3,7 @@
 
 install_dir="$(dirname $(dirname $(readlink -f $0)))"
 src_dir="$(dirname $(dirname $(dirname $(readlink -f $0))))"
+doc_dir="$(dirname $(dirname $(dirname $(dirname $(readlink -f $0)))))/docs"
 
 # Define/Carrega variáveis, funções e scripts comuns.
 
