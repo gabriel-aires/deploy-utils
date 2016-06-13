@@ -19,6 +19,7 @@
 #       - $remote_history_dir:  	caminho para o diretório do histórico (ex: "/mnt/...")
 #       - $remote_app_history_dir:  caminho para o diretório de histórico da aplicação em questão (ex: "/mnt/.../$app")
 #       - $history_csv_file:    	nome do arquivo csv que contém o histórico (ex: "deploy_log.csv")
+#       - $web_context_path:    	contexto de acesso à interface web do sistema no servidor deploy-utils (ex: "/deploy_utils")
 #
 #   b) Somente-leitura:
 #
