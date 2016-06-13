@@ -237,7 +237,7 @@ echo "          </form>"
 # Download de manuais
 echo "          <br>"
 echo "          <h3>Manuais:</h3>"
-find $doc_dir/ -type f -iname '*.pdf' | sed -r "s|^$doc_dir/(.*)$|<p><a href=\"$apache_doc_alias/\1\">\1</a></p>|"
+find $doc_dir/ -type f -iname '*.pdf' | sort | sed -r "s|^$doc_dir/(.*)$|<p><a href=\"$apache_doc_alias/\1\">\1</a></p>|"
 
 # Formulário de upload
 if "$allow_edit"; then
