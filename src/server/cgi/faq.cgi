@@ -366,7 +366,7 @@ else
             chk_conflict "$question_filename" "$question_dir"
 
             mkdir -p "$question_dir"
-            echo "$tag" >> "$question_file"
+            echo -e "\n$tag" >> "$question_file"
             cp "$question_file" "$question_dir/${question_filename}"
             echo "<p><b>Tópico '$question_txt' adicionado com sucesso.</b></p>"
 
@@ -406,7 +406,7 @@ else
                 end 1
             else
                 cp -f "$update_file" "$question_file"
-                echo "$question_tag" >> "$question_file"
+                echo -e "\n$question_tag" >> "$question_file"
                 echo "<p><b>Tópico '$question_txt' atualizado.</b></p>"
             fi
 
