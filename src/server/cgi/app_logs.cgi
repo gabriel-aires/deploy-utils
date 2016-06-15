@@ -121,7 +121,7 @@ else
 
             "$proceed_view")
                 find $upload_dir/ -mindepth $((qtd_dir+2)) -maxdepth $((qtd_dir+2)) -type d -regextype posix-extended -iregex "^$upload_dir/$env/.*/$app/log$" > $tmp_dir/log_path
-                test "$(cat $tmp_dir/log_path | wc -l)" -eq 0 && echo "<p><b>Nenhum caminho de de acesso a logs encontrado para a aplicação '$app' no ambiente '$env'.</b></p>" && end 0
+                test "$(cat $tmp_dir/log_path | wc -l)" -eq 0 && echo "<p><b>Nenhum caminho de acesso a logs encontrado para a aplicação '$app' no ambiente '$env'.</b></p>" && end 0
                 echo "          <p>Sistema: $app</p>"
                 echo "          <p>Ambiente: $env</p>"
                 submit_log || end 1
