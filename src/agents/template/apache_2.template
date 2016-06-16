@@ -4,7 +4,7 @@ servidor_aplicacao=
 hostname=
 # Parâmetros do agente.
 agent_name=
-run_deploy_agent=false
+run_deploy_agent=
 run_log_agent=
 deploy_interval=
 log_interval=
