@@ -14,7 +14,7 @@ function copy_log () {
     cd $serverroot &> /dev/null
 
     grep -Ex "$regex_include_directive" "$apache_configuration" | sed -r "s|^[[:blank:]]*||" | cut -d ' ' -f2 | sed -r 's|\"||g' | sed -r "s|\'||g" > $tmp_dir/apache_includes.list
-    touch $tmp_dir/apache_logs.list
+    grep -Ex "$regex_log_directive" "$apache_configuration" | sed -r "s|^[[:blank:]]*||" | cut -d ' ' -f2 | sed -r 's|\"||g' | sed -r "s|\'||g" >> $tmp_dir/apache_logs.list
 
     cat $tmp_dir/apache_includes.list | while read apache_includes; do
         grep -Exh "$regex_log_directive" $apache_includes | sed -r "s|^[[:blank:]]*||" | cut -d ' ' -f2 | sed -r 's|\"||g' | sed -r "s|\'||g" >> $tmp_dir/apache_logs.list
@@ -23,7 +23,7 @@ function copy_log () {
     sort $tmp_dir/apache_logs.list | uniq | while read logfile; do
         test -f "$logfile" || continue
         zipfile="${shared_log_dir}/$(basename $logfile).zip"
-        log "INFO" "Criando o arquivo $zipfile a partir de $logfile..."
+        log "INFO" "Criando o arquivo $zipfile..."
         zip -ql1 "$zipfile" "$logfile"
     done
 
