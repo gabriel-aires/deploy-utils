@@ -22,11 +22,22 @@ function copy_log () {
         grep -Exh "$regex_log_directive" $apache_includes | sed -r "s|^[[:blank:]]*||" | cut -d ' ' -f2 | sed -r 's|\"||g' | sed -r "s|\'||g" >> $tmp_dir/apache_logs.list
     done
 
-    sort $tmp_dir/apache_logs.list | uniq | while read logfile; do
-        test -f "$logfile" || continue
-        zipfile="${shared_log_dir}/$(basename $logfile).zip"
+    log "INFO" "Separando logs da aplicação $app..."
+
+    sort $tmp_dir/apache_logs.list | uniq | while read logpath; do
+
+        logname="$(basename $logpath)"
+        zipfile="${shared_log_dir}/$logname.zip"
+        zippipe="$tmp_dir/$logname"
+        mkfifo "$zippipe"
         log "INFO" "Criando o arquivo $zipfile..."
-        cd "$(dirname $logfile)" ; zip -ql1 "$zipfile" "$(basename $logfile)" ; cd - &> /dev/null
+
+        ls $logpath* | while read logfile; do
+            test ! -f "$logfile" && log "ERRO" "'$logfile' não é um arquivo. Continuando..." && continue
+            test "$(file -bi "$logfile" | cut -d / -f1)" != 'text' && log "INFO" "'$logfile' não é um arquivo de texto. Continuando..." && continue
+            grep -F "$app" "$logfile" > "$zippipe" & zip -ql1 "$zipfile" "$zippipe"
+        done
+
     done
 
     log "INFO" "Fim da transferência de logs."
