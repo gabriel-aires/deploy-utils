@@ -35,6 +35,7 @@ function copy_log () {
         ls $logpath* | while read logfile; do
             test ! -f "$logfile" && log "ERRO" "'$logfile' não é um arquivo. Continuando..." && continue
             test "$(file -bi "$logfile" | cut -d / -f1)" != 'text' && log "INFO" "'$logfile' não é um arquivo de texto. Continuando..." && continue
+            log "INFO" "Adicionando o arquivo $logfile..."
             grep -F "$app" "$logfile" > "$zippipe" & zip --fifo -q -l -1 "$zipfile" "$zippipe"
         done
 
