@@ -1,0 +1,14 @@
+# Local a ser monitorado no repositório de pacotes. Cada variável corresponde a um nível de diretório.
+ambiente=
+servidor_aplicacao=
+hostname=
+# Parâmetros do agente.
+agent_name=
+run_deploy_agent=
+run_log_agent=
+deploy_interval=
+log_interval=
+deploy_filetypes=
+log_filetypes=
+# Parâmetros do servidor de aplicação
+apache_configuration=
