@@ -246,6 +246,7 @@ function deploy_agent () {
                     deploy_log_file=$deploy_log_dir/deploy_${host}.log
                     qtd_log_inicio=$(cat $log | wc -l)
                     find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
+                    find $tmp_dir/ -type p | xargs -d '\n' -r rm -f
                     $agent_script 'deploy'
                     qtd_log_fim=$(cat $log | wc -l)
                     qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
@@ -284,6 +285,7 @@ function log_agent () {
                 valid 'app' "'$app': Nome de aplicação inválido." "continue" || continue
 
                 find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
+                find $tmp_dir/ -type p | xargs -d '\n' -r rm -f
                 $agent_script 'log'
                 echo -e "Log de execução do agente:\n\n" > "$shared_log_dir/agent_$host.log"
                 test -f "$log_dir/service.log" && cat "$log_dir/service.log" >> "$shared_log_dir/agent_$host.log"

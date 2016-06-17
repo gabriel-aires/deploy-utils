@@ -4,6 +4,7 @@ source $install_dir/sh/include.sh || exit 1
 
 lock_history=false
 interactive=false
+purge_time=0
 execution_mode="server"
 verbosity="quiet"
 pid="$$"
@@ -27,6 +28,10 @@ function tasks () {
     test "$auto_running" -eq 0 && $install_dir/sh/deploy_auto.sh &
 
     ### Expurgo de logs
+
+    current_time="$(date +%s)"
+    test "$((current_time-purge_time))" -lt "20" && return 0
+    purge_time="$current_time"
 
     while [ -f "$lock_dir/$history_lock_file" ]; do
         sleep 0.001
