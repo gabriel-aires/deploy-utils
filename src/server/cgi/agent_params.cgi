@@ -35,7 +35,7 @@ function end() {
     exit $1
 }
 
-trap "end 1" SIGQUIT SIGINT SIGHUP
+trap "end 1" SIGQUIT SIGINT SIGHUP SIGTERM
 mkdir $tmp_dir
 
 ### Cabeçalho
