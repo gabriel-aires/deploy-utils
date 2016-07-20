@@ -110,6 +110,7 @@ elif [ -n "$POST_STRING" ]; then
             test -f $app_conf_dir/$app_name.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$app_name.conf"
             while read l; do
                 key="$(echo "$l" | cut -f1 -d '=')"
+                echo "$arg_string" | grep -Ex "^.*&$key=([^\&]+)&.*$" > /dev/null || continue
                 new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]+)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
                 editconf "$key" "$new_value" "$app_conf_dir/$app_name.conf"
             done < "$app_conf_dir/$app_name.conf"
