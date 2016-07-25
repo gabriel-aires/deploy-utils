@@ -434,12 +434,13 @@ valid "raiz" "\nInforme um caminho válido para a raiz da aplicação."
 valid "hosts_$ambiente" "\nInforme uma lista válida de hosts para deploy, separando-os por espaço ou vírgula."
 valid "modo_$ambiente" "\nInforme um modo válido para deploy no ambiente $ambiente [p/d]."
 valid "auto_$ambiente" "\nInforme um valor válido para a flag de deploy automático no ambiente $ambiente [0/1]."
-valid "share" "\nInforme um compartilhamento válido para deploy, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
+valid "share_$ambiente" "regex_share" "\nInforme um compartilhamento válido para deploy no ambiente $ambiente, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
 valid "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]."
 
 hosts_deploy=$(eval "echo \$hosts_${ambiente}")
 modo_deploy=$(eval "echo \$modo_${ambiente}")
 auto_deploy=$(eval "echo \$auto_${ambiente}")
+share_deploy=$(eval "echo \$share_${ambiente}")
 
 if $interactive; then
     editconf "repo" "$repo" "$app_conf_dir/${app}.conf"
@@ -447,7 +448,7 @@ if $interactive; then
     editconf "hosts_$ambiente" "$hosts_deploy" "$app_conf_dir/${app}.conf"
     editconf "modo_$ambiente" "$modo_deploy" "$app_conf_dir/${app}.conf"
     editconf "auto_$ambiente" "$auto_deploy" "$app_conf_dir/${app}.conf"
-    editconf "share" "$share" "$app_conf_dir/${app}.conf"
+    editconf "share_$ambiente" "$share_deploy" "$app_conf_dir/${app}.conf"
     editconf "mount_type" "$mount_type" "$app_conf_dir/${app}.conf"
 fi
 
@@ -468,8 +469,8 @@ mklist "$hosts_deploy" $tmp_dir/hosts_$ambiente
 
 while read host; do
     case $mount_type in
-        'cifs') dir_destino=$(echo "//$host/$share" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||") ;;
-        'nfs') dir_destino=$(echo "$host:$share" | sed -r "s|(:)([^/])|\1/\2|" | sed -r "s|/$||") ;;
+        'cifs') dir_destino=$(echo "//$host/$share_deploy" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||") ;;
+        'nfs') dir_destino=$(echo "$host:$share_deploy" | sed -r "s|(:)([^/])|\1/\2|" | sed -r "s|/$||") ;;
     esac
     nomedestino=$(echo $dir_destino | sed -r "s|[/:]|_|g")
     lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
