@@ -284,7 +284,7 @@ function write_history () {
     local app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
     local rev_log="$(echo "$rev" | sed -r "s|$delim|_|g")"
     local ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
-    local host_log="$(echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
+    local host_log="$(echo "$host" | grep -Eiv '[a-z]' || echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
     local obs_log="<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=$ambiente&deploy_id=$deploy_id\">$1</a>"
     local flag_log="$2"
 
