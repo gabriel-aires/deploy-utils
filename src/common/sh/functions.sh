@@ -233,11 +233,12 @@ function valid () {
             regra_inversa="echo \$${nome_regra_inversa}"
         fi
 
+        set -f
         regra="$(eval $regra)"
         regra_inversa="$(eval ${regra_inversa})"
-
         valor="echo \$${nome_var}"
         valor="$(eval $valor)"
+        set +f
 
         if [ -z "$regra" ]; then
             case "$verbosity" in
