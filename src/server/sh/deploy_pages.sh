@@ -304,7 +304,7 @@ function end () {
 
                 echo "rollback" >> $deploy_log_dir/progresso_$host.txt
 
-                rsync_cmd="rsync $rsync_opts $bak/ $destino/"
+                rsync_cmd="rsync --owner --group $rsync_opts $bak/ $destino/"
                 eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
                 echo "fim_rollback" >> $deploy_log_dir/progresso_$host.txt
@@ -341,7 +341,7 @@ function end () {
 
                             echo "rollback" >> $deploy_log_dir/progresso_$host.txt
 
-                            rsync_cmd="rsync $rsync_opts $bak/ $destino/"
+                            rsync_cmd="rsync --owner --group $rsync_opts $bak/ $destino/"
                             eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
                             echo "fim_rollback" >> $deploy_log_dir/progresso_$host.txt
@@ -612,7 +612,7 @@ while read dir_destino; do
             bak="$bak_dir/${app}_${host}"
             rm -Rf $bak
             mkdir -p $bak
-            rsync_cmd="rsync $rsync_opts $destino/ $bak/"
+            rsync_cmd="rsync --owner --group $rsync_opts $destino/ $bak/"
             eval $rsync_cmd || end 1
 
             #### backup regras de deploy ###
