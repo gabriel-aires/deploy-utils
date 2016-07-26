@@ -24,6 +24,7 @@ cifs_auth=
 cifs_credentials=
 cifs_opts=
 rsync_opts=
+rsync_bak_opts=
 end_msg=
 max_running=
 lock_timeout=
