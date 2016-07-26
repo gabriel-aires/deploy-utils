@@ -149,8 +149,8 @@ function deploy () {
 
     rsync_cmd="rsync --itemize-changes $extra_opts $rsync_opts $origem/ $destino/ > $deploy_log_dir/modificacoes_$host.txt"
     eval $rsync_cmd || end 1
-    test -z "$force_uid" || chown -R "$force_uid" "$destino/*" || end 1
-    test -z "$force_gid" || chgrp -R "$force_gid" "$destino/*" || end 1
+    test -z $force_uid || chown -R $force_uid $destino/* || end 1
+    test -z $force_gid || chgrp -R $force_gid $destino/* || end 1
 
     ##### RESUMO DAS MUDANÇAS ######
 
