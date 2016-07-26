@@ -438,8 +438,8 @@ valid "modo_$ambiente" "\nInforme um modo válido para deploy no ambiente $ambie
 valid "auto_$ambiente" "\nInforme um valor válido para a flag de deploy automático no ambiente $ambiente [0/1]."
 valid "share_$ambiente" "regex_share" "\nInforme um compartilhamento válido para deploy no ambiente $ambiente, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
 valid "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]."
-valid "force_gid" "\nInforme um user id válido para a aplicação $app."
-valid "force_uid" "\nInforme um group id válido para a aplicação $app."
+valid "force_gid" "\nInforme um group id válido para a aplicação $app."
+valid "force_uid" "\nInforme um user id válido para a aplicação $app."
 
 hosts_deploy=$(eval "echo \$hosts_${ambiente}")
 modo_deploy=$(eval "echo \$modo_${ambiente}")
@@ -454,6 +454,8 @@ if $interactive; then
     editconf "auto_$ambiente" "$auto_deploy" "$app_conf_dir/${app}.conf"
     editconf "share_$ambiente" "$share_deploy" "$app_conf_dir/${app}.conf"
     editconf "mount_type" "$mount_type" "$app_conf_dir/${app}.conf"
+    editconf "force_gid" "$force_gid" "$app_conf_dir/${app}.conf"
+    editconf "force_uid" "$force_uid" "$app_conf_dir/${app}.conf"
 fi
 
 sort "$app_conf_dir/${app}.conf" -o "$app_conf_dir/${app}.conf"
