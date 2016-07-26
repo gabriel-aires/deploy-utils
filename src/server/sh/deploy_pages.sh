@@ -149,6 +149,8 @@ function deploy () {
 
     rsync_cmd="rsync --itemize-changes $extra_opts $rsync_opts $origem/ $destino/ > $deploy_log_dir/modificacoes_$host.txt"
     eval $rsync_cmd || end 1
+    test -z "$force_uid" || chown -R "$force_uid" "$destino/*" || end 1
+    test -z "$force_gid" || chgrp -R "$force_gid" "$destino/*" || end 1
 
     ##### RESUMO DAS MUDANÇAS ######
 
@@ -436,6 +438,8 @@ valid "modo_$ambiente" "\nInforme um modo válido para deploy no ambiente $ambie
 valid "auto_$ambiente" "\nInforme um valor válido para a flag de deploy automático no ambiente $ambiente [0/1]."
 valid "share_$ambiente" "regex_share" "\nInforme um compartilhamento válido para deploy no ambiente $ambiente, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
 valid "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]."
+valid "force_gid" "\nInforme um user id válido para a aplicação $app."
+valid "force_uid" "\nInforme um group id válido para a aplicação $app."
 
 hosts_deploy=$(eval "echo \$hosts_${ambiente}")
 modo_deploy=$(eval "echo \$modo_${ambiente}")
