@@ -149,8 +149,11 @@ function deploy () {
 
     rsync_cmd="rsync --itemize-changes $extra_opts $rsync_opts $origem/ $destino/ > $deploy_log_dir/modificacoes_$host.txt"
     eval $rsync_cmd || end 1
-    test -z $force_uid || chown -R $force_uid $destino/* || end 1
-    test -z $force_gid || chgrp -R $force_gid $destino/* || end 1
+
+    if [ "$rev" != "rollback" ] && [ "$extra_opts" != "--dry-run" ] && [ "$extra_opts" != "-n" ]; then
+        test -z $force_uid || chown -R $force_uid $destino/* || end 1
+        test -z $force_gid || chgrp -R $force_gid $destino/* || end 1
+    fi
 
     ##### RESUMO DAS MUDANÇAS ######
 
@@ -525,6 +528,8 @@ if [ ! "$rev" == "rollback" ]; then
     else
         check_last_deploy
     fi
+else
+    rsync_opts="$rsync_bak_opts $rsync_opts"
 fi
 
 ###### REGRAS DE DEPLOY: IGNORE / INCLUDE #######
