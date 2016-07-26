@@ -1,4 +1,8 @@
 app=
+# Repositório Git (origem)
+repo=
+raiz=
+# Deploy Automático
 auto_desenvolvimento=
 auto_homologacao=
 auto_producao=
@@ -9,29 +13,29 @@ branch_homologacao=
 branch_producao=
 branch_sustentacao=
 branch_teste=
-force_gid=
-force_uid=
-hosts_desenvolvimento=
-hosts_homologacao=
-hosts_producao=
-hosts_sustentacao=
-hosts_teste=
-modo_desenvolvimento=
-modo_homologacao=
-modo_producao=
-modo_sustentacao=
-modo_teste=
-mount_type=
-mount_options=
-raiz=
-repo=
 revisao_desenvolvimento=
 revisao_homologacao=
 revisao_producao=
 revisao_sustentacao=
 revisao_teste=
+# Servidor de Aplicação (destino)
+hosts_desenvolvimento=
+hosts_homologacao=
+hosts_producao=
+hosts_sustentacao=
+hosts_teste=
 share_desenvolvimento=
 share_homologacao=
 share_producao=
 share_sustentacao=
 share_teste=
+mount_type=
+mount_options=
+force_gid=
+force_uid=
+# Modo de Deploy
+modo_desenvolvimento=
+modo_homologacao=
+modo_producao=
+modo_sustentacao=
+modo_teste=
