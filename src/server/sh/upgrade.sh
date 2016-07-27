@@ -1,13 +1,14 @@
 #!/bin/bash
 
+source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
+source $install_dir/sh/include.sh || exit 1
+
 if [ "$(id -u)" -ne "0" ]; then
-    echo "Requer usuário root."
+    log "ERRO" "Requer usuário root."
     exit 1
 fi
 
-source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
-source $install_dir/sh/include.sh || exit 1
-trap "echo 'Script finalizado com erro'; exit 1; exit 1" SIGQUIT SIGTERM SIGHUP ERR
+trap "log 'ERRO' 'Script finalizado com erro'; exit 1; exit 1" SIGQUIT SIGTERM SIGHUP ERR
 outdated=true
 
 while $outdated; do
@@ -17,7 +18,7 @@ while $outdated; do
 ######################### 3.4
 
     if [ "$version_sequential" -lt "95" ]; then
-        echo "Aplicando migrações para a versão 95..."
+        log "INFO" "Aplicando migrações para a versão 95..."
 
         find $app_conf_dir/ -type f -iname '*.conf' | while read config; do
             touch $config
@@ -29,6 +30,8 @@ while $outdated; do
             sed -rn 's/^share=/share_teste=/p' $config >> $config
             sed -i -r '/^share=/d' $config
         done
+
+        reset_config.sh "$config" "$install_dir/template/app.template"
 
         echo "95" > $src_dir/conf/version.txt
 
@@ -42,4 +45,4 @@ while $outdated; do
 
 done
 
-echo "Migrações realizadas com sucesso."
+log "INFO" "Migrações realizadas com sucesso."
