@@ -29,9 +29,8 @@ while $outdated; do
             sed -rn 's/^share=/share_sustentacao=/p' $config >> $config
             sed -rn 's/^share=/share_teste=/p' $config >> $config
             sed -i -r '/^share=/d' $config
+            reset_config.sh "$config" "$install_dir/template/app.template"
         done
-
-        reset_config.sh "$config" "$install_dir/template/app.template"
 
         echo "95" > $src_dir/conf/version.txt
 
