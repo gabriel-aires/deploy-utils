@@ -10,10 +10,11 @@ fi
 
 trap "log 'ERRO' 'Script finalizado com erro'; exit 1; exit 1" SIGQUIT SIGTERM SIGHUP ERR
 outdated=true
+version_file="$src_dir/common/conf/version.txt"
 
 while $outdated; do
 
-    version_sequential=$(cat $src_dir/conf/version.txt 2> /dev/null || echo 0)
+    version_sequential=$(cat $version_file 2> /dev/null || echo 0)
 
 ######################### 3.4
 
@@ -32,7 +33,7 @@ while $outdated; do
             reset_config.sh "$config" "$install_dir/template/app.template"
         done
 
-        echo "95" > $src_dir/conf/version.txt
+        echo "95" > $version_file
 
 ######################## LATEST
 
