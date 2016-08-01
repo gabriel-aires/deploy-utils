@@ -58,8 +58,8 @@ function submit_deploy() {
 
             echo "      <p>"
             echo "          <form action=\"$start_page\" method=\"post\">"
-            $enable_redeploy && echo "              <input type=\"hidden\" name=\"$enable_redeploy\" value=\"true\"></td></tr>"
-            $enable_deletion && echo "              <input type=\"hidden\" name=\"$enable_deletion\" value=\"true\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"$enable_redeploy\" value=\"true\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"$enable_deletion\" value=\"true\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$rev_param\" value=\"$rev_name\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$env_param\" value=\"$env_name\"></td></tr>"
