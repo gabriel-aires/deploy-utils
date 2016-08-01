@@ -161,8 +161,6 @@ env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_simulation="Simular"
 proceed_deploy="Deploy"
-enable_redeploy=false
-enable_deletion=false
 membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && enable_options=true || enable_options=false
 
 if [ -z "$POST_STRING" ]; then
@@ -212,6 +210,10 @@ else
     rev_name=$(echo "$arg_string" | sed -rn "s/^.*&$rev_param=([^\&]+)&.*$/\1/p")
     env_name=$(echo "$arg_string" | sed -rn "s/^.*&$env_param=([^\&]+)&.*$/\1/p")
     proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
+
+    # Opções de deploy padrão
+    enable_redeploy=${enable_redeploy:=false}
+    enable_deletion=${enable_deletion:=false}
 
     if [ -n "$app_name" ] && [ -n "$rev_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
 
