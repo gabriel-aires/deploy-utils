@@ -58,6 +58,8 @@ function submit_deploy() {
 
             echo "      <p>"
             echo "          <form action=\"$start_page\" method=\"post\">"
+            $enable_redeploy && echo "              <input type=\"hidden\" name=\"$enable_redeploy\" value=\"true\"></td></tr>"
+            $enable_deletion && echo "              <input type=\"hidden\" name=\"$enable_deletion\" value=\"true\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$rev_param\" value=\"$rev_name\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$env_param\" value=\"$env_name\"></td></tr>"
@@ -159,6 +161,9 @@ env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_simulation="Simular"
 proceed_deploy="Deploy"
+enable_redeploy=false
+enable_deletion=false
+membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && enable_options=true || enable_options=false
 
 if [ -z "$POST_STRING" ]; then
 
@@ -183,6 +188,13 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>"
     echo "              <input type=\"text\" class=\"text_default\" name=\"$rev_param\" placeholder=\" Revisão...\"></input>"
     echo "              </p>"
+    # Opções...
+    if $enable_options; then
+        echo "              <p>"
+        echo "                  <input type=\"checkbox\" name=\"enable_redeploy\" value=\"true\">Reexecutar último deploy<br>"
+        echo "                  <input type=\"checkbox\" name=\"enable_deletion\" value=\"true\">Forçar modo de deleção<br>"
+        echo "              </p>"
+    fi
     # Submit
     echo "              <p>"
     echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_view\">"
@@ -194,6 +206,8 @@ else
 
     # Processar POST_STRING
     arg_string="&$(web_filter "$POST_STRING")&"
+    enable_redeploy=$(echo "$arg_string" | sed -rn "s/^.*&enable_redeploy=([^\&]+)&.*$/\1/p")
+    enable_deletion=$(echo "$arg_string" | sed -rn "s/^.*&enable_deletion=([^\&]+)&.*$/\1/p")
     app_name=$(echo "$arg_string" | sed -rn "s/^.*&$app_param=([^\&]+)&.*$/\1/p")
     rev_name=$(echo "$arg_string" | sed -rn "s/^.*&$rev_param=([^\&]+)&.*$/\1/p")
     env_name=$(echo "$arg_string" | sed -rn "s/^.*&$env_param=([^\&]+)&.*$/\1/p")
@@ -201,6 +215,8 @@ else
 
     if [ -n "$app_name" ] && [ -n "$rev_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
 
+        valid "enable_redeploy" "regex_bool" "Erro. Opção inválida."
+        valid "enable_deletion" "regex_bool" "Erro. Opção inválida."
         valid "app_name" "regex_app" "Erro. Nome de aplicação inválido."
         valid "rev_name" "regex_rev" "Erro. Nome de revisão inválido."
         valid "env_name" "regex_ambiente" "Erro. Nome de ambiente inválido."
@@ -215,6 +231,10 @@ else
             echo "              <tr><td>Sistema: </td><td>$app_name</td></tr>"
             echo "              <tr><td>Revisão: </td><td>$rev_name</td></tr>"
             echo "              <tr><td>Ambiente: </td><td>$env_name</td></tr>"
+            if $enable_options; then
+                $enable_redeploy && echo "              <tr><td>Opção: </td><td>Reexecutar último deploy</td></tr>"
+                $enable_deletion && echo "              <tr><td>Opção: </td><td>Forçar modo de deleção</td></tr>"
+            fi
             echo "          </table>"
             echo "      </p>"
 
@@ -227,6 +247,10 @@ else
             sleep_pid=$!
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
             deploy_options="-u $user_name -f"
+            if $enable_options; then
+                $enable_redeploy && deploy_options="${deploy_options} -r"
+                $enable_deletion && deploy_options="${deploy_options} -d"
+            fi
             deploy_out="$tmp_dir/deploy.out"
             touch $deploy_out
 
