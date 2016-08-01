@@ -11,6 +11,7 @@ fi
 trap "log 'ERRO' 'Script finalizado com erro'; exit 1; exit 1" SIGQUIT SIGTERM SIGHUP ERR
 outdated=true
 version_file="$src_dir/common/conf/version.txt"
+release_file="$src_dir/common/conf/release.txt"
 
 while $outdated; do
 
@@ -38,8 +39,8 @@ while $outdated; do
 ######################## LATEST
 
     elif [ "$version_sequential" -le "$version_latest" ]; then
-        echo "$version_latest" > $src_dir/conf/version.txt
-        echo "$release_latest" > $src_dir/conf/release.txt
+        echo "$version_latest" > $version_file
+        echo "$release_latest" > $release_file
         outdated=false
     fi
 
