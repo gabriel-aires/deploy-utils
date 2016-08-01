@@ -166,7 +166,6 @@ membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && enable_options=true 
 if [ -z "$POST_STRING" ]; then
 
     # Formulário deploy
-    echo "  <p>"
     echo "      <div class=\"column\">"
     echo "          <form action=\"$start_page\" method=\"post\">"
     # Sistema...
@@ -201,7 +200,6 @@ if [ -z "$POST_STRING" ]; then
     echo "              </p>"
     echo "          </form>"
     echo "      </div>"
-    echo "  </p>"
 
 else
 
