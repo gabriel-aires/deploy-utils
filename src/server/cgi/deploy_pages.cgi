@@ -166,7 +166,8 @@ membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && enable_options=true 
 if [ -z "$POST_STRING" ]; then
 
     # Formulário deploy
-    echo "      <p>"
+    echo "  <p>"
+    echo "      <div style=\"display:inline-block;\">"
     echo "          <form action=\"$start_page\" method=\"post\">"
     # Sistema...
     echo "              <p>"
@@ -188,17 +189,19 @@ if [ -z "$POST_STRING" ]; then
     echo "              </p>"
     # Opções...
     if $enable_options; then
-        echo "              <p>"
-        echo "                  <input type=\"checkbox\" name=\"enable_redeploy\" value=\"true\">Reexecutar último deploy<br>"
-        echo "                  <input type=\"checkbox\" name=\"enable_deletion\" value=\"true\">Forçar modo de deleção<br>"
-        echo "              </p>"
+        echo "              <fieldset>"
+        echo "                  <legend>Opções Avançadas</legend>"
+        echo "                  <p><input type=\"checkbox\" name=\"enable_redeploy\" value=\"true\">Reexecutar último deploy</p>"
+        echo "                  <p><input type=\"checkbox\" name=\"enable_deletion\" value=\"true\">Forçar modo de deleção</p>"
+        echo "              </fieldset>"
     fi
     # Submit
     echo "              <p>"
     echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_view\">"
     echo "              </p>"
     echo "          </form>"
-    echo "      </p>"
+    echo "      </div>"
+    echo "  </p>"
 
 else
 
