@@ -167,7 +167,7 @@ if [ -z "$POST_STRING" ]; then
 
     # Formulário deploy
     echo "  <p>"
-    echo "      <div style=\"display:inline-block;\">"
+    echo "      <div class=\"column\">"
     echo "          <form action=\"$start_page\" method=\"post\">"
     # Sistema...
     echo "              <p>"
