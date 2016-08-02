@@ -97,6 +97,10 @@ a, p {
     padding-right: 0.5rem;
 }
 
+.column.zero_padding {
+    padding: 0;
+}
+
 .column_small {
     width: 15%;
 }
@@ -108,7 +112,6 @@ a, p {
 .column_large {
     width: 80%;
 }
-
 
 /* Tables */
 
