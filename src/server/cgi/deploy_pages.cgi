@@ -48,7 +48,7 @@ function submit_deploy() {
                     key="$(echo "$l" | cut -f1 -d '=')"
                     value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
                     if echo "$key" | grep -E "^#" > /dev/null; then
-                        echo "                  <tr><td colspan=\"2\">##$key</td></tr>"
+                        echo "                  <tr><td colspan=\"2\"><b>##$key</b></td></tr>"
                     else
                         show_param=true
                         echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
