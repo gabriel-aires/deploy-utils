@@ -2,6 +2,7 @@
 
 interactive='false'
 verbosity='verbose'
+skip_upgrade=false
 
 function end() {
 
@@ -19,14 +20,13 @@ case "$1" in
         $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
         echo "$version_latest" > $version_file || end 1
         echo "$release_latest" > $release_file || end 1
+        skip_upgrade=true
         ;;
     --reconfigure)
         echo "Reconfigurando serviço..."
         $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
-        $install_dir/sh/upgrade.sh || end 1
         ;;
     '') echo "Configurando serviço..."
-        $install_dir/sh/upgrade.sh || end 1
         ;;
     *)  echo "Argumento inválido" && end 1
         ;;
@@ -184,6 +184,9 @@ chgrp -R $apache_group $log_dir || end 1
 chgrp -R $apache_group $lock_dir || end 1
 chgrp -R $apache_group $src_dir/server/cgi || end 1
 chgrp -R $apache_group $src_dir/server/css || end 1
+
+#migrations
+$skip_upgrade || $install_dir/sh/upgrade.sh || end 1
 
 #restart services
 $apache_init_script restart || end 1
