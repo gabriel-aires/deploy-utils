@@ -15,7 +15,7 @@ while $outdated; do
 
     version_sequential=$(cat $version_file 2> /dev/null || echo 0)
 
-######################### 3.4
+######################### 3.3
 
     if [ "$version_sequential" -lt "95" ]; then
         log "INFO" "Aplicando migrações para a versão 95..."
