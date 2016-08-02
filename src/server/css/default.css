@@ -85,6 +85,7 @@ a, p {
 
 .column.faq_override {
     vertical-align: bottom;
+    margin: 0.5rem;
 }
 
 .box_shadow {
@@ -92,7 +93,6 @@ a, p {
 }
 
 .column {
-    margin: 0.5rem;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
