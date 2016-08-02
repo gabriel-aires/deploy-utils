@@ -461,8 +461,6 @@ if $interactive; then
     editconf "force_uid" "$force_uid" "$app_conf_dir/${app}.conf"
 fi
 
-sort "$app_conf_dir/${app}.conf" -o "$app_conf_dir/${app}.conf"
-
 if [ "$rev" == "auto" ]; then
     if [ "$auto_deploy" == "1" ]; then
         auto="true"
