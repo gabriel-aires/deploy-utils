@@ -268,10 +268,8 @@ else
                 echo "$deploy_options:$app_name:$rev_name:$env_name:$deploy_out:" >> "$deploy_queue"
 
                 echo "      <p>"
-                echo "          <div class=\"cfg_color column box_shadow\">"
-                echo "              <pre>"
+                echo "          <div class=\"cfg_color column box_shadow pre\">"
                 cat_eof "$deploy_out" "$end_msg"
-                echo "              </pre>"
                 echo "          </div>"
                 echo "      </p>"
 
@@ -283,10 +281,8 @@ else
                 echo "$deploy_options:$app_name:$rev_name:$env_name:$deploy_out:" >> "$deploy_queue"
 
                 echo "      <p>"
-                echo "          <div class=\"column box_shadow\">"
-                echo "              <pre>"
+                echo "          <div class=\"column box_shadow pre\">"
                 cat_eof "$deploy_out" "$end_msg"
-                echo "              </pre>"
                 echo "          </div>"
                 echo "      </p>"
 

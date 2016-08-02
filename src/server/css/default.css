@@ -155,6 +155,12 @@ a, p {
     min-width: 90%;
 }
 
+/* Shell Output */
+
+.pre {
+    font-family: monospace;    
+}
+
 /* Faq */
 
 #faq_sidebar, #faq_topics {
