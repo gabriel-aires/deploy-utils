@@ -149,6 +149,7 @@ function web_filter() {   # Filtra o input de formulários cgi
 function web_header () {
 
     test "$(basename $SCRIPT_NAME)" == 'index.cgi' && start_page="$(dirname $SCRIPT_NAME)/" || start_page="$SCRIPT_NAME"
+    release_name=$(cat $release_file 2> /dev/null || echo "")
     page_name=$(basename $SCRIPT_NAME | cut -f1 -d '.')
     page_title="$(eval "echo \$cgi_${page_name}_title")"
     test -n "$REMOTE_USER" && welcome_msg="Bem vindo, $REMOTE_USER" || welcome_msg=""
@@ -159,7 +160,7 @@ function web_header () {
     echo '  <head>'
     echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
     echo '      <meta http-equiv="X-UA-Compatible" content="IE=edge">'
-    echo "      <title>$page_title</title>"
+    echo "      <title><b>$web_app_name $release_name |</b> $page_title</title>"
     echo "      <link rel=\"stylesheet\" type=\"text/css\" href=\"$apache_css_alias/default.css\">"
     echo '  </head>'
     echo "  <body>"
