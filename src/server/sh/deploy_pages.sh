@@ -150,6 +150,11 @@ function deploy () {
     rsync_cmd="rsync --itemize-changes $extra_opts $rsync_opts $origem/ $destino/ > $deploy_log_dir/modificacoes_$host.txt"
     eval $rsync_cmd || end 1
 
+    if [ "$rev" != "rollback" ] && [ "$extra_opts" != "--dry-run" ] && [ "$extra_opts" != "-n" ]; then
+        test -z $force_uid || chown -R $force_uid $destino/* || end 1
+        test -z $force_gid || chgrp -R $force_gid $destino/* || end 1
+    fi
+
     ##### RESUMO DAS MUDANÇAS ######
 
     adicionados="$(grep -E "^>f\+" $deploy_log_dir/modificacoes_$host.txt | wc -l)"
@@ -302,7 +307,7 @@ function end () {
 
                 echo "rollback" >> $deploy_log_dir/progresso_$host.txt
 
-                rsync_cmd="rsync $rsync_opts $bak/ $destino/"
+                rsync_cmd="rsync $rsync_bak_opts --group $rsync_opts $bak/ $destino/"
                 eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
                 echo "fim_rollback" >> $deploy_log_dir/progresso_$host.txt
@@ -339,7 +344,7 @@ function end () {
 
                             echo "rollback" >> $deploy_log_dir/progresso_$host.txt
 
-                            rsync_cmd="rsync $rsync_opts $bak/ $destino/"
+                            rsync_cmd="rsync $rsync_bak_opts $rsync_opts $bak/ $destino/"
                             eval $rsync_cmd && ((qtd_rollback++)) && rm -Rf $bak
 
                             echo "fim_rollback" >> $deploy_log_dir/progresso_$host.txt
@@ -434,12 +439,15 @@ valid "raiz" "\nInforme um caminho válido para a raiz da aplicação."
 valid "hosts_$ambiente" "\nInforme uma lista válida de hosts para deploy, separando-os por espaço ou vírgula."
 valid "modo_$ambiente" "\nInforme um modo válido para deploy no ambiente $ambiente [p/d]."
 valid "auto_$ambiente" "\nInforme um valor válido para a flag de deploy automático no ambiente $ambiente [0/1]."
-valid "share" "\nInforme um compartilhamento válido para deploy, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
+valid "share_$ambiente" "regex_share" "\nInforme um compartilhamento válido para deploy no ambiente $ambiente, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
 valid "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]."
+valid "force_gid" "\nInforme um group id válido para a aplicação $app."
+valid "force_uid" "\nInforme um user id válido para a aplicação $app."
 
 hosts_deploy=$(eval "echo \$hosts_${ambiente}")
 modo_deploy=$(eval "echo \$modo_${ambiente}")
 auto_deploy=$(eval "echo \$auto_${ambiente}")
+share_deploy=$(eval "echo \$share_${ambiente}")
 
 if $interactive; then
     editconf "repo" "$repo" "$app_conf_dir/${app}.conf"
@@ -447,11 +455,11 @@ if $interactive; then
     editconf "hosts_$ambiente" "$hosts_deploy" "$app_conf_dir/${app}.conf"
     editconf "modo_$ambiente" "$modo_deploy" "$app_conf_dir/${app}.conf"
     editconf "auto_$ambiente" "$auto_deploy" "$app_conf_dir/${app}.conf"
-    editconf "share" "$share" "$app_conf_dir/${app}.conf"
+    editconf "share_$ambiente" "$share_deploy" "$app_conf_dir/${app}.conf"
     editconf "mount_type" "$mount_type" "$app_conf_dir/${app}.conf"
+    editconf "force_gid" "$force_gid" "$app_conf_dir/${app}.conf"
+    editconf "force_uid" "$force_uid" "$app_conf_dir/${app}.conf"
 fi
-
-sort "$app_conf_dir/${app}.conf" -o "$app_conf_dir/${app}.conf"
 
 if [ "$rev" == "auto" ]; then
     if [ "$auto_deploy" == "1" ]; then
@@ -468,8 +476,8 @@ mklist "$hosts_deploy" $tmp_dir/hosts_$ambiente
 
 while read host; do
     case $mount_type in
-        'cifs') dir_destino=$(echo "//$host/$share" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||") ;;
-        'nfs') dir_destino=$(echo "$host:$share" | sed -r "s|(:)([^/])|\1/\2|" | sed -r "s|/$||") ;;
+        'cifs') dir_destino=$(echo "//$host/$share_deploy" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||") ;;
+        'nfs') dir_destino=$(echo "$host:$share_deploy" | sed -r "s|(:)([^/])|\1/\2|" | sed -r "s|/$||") ;;
     esac
     nomedestino=$(echo $dir_destino | sed -r "s|[/:]|_|g")
     lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
@@ -518,6 +526,8 @@ if [ ! "$rev" == "rollback" ]; then
     else
         check_last_deploy
     fi
+else
+    rsync_opts="$rsync_bak_opts $rsync_opts"
 fi
 
 ###### REGRAS DE DEPLOY: IGNORE / INCLUDE #######
@@ -605,7 +615,7 @@ while read dir_destino; do
             bak="$bak_dir/${app}_${host}"
             rm -Rf $bak
             mkdir -p $bak
-            rsync_cmd="rsync $rsync_opts $destino/ $bak/"
+            rsync_cmd="rsync $rsync_bak_opts $rsync_opts $destino/ $bak/"
             eval $rsync_cmd || end 1
 
             #### backup regras de deploy ###

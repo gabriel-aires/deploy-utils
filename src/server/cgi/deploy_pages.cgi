@@ -43,21 +43,29 @@ function submit_deploy() {
             if [ "$proceed" == "$proceed_view" ]; then
                 echo "      <p><b>Parâmetros de deploy:</b></p>"
                 echo "      <p>"
-                echo "              <table class=\"cfg_color\">"
+                echo "          <div class=\"column zero_padding cfg_color box_shadow\">"
+                echo "              <table>"
                 while read l; do
-                    show_param=true
                     key="$(echo "$l" | cut -f1 -d '=')"
                     value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                    echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
-                    ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
-                    $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
+                    if echo "$key" | grep -E "^#" > /dev/null; then
+                        echo "                  <tr><td colspan=\"2\"><b>##$key</b></td></tr>"
+                    else
+                        show_param=true
+                        echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
+                        ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
+                        $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
+                    fi
                 done < "$app_conf_dir/$app_name.conf"
                 echo "              </table>"
+                echo "          </div>"
                 echo "      </p>"
             fi
 
             echo "      <p>"
             echo "          <form action=\"$start_page\" method=\"post\">"
+            echo "              <input type=\"hidden\" name=\"enable_redeploy\" value=\"$enable_redeploy\"></td></tr>"
+            echo "              <input type=\"hidden\" name=\"enable_deletion\" value=\"$enable_deletion\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$app_param\" value=\"$app_name\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$rev_param\" value=\"$rev_name\"></td></tr>"
             echo "              <input type=\"hidden\" name=\"$env_param\" value=\"$env_name\"></td></tr>"
@@ -159,11 +167,12 @@ env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_simulation="Simular"
 proceed_deploy="Deploy"
+membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && enable_options=true || enable_options=false
 
 if [ -z "$POST_STRING" ]; then
 
     # Formulário deploy
-    echo "      <p>"
+    echo "      <div class=\"column\">"
     echo "          <form action=\"$start_page\" method=\"post\">"
     # Sistema...
     echo "              <p>"
@@ -183,24 +192,40 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>"
     echo "              <input type=\"text\" class=\"text_default\" name=\"$rev_param\" placeholder=\" Revisão...\"></input>"
     echo "              </p>"
+    # Opções...
+    if $enable_options; then
+        echo "              <fieldset>"
+        echo "                  <legend>Opções Avançadas</legend>"
+        echo "                  <p><input type=\"checkbox\" name=\"enable_redeploy\" value=\"true\">Reexecutar último deploy</p>"
+        echo "                  <p><input type=\"checkbox\" name=\"enable_deletion\" value=\"true\">Forçar modo de deleção</p>"
+        echo "              </fieldset>"
+    fi
     # Submit
     echo "              <p>"
     echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_view\">"
     echo "              </p>"
     echo "          </form>"
-    echo "      </p>"
+    echo "      </div>"
 
 else
 
     # Processar POST_STRING
     arg_string="&$(web_filter "$POST_STRING")&"
+    enable_redeploy=$(echo "$arg_string" | sed -rn "s/^.*&enable_redeploy=([^\&]+)&.*$/\1/p")
+    enable_deletion=$(echo "$arg_string" | sed -rn "s/^.*&enable_deletion=([^\&]+)&.*$/\1/p")
     app_name=$(echo "$arg_string" | sed -rn "s/^.*&$app_param=([^\&]+)&.*$/\1/p")
     rev_name=$(echo "$arg_string" | sed -rn "s/^.*&$rev_param=([^\&]+)&.*$/\1/p")
     env_name=$(echo "$arg_string" | sed -rn "s/^.*&$env_param=([^\&]+)&.*$/\1/p")
     proceed=$(echo "$arg_string" | sed -rn "s/^.*&proceed=([^\&]+)&.*$/\1/p")
 
+    # Opções de deploy padrão
+    enable_redeploy=${enable_redeploy:=false}
+    enable_deletion=${enable_deletion:=false}
+
     if [ -n "$app_name" ] && [ -n "$rev_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
 
+        valid "enable_redeploy" "regex_bool" "Erro. Opção inválida."
+        valid "enable_deletion" "regex_bool" "Erro. Opção inválida."
         valid "app_name" "regex_app" "Erro. Nome de aplicação inválido."
         valid "rev_name" "regex_rev" "Erro. Nome de revisão inválido."
         valid "env_name" "regex_ambiente" "Erro. Nome de ambiente inválido."
@@ -215,6 +240,10 @@ else
             echo "              <tr><td>Sistema: </td><td>$app_name</td></tr>"
             echo "              <tr><td>Revisão: </td><td>$rev_name</td></tr>"
             echo "              <tr><td>Ambiente: </td><td>$env_name</td></tr>"
+            if $enable_options; then
+                $enable_redeploy && echo "              <tr><td>Opção: </td><td>Reexecutar último deploy</td></tr>"
+                $enable_deletion && echo "              <tr><td>Opção: </td><td>Forçar modo de deleção</td></tr>"
+            fi
             echo "          </table>"
             echo "      </p>"
 
@@ -227,6 +256,10 @@ else
             sleep_pid=$!
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
             deploy_options="-u $user_name -f"
+            if $enable_options; then
+                $enable_redeploy && deploy_options="${deploy_options} -r"
+                $enable_deletion && deploy_options="${deploy_options} -d"
+            fi
             deploy_out="$tmp_dir/deploy.out"
             touch $deploy_out
 
@@ -237,9 +270,11 @@ else
                 echo "$deploy_options:$app_name:$rev_name:$env_name:$deploy_out:" >> "$deploy_queue"
 
                 echo "      <p>"
-                echo "              <pre class=\"cfg_color\">"
+                echo "          <div class=\"cfg_color column box_shadow\">"
+                echo "              <pre>"
                 cat_eof "$deploy_out" "$end_msg"
                 echo "              </pre>"
+                echo "          </div>"
                 echo "      </p>"
 
                 submit_deploy
@@ -250,9 +285,11 @@ else
                 echo "$deploy_options:$app_name:$rev_name:$env_name:$deploy_out:" >> "$deploy_queue"
 
                 echo "      <p>"
-                echo "              <pre class=\"cfg_color\">"
+                echo "          <div class=\"cfg_color column box_shadow\">"
+                echo "              <pre>"
                 cat_eof "$deploy_out" "$end_msg"
                 echo "              </pre>"
+                echo "          </div>"
                 echo "      </p>"
 
             fi

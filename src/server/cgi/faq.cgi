@@ -98,7 +98,7 @@ function display_faq() {
         echo "<h3>"
         head -n 1 "$content_file"
         echo "</h3>"
-        echo "<div class=\"cfg_color column faq_override\">"
+        echo "<div class=\"cfg_color column faq_override box_shadow\">"
         sed '1d;$d' "$content_file" | tr "\n" '<' | sed -r 's|<|<br>|g'
         echo "</div>"
         echo "<p><b>Categoria:</b> $category_href</p>"
@@ -110,7 +110,7 @@ function display_faq() {
             echo "  <legend> Editar... </legend>"
 
             # Sobrescrever
-            echo "      <div class=\"column faq_override\">"
+            echo "      <div class=\"column faq_override box_shadow\">"
             echo "          <form action=\"$start_page\" method=\"post\" enctype=\"multipart/form-data\">"
             echo "              <p>"
             echo "                  <b>Atualizar tópico:</b>"
@@ -122,7 +122,7 @@ function display_faq() {
             echo "      </div>"
 
             # Modificar
-            echo "      <div class=\"column faq_override\">"
+            echo "      <div class=\"column faq_override box_shadow\">"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
             echo "                  <b>Categoria:</b>"
@@ -138,7 +138,7 @@ function display_faq() {
             echo "      </div>"
 
             # Remover
-            echo "      <div class=\"column faq_override\">"
+            echo "      <div class=\"column faq_override box_shadow\">"
             echo "          <form action=\"$start_page\" method=\"post\">"
             echo "              <p>"
             echo "                  <b>Excluir tópico:</b>"
