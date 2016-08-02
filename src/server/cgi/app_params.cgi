@@ -76,7 +76,7 @@ if [ -n "$QUERY_STRING" ]; then
 
     echo "      <p>"
     echo "          <form action=\"$start_page\" method=\"post\">"
-    echo "              <div class=\"column cfg_color box_shadow\">"
+    echo "              <div class=\"cfg_color box_shadow\">"
     echo "                  <table>"
     test -f "$app_conf_dir/$app_name.conf" && form_file="$app_conf_dir/$app_name.conf" || form_file="$install_dir/template/app.template"
     while read l; do
