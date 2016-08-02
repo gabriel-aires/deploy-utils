@@ -76,24 +76,26 @@ if [ -n "$QUERY_STRING" ]; then
 
     echo "      <p>"
     echo "          <form action=\"$start_page\" method=\"post\">"
-    echo "              <table frame=box class=\"cfg_color\">"
+    echo "              <div class=\"column cfg_color box_shadow\">"
+    echo "                  <table>"
     test -f "$app_conf_dir/$app_name.conf" && form_file="$app_conf_dir/$app_name.conf" || form_file="$install_dir/template/app.template"
     while read l; do
         key="$(echo "$l" | cut -f1 -d '=')"
         value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
         if echo "$key" | grep -E "^#" > /dev/null; then
-            echo "                  <tr><td colspan=\"2\">$key</td></tr>"
+            echo "                      <tr><td colspan=\"2\">$key</td></tr>"
         else
             show_param=true
             if [ -n "$env_name" ]; then
                 echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
                 ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
             fi
-            $show_param && echo "               <tr><td>$key: </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
+            $show_param && echo "                   <tr><td>$key: </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
         fi
     done < "$form_file"
-    echo "                  <tr><td><input type=\"submit\" name=\"save\" value=\"$save_value\"> <input type=\"submit\" name=\"erase\" value=\"$erase_value\"></td>"
-    echo "              </table>"
+    echo "                      <tr><td><input type=\"submit\" name=\"save\" value=\"$save_value\"> <input type=\"submit\" name=\"erase\" value=\"$erase_value\"></td>"
+    echo "                  </table>"
+    echo "              </div>"
     echo "          </form>"
     echo "      </p>"
 
