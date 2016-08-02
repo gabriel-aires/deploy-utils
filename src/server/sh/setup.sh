@@ -14,11 +14,19 @@ function end() {
 }
 
 case "$1" in
+    --install)
+        echo "Instalando serviço..."
+        $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
+        echo "$version_latest" > $version_file || end 1
+        echo "$release_latest" > $release_file || end 1
+        ;;
     --reconfigure)
         echo "Reconfigurando serviço..."
         $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
+        $install_dir/sh/upgrade.sh || end 1
         ;;
     '') echo "Configurando serviço..."
+        $install_dir/sh/upgrade.sh || end 1
         ;;
     *)  echo "Argumento inválido" && end 1
         ;;

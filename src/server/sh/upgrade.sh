@@ -10,8 +10,6 @@ fi
 
 trap "log 'ERRO' 'Script finalizado com erro'; exit 1; exit 1" SIGQUIT SIGTERM SIGHUP ERR
 outdated=true
-version_file="$src_dir/common/conf/version.txt"
-release_file="$src_dir/common/conf/release.txt"
 
 while $outdated; do
 
