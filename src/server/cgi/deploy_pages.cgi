@@ -43,7 +43,8 @@ function submit_deploy() {
             if [ "$proceed" == "$proceed_view" ]; then
                 echo "      <p><b>Parâmetros de deploy:</b></p>"
                 echo "      <p>"
-                echo "              <table class=\"cfg_color\">"
+                echo "          <div class=\"column zero_padding cfg_color box_shadow\">"
+                echo "              <table>"
                 while read l; do
                     key="$(echo "$l" | cut -f1 -d '=')"
                     value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
@@ -57,6 +58,7 @@ function submit_deploy() {
                     fi
                 done < "$app_conf_dir/$app_name.conf"
                 echo "              </table>"
+                echo "          </div>"
                 echo "      </p>"
             fi
 
