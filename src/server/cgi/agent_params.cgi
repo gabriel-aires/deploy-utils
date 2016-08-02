@@ -213,23 +213,25 @@ else
                             echo "      <p>"
                             echo "          <p>Adicionar nova configuração...</p>"
                             echo "          <form action=\"$start_page\" method=\"post\">"
-                            echo "              <table class=\"cfg_color\">"
-                            echo "                  <tr>"
-                            echo "                      <td>Agente: </td>"
-                            echo "                      <td>"
-                            echo "                          <select class=\"select_default\" name=\"agent_template\">"
-                            echo "		                        <option value=\"\" selected>Selecionar template...</option>"
+                            echo "              <div class=\"column zero_padding cfg_color box_shadow\">"
+                            echo "                  <table>"
+                            echo "                      <tr>"
+                            echo "                          <td>Agente: </td>"
+                            echo "                          <td>"
+                            echo "                              <select class=\"select_default\" name=\"agent_template\">"
+                            echo "  		                        <option value=\"\" selected>Selecionar template...</option>"
                             find $src_dir/agents/template/ -mindepth 1 -maxdepth 1 -type f -name '*.template' | sort | xargs -I{} -d '\n' basename {} | cut -d '.' -f1 | grep -Exv "agent|global|service" | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
-                            echo "                          </select>"
-                            echo "                      </td>"
-                            echo "                  <tr>"
-                            echo "                  <tr>"
-                            echo "                      <td>Nome: </td>"
-                            echo "                      <td>"
-                            echo "                          <input type=\"text\" class=\"text_default\" name=\"agent_conf\">"
-                            echo "                      </td>"
-                            echo "                  <tr>"
-                            echo "              </table>"
+                            echo "                              </select>"
+                            echo "                          </td>"
+                            echo "                      </tr>"
+                            echo "                      <tr>"
+                            echo "                          <td>Nome: </td>"
+                            echo "                          <td>"
+                            echo "                              <input type=\"text\" class=\"text_default\" name=\"agent_conf\">"
+                            echo "                          </td>"
+                            echo "                      </tr>"
+                            echo "                  </table>"
+                            echo "              </div>"
                             echo "              <p>"
                             echo "                  <input type=\"hidden\" name=\"host\" value=\"$host\">"
                             echo "                  <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
@@ -253,7 +255,8 @@ else
                             echo "      <p>"
                             echo "          <p>Modificar arquivo de configuração '$agent_conf.conf':</p>"
                             echo "          <form action=\"$start_page\" method=\"post\">"
-                            echo "              <table frame=box class=\"cfg_color\">"
+                            echo "              <div class=\"column zero_padding cfg_color box_shadow\">"
+                            echo "                  <table>"
 
                             while read l; do
                                 echo "              <tr>"
@@ -261,11 +264,11 @@ else
                                 value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
 
                                 if echo "$key" | grep -E "^#" > /dev/null; then
-                                    echo "                  <td colspan=\"2\">$key</td>"
+                                    echo "                      <td colspan=\"2\">$key</td>"
 
                                 else
-                                    echo "                  <td>$key:</td>"
-                                    echo "                  <td>"
+                                    echo "                      <td>$key:</td>"
+                                    echo "                      <td>"
 
                                     field_tag="input"
                                     field_type="text"
@@ -292,34 +295,34 @@ else
                                             field_tag="select"
                                             field_attributes="class=\"select_large\" name=\"$key\""
                                             test -n "$value" && field_disabled=true && field_attributes="$field_attributes disabled"
-                                            echo "                  <$field_tag $field_attributes>"
-                                            echo "                      <option value=\"\">selecionar...</option>"
+                                            echo "                      <$field_tag $field_attributes>"
+                                            echo "                          <option value=\"\">selecionar...</option>"
                                             mklist "$regex_ambiente" | while read option; do
-                                                test "$option" == "$value" && echo "                      <option selected>$value</option>" || echo "                      <option>$option</option>"
+                                                test "$option" == "$value" && echo "                          <option selected>$value</option>" || echo "                      <option>$option</option>"
                                             done
-                                            echo "                  </$field_tag>"
+                                            echo "                      </$field_tag>"
                                             ;;
 
                                         'run_deploy_agent'|'run_log_agent')
                                             test -z "$value" && value="true"
                                             field_tag="select"
                                             field_attributes="class=\"select_large\" name=\"$key\""
-                                            echo "                  <$field_tag $field_attributes>"
+                                            echo "                      <$field_tag $field_attributes>"
                                             mklist "$regex_bool" | while read option; do
-                                                test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
+                                                test "$option" == "$value" && echo "                 <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
-                                            echo "                  </$field_tag>"
+                                            echo "                      </$field_tag>"
                                             ;;
 
                                         'deploy_interval'|'log_interval')
                                             test -z "$value" && value="15"
                                             field_tag="select"
                                             field_attributes="class=\"select_large\" name=\"$key\""
-                                            echo "                  <$field_tag $field_attributes>"
+                                            echo "                      <$field_tag $field_attributes>"
                                             mklist "$regex_agent_interval" | while read option; do
-                                                test "$option" == "$value" && echo "               <option selected>$value</option>" || echo "               <option>$option</option>"
+                                                test "$option" == "$value" && echo "                   <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
-                                            echo "                  </$field_tag>"
+                                            echo "                      </$field_tag>"
                                             ;;
 
                                         *)
@@ -328,27 +331,28 @@ else
 
                                     esac
 
-                                    $field_disabled && field_attributes="$field_attributes disabled" && echo "                  <input type=\"hidden\" name=\"$key\" value=\"$value\">"
-                                    test "$field_tag" == "input" && echo "                  <$field_tag type=\"$field_type\" $field_attributes value=\"$value\">"
+                                    $field_disabled && field_attributes="$field_attributes disabled" && echo "                    <input type=\"hidden\" name=\"$key\" value=\"$value\">"
+                                    test "$field_tag" == "input" && echo "                      <$field_tag type=\"$field_type\" $field_attributes value=\"$value\">"
 
-                                    echo "                  <td>"
+                                    echo "                      <td>"
                                 fi
 
-                                echo "              </tr>"
+                                echo "                  </tr>"
 
                             done < "$form_file"
 
-                            echo "                  <tr>"
-                            echo "                      <td>"
-                            echo "                          <input type=\"hidden\" name=\"host\" value=\"$host\">"
-                            echo "                          <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
-                            echo "                          <input type=\"hidden\" name=\"agent_conf\" value=\"$agent_conf\">"
-                            echo "                          <input type=\"hidden\" name=\"agent_template\" value=\"$agent_template\">"
-                            echo "                          <input type=\"submit\" name=\"submit\" value=\"$submit_save\">"
-                            echo "                          <input type=\"submit\" name=\"submit\" value=\"$submit_erase\">"
-                            echo "                      </td>"
-                            echo "                  </tr>"
-                            echo "              </table>"
+                            echo "                      <tr>"
+                            echo "                          <td>"
+                            echo "                              <input type=\"hidden\" name=\"host\" value=\"$host\">"
+                            echo "                              <input type=\"hidden\" name=\"operation\" value=\"$operation\">"
+                            echo "                              <input type=\"hidden\" name=\"agent_conf\" value=\"$agent_conf\">"
+                            echo "                              <input type=\"hidden\" name=\"agent_template\" value=\"$agent_template\">"
+                            echo "                              <input type=\"submit\" name=\"submit\" value=\"$submit_save\">"
+                            echo "                              <input type=\"submit\" name=\"submit\" value=\"$submit_erase\">"
+                            echo "                          </td>"
+                            echo "                      </tr>"
+                            echo "                  </table>"
+                            echo "              </div>"
                             echo "          </form>"
                             echo "      </p>"
 
