@@ -45,12 +45,16 @@ function submit_deploy() {
                 echo "      <p>"
                 echo "              <table class=\"cfg_color\">"
                 while read l; do
-                    show_param=true
                     key="$(echo "$l" | cut -f1 -d '=')"
                     value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                    echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
-                    ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
-                    $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
+                    if echo "$key" | grep -E "^#" > /dev/null; then
+                        echo "                  <tr><td colspan=\"2\">##$key</td></tr>"
+                    else
+                        show_param=true
+                        echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
+                        ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
+                        $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
+                    fi
                 done < "$app_conf_dir/$app_name.conf"
                 echo "              </table>"
                 echo "      </p>"
