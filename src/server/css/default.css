@@ -58,6 +58,10 @@ a, p {
     left: 0;
 }
 
+#title a {
+    text-decoration: none
+}
+
 #welcome {
     padding-top: 0.5rem;
     padding-right: 20;
