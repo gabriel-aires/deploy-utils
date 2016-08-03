@@ -30,6 +30,7 @@ while $outdated; do
             sed -rn 's/^share=/share_teste=/p' $config >> $config
             sed -i -r '/^share=/d' $config
             reset_config.sh "$config" "$install_dir/template/app.template"
+            chown $apache_user:$apache_group $config
         done
 
         echo "95" > $version_file
