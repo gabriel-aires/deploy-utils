@@ -3,6 +3,7 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 source $install_dir/sh/include.sh || exit 1
 
 data_file=$1
+header_file=$tmp_dir/header
 
 function end() {
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -35,7 +36,8 @@ if echo "$SELECT" | grep -E " $col_flag_aux" > /dev/null; then
 fi
 
 # CABEÇALHO
-query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --top 1 --from $data_file > $tmp_dir/html 2> /dev/null
+head -n 1 $data_file > $header_file
+query_file.sh --delim "$delim" --replace-delim '</th><th>' $SELECT --from $header_file > $tmp_dir/html 2> /dev/null
 
 # DADOS
 query_file.sh --delim "$delim" --replace-delim '</td><td>' --header 1 $SELECT $DISTINCT $TOP --from $data_file $WHERE $ORDERBY  >> $tmp_dir/html 2> /dev/null
