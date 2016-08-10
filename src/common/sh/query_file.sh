@@ -48,8 +48,7 @@ col_name_regex='[a-zA-Z0-9 \-\_]+'
 arg_name_regex="\[$col_name_regex\]"
 arg_num_regex='[1-9][0-9]*'
 line_regex=''
-line_output_regex=''
-output_regex=''
+clean_columns=''
 preview=''
 last_preview=''
 order_by=''
@@ -78,7 +77,7 @@ while true; do
 
         "-s"|"--select")
             while echo "$2" | grep -Ex "$arg_num_regex|$arg_name_regex|all" > /dev/null; do
-                test "$2" == 'all' && columns[$s_index]="&" || columns[$s_index]="$2"
+                test "$2" == 'all' && columns[$s_index]="0" || columns[$s_index]="$2"
                 ((s_index++))
                 shift
             done
@@ -181,11 +180,9 @@ preview=$tmp_dir/raw_data
 tail -n $(($header_size-$file_size)) $file > $preview
 test $header_size -gt 0 && header="$(head -n $header_size $file | tail -n 1)" || header=$(head -n 1 $file)
 part_regex="(.*)$delim"
-part_output_regex=".*$delim"
 
 while $(echo "$header" | grep -E "^(.*$delim){$size}" > /dev/null); do
     line_regex="$line_regex$part_regex"
-    line_output_regex="$line_output_regex$part_output_regex"
     ((size++))
 done
 ((size--))
@@ -297,22 +294,21 @@ test $end_flag -eq 1 && end 1
 
 # Ordenação
 for index in $(seq 0 $(($o_index-1))) ; do
-    order_by="$order_by\$${order[$index]}$delim"
-    output_regex="$output_regex$part_output_regex"
+    order_by="$order_by\$${order[$index]}\"$delim\""
+    clean_columns="$clean_columns\$$((index+1)) = "
 done
+clean_columns="$clean_columns\"\" ; print \$0"
 
 #Seleção
-output_regex="$output_regex("
 for index in $(seq 0 $(($s_index-1))) ; do
-    if [ ${columns[$index]} == '&' ]; then
+    if [ ${columns[$index]} -eq '0' ]; then
         selection="$selection\$${columns[$index]}"
-        output_regex="$output_regex$line_output_regex"
     else
-        selection="$selection\$${columns[$index]}$delim"
-        output_regex="$output_regex$part_output_regex"
+        selection="$selection\$${columns[$index]}\"$delim\""
     fi
 done
-output_regex="$output_regex)"
 
-# Retorna colunas de (ordenação auxiliares + ) seleção do usuário, (ordena), (remove colunas de ordenação auxiliares), (remove linhas duplicadas), (exibe n primeiras linhas), substitui delimitador
-perl -pe "s|$line_regex|${order_by}$selection|" $preview | $order_cmd | sed -r "s|$output_regex|\1|" | $distinct_cmd | $top_cmd | sed -r "s|$delim|$output_delim|g" && end 0 || end 1
+# Retorna colunas de (ordenação auxiliares + ) seleção do usuário, (ordena), (limpa colunas de ordenação auxiliares), (remove linhas duplicadas), (exibe n primeiras linhas), substitui delimitador
+awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $distinct_cmd | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
+
+end 0
