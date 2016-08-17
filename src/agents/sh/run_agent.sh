@@ -97,7 +97,7 @@ chk_dir () {
         find $root_dir/* -type d | grep -Eix "^$root_dir/[^/]+/$last_dir(/[^/]+)+$" | xargs -r -d "\n" rm -Rfv
 
         # eliminar arquivos em local incorreto ou com extensão diferente das especificadas.
-        file_path_regex="^$root_dir/[^/]+/$last_dir/[^/]+\."
+        file_path_regex="^$root_dir/[^/]+/$last_dir/[^/]*\."
         file_path_regex="$(echo "$file_path_regex" | sed -r "s|^(.*)$|\1$ext_list\$|ig" | sed -r "s: :\$\|$file_path_regex:g")"
         find "$root_dir" -type f | grep -Eix "^$root_dir/[^/]+/$last_dir/[^/]+$" | grep -Eixv "$file_path_regex" | xargs -r -d "\n" rm -fv
 
@@ -268,7 +268,7 @@ function log_agent () {
 
     if [ $(ls "${destino}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir "$destino" "log" "$filetypes"
+        chk_dir "$destino" "log" "$filetypes refresh"
 
         app_list="$(find $destino/* -type d -name 'log' -print | sed -r "s|^${destino}/([^/]+)/log|\1|ig")"
         app_list=$(echo "$app_list" | sed -r "s%(.)$%\1|%g" | tr '[:upper:]' '[:lower:]')
@@ -279,10 +279,11 @@ function log_agent () {
 
             if [ -d "$shared_log_dir" ]; then
 
+                test -f "$shared_log_dir/.refresh" || continue
+                valid 'app' "'$app': Nome de aplicação inválido." "continue" || continue
+
                 export shared_log_dir
                 export app
-
-                valid 'app' "'$app': Nome de aplicação inválido." "continue" || continue
 
                 find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
                 find $tmp_dir/ -type p | xargs -d '\n' -r rm -f
@@ -291,6 +292,7 @@ function log_agent () {
                 test -f "$log_dir/service.log" && cat "$log_dir/service.log" >> "$shared_log_dir/agent_$host.log"
                 cat "$log" >> "$shared_log_dir/agent_$host.log"
                 unix2dos "$shared_log_dir/agent_$host.log" &> /dev/null
+                rm -f "$shared_log_dir/.refresh" &> /dev/null
 
             else
                 log "ERRO" "O diretório para cópia de logs da aplicação $app não foi encontrado".

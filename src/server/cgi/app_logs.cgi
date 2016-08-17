@@ -134,6 +134,16 @@ else
 
                 echo "          <p>Sistema: $app</p>"
                 echo "          <p>Ambiente: $env</p>"
+
+                echo "          <p>"
+                echo "Aguarde... O agente de coleta de logs será executado."
+                touch "$upload_dir/$log_subpath/.refresh"
+                while [ -f "$upload_dir/$log_subpath/.refresh" ]; do
+                    sleep 1
+                    echo -n "."
+                done
+                echo "          </p>"
+
                 echo "          <ul>"
                 find "$upload_dir/$log_subpath/" -maxdepth 1 -type f | sed -r "s|^$upload_dir/(.*)$|<li><a href=\"$apache_log_alias/\1\">\1</a></li>|"
                 echo "          </ul>"
