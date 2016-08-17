@@ -136,7 +136,7 @@ else
                 echo "          <p>Ambiente: $env</p>"
 
                 echo "          <p>"
-                echo "Aguarde... O agente de coleta de logs será executado."
+                echo "Aguarde... O agente de coleta de logs será executado"
                 touch "$upload_dir/$log_subpath/.refresh"
                 while [ -f "$upload_dir/$log_subpath/.refresh" ]; do
                     sleep 1
