@@ -170,6 +170,16 @@ function web_header () {
     echo "      </div>"
     echo "      <div id=\"main\">"
 
+    if [ "$(basename $SCRIPT_NAME)" == 'index.cgi' ] || ( [ "$(basename $SCRIPT_NAME)" == 'search.cgi' ] && [ -n "$QUERY_STRING" ] ); then
+        echo "          <div id=\"loading-container\">"
+        echo "              <div id=\"loading-1\"></div>"
+        echo "              <div id=\"loading-2\"></div>"
+        echo "              <div id=\"loading-3\"></div>"
+        echo "              <div id=\"loading-4\"></div>"
+        echo "              <div id=\"loading-5\"></div>"
+        echo "          </div>"
+    fi
+
     return 0
 }
 
@@ -243,7 +253,7 @@ function web_query_history () {
         table_content="$tmp_dir/html_table"
         $install_dir/cgi/table_data.cgi $file > $table_content
         web_tr_pagination "$table_content" "1"
-
+ 
         echo "      <p>"
         echo "          <table class=\"query_table\">"
         head -n 1 "$table_content"
