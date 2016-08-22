@@ -170,6 +170,16 @@ function web_header () {
     echo "      </div>"
     echo "      <div id=\"main\">"
 
+    if [ "$(basename $SCRIPT_NAME)" == 'index.cgi' ] || ( [ "$(basename $SCRIPT_NAME)" == 'search.cgi' ] && [ -n "$QUERY_STRING" ] ); then
+        echo "          <div id=\"loading-container\">"
+        echo "              <div id=\"loading-1\"></div>"
+        echo "              <div id=\"loading-2\"></div>"
+        echo "              <div id=\"loading-3\"></div>"
+        echo "              <div id=\"loading-4\"></div>"
+        echo "              <div id=\"loading-5\"></div>"
+        echo "          </div>"
+    fi
+
     return 0
 }
 
@@ -180,56 +190,58 @@ function web_tr_pagination () {
     local data_size
     local view_size
     local print_size
+    local arg_delimiter='&'
     local page
     local min_page
     local max_page
     local next
     local prev
+    local first_uri
     local next_uri
     local prev_uri
+    local last_uri
     local nav
     local no_results_msg='<tr><td colspan="100">Nenhum registro encontrado.</td></tr>'
 
     test "$#" -eq "2" || { echo "web_tr_pagination(): favor informar dois argumentos." ; return 1 ; }
     test -f "$table_content" || { echo "web_tr_pagination(): o primeiro argumento deve ser um arquivo." ; return 1 ; }
     test "$header_line" -ge "0" 2> /dev/null || { echo "web_tr_pagination(): o segundo argumento deve ser o número da linha de cabeçalho." ; return 1 ; }
+    test -z "$QUERY_STRING" && arg_delimiter='?'
 
-    if [ -z "$QUERY_STRING" ]; then
-        view_size="$cgi_table_size"
-        page=1
-        next=2
-        prev=0
-        next_uri="$start_page?p=$next"
-    else
-        view_size=$(echo "$arg_string" | sed -rn "s/^.*&n=([^\&]+)&.*$/\1/p")
-        test -z "$view_size" && view_size="$cgi_table_size"
-
-        page=$(echo "$arg_string" | sed -rn "s/^.*&p=([^\&]+)&.*$/\1/p")
-        test -z "$page" && page=1
-
-        next=$(($page+1))
-        prev=$(($page-1))
-
-        next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$next\2/p")"
-        test -z "$next_uri" && next_uri="$REQUEST_URI&p=$next"
-
-        prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$prev\2/p")"
-        test -z "$prev_uri" && prev_uri="$REQUEST_URI&p=$prev"
-    fi
-
-    # define comando de exibição das linhas
     data_size=$(($(cat "$table_content" | wc -l)-$header_line))
+    view_size=$(echo "$arg_string" | sed -rn "s/^.*&n=([^\&]+)&.*$/\1/p")
+    test -z "$view_size" && view_size="$cgi_table_size"
+
     min_page=1
     max_page=$(($data_size/$view_size))
     test $(($max_page*$view_size)) -lt $data_size && ((max_page++))
+
+    page=$(echo "$arg_string" | sed -rn "s/^.*&p=([^\&]+)&.*$/\1/p")
+    test -z "$page" && page=1
+    next=$(($page+1))
+    prev=$(($page-1))
+
+    first_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$min_page\2/p")"
+    test -z "$first_uri" && first_uri="$REQUEST_URI${arg_delimiter}p=$min_page"
+
+    prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$prev\2/p")"
+    test -z "$prev_uri" && prev_uri="$REQUEST_URI${arg_delimiter}p=$prev"
+
+    next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$next\2/p")"
+    test -z "$next_uri" && next_uri="$REQUEST_URI${arg_delimiter}p=$next"
+
+    last_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$max_page\2/p")"
+    test -z "$last_uri" && last_uri="$REQUEST_URI${arg_delimiter}p=$max_page"
+
+    # define comando de exibição das linhas
     test $page -eq $max_page && print_size=$(($view_size-($view_size*$max_page-$data_size))) || print_size=$view_size
     test $data_size -ge 1 && print_page_cmd="head -n '$((($page*$view_size)+$header_line))' '$table_content' | tail -n '$print_size'" || print_page_cmd="echo '$no_results_msg'"
 
     # define links para navegação
-    nav="$page"
-    test $next -le $max_page && nav="$nav <a href=\"$next_uri\">$next</a>"
-    test $prev -ge $min_page && nav="<a href=\"$prev_uri\">$prev</a> $nav"
-    nav_right="<div id=\"nav_right\"><p>Página: $nav</p></div>"
+    nav="Página $page"
+    test $prev -ge $min_page && nav="<a href=\"$first_uri\"><button type=\"button\">&lt&lt</button></a> <a href=\"$prev_uri\"><button type=\"button\">&lt</button></a> $nav"
+    test $next -le $max_page && nav="$nav <a href=\"$next_uri\"><button type=\"button\">&gt</button></a> <a href=\"$last_uri\"><button type=\"button\">&gt&gt</button></a>"
+    nav_right="<div id=\"nav_right\"><p>$nav</p></div>"
 
 }
 
@@ -254,6 +266,8 @@ function web_query_history () {
     else
         echo "<p>Arquivo de histórico inexistente</p>"
     fi
+
+    echo "<div id=\"loading-hide\"></div>"
 
     return 0
 }

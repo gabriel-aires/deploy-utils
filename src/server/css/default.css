@@ -81,6 +81,72 @@ a, p {
     padding: 20;
 }
 
+/* Loading */
+
+#loading-container, #loading-hide, #loading-1, #loading-2, #loading-3, #loading-4, #loading-5 {
+    position: fixed;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
+#loading-container, #loading-hide {
+    width: 60px;
+    height: 60px;
+}
+
+#loading-container {
+    z-index: -3;
+    background-color: lightgray;
+    border-radius: 30px;
+}
+
+#loading-hide {
+   z-index: -1;
+   background-color: white;
+}
+
+@keyframes spin {
+    0%   {transform: translate(20px,0px); background-color: white;}
+    13%  {transform: translate(14px,14px);}
+    26%  {transform: translate(0px,20px);}
+    39%  {transform: translate(-14px,14px);}
+    52%  {transform: translate(-20px,0px);}
+    65%  {transform: translate(-14px,-14px);}
+    78%  {transform: translate(0px,-20px);}
+    91%  {transform: translate(14px,-14px);}
+    100% {transform: translate(20px,0px); background-color: white;}
+}
+
+#loading-1, #loading-2, #loading-3, #loading-4, #loading-5 {
+    z-index: -2;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    animation-name: spin;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+
+#loading-2 {
+    animation-delay: 0.1s;
+}
+
+#loading-3 {
+    animation-delay: 0.2s;
+}
+
+#loading-4 {
+    animation-delay: 0.3s;
+}
+
+#loading-5 {
+    animation-delay: 0.4s;
+}
+
 /* Columns */
 
  .column, .column_small, .column_default, .column_large {
