@@ -239,8 +239,8 @@ function web_tr_pagination () {
 
     # define links para navegação
     nav="$page"
-    test $prev -ge $min_page && nav="<a href=\"$first_uri\">&lt&lt</a> <a href=\"$prev_uri\">$prev</a> $nav"
-    test $next -le $max_page && nav="$nav <a href=\"$next_uri\">$next</a> <a href=\"$last_uri\">&gt&gt</a>"
+    test $prev -ge $min_page && nav="<a href=\"$first_uri\"><button type=\"button\">&lt&lt</button></a> <a href=\"$prev_uri\"><button type=\"button\">&lt</button></a> $nav"
+    test $next -le $max_page && nav="$nav <a href=\"$next_uri\"><button type=\"button\">&gt</button></a> <a href=\"$last_uri\"><button type=\"button\">&gt&gt</button></a>"
     nav_right="<div id=\"nav_right\"><p>Página: $nav</p></div>"
 
 }
