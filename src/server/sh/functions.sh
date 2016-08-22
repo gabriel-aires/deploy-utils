@@ -221,16 +221,16 @@ function web_tr_pagination () {
     next=$(($page+1))
     prev=$(($page-1))
 
-    first_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$min_page\2/p")"
+    first_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*)[&\?]p=$page(.*)$/\1${arg_delimiter}p=$min_page\2/p")"
     test -z "$first_uri" && first_uri="$REQUEST_URI${arg_delimiter}p=$min_page"
 
-    prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$prev\2/p")"
+    prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*)[&\?]p=$page(.*)$/\1${arg_delimiter}p=$prev\2/p")"
     test -z "$prev_uri" && prev_uri="$REQUEST_URI${arg_delimiter}p=$prev"
 
-    next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$next\2/p")"
+    next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*)[&\?]p=$page(.*)$/\1${arg_delimiter}p=$next\2/p")"
     test -z "$next_uri" && next_uri="$REQUEST_URI${arg_delimiter}p=$next"
 
-    last_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$max_page\2/p")"
+    last_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*)[&\?]p=$page(.*)$/\1${arg_delimiter}p=$max_page\2/p")"
     test -z "$last_uri" && last_uri="$REQUEST_URI${arg_delimiter}p=$max_page"
 
     # define comando de exibição das linhas
@@ -238,10 +238,10 @@ function web_tr_pagination () {
     test $data_size -ge 1 && print_page_cmd="head -n '$((($page*$view_size)+$header_line))' '$table_content' | tail -n '$print_size'" || print_page_cmd="echo '$no_results_msg'"
 
     # define links para navegação
-    nav="$page"
+    nav="Página $page"
     test $prev -ge $min_page && nav="<a href=\"$first_uri\"><button type=\"button\">&lt&lt</button></a> <a href=\"$prev_uri\"><button type=\"button\">&lt</button></a> $nav"
     test $next -le $max_page && nav="$nav <a href=\"$next_uri\"><button type=\"button\">&gt</button></a> <a href=\"$last_uri\"><button type=\"button\">&gt&gt</button></a>"
-    nav_right="<div id=\"nav_right\"><p>Página: $nav</p></div>"
+    nav_right="<div id=\"nav_right\"><p>$nav</p></div>"
 
 }
 
