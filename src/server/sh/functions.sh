@@ -221,16 +221,16 @@ function web_tr_pagination () {
     next=$(($page+1))
     prev=$(($page-1))
 
-    first_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*)[&\?]p=$page(.*)$/\1${arg_delimiter}p=$min_page\2/p")"
+    first_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$min_page\2/p")"
     test -z "$first_uri" && first_uri="$REQUEST_URI${arg_delimiter}p=$min_page"
 
-    prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*)[&\?]p=$page(.*)$/\1${arg_delimiter}p=$prev\2/p")"
+    prev_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$prev\2/p")"
     test -z "$prev_uri" && prev_uri="$REQUEST_URI${arg_delimiter}p=$prev"
 
-    next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*)[&\?]p=$page(.*)$/\1${arg_delimiter}p=$next\2/p")"
+    next_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$next\2/p")"
     test -z "$next_uri" && next_uri="$REQUEST_URI${arg_delimiter}p=$next"
 
-    last_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*)[&\?]p=$page(.*)$/\1${arg_delimiter}p=$max_page\2/p")"
+    last_uri="$(echo "$REQUEST_URI" | sed -rn "s/^(.*[&\?]p=)$page(.*)$/\1$max_page\2/p")"
     test -z "$last_uri" && last_uri="$REQUEST_URI${arg_delimiter}p=$max_page"
 
     # define comando de exibição das linhas
