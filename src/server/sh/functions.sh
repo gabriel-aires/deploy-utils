@@ -206,7 +206,7 @@ function web_tr_pagination () {
     test "$#" -eq "2" || { echo "web_tr_pagination(): favor informar dois argumentos." ; return 1 ; }
     test -f "$table_content" || { echo "web_tr_pagination(): o primeiro argumento deve ser um arquivo." ; return 1 ; }
     test "$header_line" -ge "0" 2> /dev/null || { echo "web_tr_pagination(): o segundo argumento deve ser o número da linha de cabeçalho." ; return 1 ; }
-    test -z "$arg_string" && arg_delimiter='?'
+    test -z "$QUERY_STRING" && arg_delimiter='?'
 
     data_size=$(($(cat "$table_content" | wc -l)-$header_line))
     view_size=$(echo "$arg_string" | sed -rn "s/^.*&n=([^\&]+)&.*$/\1/p")
