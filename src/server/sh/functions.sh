@@ -170,16 +170,6 @@ function web_header () {
     echo "      </div>"
     echo "      <div id=\"main\">"
 
-    if [ "$(basename $SCRIPT_NAME)" == 'index.cgi' ] || ( [ "$(basename $SCRIPT_NAME)" == 'search.cgi' ] && [ -n "$QUERY_STRING" ] ); then
-        echo "          <div id=\"loading-container\">"
-        echo "              <div id=\"loading-1\"></div>"
-        echo "              <div id=\"loading-2\"></div>"
-        echo "              <div id=\"loading-3\"></div>"
-        echo "              <div id=\"loading-4\"></div>"
-        echo "              <div id=\"loading-5\"></div>"
-        echo "          </div>"
-    fi
-
     return 0
 }
 
@@ -267,8 +257,6 @@ function web_query_history () {
         echo "<p>Arquivo de histórico inexistente</p>"
     fi
 
-    echo "<div id=\"loading-hide\"></div>"
-
     return 0
 }
 
@@ -310,6 +298,26 @@ function web_footer () {
     echo '  </body>'
     echo '</html>'
 
+    return 0
+
+}
+
+function content_loading() {
+
+    echo "          <div id=\"loading-container\">"
+    echo "              <div id=\"loading-1\"></div>"
+    echo "              <div id=\"loading-2\"></div>"
+    echo "              <div id=\"loading-3\"></div>"
+    echo "              <div id=\"loading-4\"></div>"
+    echo "              <div id=\"loading-5\"></div>"
+    echo "          </div>"
+    return 0
+
+}
+
+function content_ready() {
+
+    echo "          <div id=\"loading-hide\"></div>"
     return 0
 
 }

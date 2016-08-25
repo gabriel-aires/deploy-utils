@@ -22,6 +22,7 @@ mkdir $tmp_dir
 
 # Cabeçalho
 web_header
+content_loading
 
 # Inicializar variáveis e constantes
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
@@ -71,5 +72,6 @@ fi
 
 # histórico de deploy
 web_query_history
+content_ready
 
 end 0
