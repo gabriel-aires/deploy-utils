@@ -6,6 +6,7 @@ source $install_dir/sh/include.sh || exit 1
 
 function end() {
     test "$1" == "0" || echo "      <p><b>Operação inválida.</b></p>"
+    content_ready
     echo "</div>"
     web_footer
 
@@ -177,6 +178,7 @@ mkdir $tmp_dir
 
 # Cabeçalho
 web_header
+content_loading
 
 proceed_search="Buscar"
 proceed_view="Exibir"

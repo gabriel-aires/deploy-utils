@@ -22,6 +22,7 @@ mkdir $tmp_dir
 
 # Cabeçalho
 web_header
+test -n "$QUERY_STRING" && content_loading
 
 # Inicializar variáveis e constantes
 col_day_name=$(echo "$col_day" | sed -r 's|(\[)||' | sed -r 's|(\])||')
@@ -104,6 +105,7 @@ else
 
     # Consultar Histórico de Deploy
     web_query_history
+    content_ready
 
 fi
 echo "      </p>"
