@@ -12,3 +12,4 @@ deploy_filetypes=
 log_filetypes=
 # Parâmetros do servidor de aplicação
 caminho_instancias_jboss=
+log_limit=
