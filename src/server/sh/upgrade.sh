@@ -31,6 +31,7 @@ while $outdated; do
             sed -i -r '/^share=/d' $config
             reset_config.sh "$config" "$install_dir/template/app.template"
             chown $apache_user:$apache_group $config
+            log "INFO" "Arquivo $config atualizado com sucesso."            
         done
 
         echo "95" > $version_file
@@ -40,13 +41,14 @@ while $outdated; do
     elif [ "$version_sequential" -lt "101" ]; then
         log "INFO" "Aplicando migrações para a versão 101..."
 
-        find $gent_conf_dir/ -type f -iname '*.conf' | while read config; do
+        find $agent_conf_dir/ -type f -iname '*.conf' | while read config; do
             grep -E "^agent_name=[\"']?jboss_4_5[\"']?$" $config > /dev/null || continue
             touch $config
             cp $config $config.bak
             echo "log_limit='100'" >> $config
             reset_config.sh "$config" "$src_dir/agents/template/jboss_4_5.template"
             chown $apache_user:$apache_group $config
+            log "INFO" "Arquivo $config atualizado com sucesso."
         done
 
         echo "101" > $version_file
