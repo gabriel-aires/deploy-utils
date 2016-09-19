@@ -120,13 +120,13 @@ function tasks () {
     test $qtd_purge -gt 0 && sed -i 1,"$qtd_purge"d "$log"
 
     # Deploys
-    grep -RExl "run_deploy_agent=[\"']?true[\"']?" "$remote_conf_dir/$host/" > $tmp_dir/deploy_enabled.list
+    grep -RExl "run_deploy_agent=[\"']?true[\"']?" "$remote_conf_dir/$host/"*.conf > $tmp_dir/deploy_enabled.list
     while read deploy_conf; do
         async_agent "deploy" "$deploy_conf"
     done < $tmp_dir/deploy_enabled.list
 
     # Logs
-    grep -RExl "run_log_agent=[\"']?true[\"']?" "$remote_conf_dir/$host/" > $tmp_dir/log_enabled.list
+    grep -RExl "run_log_agent=[\"']?true[\"']?" "$remote_conf_dir/$host/"*.conf > $tmp_dir/log_enabled.list
     while read log_conf; do
         async_agent "log" "$log_conf"
     done < $tmp_dir/log_enabled.list
