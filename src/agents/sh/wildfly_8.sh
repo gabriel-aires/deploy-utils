@@ -80,9 +80,6 @@ function copy_log () {
                     cd $app_log_dir; zip -rql1 ${shared_log_dir}/logs_${hc_name}_${srvconf}.zip *; cd - > /dev/null
                     cp -f $app_log_dir/server.log $shared_log_dir/server_${hc_name}_${srvconf}.log
 
-                    log "INFO" "Expurgando logs antigos no diretório $app_log_dir..."
-                    ls -1 $app_log_dir/server.log.* | sort | head -n -$log_limit | xargs -r rm -fv
-
                 else
                     log "INFO" "Não foram encontrados arquivos de log para a aplicação $app"
                 fi
@@ -102,7 +99,6 @@ test -n $controller_hostname || exit 1
 test -n $controller_port || exit 1
 test -n $user || exit 1
 test -n $password || exit 1
-test "$log_limit" -ge 0 || exit 1
 
 # testar a conexão com o domain controller
 wildfly_cmd="timeout -s KILL $((agent_timeout/2)) $wildfly_dir/bin/jboss-cli.sh --connect --controller=$controller_hostname:$controller_port --user=$user --password=$password"

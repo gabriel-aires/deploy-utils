@@ -180,15 +180,10 @@ function copy_log () {
             server_log=$(find "${caminho_instancias_jboss}/${instancia_jboss}" -iwholename "${caminho_instancias_jboss}/${instancia_jboss}/log/server.log" 2> /dev/null)
 
             if [ $(echo $server_log | wc -l) -eq 1 ]; then
-
                 log "INFO" "Copiando logs da aplicação $app no diretório $(dirname $server_log)..."
                 cd $(dirname $server_log); zip -rql1 ${shared_log_dir}/${instancia_jboss}.zip *; cd - > /dev/null
                 cp -f $server_log "$shared_log_dir/server_${instancia_jboss}.log"
                 unix2dos "$shared_log_dir/server_${instancia_jboss}.log" > /dev/null 2>&1
-
-                log "INFO" "Expurgando logs antigos no diretório $(dirname $server_log)..."
-                ls -1 $(dirname $server_log)/server.log.* | sort | head -n -$log_limit | xargs -r rm -fv
-
             else
                 log "ERRO" "Não há logs da instância JBOSS correspondente à aplicação $app."
             fi
@@ -202,8 +197,7 @@ function copy_log () {
 }
 
 # Validar variáveis específicas
-test -d "${caminho_instancias_jboss}" || exit 1
-test "$log_limit" -ge 0 || exit 1
+test ! -d "${caminho_instancias_jboss}" && log "ERRO" "O parâmetro 'caminho_instancias_jboss' deve ser um diretório válido." && exit 1
 
 case $1 in
     log) copy_log;;
