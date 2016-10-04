@@ -14,8 +14,8 @@ function tomcat_script_init () {
     while read script_tomcat && [ -z "$script_init" ]; do
 
         #verifica se o script corresponde à instalação correta do TOMCAT e se aceita os argumentos 'start' e 'stop'
-        test -n "$(grep -Ex "[[:blank:]]*[\"']?start[\"']?\)" "$script_tomcat" | head -1)" || continue
-        test -n "$(grep -Ex "[[:blank:]]*[\"']?stop[\"']?\)" "$script_tomcat" | head -1)" || continue
+        test -n "$(grep -E "^[[:blank:]]*[\"']?start[\"']?\)" "$script_tomcat" | head -1)" || continue
+        test -n "$(grep -E "^[[:blank:]]*[\"']?stop[\"']?\)" "$script_tomcat" | head -1)" || continue
         test -n "$(grep -F "$tomcat_path" "$script_tomcat" | head -1)" || continue
         
         #retorna a primeira linha onde foi definida a variável $CATALINA_BASE (ou $CATALINA_HOME, caso haja somente uma instância TOMCAT no servidor)
