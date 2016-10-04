@@ -20,11 +20,11 @@ function tomcat_script_init () {
         
         #retorna a primeira linha onde foi definida a variável $CATALINA_BASE (ou $CATALINA_HOME, caso haja somente uma instância TOMCAT no servidor)
         param_name='CATALINA_BASE'
-        param_line="$(grep -Ex '[[:blank:]]*${param_name}=.*' "$script_tomcat" | head -1 )"
+        param_line="$(grep -Ex "[[:blank:]]*${param_name}=.*" "$script_tomcat" | head -1 )"
 
         if [ -z "$param_line" ]; then
             param_name='CATALINA_HOME'
-            param_line="$(grep -Ex '[[:blank:]]*${param_name}=.*' "$script_tomcat" | head -1 )"
+            param_line="$(grep -Ex "[[:blank:]]*${param_name}=.*" "$script_tomcat" | head -1 )"
         fi
         
         param_value="$(echo "$param_line" | cut -f2 -d '=' | tr -d "'" | tr -d '"' | tr '{}' '%')"
