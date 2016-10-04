@@ -82,8 +82,9 @@ function deploy_pkg () {
                 start_instance="timeout -s KILL $((agent_timeout/2)) $script_init start"
 
                 $stop_instance
+                sleep 5
 
-                if [ $? -ne 0 ] || [ $(pgrep -f "\-Dcatalina.base=$tomcat_dir" | wc -l) -ne 0 ]; then
+                if [ $(pgrep -f "\-Dcatalina.base=$tomcat_dir" | wc -l) -ne 0 ]; then
                     log "ERRO" "Não foi possível parar a instância $tomcat_instance do TOMCAT. Deploy abortado."
                     write_history "Deploy abortado. Impossível parar a instância $tomcat_instance." "0"
                 else
