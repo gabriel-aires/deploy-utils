@@ -19,7 +19,7 @@ function deploy_pkg () {
                 log "INFO" "Removendo a aplicação $app do grupo $group..."
                 $wildfly_cmd --command="undeploy $app.$ext --server-groups=$group"
                 if [ "$?" -ne "0" ]; then
-                    log "ERRO" "Falha ao remover a aplicação $app.$ext do server-group $group"
+                    log "ERRO" "Falha ao remover a aplicação $app.$ext do server-group $group" && error=true
                     write_history "Falha ao remover a aplicação $app.$ext do server-group $group" "0"
                     continue
                 fi
@@ -27,7 +27,7 @@ function deploy_pkg () {
                 log "INFO" "Implantando a nova versão da aplicação $app no grupo $group"
                 $wildfly_cmd --command="deploy $pkg --name=$app.$ext --server-groups=$group"
                 if [ "$?" -ne "0" ]; then
-                    log "ERRO" "Falha ao implantar a aplicação $app.$ext no server-group $group"
+                    log "ERRO" "Falha ao implantar a aplicação $app.$ext no server-group $group" && error=true
                     write_history "Falha ao implantar a aplicação $app.$ext no server-group $group" "0"
                     continue
                 fi
@@ -38,19 +38,18 @@ function deploy_pkg () {
             done
 
         else
-            log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)"
+            log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && error=true
             write_history "A aplicação $app não foi localizada pelo domain controller" "0"
-            exit 1
         fi
 
-        # finalizado o deploy, remover pacote do diretório de origem
-        rm -f $pkg
-
     else
-        log "ERRO" "O deploy deve ser realizado através domain controller ($controller_host)"
+        log "ERRO" "O deploy deve ser realizado através do domain controller ($controller_host)" && error=true
         write_history "O deploy deve ser realizado através domain controller ($controller_host)" "0"
-        exit 1
     fi
+
+    # finalizado o deploy, remover pacote do diretório de origem
+    rm -f $pkg
+
 }
 
 function copy_log () {
@@ -89,20 +88,26 @@ function copy_log () {
         done
 
     else
-        log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && exit 1
+        log "ERRO" "A aplicação $app não foi localizada pelo domain controller ($controller_hostname:$controller_port)" && error=true
     fi
 }
 
 # Validar variáveis específicas
-test -f $wildfly_dir/bin/jboss-cli.sh || exit 1
-test -n $controller_hostname || exit 1
-test -n $controller_port || exit 1
-test -n $user || exit 1
-test -n $password || exit 1
+error=false
+
+test ! -x $wildfly_dir/bin/jboss-cli.sh && log "ERRO" "Não foi identificado o executável jboss-cli.sh" && error=true
+test -z $controller_hostname && log "ERRO" "O parâmetro 'controller_hostname' deve ser preenchido." && error=true
+test -z $controller_port && log "ERRO" "O parâmetro 'controller_port' deve ser preenchido." && error=true
+test -z $user && log "ERRO" "O parâmetro 'user' deve ser preenchido." && error=true
+test -z $password && log "ERRO" "O parâmetro 'password' deve ser preenchido." && error=true
+
+$error && log "ERRO" "Rotina abortada." && exit 1
 
 # testar a conexão com o domain controller
 wildfly_cmd="timeout -s KILL $((agent_timeout/2)) $wildfly_dir/bin/jboss-cli.sh --connect --controller=$controller_hostname:$controller_port --user=$user --password=$password"
-$wildfly_cmd --command="deployment-info --server-group=*" > /dev/null || exit 1
+$wildfly_cmd --command="deployment-info --server-group=*" > /dev/null || { log "ERRO" "Falha na conexão com o domain controller" && error=true ; }
+
+$error && log "ERRO" "Rotina abortada." && exit 1
 
 # executar função de deploy ou cópia de logs
 case $1 in
@@ -110,3 +115,6 @@ case $1 in
     deploy) deploy_pkg;;
     *) log "ERRO" "O script somente admite os parâmetros 'deploy' ou 'log'.";;
 esac
+
+$error && log "ERRO" "Rotina concluída com erro(s)." && exit 1
+log "INFO" "Rotina concluída com sucesso." && exit 0
