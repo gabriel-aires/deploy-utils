@@ -78,6 +78,7 @@ cgi_deploy_logs_title=
 cgi_users_title=
 cgi_groups_title=
 cgi_signup_title=
+cgi_profile_title=
 cgi_faq_title=
 cgi_table_size=
 # Estrutura da tabela de permissões:
