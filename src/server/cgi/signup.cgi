@@ -117,7 +117,7 @@ if [ -n "$POST_STRING" ]; then
                 test "$(get_email "$user")" == "$email" > /dev/null || { echo "<p><b>O email informado não corresponde ao usuário '$user'.</b></p>" && end 1 ; }
 
                 new_password="$(random_password "$user")"
-                echo "$new_password" | mail -s "deploy-utils: senha temporária" "$email" || { echo "<p><b>Não foi possível enviar a senha para o endereço '$email'.</b></p>" && end 1 ; }
+                echo "$new_password" | mail -s "$web_app_name: nova senha" "$email" || { echo "<p><b>Não foi possível enviar a senha para o endereço '$email'.</b></p>" && end 1 ; }
                 add_login "$user" "$new_password" || end 1
                 
                 echo "      <p><b>Foi gerada uma nova senha para o usuário '$user'. Favor verificar o email cadastrado.</b></p>"
