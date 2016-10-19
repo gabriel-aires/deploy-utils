@@ -28,7 +28,8 @@ test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTE
 create_value='Criar Conta'
 
 # Form Select
-echo "<form action=\"$start_page\" method=\"post\">"
+echo "<div class=\"column\">"
+echo "  <form action=\"$start_page\" method=\"post\">"
 echo "     <fieldset>"
 echo "          <legend>Nova Usuário</legend>"
 echo "          <table>"
@@ -39,7 +40,8 @@ echo "              <tr><td>Confirmar Senha:      </td><td><input type=\"passwor
 echo "              <tr><td colspan=\"2\"><input type=\"submit\" name=\"create\" value=\"$create_value\"></td></tr>"
 echo "          </table>"
 echo "     </fieldset>"
-echo "</form>"
+echo "  </form>"
+echo "</div>"
 
 if [ -n "$POST_STRING" ]; then
 
