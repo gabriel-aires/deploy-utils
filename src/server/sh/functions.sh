@@ -359,6 +359,59 @@ function delete_login() {
 
 }
 
+function delete_email() {
+
+    test -w "$web_emails_file" || return 1
+
+    if [ -n "$1" ]; then
+        local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
+        local error=false
+        cp -f "$web_emails_file" "$web_emails_file.bak" || return 1
+        sed -i.bak -r "/^$user_regex:.*$/d" "$web_emails_file" || error=true
+        $error && cp -f "$web_emails_file.bak" "$web_emails_file" && return 1
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function add_email() {
+
+    test -w "$web_emails_file" || return 1
+
+    if [ -n "$1" ] && [ -n "$2" ]; then
+        local user="$1"
+        local email="$2"
+        local error=false
+        cp -f "$web_emails_file" "$web_emails_file.bak" || return 1
+        echo "$user:$email" >> "$web_emails_file" || error=true
+        $error && cp -f "$web_users_file.bak" "$web_users_file" && return 1
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function get_email() {
+
+    test -w "$web_emails_file" || return 1
+
+    if [ -n "$1" ]; then
+        local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
+        grep -E "^$user_regex:[[:blank:]]*[[:graph:]]+[[:blank:]]*$" "$web_emails_file" > /dev/null || return 1
+        sed -rn "s/^$user_regex:[[:blank:]]*([[:graph:]]+)[[:blank:]]*$/\1/p" "$web_emails_file" | tail -n 1
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
 function add_group() {
 
     test -w "$web_groups_file" || return 1
