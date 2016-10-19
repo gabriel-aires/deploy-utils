@@ -31,7 +31,7 @@ create_value='Criar Conta'
 echo "<div class=\"column\">"
 echo "  <form action=\"$start_page\" method=\"post\">"
 echo "     <fieldset>"
-echo "          <legend>Nova Usuário</legend>"
+echo "          <legend>Novo Usuário</legend>"
 echo "          <table>"
 echo "              <tr><td>Login:    </td><td><input type=\"text\" class=\"text_small\" name=\"user\"></td></tr>"
 echo "              <tr><td>Email:      </td><td><input type=\"text\" class=\"text_small\" name=\"email\"></td></tr>"
