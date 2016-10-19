@@ -50,6 +50,10 @@ a, p {
     height: 2.5rem;
 }
 
+#header_version {
+   font-size: 0.5rem;
+}
+
 #title {
     padding-left: 20;
     font-weight: 200;

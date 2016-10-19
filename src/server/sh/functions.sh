@@ -165,7 +165,7 @@ function web_header () {
     echo '  </head>'
     echo "  <body>"
     echo "      <div id=\"header\" class=\"header_color\">"
-    echo "          <div id=\"title\"><b><a href="$web_context_path">$web_app_name $release_name</a> :</b> $page_title</div>"
+    echo "          <div id=\"title\"><b><a href="$web_context_path">$web_app_name <span id=\"header_version\">$release_name</span></a> :</b> $page_title</div>"
     echo "          <div id=\"welcome\">$welcome_msg</div>"
     echo "      </div>"
     echo "      <div id=\"main\">"
