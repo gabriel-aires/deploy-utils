@@ -29,16 +29,16 @@ create_value='Criar Conta'
 
 # Form Select
 echo "<form action=\"$start_page\" method=\"post\">"
-echo "     <table>"
-echo "          <fieldset>"
-echo "              <legend>Nova Conta</legend>"
-echo "              <tr><td>Usuário:    </td><td><input type=\"text\" class=\"text_small\" name=\"user\"></td></tr>"
+echo "     <fieldset>"
+echo "          <legend>Nova Usuário</legend>"
+echo "          <table>"
+echo "              <tr><td>Login:    </td><td><input type=\"text\" class=\"text_small\" name=\"user\"></td></tr>"
 echo "              <tr><td>Email:      </td><td><input type=\"text\" class=\"text_small\" name=\"email\"></td></tr>"
 echo "              <tr><td>Senha:      </td><td><input type=\"password\" class=\"text_small\" name=\"password\"></td></tr>"
 echo "              <tr><td>Confirmar Senha:      </td><td><input type=\"password\" class=\"text_small\" name=\"assure_password\"></td></tr>"
 echo "              <tr><td colspan=\"2\"><input type=\"submit\" name=\"create\" value=\"$create_value\"></td></tr>"
-echo "          </fieldset>"
-echo "     </table>"
+echo "          </table>"
+echo "     </fieldset>"
 echo "</form>"
 
 if [ -n "$POST_STRING" ]; then
