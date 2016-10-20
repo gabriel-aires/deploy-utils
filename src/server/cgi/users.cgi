@@ -97,6 +97,7 @@ else
                             unsubscribe "$user" "$group" && echo "      <p>Usuário '$user' retirado do grupo "$group".</p>" || touch $tmp_dir/error
                         done
                         test -f $tmp_dir/error && end 1
+                        delete_email "$user" || end 1
                         delete_login "$user" || end 1
                         test -w "$web_permissions_file" || end 1
                         cp -f "$web_permissions_file" "$web_permissions_file.bak" || end 1

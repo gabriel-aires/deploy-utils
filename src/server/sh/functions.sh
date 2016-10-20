@@ -160,12 +160,12 @@ function web_header () {
     echo '  <head>'
     echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
     echo '      <meta http-equiv="X-UA-Compatible" content="IE=edge">'
-    echo "      <title>$web_app_name $release_name: $page_title</title>"
+    echo "      <title>$web_app_name $release_name : $page_title</title>"
     echo "      <link rel=\"stylesheet\" type=\"text/css\" href=\"$apache_css_alias/default.css\">"
     echo '  </head>'
     echo "  <body>"
     echo "      <div id=\"header\" class=\"header_color\">"
-    echo "          <div id=\"title\"><b><a href="$web_context_path">$web_app_name</a> :</b> $page_title</div>"
+    echo "          <div id=\"title\"><b><a href="$web_context_path">$web_app_name</a> /</b> $page_title</div>"
     echo "          <div id=\"welcome\">$welcome_msg</div>"
     echo "      </div>"
     echo "      <div id=\"main\">"
@@ -351,6 +351,59 @@ function delete_login() {
         cp -f "$web_users_file" "$web_users_file.bak" || return 1
         htpasswd -D "$web_users_file" "$user" || error=true
         $error && cp -f "$web_users_file.bak" "$web_users_file" && return 1
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function delete_email() {
+
+    test -w "$web_emails_file" || return 1
+
+    if [ -n "$1" ]; then
+        local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
+        local error=false
+        cp -f "$web_emails_file" "$web_emails_file.bak" || return 1
+        sed -i.bak -r "/^$user_regex:.*$/d" "$web_emails_file" || error=true
+        $error && cp -f "$web_emails_file.bak" "$web_emails_file" && return 1
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function add_email() {
+
+    test -w "$web_emails_file" || return 1
+
+    if [ -n "$1" ] && [ -n "$2" ]; then
+        local user="$1"
+        local email="$2"
+        local error=false
+        cp -f "$web_emails_file" "$web_emails_file.bak" || return 1
+        echo "$user:$email" >> "$web_emails_file" || error=true
+        $error && cp -f "$web_users_file.bak" "$web_users_file" && return 1
+    else
+        return 1
+    fi
+
+    return 0
+
+}
+
+function get_email() {
+
+    test -w "$web_emails_file" || return 1
+
+    if [ -n "$1" ]; then
+        local user_regex="$(echo "$1" | sed -r 's|([\.\-])|\\\1|g' )"
+        grep -E "^$user_regex:[[:blank:]]*[[:graph:]]+[[:blank:]]*$" "$web_emails_file" > /dev/null || return 1
+        sed -rn "s/^$user_regex:[[:blank:]]*([[:graph:]]+)[[:blank:]]*$/\1/p" "$web_emails_file" | tail -n 1
     else
         return 1
     fi
