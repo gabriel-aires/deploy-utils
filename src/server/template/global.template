@@ -57,6 +57,7 @@ apache_log_alias=
 apache_doc_alias=
 apache_history_alias=
 web_users_file=
+web_emails_file=
 web_groups_file=
 web_permissions_file=
 web_admin_user=
@@ -77,6 +78,7 @@ cgi_deploy_logs_title=
 cgi_users_title=
 cgi_groups_title=
 cgi_signup_title=
+cgi_profile_title=
 cgi_faq_title=
 cgi_table_size=
 # Estrutura da tabela de permissões:
@@ -87,6 +89,7 @@ col_resource_name=
 col_permission=
 # Expressões de validação utilizadas na interface Web
 regex_user=
+regex_email=
 regex_group=
 regex_password=
 regex_subject_type=
