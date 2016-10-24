@@ -247,7 +247,7 @@ function web_query_history () {
         web_tr_pagination "$table_content" "1"
 
         echo "      <p>"
-        echo "          <table class=\"query_table\">"
+        echo "          <table class=\"stripped_table\">"
         head -n 1 "$table_content"
         eval "$print_page_cmd"
         echo "          </table>"

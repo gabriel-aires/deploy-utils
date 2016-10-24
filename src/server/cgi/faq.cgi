@@ -156,14 +156,14 @@ function display_faq() {
 
         sed -i -r "s|^([^;]*;)([^;]*;)([^;]*;)$|\2\1\3|" $tmp_dir/results
         sed -i -r "s|;|</td><td>|g" $tmp_dir/results
-        sed -i -r "s|^(.)|<tr class=\"cfg_color\"><td>\1|" $tmp_dir/results
+        sed -i -r "s|^(.)|<tr><td>\1|" $tmp_dir/results
         sed -i -r "s|<td>$|</tr>|" $tmp_dir/results
 
         web_tr_pagination "$tmp_dir/results" "0"
 
         echo "<h3>Tópicos:</h3>"
-        echo "<table id=\"faq\" width=100%>"
-        echo "<tr class=\"header_color\"><td>Tópico</td><td>Categoria</td><td>Tags</td></tr>"
+        echo "<table id=\"faq\" class=\"stripped_table\" width=100%>"
+        echo "<tr><th>Tópico</th><th>Categoria</th><th>Tags</th></tr>"
         eval "$print_page_cmd"
         echo "</table>"
 
