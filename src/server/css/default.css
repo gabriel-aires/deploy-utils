@@ -187,20 +187,44 @@ a, p {
 
 /* Tables */
 
-.query_table {
+.stripped_table {
     text-align: center;
-    background-color: white;
+    background-color: #dddddd;
+    border-spacing: 0.1rem;
     width: 100%;
 }
 
-.query_row_default {
-    background-color: #ebeae1;
-    color: black;
+.stripped_table th {
+    color: #222222;
 }
 
-.query_row_warning {
-    background-color: #e6c0b3;
-    color: black;
+.stripped_table tr {
+    color: #444444;
+}
+
+.stripped_table tr a {
+    color: #444444;
+}
+
+.stripped_table tr.warning {
+    color: #B36060;
+    font-weight: 600;
+}
+
+.stripped_table tr.warning a {
+    color: #B36060;
+}
+
+.stripped_table tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+.stripped_table tr:nth-child(even) {
+    background-color: #ededed;
+}
+
+.stripped_table tr:hover {
+    box-shadow: 0 0 0.3rem #2871bf inset;
 }
 
 .cfg_color {
