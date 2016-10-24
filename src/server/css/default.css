@@ -207,12 +207,11 @@ a, p {
 }
 
 .stripped_table tr.warning {
-    color: #B36060;
-    font-weight: 600;
+    color: #b32400;
 }
 
 .stripped_table tr.warning a {
-    color: #B36060;
+    color: #b32400;
 }
 
 .stripped_table tr:nth-child(odd) {
@@ -224,7 +223,7 @@ a, p {
 }
 
 .stripped_table tr:hover {
-    box-shadow: 0 0 0.3rem #2871bf inset;
+    text-shadow: 1px 0px;
 }
 
 .cfg_color {
