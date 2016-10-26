@@ -10,6 +10,7 @@ html {
     color: black;
     background-color: #efefef;
     min-height: 100%;
+    position: relative;
 }
 
 body {
@@ -320,12 +321,8 @@ a, p {
 
 #navbar {
     position: relative;
-    line-height: 0.5rem;
+    padding: 0.5rem;
     font-size: 1rem;
-}
-
-#navbar {
-    height: 2.5rem;
 }
 
 #nav_left, #nav_right {
