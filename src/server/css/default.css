@@ -89,15 +89,18 @@ a, p {
     display: inline-block;
 }
 
-.dropdown_content {
+.dropdown ul {
     position: relative;
     display: none;
 }
 
-.dropdown:hover .dropdown_content {
+.dropdown:hover ul {
     background-color: #2871bf;
-    text-decoration: underline;
     display: inline-block;
+}
+
+.dropdown li:hover {
+    text-decoration: underline;
 }
 
 /* Main */

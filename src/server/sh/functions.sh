@@ -188,11 +188,13 @@ function web_links () {
             *)
                 echo "<div class=\"dropdown\">"
                 echo "  <div class=\"header_button\">$category_title &or;</div>"
+                echo "      <ul>"
                 cat $tmp_dir/cgi_${category}_pages | while read link_name; do
                     link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
                     link_title="$(eval "echo \$cgi_${link_name}_title")"
-                    echo "<div class=\"dropdown_content\"><a href=\"$link_uri\"><br>$link_title</a></div>"
+                    echo "          <li><a href=\"$link_uri\">$link_title</a></li>"
                 done
+                echo "      </ul>"
                 echo "</div>"
                 ;;
         
