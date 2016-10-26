@@ -88,7 +88,7 @@ a, p {
 }
 
 .dropdown {
-    position: relative;
+    position: absolute;
     display: inline-block;
 }
 
@@ -98,6 +98,8 @@ a, p {
 }
 
 .dropdown:hover .dropdown_content {
+    background-color: inherit;
+    text-decoration: underline;
     display:block;    
 }
 

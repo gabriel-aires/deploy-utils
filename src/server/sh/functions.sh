@@ -156,7 +156,7 @@ function web_links () {
     mklist "$cgi_account_pages" $tmp_dir/cgi_account_pages
     
     local categories=([0]='admin' [1]='search' [2]='deploy' [3]='log' [4]='help' [5]='account')
-    local category_titles=([0]='Administração' [1]='Pesquisa' [2]='Deploy' [3]='Logs' [4]='Ajuda' [5]="${REMOTE_USER:-'Conta'}")
+    local category_titles=([0]='Administração' [1]='Pesquisa' [2]='Deploy' [3]='Logs' [4]='Ajuda' [5]="${REMOTE_USER:-Conta}")
     local category=''
     local category_title=''
     local count=0
