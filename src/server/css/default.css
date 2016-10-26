@@ -89,16 +89,14 @@ a, p {
     display: inline-block;
 }
 
-.dropdown ul {
-    position: relative;
+.dropdown_content {
+    position: absolute;
     display: none;
-    list-style-type: none;
 }
 
-.dropdown:hover ul {
+.dropdown:hover .dropdown_content {
     background-color: #2871bf;
     display: block;
-    vertical-align: top;
 }
 
 .dropdown li {
