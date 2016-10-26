@@ -9,6 +9,7 @@ html {
     font-size: 100%;
     color: black;
     background-color: #efefef;
+    min-height: 100%;
 }
 
 body {
@@ -337,4 +338,14 @@ a, p {
 
 #nav_right {
   right: 0;
+}
+
+#footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.5rem;
+    background-color: #888888;
+    color: white;
 }
