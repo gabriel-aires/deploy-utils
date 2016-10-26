@@ -333,6 +333,7 @@ function web_footer () {
     echo "              $nav_right"
     echo "          </div>"
     echo "      </div>"
+    echo "      <div id=\"spacer\"></div>"
     echo "      <div id=\"footer\">Versão: $release_name</div>"
     echo '  </body>'
     echo '</html>'

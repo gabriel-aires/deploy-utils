@@ -321,7 +321,8 @@ a, p {
 
 #nav_left, #nav_right {
     display: inline-block;
-    width: 49.9%;
+    width: 49.8%;
+    margin-bottom: 1rem;
 }
 
 #nav_left {
@@ -330,6 +331,10 @@ a, p {
 
 #nav_right {
     text-align: right;
+}
+
+#spacer {
+    height: 1rem;    
 }
 
 #footer {
