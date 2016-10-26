@@ -225,7 +225,7 @@ function web_header () {
     echo "      <link rel=\"stylesheet\" type=\"text/css\" href=\"$apache_css_alias/default.css\">"
     echo '  </head>'
     echo "  <body>"
-    echo "      <div id=\"header\" class=\"header_color\">"
+    echo "      <div id=\"header\">"
     echo "          <div id=\"title\"><b><a href="$web_context_path">$web_app_name</a> /</b> $page_title</div>"
     web_links
     echo "      </div>"
