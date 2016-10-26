@@ -273,8 +273,8 @@ function web_footer () {
     echo "          </div>"
     echo "          $nav_right"
     echo "      </div>"
-    echo "      <hr>"
     echo "      <div id=\"footer\">"
+    echo "          <br><br>"
     echo "          <div id=\"links_$index\">"
     while read link_name; do
 
