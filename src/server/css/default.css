@@ -50,7 +50,7 @@ a, p {
 }
 
 #title {
-    padding-left: 20;
+    padding-left: 2rem;
     padding-top: 0.5rem;
     font-weight: 200;
     font-size: 1.4rem;
@@ -65,7 +65,7 @@ a, p {
 
 #header_links {
     padding-top: 0.8rem;
-    padding-right: 20;
+    padding-right: 2rem;
     font-weight: 200;
     font-size: 1rem;
     position: absolute;
