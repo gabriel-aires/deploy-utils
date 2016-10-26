@@ -78,6 +78,11 @@ a, p {
     color: white;
 }
 
+.header_button {
+    display: inline-block;
+    text-decoration: underline;
+}
+
 .dropdown {
     position: relative;
     display: inline-block;
