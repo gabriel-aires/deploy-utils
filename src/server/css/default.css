@@ -92,15 +92,18 @@ a, p {
 .dropdown ul {
     position: relative;
     display: none;
+    list-style-type: none;
 }
 
 .dropdown:hover ul {
     background-color: #2871bf;
     display: inline-block;
+    vertical-align: top;
 }
 
 .dropdown li:hover {
     text-decoration: underline;
+    padding: 1rem;
 }
 
 /* Main */
