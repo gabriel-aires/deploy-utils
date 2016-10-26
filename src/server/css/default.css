@@ -141,8 +141,8 @@ a, p {
 
 #loading-container, #loading-hide, #loading-1, #loading-2, #loading-3, #loading-4, #loading-5 {
     position: fixed;
-    top: 25%;
-    bottom: 0;
+    top: 0;
+    bottom: 50%;
     left: 0;
     right: 0;
     margin: auto;
@@ -155,17 +155,17 @@ a, p {
 
 #loading-container {
     z-index: -3;
-    background-color: lightgray;
+    background-color: #fbfbfb;
     border-radius: 30px;
 }
 
 #loading-hide {
    z-index: -1;
-   background-color: white;
+   background-color: #fbfbfb;
 }
 
 @keyframes spin {
-    0%   {transform: translate(20px,0px); background-color: white;}
+    0%   {transform: translate(20px,0px); background-color: #efefef;}
     13%  {transform: translate(14px,14px);}
     26%  {transform: translate(0px,20px);}
     39%  {transform: translate(-14px,14px);}
@@ -173,7 +173,7 @@ a, p {
     65%  {transform: translate(-14px,-14px);}
     78%  {transform: translate(0px,-20px);}
     91%  {transform: translate(14px,-14px);}
-    100% {transform: translate(20px,0px); background-color: white;}
+    100% {transform: translate(20px,0px); background-color: #efefef;}
 }
 
 #loading-1, #loading-2, #loading-3, #loading-4, #loading-5 {
