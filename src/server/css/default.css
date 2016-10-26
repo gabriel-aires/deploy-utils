@@ -320,21 +320,22 @@ a, p {
 /* Footer */
 
 #navbar {
-    position: relative;
-    padding: 0.5rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
     font-size: 1rem;
 }
 
 #nav_left, #nav_right {
-    position: absolute;
+    display: inline-block;
+    width: 49.9%;
 }
 
 #nav_left {
-    left: 0;
+    text-align: left;
 }
 
 #nav_right {
-  right: 0;
+    text-align: right;
 }
 
 #footer {
