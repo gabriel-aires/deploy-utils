@@ -95,7 +95,7 @@ a, p {
 }
 
 .dropdown:hover .dropdown_content {
-    background-color: inherit;
+    background-color: #2871bf;
     text-decoration: underline;
     display: inline-block;
 }
