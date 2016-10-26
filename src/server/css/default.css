@@ -97,13 +97,16 @@ a, p {
 
 .dropdown:hover ul {
     background-color: #2871bf;
-    display: inline-block;
+    display: block;
     vertical-align: top;
+}
+
+.dropdown li {
+    padding: 1rem;
 }
 
 .dropdown li:hover {
     text-decoration: underline;
-    padding: 1rem;
 }
 
 /* Main */
