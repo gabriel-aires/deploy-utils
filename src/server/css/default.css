@@ -246,11 +246,18 @@ a, p {
     text-align: center;
     background-color: #dddddd;
     border-spacing: 0.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
     width: 100%;
 }
 
 .stripped_table th {
     color: #222222;
+    padding: 0.3rem;
+}
+
+.stripped_table td {
+    padding: 0.3rem;
 }
 
 .stripped_table tr {
