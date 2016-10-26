@@ -99,11 +99,12 @@ a, p {
     display: block;
 }
 
-.dropdown li {
+.dropdown_content:hover a {
     padding: 1rem;
+    display: block;
 }
 
-.dropdown li:hover {
+.dropdown_content a:hover {
     text-decoration: underline;
 }
 
