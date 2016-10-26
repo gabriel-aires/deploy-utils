@@ -267,7 +267,7 @@ a, p {
 
 /* Footer */
 
-#footer, #navbar {
+#navbar {
     position: relative;
     line-height: 0.5rem;
     font-size: 1rem;
@@ -277,7 +277,7 @@ a, p {
     height: 2.5rem;
 }
 
-#nav_left, #nav_right, #links_1, #links_2, #links_3, #links_4 {
+#nav_left, #nav_right {
     position: absolute;
 }
 
@@ -287,20 +287,4 @@ a, p {
 
 #nav_right {
   right: 0;
-}
-
-#links_1 {
-    left: 0%;
-}
-
-#links_2 {
-    left: 25%;
-}
-
-#links_3 {
-    left: 50%;
-}
-
-#links_4 {
-    left: 75%;
 }
