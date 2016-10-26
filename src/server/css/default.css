@@ -141,7 +141,7 @@ a, p {
 
 #loading-container, #loading-hide, #loading-1, #loading-2, #loading-3, #loading-4, #loading-5 {
     position: fixed;
-    top:0;
+    top: 25%;
     bottom: 0;
     left: 0;
     right: 0;
