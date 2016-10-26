@@ -219,6 +219,7 @@ function web_header () {
 
     echo 'Content-type: text/html'
     echo ''
+    echo '<!DOCTYPE html>'
     echo '<html>'
     echo '  <head>'
     echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
@@ -292,8 +293,8 @@ function web_tr_pagination () {
 
     # define links para navegação
     nav="Página $page"
-    test $prev -ge $min_page && nav="<a href=\"$first_uri\"><button type=\"button\">&lt&lt</button></a> <a href=\"$prev_uri\"><button type=\"button\">&lt</button></a> $nav"
-    test $next -le $max_page && nav="$nav <a href=\"$next_uri\"><button type=\"button\">&gt</button></a> <a href=\"$last_uri\"><button type=\"button\">&gt&gt</button></a>"
+    test $prev -ge $min_page && nav="<a href=\"$first_uri\"><button type=\"button\">&lt;&lt;</button></a> <a href=\"$prev_uri\"><button type=\"button\">&lt;</button></a> $nav"
+    test $next -le $max_page && nav="$nav <a href=\"$next_uri\"><button type=\"button\">&gt;</button></a> <a href=\"$last_uri\"><button type=\"button\">&gt;&gt;</button></a>"
     nav_right="<div id=\"nav_right\">$nav</div>"
 
 }
