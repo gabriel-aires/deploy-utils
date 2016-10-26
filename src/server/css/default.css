@@ -68,16 +68,13 @@ a, p {
     font-size: 1rem;
     position: absolute;
     right: 0;
-}
-
-#header_links a {
-    text-decoration: none;
     color: white;
 }
 
 .header_button {
     padding-left: 1rem;
     display: inline-block;
+    text-decoration: none;
 }
 
 .header_button:hover {
@@ -99,7 +96,7 @@ a, p {
     display: block;
 }
 
-.dropdown_content:hover a {
+.dropdown_content a {
     padding: 1rem;
     display: block;
 }
