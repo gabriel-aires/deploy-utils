@@ -77,7 +77,16 @@ a, p {
     text-decoration: none;
 }
 
+.header_button a {
+    color: white;
+    text-decoration: none;
+}
+
 .header_button:hover {
+    text-decoration: underline;
+}
+
+.header_button:hover a{
     text-decoration: underline;
 }
 
@@ -99,6 +108,8 @@ a, p {
 .dropdown_content a {
     padding: 1rem;
     display: block;
+    color: white;
+    text-decoration: none;
 }
 
 .dropdown_content a:hover {
