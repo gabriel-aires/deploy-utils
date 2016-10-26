@@ -332,7 +332,7 @@ a, p {
     text-align: right;
 }
 
-#spacer {
+.spacer {
     height: 2rem;    
 }
 
