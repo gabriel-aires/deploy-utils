@@ -73,6 +73,25 @@ a, p {
     right: 0;
 }
 
+#header_links a {
+    text-decoration: none;
+    color: white;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown_content {
+    position: relative;
+    display: none;
+}
+
+.dropdown:hover .dropdown_content {
+    display:block;    
+}
+
 /* Main */
 
 #main {
