@@ -79,7 +79,11 @@ a, p {
 }
 
 .header_button {
+    padding-left: 1rem;
     display: inline-block;
+}
+
+.header_button:hover {
     text-decoration: underline;
 }
 
