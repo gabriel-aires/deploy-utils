@@ -294,7 +294,7 @@ function web_tr_pagination () {
     nav="Página $page"
     test $prev -ge $min_page && nav="<a href=\"$first_uri\"><button type=\"button\">&lt&lt</button></a> <a href=\"$prev_uri\"><button type=\"button\">&lt</button></a> $nav"
     test $next -le $max_page && nav="$nav <a href=\"$next_uri\"><button type=\"button\">&gt</button></a> <a href=\"$last_uri\"><button type=\"button\">&gt&gt</button></a>"
-    nav_right="<div id=\"nav_right\"><p>$nav</p></div>"
+    nav_right="<div id=\"nav_right\">$nav</div>"
 
 }
 
@@ -327,7 +327,7 @@ function web_footer () {
 
     echo "          <div id=\"navbar\">"
     echo "              <div id=\"nav_left\">"
-    echo "                  <p><a href=\"$start_page\">Início</a></p>"
+    echo "                  <a href=\"$start_page\">Início</a>"
     echo "              </div>"
     echo "              $nav_right"
     echo "          </div>"
