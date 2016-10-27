@@ -6,6 +6,7 @@ source $install_dir/sh/include.sh || exit 1
 
 function end() {
     test "$1" == "0" || echo "      <p><b>Operação inválida.</b></p>"
+    echo "<div class=\"spacer\"></div>"
     web_footer
 
     if [ -n "$tmp_dir" ] && [ -d "$tmp_dir" ]; then
@@ -52,7 +53,7 @@ echo "     </fieldset>"
 echo "  </form>"
 echo "</div>"
 
-echo "<br>"
+echo "<div class=\"spacer\"></div>"
 
 # Form reset password
 echo "<div class=\"column\">"

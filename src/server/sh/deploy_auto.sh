@@ -25,10 +25,10 @@ function async_deploy() {
     log "INFO" "DEPLOY (opts:$options app:$app_name rev:$rev_name env:$env_name out:$out_name)\n" &>> $tmp_dir/deploy_$miliseconds.log
 
     if [ -z "$out_name" ]; then
-        nohup $install_dir/sh/deploy_pages.sh $options "$app_name" "$rev_name" "$env_name" &>> $tmp_dir/deploy_$miliseconds.log &
+        nohup $install_dir/sh/deploy_code.sh $options "$app_name" "$rev_name" "$env_name" &>> $tmp_dir/deploy_$miliseconds.log &
     else
         touch "$out_name" || return 1
-        nohup $install_dir/sh/deploy_pages.sh $options "$app_name" "$rev_name" "$env_name" &>> "$out_name" &
+        nohup $install_dir/sh/deploy_code.sh $options "$app_name" "$rev_name" "$env_name" &>> "$out_name" &
     fi
 
     sleep 0.001

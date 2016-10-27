@@ -146,16 +146,80 @@ function web_filter() {   # Filtra o input de formulários cgi
 
 }
 
+function web_links () {
+
+    mklist "$cgi_admin_pages" $tmp_dir/cgi_admin_pages
+    mklist "$cgi_search_pages" $tmp_dir/cgi_search_pages
+    mklist "$cgi_deploy_pages" $tmp_dir/cgi_deploy_pages
+    mklist "$cgi_log_pages" $tmp_dir/cgi_log_pages
+    mklist "$cgi_help_pages" $tmp_dir/cgi_help_pages
+    mklist "$cgi_account_pages" $tmp_dir/cgi_account_pages
+    
+    local categories=([0]='admin' [1]='search' [2]='deploy' [3]='log' [4]='help' [5]='account')
+    local category_titles=([0]='Administração' [1]='Pesquisa' [2]='Deploy' [3]='Logs' [4]='Ajuda' [5]="${REMOTE_USER:-Conta}")
+    local category=''
+    local category_title=''
+    local count=0
+    local index=0
+    local link_name=''
+    local link_url=''
+    local link_title=''
+    
+    echo "      <div id=\"header_links\">"
+
+    for category in ${categories[@]}; do
+
+        category_title=${category_titles[$index]}
+        count=$(cat $tmp_dir/cgi_${category}_pages | wc -l)
+        
+        case $count in
+
+            0) 
+                continue
+                ;;
+
+            1)  
+                link_name="$(cat $tmp_dir/cgi_${category}_pages)"
+                link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
+                link_title="$(eval "echo \$cgi_${link_name}_title")"
+                echo "<div class=\"header_button\"><a href=\"$link_uri\">"$link_title"</a></div>"
+                ;;
+
+            *)
+                echo "<div class=\"dropdown\">"
+                echo "  <div class=\"header_button\">$category_title &#9660;</div>"
+                echo "  <div class=\"dropdown_content\">"
+                cat $tmp_dir/cgi_${category}_pages | while read link_name; do
+                    link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
+                    link_title="$(eval "echo \$cgi_${link_name}_title")"
+                    echo "      <a href=\"$link_uri\">$link_title</a>"
+                done
+                echo "  </div>"
+                echo "</div>"
+                ;;
+        
+        esac
+
+        ((index++))
+
+    done
+
+    echo "      </div>"
+
+    return 0
+
+}
+
 function web_header () {
 
     test "$(basename $SCRIPT_NAME)" == 'index.cgi' && start_page="$(dirname $SCRIPT_NAME)/" || start_page="$SCRIPT_NAME"
     release_name=$(cat $release_file 2> /dev/null || echo "")
     page_name=$(basename $SCRIPT_NAME | cut -f1 -d '.')
     page_title="$(eval "echo \$cgi_${page_name}_title")"
-    test -n "$REMOTE_USER" && welcome_msg="Bem vindo, $REMOTE_USER" || welcome_msg=""
 
     echo 'Content-type: text/html'
     echo ''
+    echo '<!DOCTYPE html>'
     echo '<html>'
     echo '  <head>'
     echo '      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
@@ -164,9 +228,9 @@ function web_header () {
     echo "      <link rel=\"stylesheet\" type=\"text/css\" href=\"$apache_css_alias/default.css\">"
     echo '  </head>'
     echo "  <body>"
-    echo "      <div id=\"header\" class=\"header_color\">"
+    echo "      <div id=\"header\">"
     echo "          <div id=\"title\"><b><a href="$web_context_path">$web_app_name</a> /</b> $page_title</div>"
-    echo "          <div id=\"welcome\">$welcome_msg</div>"
+    web_links
     echo "      </div>"
     echo "      <div id=\"main\">"
 
@@ -229,9 +293,9 @@ function web_tr_pagination () {
 
     # define links para navegação
     nav="Página $page"
-    test $prev -ge $min_page && nav="<a href=\"$first_uri\"><button type=\"button\">&lt&lt</button></a> <a href=\"$prev_uri\"><button type=\"button\">&lt</button></a> $nav"
-    test $next -le $max_page && nav="$nav <a href=\"$next_uri\"><button type=\"button\">&gt</button></a> <a href=\"$last_uri\"><button type=\"button\">&gt&gt</button></a>"
-    nav_right="<div id=\"nav_right\"><p>$nav</p></div>"
+    test $prev -ge $min_page && nav="<a href=\"$first_uri\"><button type=\"button\">&lt;&lt;</button></a> <a href=\"$prev_uri\"><button type=\"button\">&lt;</button></a> $nav"
+    test $next -le $max_page && nav="$nav <a href=\"$next_uri\"><button type=\"button\">&gt;</button></a> <a href=\"$last_uri\"><button type=\"button\">&gt;&gt;</button></a>"
+    nav_right="<div id=\"nav_right\">$nav</div>"
 
 }
 
@@ -262,39 +326,15 @@ function web_query_history () {
 
 function web_footer () {
 
-    mklist "$cgi_list_pages" $tmp_dir/cgi_list_pages
-    local index=1
-    local count=0
-    local max=3
-
-    echo "      <div id=\"navbar\">"
-    echo "          <div id=\"nav_left\">"
-    echo "              <p><a href=\"$start_page\">Início</a></p>"
-    echo "          </div>"
-    echo "          $nav_right"
-    echo "      </div>"
-    echo "      <hr>"
-    echo "      <div id=\"footer\">"
-    echo "          <div id=\"links_$index\">"
-    while read link_name; do
-
-        link_uri="$(dirname $SCRIPT_NAME)/$link_name.cgi"
-        link_title="$(eval "echo \$cgi_${link_name}_title")"
-        if [ "$SCRIPT_NAME" != "$link_uri" ]; then
-            ((count++))
-            echo "              <p><a href=\"$link_uri\">"$link_title"</a></p>"
-            if [ "$count" -eq "$max" ]; then
-                ((index++))
-                echo "          </div>"
-                echo "          <div id=\"links_$index\">"
-                count=0
-            fi
-        fi
-
-    done < $tmp_dir/cgi_list_pages
+    echo "          <div id=\"navbar\">"
+    echo "              <div id=\"nav_left\">"
+    echo "                  <a href=\"$start_page\">Início</a>"
+    echo "              </div>"
+    echo "              $nav_right"
     echo "          </div>"
     echo "      </div>"
-    echo "  </div>"
+    echo "      <div class=\"spacer\"></div>"
+    echo "      <div id=\"footer\">Versão: $release_name</div>"
     echo '  </body>'
     echo '</html>'
 

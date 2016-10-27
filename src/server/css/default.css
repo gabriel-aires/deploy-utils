@@ -8,7 +8,9 @@ html {
     font-weight:400;
     font-size: 100%;
     color: black;
-    background-color: white;
+    background-color: #efefef;
+    min-height: 95%;
+    position: relative;
 }
 
 body {
@@ -37,21 +39,18 @@ a, p {
 
 /* Header */
 
-.header_color {
-    background-color: #2871bf; /* dark blue #2871bf dark green #2e6e67 light brown #ba9082, light green #90BA82, light blue #66a1ff */
-    color: white;
-}
-
 #header {
     position: fixed;
     z-index: 1;
     top: 0%;
     width: 100%;
     height: 3rem;
+    background-color: #2871bf; /* dark blue #2871bf dark green #2e6e67 light brown #ba9082, light green #90BA82, light blue #66a1ff */
+    color: white;
 }
 
 #title {
-    padding-left: 20;
+    padding-left: 2rem;
     padding-top: 0.5rem;
     font-weight: 200;
     font-size: 1.4rem;
@@ -64,13 +63,66 @@ a, p {
     color: white;
 }
 
-#welcome {
+#header_links {
     padding-top: 0.8rem;
-    padding-right: 20;
+    padding-right: 2rem;
     font-weight: 200;
     font-size: 1rem;
     position: absolute;
     right: 0;
+    color: white;
+}
+
+.header_button {
+    padding-left: 1rem;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.header_button a {
+    color: white;
+    text-decoration: none;
+}
+
+.header_button:hover {
+    text-decoration: underline;
+}
+
+.header_button:hover a{
+    text-decoration: underline;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown_content {
+    position: absolute;
+    display: none;
+}
+
+.dropdown:hover .dropdown_content {
+    display: block;
+    padding-top: 0.8rem;
+}
+
+.dropdown_content a {
+    padding: 0.5rem;
+    min-width: 10rem;
+    display: block;
+    font-weight: 400;
+    font-size: 0.8rem;
+    color: #444444;
+    background-color: #f9f9f9;
+    border-left: 1px #888888 solid;
+    border-right: 1px #888888 solid;
+    border-bottom: 1px #888888 solid;
+    text-decoration: none;
+}
+
+.dropdown_content a:hover {
+    text-decoration: underline;
 }
 
 /* Main */
@@ -79,15 +131,18 @@ a, p {
     position: relative;
     z-index: 0;
     top: 3rem;
-    padding: 20;
+    padding: 1rem;
+    margin: 2rem;
+    background-color: #fbfbfb;
+    border: 1px lightgray solid;
 }
 
 /* Loading */
 
 #loading-container, #loading-hide, #loading-1, #loading-2, #loading-3, #loading-4, #loading-5 {
     position: fixed;
-    top:0;
-    bottom: 0;
+    top: 0;
+    bottom: 50%;
     left: 0;
     right: 0;
     margin: auto;
@@ -100,17 +155,17 @@ a, p {
 
 #loading-container {
     z-index: -3;
-    background-color: lightgray;
+    background-color: #fbfbfb;
     border-radius: 30px;
 }
 
 #loading-hide {
    z-index: -1;
-   background-color: white;
+   background-color: #fbfbfb;
 }
 
 @keyframes spin {
-    0%   {transform: translate(20px,0px); background-color: white;}
+    0%   {transform: translate(20px,0px); background-color: #efefef;}
     13%  {transform: translate(14px,14px);}
     26%  {transform: translate(0px,20px);}
     39%  {transform: translate(-14px,14px);}
@@ -118,7 +173,7 @@ a, p {
     65%  {transform: translate(-14px,-14px);}
     78%  {transform: translate(0px,-20px);}
     91%  {transform: translate(14px,-14px);}
-    100% {transform: translate(20px,0px); background-color: white;}
+    100% {transform: translate(20px,0px); background-color: #efefef;}
 }
 
 #loading-1, #loading-2, #loading-3, #loading-4, #loading-5 {
@@ -191,11 +246,18 @@ a, p {
     text-align: center;
     background-color: #dddddd;
     border-spacing: 0.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
     width: 100%;
 }
 
 .stripped_table th {
     color: #222222;
+    padding: 0.3rem;
+}
+
+.stripped_table td {
+    padding: 0.3rem;
 }
 
 .stripped_table tr {
@@ -264,40 +326,30 @@ a, p {
 
 /* Footer */
 
-#footer, #navbar {
-    position: relative;
-    line-height: 0.5rem;
-    font-size: 1rem;
-}
-
-#navbar {
-    height: 2.5rem;
-}
-
-#nav_left, #nav_right, #links_1, #links_2, #links_3, #links_4 {
-    position: absolute;
+#nav_left, #nav_right {
+    display: inline-block;
+    width: 49.8%;
 }
 
 #nav_left {
-    left: 0;
+    text-align: left;
 }
 
 #nav_right {
-  right: 0;
+    text-align: right;
 }
 
-#links_1 {
-    left: 0%;
+.spacer {
+    height: 2rem;    
 }
 
-#links_2 {
-    left: 25%;
-}
-
-#links_3 {
-    left: 50%;
-}
-
-#links_4 {
-    left: 75%;
+#footer {
+    position: absolute;
+    bottom: -5%;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    border-top: 1px #888888 solid;
+    background-color: white;
+    text-align: center;
 }
