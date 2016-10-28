@@ -157,9 +157,9 @@ function deploy_pkg () {
 
         done < "$tmp_dir/old.list"
 
-        rm -f $pkg
-
     fi
+
+    rm -f $pkg
 
 }
 
