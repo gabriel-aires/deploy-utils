@@ -85,22 +85,22 @@ mklist "$ambientes" "$tmp_dir/lista_ambientes"
 
 while read ambiente; do
 
-    grep -REl "^auto_$ambiente='1'$" $app_conf_dir > $tmp_dir/lista_aplicacoes
+    grep -REl "^auto_${ambiente}='1'$" $app_conf_dir > $tmp_dir/lista_aplicacoes
     sed -i -r "s|^$app_conf_dir/(.+)\.conf$|\1|g" $tmp_dir/lista_aplicacoes
 
     if [ -n "$(cat $tmp_dir/lista_aplicacoes)" ]; then
 
-        log "INFO" "Identificando deploys automáticos no ambiente '$ambiente'...\n"
+        log "INFO" "Identificando deploys automáticos no ambiente '${ambiente}'...\n"
 
         while read aplicacao; do
 
-            echo "-u auto -f:$aplicacao:auto:$ambiente:" >> "$deploy_queue" &
+            echo "-u auto -f:$aplicacao:auto:${ambiente}:" >> "$deploy_queue" &
 
         done < "$tmp_dir/lista_aplicacoes"
 
     else
 
-        log "INFO" "O deploy automático não foi habilitado no ambiente '$ambiente'\n"
+        log "INFO" "O deploy automático não foi habilitado no ambiente '${ambiente}'\n"
 
     fi
 

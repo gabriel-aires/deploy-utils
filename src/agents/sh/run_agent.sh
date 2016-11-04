@@ -240,7 +240,7 @@ function deploy_agent () {
 
                     #valida variáveis antes da chamada do agente.
                     valid 'app' "'$app': Nome de aplicação inválido" "continue" || continue
-                    valid 'host' "regex_hosts_$ambiente" "'$host': Host inválido para o ambiente $ambiente" "continue" || continue
+                    valid 'host' "regex_hosts_${ambiente}" "'$host': Host inválido para o ambiente ${ambiente}" "continue" || continue
 
                     #inicio deploy
                     deploy_log_file=$deploy_log_dir/deploy_${host}.log
@@ -354,7 +354,7 @@ source "$agent_conf" || end 1
 
 # validar parâmetros do arquivo $agent_conf:
 erro=false
-valid 'ambiente' "'$ambiente': Nome inválido para o ambiente." "continue" || erro=true
+valid 'ambiente' "'${ambiente}': Nome inválido para o ambiente." "continue" || erro=true
 valid "run_${agent_task}_agent" 'regex_bool' "Valor inválido para o parâmetro 'run_${agent_task}_agent' (booleano)." "continue" || erro=true
 valid "${agent_task}_filetypes" 'regex_filetypes' "Lista de extensões inválida para o agente de '${agent_task}'." "continue" || erro=true
 test "$agent_name_input" != "$agent_name" && log 'ERRO' "O nome de agente informado não corresponde àquele no arquivo '$agent_conf'"  && erro=true

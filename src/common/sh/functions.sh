@@ -284,9 +284,9 @@ function write_history () {
     local user_log="$(echo "$user_name" | tr '[:upper:]' '[:lower:]')"
     local app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
     local rev_log="$(echo "$rev" | sed -r "s|$delim|_|g")"
-    local ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
+    local ambiente_log="$(echo "${ambiente}" | tr '[:upper:]' '[:lower:]')"
     local host_log="$(echo "$host" | grep -Eiv '[a-z]' || echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
-    local obs_log="<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=$ambiente&deploy_id=$deploy_id\">$1</a>"
+    local obs_log="<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=${ambiente}&deploy_id=$deploy_id\">$1</a>"
     local flag_log="$2"
 
     local aux="$interactive"; interactive=false
@@ -295,7 +295,7 @@ function write_history () {
     interactive=$aux
 
     local header="$(echo "$col_day$col_month$col_year$col_time$col_user$col_app$col_rev$col_env$col_host$col_obs$col_flag" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
-    local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$user_log$delim$app_log$delim$rev_log$delim$ambiente_log$delim$host_log$delim$obs_log$delim$flag_log$delim"
+    local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$user_log$delim$app_log$delim$rev_log$delim${ambiente_log}$delim$host_log$delim$obs_log$delim$flag_log$delim"
 
     local lock_path
     local history_path

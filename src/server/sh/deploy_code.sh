@@ -78,13 +78,13 @@ function checkout () {                                                   #o coma
 
     if $auto; then
 
-        valid "revisao_$ambiente" "\nInforme um valor válido para o parâmetro revisao_$ambiente: [commit/tag]."
+        valid "revisao_${ambiente}" "\nInforme um valor válido para o parâmetro revisao_${ambiente}: [commit/tag]."
         revisao_auto=$(eval "echo \$revisao_${ambiente}")
-        $interactive && editconf "revisao_$ambiente" "$revisao_auto" "$app_conf_dir/${app}.conf"
+        $interactive && editconf "revisao_${ambiente}" "$revisao_auto" "$app_conf_dir/${app}.conf"
 
-        valid "branch_$ambiente" "\nInforme um valor válido para o parâmetro branch_$ambiente (Ex: 'master')."
+        valid "branch_${ambiente}" "\nInforme um valor válido para o parâmetro branch_${ambiente} (Ex: 'master')."
         branch_auto=$(eval "echo \$branch_${ambiente}")
-        $interactive && editconf "revisao_$ambiente" "$revisao_auto" "$app_conf_dir/${app}.conf"
+        $interactive && editconf "revisao_${ambiente}" "$revisao_auto" "$app_conf_dir/${app}.conf"
 
         git branch -a | grep -v remotes/origin/HEAD | cut -b 3- > $tmp_dir/branches
 
@@ -193,7 +193,7 @@ function check_last_deploy () {
                 '--select' $col_rev \
                 --top $top \
                 --from "${history_dir}/$history_csv_file" \
-                --where $col_app==$app $col_flag==1 $col_env==$ambiente \
+                --where $col_app==$app $col_flag==1 $col_env==${ambiente} \
                 --order-by $col_year $col_month $col_day $col_time desc \
                 | tail -n 1 2> /dev/null \
             )
@@ -436,10 +436,10 @@ $error && end 1 || source "${app_conf_dir}/${app}.conf"
 
 valid "repo" "\nInforme um caminho válido para o repositório GIT."
 valid "raiz" "\nInforme um caminho válido para a raiz da aplicação."
-valid "hosts_$ambiente" "\nInforme uma lista válida de hosts para deploy, separando-os por espaço ou vírgula."
-valid "modo_$ambiente" "\nInforme um modo válido para deploy no ambiente $ambiente [p/d]."
-valid "auto_$ambiente" "\nInforme um valor válido para a flag de deploy automático no ambiente $ambiente [0/1]."
-valid "share_$ambiente" "regex_share" "\nInforme um compartilhamento válido para deploy no ambiente $ambiente, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
+valid "hosts_${ambiente}" "\nInforme uma lista válida de hosts para deploy, separando-os por espaço ou vírgula."
+valid "modo_${ambiente}" "\nInforme um modo válido para deploy no ambiente ${ambiente} [p/d]."
+valid "auto_${ambiente}" "\nInforme um valor válido para a flag de deploy automático no ambiente ${ambiente} [0/1]."
+valid "share_${ambiente}" "regex_share" "\nInforme um compartilhamento válido para deploy no ambiente ${ambiente}, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
 valid "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]."
 valid "force_gid" "\nInforme um group id válido para a aplicação $app."
 valid "force_uid" "\nInforme um user id válido para a aplicação $app."
@@ -452,10 +452,10 @@ share_deploy=$(eval "echo \$share_${ambiente}")
 if $interactive; then
     editconf "repo" "$repo" "$app_conf_dir/${app}.conf"
     editconf "raiz" "$raiz" "$app_conf_dir/${app}.conf"
-    editconf "hosts_$ambiente" "$hosts_deploy" "$app_conf_dir/${app}.conf"
-    editconf "modo_$ambiente" "$modo_deploy" "$app_conf_dir/${app}.conf"
-    editconf "auto_$ambiente" "$auto_deploy" "$app_conf_dir/${app}.conf"
-    editconf "share_$ambiente" "$share_deploy" "$app_conf_dir/${app}.conf"
+    editconf "hosts_${ambiente}" "$hosts_deploy" "$app_conf_dir/${app}.conf"
+    editconf "modo_${ambiente}" "$modo_deploy" "$app_conf_dir/${app}.conf"
+    editconf "auto_${ambiente}" "$auto_deploy" "$app_conf_dir/${app}.conf"
+    editconf "share_${ambiente}" "$share_deploy" "$app_conf_dir/${app}.conf"
     editconf "mount_type" "$mount_type" "$app_conf_dir/${app}.conf"
     editconf "force_gid" "$force_gid" "$app_conf_dir/${app}.conf"
     editconf "force_uid" "$force_uid" "$app_conf_dir/${app}.conf"
@@ -465,14 +465,14 @@ if [ "$rev" == "auto" ]; then
     if [ "$auto_deploy" == "1" ]; then
         auto="true"
     else
-        echo "Erro. Deploy automático desabilitado para a aplicação $app no ambiente $ambiente." && end 1
+        echo "Erro. Deploy automático desabilitado para a aplicação $app no ambiente ${ambiente}." && end 1
     fi
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
 
-mklist "$hosts_deploy" $tmp_dir/hosts_$ambiente
+mklist "$hosts_deploy" $tmp_dir/hosts_${ambiente}
 
 while read host; do
     case $mount_type in
@@ -482,14 +482,14 @@ while read host; do
     nomedestino=$(echo $dir_destino | sed -r "s|[/:]|_|g")
     lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
     echo "$dir_destino" >> $tmp_dir/dir_destino
-done < $tmp_dir/hosts_$ambiente
+done < $tmp_dir/hosts_${ambiente}
 
 #### Diretórios onde serão armazenados os logs de deploy (define e cria os diretórios app_history_dir e deploy_log_dir)
 set_app_history_dirs
 
 echo -e "\nSistema:\t$app"
 echo -e "Revisão:\t$rev"
-echo -e "Ambiente:\t$ambiente"
+echo -e "Ambiente:\t${ambiente}"
 echo -e "Deploy ID:\t$deploy_id\n"
 
 ##### MODO DE DEPLOY #####
