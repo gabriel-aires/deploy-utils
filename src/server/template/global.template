@@ -127,9 +127,9 @@ regex_mount_type=
 regex_share=
 regex_force_gid=
 regex_force_uid=
-regex_branch\[[0-9]\]=
-regex_revisao\[[0-9]\]=
-regex_modo\[[0-9]\]=
-regex_auto\[[0-9]\]=
+regex_branch\[[a-zA-Z0-9._-]*\]=
+regex_revisao\[[a-zA-Z0-9._-]*\]=
+regex_modo\[[a-zA-Z0-9._-]*\]=
+regex_auto\[[a-zA-Z0-9._-]*\]=
 # Expressões inválidas
 not_regex_[a-z][0-9a-z_]*=
