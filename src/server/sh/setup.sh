@@ -3,6 +3,7 @@
 interactive='false'
 verbosity='verbose'
 skip_upgrade=false
+src_dir="$(dirname $(dirname $(dirname $(readlink -f $0))))"
 
 function end() {
 
@@ -17,14 +18,15 @@ function end() {
 case "$1" in
     --install)
         echo "Instalando serviço..."
-        $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
+        $src_dir/common/sh/reconfigure.sh || end 1
         echo "$version_latest" > $version_file || end 1
         echo "$release_latest" > $release_file || end 1
         skip_upgrade=true
         ;;
     --reconfigure)
         echo "Reconfigurando serviço..."
-        $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
+        $src_dir/common/sh/reconfigure.sh || end 1
+        $src_dir/common/sh/reset_config.sh "$src_dir/server/conf/user.conf" "$src_dir/server/template/user.template" || end 1
         ;;
     '') echo "Configurando serviço..."
         ;;
@@ -32,7 +34,7 @@ case "$1" in
         ;;
 esac
 
-source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || end 1
+source $src_dir/common/sh/include.sh || end 1
 source $install_dir/sh/include.sh || end 1
 
 valid "ssl_enable" "regex_bool" "\nErro. A variável ssl_enable é booleana (true/false)."
