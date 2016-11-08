@@ -1,27 +1,22 @@
 # Opções de deploy padrão
+ambientes=
 modo_padrao=
 rsync_opts=
+rsync_bak_opts=
 max_running=
 lock_timeout=
 # Expurgo de logs
 app_log_max=
 global_history_size=
 service_log_size=
-# HTML
+# Web
+ssl_enable=
+ssl_crt_path=
+ssl_key_path=
+set_apache_namevirtualhost_directive=
+set_apache_listen_directive=
+apache_vhost_name='*'
+apache_vhost_port='80'
+apache_servername="$HOSTNAME"
 cgi_timeout=
 cgi_table_size=
-cgi_list_pages=
-cgi_public_pages=
-cgi_private_pages=
-cgi_admin_pages=
-cgi_index_title=
-cgi_search_title=
-cgi_app_params_title=
-cgi_agent_params_title=
-cgi_deploy_code_title=
-cgi_deploy_packages_title=
-cgi_users_title=
-cgi_groups_title=
-cgi_signup_title=
-# Expressões inválidas
-not_regex_

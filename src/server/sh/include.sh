@@ -9,16 +9,15 @@ mkdir -p $log_dir || exit 1
 error_log="$log_dir/error_$$_$(basename $0).log"
 touch $error_log || exit 1
 
+# Carrega preferências do usuário (overrides)
+test -f "$install_dir/conf/user.conf" || exit 1
+chk_template $install_dir/conf/user.conf &>> $error_log
+source "$install_dir/conf/user.conf" &>> $error_log || exit 1
+
 # Carrega valores default para o servidor
 test -f "$install_dir/conf/global.conf" || exit 1
 chk_template $install_dir/conf/global.conf &>> $error_log
 source "$install_dir/conf/global.conf" &>> $error_log  || exit 1
-
-# Carrega preferências do usuário
-if [ -f "$install_dir/conf/user.conf" ]; then
-    chk_template $install_dir/conf/user.conf &>> $error_log
-    source "$install_dir/conf/user.conf" &>> $error_log || exit 1
-fi
 
 # Define diretório temporário.
 pid=$$
