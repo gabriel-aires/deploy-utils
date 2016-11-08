@@ -139,7 +139,8 @@ fi
 
 #setup owner/permissions
 chmod 775 $install_dir/conf || end 1
-chmod 640 $install_dir/conf/global.conf || end 1
+chmod 440 $install_dir/conf/global.conf || end 1
+chmod 640 $install_dir/conf/user.conf || end 1
 chmod 775 $common_work_dir || end 1
 chmod 775 $common_log_dir || end 1
 chmod 755 $src_dir/common/sh/query_file.sh || end 1
@@ -166,6 +167,7 @@ chmod 644 $src_dir/server/css/* || end 1
 
 chgrp $apache_group $install_dir/conf || end 1
 chgrp $apache_group $install_dir/conf/global.conf || end 1
+chgrp $apache_group $install_dir/conf/user.conf || end 1
 chgrp $apache_group $common_work_dir || end 1
 chgrp $apache_group $common_log_dir || end 1
 chgrp $apache_group $src_dir/common/sh/query_file.sh || end 1
