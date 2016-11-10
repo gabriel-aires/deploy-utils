@@ -181,6 +181,13 @@ function deploy () {
 
 }
 
+function check_branch () {
+
+    local branch_regex="\*?[[:blank:]]*$(echo "$1" | sed -r 's|([ \.\-])|\\\1|g' )[[:blank:]]*"
+    git branch --contains "$rev" | grep -Exq "$branch_regex" && return 0 || return 1
+
+}
+
 function check_last_deploy () {
 
     cd $origem
