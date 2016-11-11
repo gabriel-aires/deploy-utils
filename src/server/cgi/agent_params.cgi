@@ -62,9 +62,9 @@ test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p
 test ! -w "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" && end 1
 test ! -d "$agent_conf_dir" && "<p><b>Erro. Diretório de configuração de agentes inexistente.</b></p>" && end 1
 test ! -w "$agent_conf_dir" && "<p><b>Erro. Permissões insuficientes no diretório de configuração de agentes.</b></p>" && end 1
-test ! -n "$regex_bool" && "<p><b>Erro. A expressão regular 'regex_bool' não foi definida.</b></p>" && end 1
-test ! -n "$regex_ambiente" && "<p><b>Erro. A expressão regular 'regex_ambiente' não foi definida.</b></p>" && end 1
-test ! -n "$regex_agent_interval" && "<p><b>Erro. A expressão regular 'regex_agent_interval' não foi definida.</b></p>" && end 1
+test ! -n "${regex[bool]}" && "<p><b>Erro. A expressão regular 'regex_bool' não foi definida.</b></p>" && end 1
+test ! -n "${regex[ambiente]}" && "<p><b>Erro. A expressão regular 'regex_ambiente' não foi definida.</b></p>" && end 1
+test ! -n "${regex[agent_interval]}" && "<p><b>Erro. A expressão regular 'regex_agent_interval' não foi definida.</b></p>" && end 1
 
 if [ -z "$POST_STRING" ]; then
 
@@ -297,7 +297,7 @@ else
                                             test -n "$value" && field_disabled=true && field_attributes="$field_attributes disabled"
                                             echo "                      <$field_tag $field_attributes>"
                                             echo "                          <option value=\"\">selecionar...</option>"
-                                            mklist "$regex_ambiente" | while read option; do
+                                            mklist "${regex[ambiente]}" | while read option; do
                                                 test "$option" == "$value" && echo "                          <option selected>$value</option>" || echo "                      <option>$option</option>"
                                             done
                                             echo "                      </$field_tag>"
@@ -308,7 +308,7 @@ else
                                             field_tag="select"
                                             field_attributes="class=\"select_large\" name=\"$key\""
                                             echo "                      <$field_tag $field_attributes>"
-                                            mklist "$regex_bool" | while read option; do
+                                            mklist "${regex[bool]}" | while read option; do
                                                 test "$option" == "$value" && echo "                 <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
                                             echo "                      </$field_tag>"
@@ -319,7 +319,7 @@ else
                                             field_tag="select"
                                             field_attributes="class=\"select_large\" name=\"$key\""
                                             echo "                      <$field_tag $field_attributes>"
-                                            mklist "$regex_agent_interval" | while read option; do
+                                            mklist "${regex[agent_interval]}" | while read option; do
                                                 test "$option" == "$value" && echo "                   <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
                                             echo "                      </$field_tag>"
@@ -512,7 +512,7 @@ else
                         test -n "$enable_deploy" || enable_deploy=false
 
                         mklist "$app" | while read app_name; do
-                            valid "app_name" "regex_app" "<p><b>Erro. Nome de aplicação inválido: $app_name.</b></p>" "continue" && dir_created=false || continue
+                            valid "app_name" "regex[app" "<p><b>Erro. Nome de aplicação inválido: $app_name.</b></p>" "continue" && dir_created]=false || continue
                             $enable_log && mkdir -p "$upload_path/$app_name/log" && echo "<p>Diretório '$upload_path/$app_name/log' criado.</p>" && dir_created=true
                             $enable_deploy && mkdir -p "$upload_path/$app_name/deploy" && echo "<p>Diretório '$upload_path/$app_name/deploy' criado.</p>" && dir_created=true
                             $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app_name'.</p>"

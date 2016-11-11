@@ -79,11 +79,11 @@ function display_faq() {
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
 
-    while grep -Ex "([^;]*;){2}(<a_href.*/a> )?$regex_faq_tag [^;]*;" $tmp_dir/results > /dev/null; do
-        sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag) ([^;]*;)$|\1<a_href=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a> \5|" $tmp_dir/results
+    while grep -Ex "([^;]*;){2}(<a_href.*/a> )?${regex[faq_tag]} [^;]*;" $tmp_dir/results > /dev/null; do
+        sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex[faq_tag) ([^;]*;)$|\1<a_href]=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a> \5|" $tmp_dir/results
     done
 
-    sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag);$|\1<a_href=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a>;|" $tmp_dir/results
+    sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex[faq_tag);$|\1<a_href]=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a>;|" $tmp_dir/results
 
     while grep -E "<a_href=\"$start_page\?[^\"]*/[^\"]*\">" $tmp_dir/results > /dev/null; do
         sed -i -r "s|(<a_href=\"$start_page\?[^\"]*)/([^\"]*\">)|\1\%2F\2|" $tmp_dir/results
@@ -193,9 +193,9 @@ membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && allow_edit=true
 echo "      <div class=\"column_small\" id=\"faq_sidebar\">"
 
 test -d "$faq_dir_tree" || end 1
-test -n "$regex_faq_category" || end 1
-test -n "$regex_faq_tag" || end 1
-test -n "$regex_faq_taglist" || end 1
+test -n "${regex[faq_category]}" || end 1
+test -n "${regex[faq_tag]}" || end 1
+test -n "${regex[faq_taglist]}" || end 1
 
 # listas de tópicos, categorias e tags
 touch $tmp_dir/questions.list

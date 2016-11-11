@@ -591,7 +591,7 @@ function add_permission() { #subject_type (user/group), #subject_name, #resource
         $error && cp -f "$web_permissions_file.bak" "$web_permissions_file" && return 1
     fi
 
-    if grep -Ex "$1$delim$2$delim$3$delim$4$delim($regex_permission)$delim" "$web_permissions_file" > /dev/null; then
+    if grep -Ex "$1$delim$2$delim$3$delim$4$delim(${regex[permission]})$delim" "$web_permissions_file" > /dev/null; then
         echo "<p>Já foi atribuída uma permissão correspondente ao sujeito '$2' / recurso '$4'. Favor remover a permissão conflitante e tentar novamente.</p>"
         return 1
     else

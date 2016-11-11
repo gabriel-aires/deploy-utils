@@ -328,13 +328,13 @@ valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles 
 
 #valida caminho para diretórios do servidor e argumentos do script
 erro=false
-valid 'agent_name_input' 'regex_agent_name' "'$agent_name_input': Nome inválido para o agente." 'continue' || erro=true
+valid 'agent_name_input' 'regex[agent_name' "'$agent_name_input': Nome inválido para o agente." 'continue' || erro]=true
 valid 'agent_task' "'$agent_task': Nome inválido para a tarefa." 'continue' || erro=true
-valid 'remote_pkg_dir_tree' 'regex_remote_dir' "'$remote_pkg_dir_tree': Caminho inválido para o repositório de pacotes." 'continue' || erro=true
-valid 'remote_log_dir_tree' 'regex_remote_dir' "'$remote_log_dir_tree': Caminho inválido para o diretório raiz de cópia dos logs." 'continue' || erro=true
-valid 'remote_lock_dir' 'regex_remote_dir' "'$remote_lock_dir': Caminho inválido para o diretório de lockfiles do servidor" 'continue' || erro=true
-valid 'remote_history_dir' 'regex_remote_dir' "'$remote_history_dir': Caminho inválido para o diretório de gravação do histórico" 'continue' || erro=true
-valid 'remote_app_history_dir_tree' 'regex_remote_dir' "'$remote_app_history_dir_tree': Caminho inválido para o histórico de deploy das aplicações" 'continue' || erro=true
+valid 'remote_pkg_dir_tree' 'regex[remote_dir' "'$remote_pkg_dir_tree': Caminho inválido para o repositório de pacotes." 'continue' || erro]=true
+valid 'remote_log_dir_tree' 'regex[remote_dir' "'$remote_log_dir_tree': Caminho inválido para o diretório raiz de cópia dos logs." 'continue' || erro]=true
+valid 'remote_lock_dir' 'regex[remote_dir' "'$remote_lock_dir': Caminho inválido para o diretório de lockfiles do servidor" 'continue' || erro]=true
+valid 'remote_history_dir' 'regex[remote_dir' "'$remote_history_dir': Caminho inválido para o diretório de gravação do histórico" 'continue' || erro]=true
+valid 'remote_app_history_dir_tree' 'regex[remote_dir' "'$remote_app_history_dir_tree': Caminho inválido para o histórico de deploy das aplicações" 'continue' || erro]=true
 test ! -f "$agent_conf" && log 'ERRO' "'$agent_conf': Arquivo de configuração inexistente."  && erro=true
 test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes inexistente.' && erro=true
 test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs inexistente.' && erro=true
@@ -355,8 +355,8 @@ source "$agent_conf" || end 1
 # validar parâmetros do arquivo $agent_conf:
 erro=false
 valid 'ambiente' "'${ambiente}': Nome inválido para o ambiente." "continue" || erro=true
-valid "run_${agent_task}_agent" 'regex_bool' "Valor inválido para o parâmetro 'run_${agent_task}_agent' (booleano)." "continue" || erro=true
-valid "${agent_task}_filetypes" 'regex_filetypes' "Lista de extensões inválida para o agente de '${agent_task}'." "continue" || erro=true
+valid "run_${agent_task}_agent" 'regex[bool' "Valor inválido para o parâmetro 'run_${agent_task}_agent' (booleano)." "continue" || erro]=true
+valid "${agent_task}_filetypes" 'regex[filetypes' "Lista de extensões inválida para o agente de '${agent_task}'." "continue" || erro]=true
 test "$agent_name_input" != "$agent_name" && log 'ERRO' "O nome de agente informado não corresponde àquele no arquivo '$agent_conf'"  && erro=true
 $erro && end 1 || unset erro
 

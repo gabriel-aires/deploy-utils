@@ -266,7 +266,7 @@ else
                         echo "              <p>"
                         echo "                  Tipo de recurso:<br>"
                         echo "      		    <select class=\"select_large\" name=\"resource_type\">"
-                        mklist "$regex_resource_type" | while read resource_type; do
+                        mklist "${regex[resource_type]}" | while read resource_type; do
                             echo "		        	<option>$resource_type</option>"
                         done
                         echo "		            </select>"
@@ -280,7 +280,7 @@ else
                         echo "              <p>"
                         echo "                  Permissão:<br>"
                         echo "      		    <select class=\"select_large\" name=\"permission\">"
-                        mklist "$regex_permission" | while read permission; do
+                        mklist "${regex[permission]}" | while read permission; do
                             echo "		        	<option>$permission</option>"
                         done
                         echo "		            </select>"

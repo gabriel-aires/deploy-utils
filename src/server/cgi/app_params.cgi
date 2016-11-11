@@ -28,8 +28,8 @@ web_header
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
-app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
-env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
+app_param="$(echo "${col[app]}" | sed -r 's/\[//;s/\]//')"
+env_param="$(echo "${col[env]}" | sed -r 's/\[//;s/\]//')"
 save_value='Salvar'
 erase_value='Remover'
 erase_yes='Sim'
@@ -87,7 +87,7 @@ if [ -n "$QUERY_STRING" ]; then
         else
             show_param=true
             if [ -n "$env_name" ]; then
-                echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
+                echo "$key" | grep -Ex ".*_($regex[ambiente)" > /dev/null  && show_param]=false
                 ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
             fi
             $show_param && echo "                   <tr><td>$key: </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"

@@ -52,7 +52,7 @@ function submit_deploy() {
                         echo "                  <tr><td colspan=\"2\"><b>##$key</b></td></tr>"
                     else
                         show_param=true
-                        echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
+                        echo "$key" | grep -Ex ".*_($regex[ambiente)" > /dev/null  && show_param]=false
                         ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
                         $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
                     fi
@@ -161,9 +161,9 @@ web_header
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
-app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
-rev_param="$(echo "$col_rev" | sed -r 's/\[//;s/\]//')"
-env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
+app_param="$(echo "${col[app]}" | sed -r 's/\[//;s/\]//')"
+rev_param="$(echo "${col[rev]}" | sed -r 's/\[//;s/\]//')"
+env_param="$(echo "${col[env]}" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_simulation="Simular"
 proceed_deploy="Deploy"

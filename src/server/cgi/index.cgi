@@ -26,8 +26,8 @@ content_loading
 
 # Inicializar variáveis e constantes
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
-app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
-env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
+app_param="$(echo "${col[app]}" | sed -r 's/\[//;s/\]//')"
+env_param="$(echo "${col[env]}" | sed -r 's/\[//;s/\]//')"
 WHERE=''
 ORDERBY=''
 TOP=''
@@ -65,8 +65,8 @@ if [ -n $QUERY_STRING ]; then
     arg_string="&$(web_filter "$QUERY_STRING")&"
 	app_name=$(echo "$arg_string" | sed -rn "s/^.*&$app_param=([^\&]+)&.*$/\1/p")
     env_name=$(echo "$arg_string" | sed -rn "s/^.*&$env_param=([^\&]+)&.*$/\1/p")
-    test -n "$app_name" && WHERE="$WHERE $col_app==$app_name"
-    test -n "$env_name" && WHERE="$WHERE $col_env==$env_name"
+    test -n "$app_name" && WHERE="$WHERE $col[app]==$app_name"
+    test -n "$env_name" && WHERE="$WHERE $col[env]==$env_name"
     test -n "$WHERE" && WHERE="--where$WHERE"
 fi
 

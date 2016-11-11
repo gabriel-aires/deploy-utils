@@ -190,11 +190,11 @@ function check_last_deploy () {
         last_rev=''
         while [ -z "$last_rev" ]; do
             last_rev=$(query_file.sh --delim "$delim" --replace-delim '' --header 1 \
-                '--select' $col_rev \
+                '--select' ${col[rev]} \
                 --top $top \
                 --from "${history_dir}/$history_csv_file" \
-                --where $col_app==$app $col_flag==1 $col_env==${ambiente} \
-                --order-by $col_year $col_month $col_day $col_time desc \
+                --where $col[app]==$app $col[flag]==1 $col[env]==${ambiente} \
+                --order-by ${col[year]} ${col[month]} ${col[day]} ${col[time]} desc \
                 | tail -n 1 2> /dev/null \
             )
             if [ "$last_rev" == 'rollback' ]; then
@@ -439,7 +439,7 @@ valid "raiz" "\nInforme um caminho válido para a raiz da aplicação."
 valid "hosts_${ambiente}" "\nInforme uma lista válida de hosts para deploy, separando-os por espaço ou vírgula."
 valid "modo_${ambiente}" "\nInforme um modo válido para deploy no ambiente ${ambiente} [p/d]."
 valid "auto_${ambiente}" "\nInforme um valor válido para a flag de deploy automático no ambiente ${ambiente} [0/1]."
-valid "share_${ambiente}" "regex_share" "\nInforme um compartilhamento válido para deploy no ambiente ${ambiente}, suprimindo o nome do host (Ex: //host/a\$/b/c => a\$/b/c, hostname:/a/b/c => /a/b/c)."
+valid "share_${ambiente}" "regex[share" "\nInforme um compartilhamento válido para deploy no ambiente ${ambiente}, suprimindo o nome do host (Ex: //host/a\$/b/c ]=> a\$/b/c, hostname:/a/b/c => /a/b/c)."
 valid "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]."
 valid "force_gid" "\nInforme um group id válido para a aplicação $app."
 valid "force_uid" "\nInforme um user id válido para a aplicação $app."

@@ -142,7 +142,7 @@ while true; do
             echo "-u|--unique|--distinct: (sem argumentos). Suprime linhas duplicadas da saída padrão (opcional)"
             echo "-t|--top: especificar quantidade de linhas a serem retornadas. Ex: '10' '500', etc (opcional)"
             echo "-f|--from: especificar arquivo. Ex: dados.csv (obrigatório)"
-            echo "-w|--where: especificar filtro. Ex: '1==valor_exato' '[nome_coluna2]=~regex_valor' '3!=diferente_valor' '[nome_coluna4]=%contem_valor', etc (opcional)"
+            echo "-w|--where: especificar filtro. Ex: '1==valor_exato' '[nome_coluna2]=~regex[valor' '3!]=diferente_valor' '[nome_coluna4]=%contem_valor', etc (opcional)"
             echo "-o|--order-by: especificar ordenação dos resultados. Ex: '1' '2' '[nome_coluna3]' 'asc', '4' ' 5' 'desc', etc (opcional)"
             echo ""
             echo "OBS: Nas opções select, order-by e where, as colunas podem ser especificadas por número (1 2, etc) ou nome ([coluna1] [coluna2], etc)."
