@@ -135,12 +135,22 @@ function deploy_pkg () {
             sleep "$deployment_delay"
 
         fi
-      
-        t=0
-        while [ -f "$old.isdeploying" ] && [ "$t" -le "$((agent_timeout/2))" ]; do
-            log "INFO" "Wildfly - realizando deploy do pacote $(basename $pkg) na instância $wildfly_instance..."
+
+        t=0      
+        log "INFO" "Wildfly - realizando deploy do pacote $(basename $pkg) na instância $wildfly_instance..."
+
+        while [ -f "$old.isdeploying" ]; do
+            
             sleep 1
-            ((t++))
+
+            if [ $((++t)) -gt "$((agent_timeout/2))" ]; then
+                log "ERRO" "Wildfly - timeout atingido no deploy do pacote $(basename $pkg) na instância $wildfly_instance:"
+                write_history "Deploy abortado. Wildfly - timeout atingido no deploy do pacote $(basename $pkg) na instância $wildfly_instance." "0"
+                continue 2            
+            else
+                log "INFO" "Wildfly - realizando deploy do pacote $(basename $pkg) na instância $wildfly_instance..."
+            fi
+
         done
 
         if [ -f "$old.failed" ]; then
