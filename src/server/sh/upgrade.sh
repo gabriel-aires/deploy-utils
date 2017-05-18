@@ -53,6 +53,26 @@ while $outdated; do
 
         echo "101" > $version_file
 
+######################### 3.8.2
+
+    elif [ "$version_sequential" -lt "110" ]; then
+        log "INFO" "Aplicando migrações para a versão 110..."
+
+        find $agent_conf_dir/ -type f -iname '*.conf' | while read config; do
+            grep -E "^agent_name=[\"']?wildfly_8_standalone[\"']?$" $config > /dev/null || continue
+            touch $config
+            cp $config $config.bak
+            sed -i -r "s/^agent_name=.*$/agent_name='jboss_7_8_standalone'/" $config
+            sed -i -r "s/^wildfly_servers_dir=/jboss_servers_dir=/" $config
+            echo "jboss_uid='wildfly'" >> $config
+            echo "jboss_gid='wildfly'" >> $config
+            reset_config.sh "$config" "$src_dir/agents/template/jboss_7_8_standalone.template"
+            chown $apache_user:$apache_group $config
+            log "INFO" "Arquivo $config atualizado com sucesso."
+        done
+
+        echo "110" > $version_file
+
 ######################## LATEST
 
     elif [ "$version_sequential" -le "$version_latest" ]; then

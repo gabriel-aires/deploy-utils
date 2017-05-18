@@ -11,7 +11,9 @@ log_interval=
 deploy_filetypes=
 log_filetypes=
 # Parâmetros do servidor de aplicação
-wildfly_servers_dir=
+jboss_servers_dir=
+jboss_uid=
+jboss_gid=
 restart_required=
 restart_delay=
 deployment_delay=
