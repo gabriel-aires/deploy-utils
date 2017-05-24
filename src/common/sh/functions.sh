@@ -46,7 +46,7 @@ function log () {    ##### log de execução detalhado.
 
 function compress () {         ##### padroniza a metodologia de compressão de arquivos (argumentos: pacote [arquivo1 arquivo2 arquivo3...])
 
-    local error_msg="Impossível\ criar\ arquivo\ zip"
+    local error_msg='Impossível criar arquivo zip'
     local error_cmd='return 1'
 
     case $verbosity in
@@ -63,7 +63,7 @@ function compress () {         ##### padroniza a metodologia de compressão de a
         local filelist="$@"
 
         touch "$filename" || $error_cmd                                                                 #verifica se o pacote pode ser escrito
-        zip -rql9 --filesync "$filename" $filelist &> /dev/null && success="true" || "retry=true"       #tenta utilizar o parâmetro --filesync (disponível a partir da versão 3.0)
+        zip -rql9 --filesync "$filename" $filelist &> /dev/null && success="true" || retry="true"       #tenta utilizar o parâmetro --filesync (disponível a partir da versão 3.0)
         $retry && rm -f "$filename" && zip -rql1 "$filename" $filelist &> /dev/null && success="true"   #recria o pacote (caso exista) e usa taxa de compressão menor para reduzir tempo
         $success || $error_cmd
 
