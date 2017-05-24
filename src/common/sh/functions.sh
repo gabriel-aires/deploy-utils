@@ -50,8 +50,8 @@ function compress () {         ##### padroniza a metodologia de compressão de a
     local error_cmd='return 1'
 
     case $verbosity in
-        'quiet') error_cmd="log ERRO $error_msg; $error_cmd";;
-        'verbose') error_cmd="echo -e \n$error_msg; $error_cmd";;
+        'quiet') error_cmd="log 'ERRO' '$error_msg'; $error_cmd";;
+        'verbose') error_cmd="echo -e '\n$error_msg'; $error_cmd";;
     esac
 
     if [ "$#" -ge 2 ]; then
@@ -62,14 +62,14 @@ function compress () {         ##### padroniza a metodologia de compressão de a
         shift 1
         local filelist="$@"
 
-        touch "$filename" || $error_cmd                                                                 #verifica se o pacote pode ser escrito
+        touch "$filename" || eval "$error_cmd"                                                          #verifica se o pacote pode ser escrito
         zip -rql9 --filesync "$filename" $filelist &> /dev/null && success="true" || retry="true"       #tenta utilizar o parâmetro --filesync (disponível a partir da versão 3.0)
         $retry && rm -f "$filename" && zip -rql1 "$filename" $filelist &> /dev/null && success="true"   #recria o pacote (caso exista) e usa taxa de compressão menor para reduzir tempo
-        $success || $error_cmd
+        $success || eval "$error_cmd"
 
     else
 
-        $error_cmd
+        eval "$error_cmd"
 
     fi
 
