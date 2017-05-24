@@ -181,7 +181,7 @@ function copy_log () {
 
             if [ $(echo $server_log | wc -l) -eq 1 ]; then
                 log "INFO" "Copiando logs da aplicação $app no diretório $(dirname $server_log)..."
-                cd $(dirname $server_log); zip -rql1 ${shared_log_dir}/${instancia_jboss}.zip *; cd - > /dev/null
+                cd $(dirname $server_log); compress ${shared_log_dir}/${instancia_jboss}.zip *; cd - > /dev/null
                 cp -f $server_log "$shared_log_dir/server_${instancia_jboss}.log"
                 unix2dos "$shared_log_dir/server_${instancia_jboss}.log" > /dev/null 2>&1
             else

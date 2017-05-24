@@ -195,7 +195,7 @@ function copy_log () {
         fi
 
         log "INFO" "Copiando logs da aplicação $app no diretório $(dirname $server_log)..."
-        cd $(dirname $server_log); zip -rql1 ${shared_log_dir}/${jboss_instance}.zip *; cd - > /dev/null
+        cd $(dirname $server_log); compress ${shared_log_dir}/${jboss_instance}.zip *; cd - > /dev/null
         cp -f $server_log "$shared_log_dir/server_${jboss_instance}.log"
         unix2dos "$shared_log_dir/server_${jboss_instance}.log" > /dev/null 2>&1
 
