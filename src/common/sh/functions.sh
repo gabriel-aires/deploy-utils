@@ -46,7 +46,7 @@ function log () {    ##### log de execução detalhado.
 
 function compress () {         ##### padroniza a metodologia de compressão de arquivos (argumentos: pacote [arquivo1 arquivo2 arquivo3...])
 
-    local error_msg='Impossível\ criar\ arquivo\ zip'
+    local error_msg="Impossível\ criar\ arquivo\ zip"
     local error_cmd='return 1'
 
     case $verbosity in
