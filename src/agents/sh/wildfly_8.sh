@@ -76,7 +76,7 @@ function copy_log () {
                 if [ -d  "$app_log_dir" ] && [ -f "$app_log_dir/server.log" ]; then
 
                     log "INFO" "Copiando logs da aplicação $app no diretório $app_log_dir"
-                    cd $app_log_dir; zip -rql1 ${shared_log_dir}/logs_${hc_name}_${srvconf}.zip *; cd - > /dev/null
+                    cd $app_log_dir; compress ${shared_log_dir}/logs_${hc_name}_${srvconf}.zip *; cd - > /dev/null
                     cp -f $app_log_dir/server.log $shared_log_dir/server_${hc_name}_${srvconf}.log
 
                 else

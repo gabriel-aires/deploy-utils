@@ -381,6 +381,7 @@ fi
 # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
 export -f 'valid'
 export -f 'log'
+export -f 'compress'
 export -f 'write_history'
 export 'regex_csv_value'
 export 'regex_flag'

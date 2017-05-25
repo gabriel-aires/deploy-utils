@@ -132,7 +132,7 @@ function copy_log () {
 
             if [ $(echo $catalna_out | wc -l) -eq 1 ]; then
                 log "INFO" "Copiando logs da aplicação $app no diretório $(dirname $catalina_out)..."
-                cd $(dirname $catalina_out); zip -rql1 ${shared_log_dir}/${tomcat_instance}.zip *; cd - > /dev/null
+                cd $(dirname $catalina_out); compress ${shared_log_dir}/${tomcat_instance}.zip *; cd - > /dev/null
                 cp -f $catalina_out "$shared_log_dir/catalina_${tomcat_instance}.log"
                 unix2dos "$shared_log_dir/catalina_${tomcat_instance}.log" > /dev/null 2>&1
             else
