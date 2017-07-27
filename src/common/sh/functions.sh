@@ -170,108 +170,47 @@ function chk_template () {
 
 }
 
-function valid () {
+function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ; retorna 0 para string válida e 1 para inválida ou argumentos incorretos
 
-    #argumentos: nome_variável (nome_regra) (nome_regra_inversa) mensagem_erro ("continue").
-    #O comportamento padrão é a finalização do script quando a validação falha.
-    #Esse comportamento pode ser alterado se a palavra "continue" for adicionada como último argumento,
-    #nesse caso a função simplesmente retornará 1 caso a validação falhe.
+    test "$#" -eq "3" || return 1
+    
+    local value="$1"     
+    local rule_id="$2"
+    local error_msg="$3"
 
-    if [ ! -z "$1" ] && [ ! -z "${!#}" ]; then
-
-        #argumentos
-        local nome_var="$1"            # obrigatório
-        local nome_regra            # opcional, se informado, é o segundo argumento.
-        local nome_regra_inversa    # opcional, se informado, é o terceiro argumento.
-        local msg                    # mensagem de erro: obrigatório.
-
-        #variaveis internas
-        local exit_cmd="end 1 2> /dev/null || exit 1"
-        local flag_count=0
-        local valor
-        local regra
-        local regra_inversa
-        local retry="$interactive"
-
-        test "$retry" == "true" || retry=false
-
-        if [ "${!#}" == "continue" ]; then
-            ((flag_count++))
-            exit_cmd="return 1"
-            msg=$(eval "echo \$$(($#-1))")
-        else
-            msg="${!#}"
-        fi
-
-        if [ "$#" -gt "$((2 + $flag_count))" ] && [ ! -z "$2" ]; then
-            nome_regra="$2"
-
-            if [ $(echo "$nome_regra" | grep -Ex "^regex_[a-z_]+$" | wc -l) -ne 1 ]; then
-                echo "Erro. O argumento especificado não é uma regra de validação."
-                eval "$exit_cmd"
-            fi
-
-            if [ "$#" -gt "$((3 + $flag_count))" ] && [ ! -z "$3" ]; then
-                nome_regra_inversa="$3"
-
-                if [ $(echo "${nome_regra_inversa}" | grep -Ex "^not_regex_[a-z_]+$" | wc -l) -ne 1 ]; then
-                    echo "Erro. O argumento especificado não é uma regra de validação inversa."
-                    eval "$exit_cmd"
-                fi
-            fi
-        fi
-
-        if [ -z "$nome_regra" ]; then
-            regra="echo \$regex_${nome_var}"
-        else
-            regra="echo \$$nome_regra"
-        fi
-
-        if [ -z "${nome_regra_inversa}" ]; then
-            regra_inversa="echo \$not_regex_${nome_var}"
-        else
-            regra_inversa="echo \$${nome_regra_inversa}"
-        fi
-
-        set -f
-        regra="$(eval $regra)"
-        regra_inversa="$(eval ${regra_inversa})"
-        valor="echo \$${nome_var}"
-        valor="$(eval $valor)"
-        set +f
-
-        if [ -z "$regra" ]; then
-            case "$verbosity" in
-                'quiet') log "ERRO" "Não há uma regra para validação da variável $nome_var";;
-                'verbose') echo "Erro. Não há uma regra para validação da variável $nome_var";;
-            esac
-            eval "$exit_cmd"
-
-        elif "$retry"; then
-
-            while [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; do
-                paint 'fg' 'yellow'
-                echo -e "$msg"
-                paint 'default'
-                read -p "$nome_var: " -e -r $nome_var
-                valor="echo \$${nome_var}"
-                valor="$(eval $valor)"
-            done
-
-        elif [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; then
-            case "$verbosity" in
-                'quiet') log "ERRO" "$msg";;
-                'verbose') echo -e "$msg";;
-            esac
-            eval "$exit_cmd"
-
-        fi
-
-    else
-        eval "$exit_cmd"
+    local valid_regex="${regex[$rule_id]}"
+    local forbidden_regex="${not_regex[$rule_id]}"
+    local alt_valid_regex='.*'
+    local alt_forbidden_regex=''
+    local composite_rule="$(echo "$rule_id" | grep -qF ':' && echo true || echo false)"
+    local rule_name="$rule_id"
+    local missing_rule_msg="Não há uma regra correspondente à chave '$rule_name'"
+    
+    if $composite_rule; then
+        rule_name="$(echo "$rule_id" | cut -f1 -d ':')"
+        valid_regex="${regex[$rule_name]}"
+        forbidden_regex="${not_regex[$rule_name]}"
+        alt_valid_regex="${regex[$rule_id]}"
+        alt_forbidden_regex="${not_regex[$rule_id]}"
     fi
 
-    return 0        # o script continua somente se a variável tiver sido validada corretamente.
+    if [ -z "$valid_regex" ]; then
+        case "$verbosity" in
+            'quiet') log "ERRO" "$missing_rule_msg";;
+            'verbose') echo "Erro. $missing_rule_msg";;
+        esac
+        return 1
+
+    elif [ $(echo "$value" | grep -Ex "$valid_regex" | grep -Ex "$alt_valid_regex" | grep -Exv "$forbidden_regex" | grep -Exv "$alt_forbidden_regex" | wc -l) -eq 0 ]; then
+        case "$verbosity" in
+            'quiet') log "ERRO" "$error_msg";;
+            'verbose') echo -e "$error_msg";;
+        esac
+        return 1
+
+    fi
+
+    return 0
 
 }
 
