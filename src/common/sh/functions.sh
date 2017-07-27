@@ -178,18 +178,16 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
     local rule_id="$2"
     local error_msg="$3"
 
-    local match=true
-    local count=0
     local valid_regex="${regex[$rule_id]}"
     local forbidden_regex="${not_regex[$rule_id]}"
     local alt_valid_regex='.*'
     local alt_forbidden_regex=''
-    local composite_rule="$(echo "$rule_id" | grep -qF ':' && echo true || echo false)"
+    local compound_rule="$([[ $rule_id =~ : ]] && echo true || echo false)"
     local rule_name="$rule_id"
     local missing_rule_msg="Não há uma regra correspondente à chave '$rule_name'"
     
-    if $composite_rule; then
-        rule_name="$(echo "$rule_id" | cut -f1 -d ':')"
+    if $compound_rule; then
+        rule_name="${rule_id//:*}"
         valid_regex="${regex[$rule_name]}"
         forbidden_regex="${not_regex[$rule_name]}"
         alt_valid_regex="${regex[$rule_id]}"
@@ -202,31 +200,17 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
             'verbose') echo "Erro. $missing_rule_msg";;
         esac
         return 1
-    fi
+    
+    elif [[ $value =~ ^$valid_regex$ ]] && [[ $value =~ ^$alt_valid_regex$ ]] && [[ ! $value =~ ^$forbidden_regex$ ]] && [[ ! $value =~ ^$alt_forbidden_regex$ ]]; then
+        return 0
 
-    local test_valid=("$valid_regex" "$alt_valid_regex")
-    local test_forbidden=("$forbidden_regex" "$alt_forbidden_regex")    
-
-    while $match && [ $count -lt 2 ]; do
-        echo "$value" | grep -Exq "${test_valid[$count]}" || match=false
-        ((count++))
-    done
-
-    count=0
-    while $match && [ $count -lt 2 ]; do
-        echo "$value" | grep -Exvq "${test_forbidden[$count]}" || match=false
-        ((count++))
-    done
-
-    if ! $match; then
+    else
         case "$verbosity" in
             'quiet') log "ERRO" "$error_msg";;
             'verbose') echo -e "$error_msg";;
         esac
         return 1
     fi
-
-    return 0
 
 }
 
