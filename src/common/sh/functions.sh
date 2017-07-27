@@ -178,6 +178,8 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
     local rule_id="$2"
     local error_msg="$3"
 
+    local match=true
+    local count=0
     local valid_regex="${regex[$rule_id]}"
     local forbidden_regex="${not_regex[$rule_id]}"
     local alt_valid_regex='.*'
@@ -200,14 +202,28 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
             'verbose') echo "Erro. $missing_rule_msg";;
         esac
         return 1
+    fi
 
-    elif [ $(echo "$value" | grep -Ex "$valid_regex" | grep -Ex "$alt_valid_regex" | grep -Exv "$forbidden_regex" | grep -Exv "$alt_forbidden_regex" | wc -l) -eq 0 ]; then
+    local test_valid=("$valid_regex" "$alt_valid_regex")
+    local test_forbidden=("$forbidden_regex" "$alt_forbidden_regex")    
+
+    while $match && [ $count -lt 2 ]; do
+        echo "$value" | grep -Exq "${test_valid[$count]}" || match=false
+        ((count++))
+    done
+
+    count=0
+    while $match && [ $count -lt 2 ]; do
+        echo "$value" | grep -Exvq "${test_forbidden[$count]}" || match=false
+        ((count++))
+    done
+
+    if ! $match; then
         case "$verbosity" in
             'quiet') log "ERRO" "$error_msg";;
             'verbose') echo -e "$error_msg";;
         esac
         return 1
-
     fi
 
     return 0
