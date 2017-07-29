@@ -229,8 +229,8 @@ function write_history () {
     local flag_log="$2"
 
     local aux="$interactive"; interactive=false
-    valid "obs_log" "regex_csv_value" "'$obs_log': mensagem inválida." "continue" || return 1
-    valid "flag_log" "regex_flag" "'$flag_log': flag de deploy inválida." "continue" || return 1
+    valid "$obs_log" "csv_value" "'$obs_log': mensagem inválida." || return 1
+    valid "$flag_log" "flag" "'$flag_log': flag de deploy inválida." || return 1
     interactive=$aux
 
     local header="$(echo "${col[day]}${col[month]}${col[year]}${col[time]}${col[user]}${col[app]}${col[rev]}${col[env]}${col[host]}${col[obs]}${col[flag]}" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
