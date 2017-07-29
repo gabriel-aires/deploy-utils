@@ -91,17 +91,19 @@ global_conf="${install_dir}/conf/global.conf"
 test -f "$global_conf" || exit 1
 chk_template "$global_conf"
 source "$global_conf" || exit 1
+tmp_dir="$work_dir/$pid"
 
 # Validações
-tmp_dir="$work_dir/$pid"
-valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários"
-valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido"
-valid "remote_lock_dir" "regex_remote_dir" "Diretório de lockfiles remoto inválido"
-valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs"
-valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles"
-valid "max_running" "regex_qtd" "Valor inválido para a quantidade máxima de tarefas simultâneas"
-valid "agent_timeout" "regex_qtd" "Valor inválido para o timeout de tarefas global"
-valid "service_log_size" "regex_qtd" "Valor inválido para o tamanho máximo do log do agente"
+error=false
+valid "$tmp_dir" "tmp_dir" "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" || error=true
+valid "$remote_conf_dir" "remote_dir" "Diretório de configuração de agentes inválido" || error=true
+valid "$remote_lock_dir" "remote_dir" "Diretório de lockfiles remoto inválido" || error=true
+valid "$log_dir" "log_dir" "'$log_dir': Caminho inválido para o diretório de armazenamento de logs" || error=true
+valid "$lock_dir" "lock_dir" "'$lock_dir': Caminho inválido para o diretório de lockfiles" || error=true
+valid "$max_running" "qtd" "Valor inválido para a quantidade máxima de tarefas simultâneas" || error=true
+valid "$agent_timeout" "qtd" "Valor inválido para o timeout de tarefas global" || error=true
+valid "$service_log_size" "qtd" "Valor inválido para o tamanho máximo do log do agente" || error=true
+$error && end 1
 
 mkdir -p "$tmp_dir" "$remote_conf_dir" "$remote_lock_dir" "$log_dir" "$lock_dir" || end 1
 lock 'agent_tasks' "A rotina já está em execução."
