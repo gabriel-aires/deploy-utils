@@ -47,17 +47,20 @@ if ! "$INCLUDE"; then
     source "$src_dir/common/conf/include.conf" || exit 1
 
     # atribui regras de validação de hostnames para cada ambiente
-    valid 'ambientes' 'regex_env_list' 'Erro. Lista de ambientes inválida.'
+    valid "$ambientes" 'env_list' 'Erro. Lista de ambientes inválida.' || exit 1
     regex[ambiente]="$(echo "$ambientes" | tr ' ' '|')"
+    error=false
     for environment in ${!regex_host[@]}; do
-        valid 'environment' 'regex_ambiente' 'Erro. '$environment': Ambiente inválido.'
+        valid "$environment" 'ambiente' 'Erro. '$environment': Ambiente inválido.' || { error=true ; continue ; }
         custom_value="${regex_host[$environment]}"
         default_value="${regex_host[0]}"
         current_value="${custom_value:-$default_value}"
         regex[host["$environment"]]="$current_value"
         regex[hosts["$environment"]]="($current_value[ ,]?)+"
     done
-    unset environment custom_value default_value current_value
+    $error && exit 1
+
+    unset environment custom_value default_value current_value error
 
     INCLUDE=true
 
