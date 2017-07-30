@@ -30,9 +30,7 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 
 # Valida o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
-test -f "$global_conf" || end 1
-chk_template "$global_conf"
-source "$global_conf" || end 1
+chk_template "$global_conf" 'global' && source "$global_conf" || end 1
 
 error=false
 valid "$work_dir" "tmp_dir" "\nErro. Diretório 'work' informado incorretamente." || error=true
