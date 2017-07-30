@@ -89,7 +89,7 @@ chk_dir () {
 
     else
         log "ERRO" "chk_dir: falha na validação dos parâmetros: $@"
-        end 1
+        return 1
     fi
 
     return 0
@@ -102,7 +102,7 @@ function deploy_agent () {
 
     if [ $(ls "${application_path['from']}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir ${application_path['from']} "deploy" "$filetypes"
+        chk_dir ${application_path['from']} "deploy" "$filetypes" || end 1
 
         # Verificar se há arquivos para deploy.
 
@@ -254,7 +254,7 @@ function log_agent () {
 
     if [ $(ls "${application_path['to']}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir "${application_path['to']}" "log" "$filetypes refresh"
+        chk_dir "${application_path['to']}" "log" "$filetypes refresh" || end 1
 
         app_list="$(find ${application_path['to']}/* -type d -name 'log' -print | sed -r "s|^${application_path['to']}/([^/]+)/log|\1|ig")"
         app_list=$(echo "$app_list" | sed -r "s%(.)$%\1|%g" | tr '[:upper:]' '[:lower:]')
