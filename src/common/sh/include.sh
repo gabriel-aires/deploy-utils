@@ -37,29 +37,10 @@ if ! "$INCLUDE"; then
     source $src_dir/common/sh/functions.sh || exit 1
     PATH="$PATH:$src_dir/common/sh"
 
-    # carrega overrides específicos
-    test -f "$src_dir/common/conf/environments.conf" || exit 1
-    #chk_template "$src_dir/common/conf/environments.conf"
-    source "$src_dir/common/conf/environments.conf" || exit 1
-
     # carrega configurações default comuns
     test -f "$src_dir/common/conf/include.conf" || exit 1
     #chk_template "$src_dir/common/conf/include.conf"
     source "$src_dir/common/conf/include.conf" || exit 1
-
-    # atribui regras de validação de hostnames para cada ambiente
-    valid "$ambientes" 'env_list' 'Erro. Lista de ambientes inválida.' || exit 1
-    regex[ambiente]="$(echo "$ambientes" | tr ' ' '|')"
-    error=false
-    for environment in ${!regex_host[@]}; do
-        valid "$environment" 'ambiente' 'Erro. '$environment': Ambiente inválido.' || { error=true ; continue ; }
-        custom_value="${regex_host[$environment]}"
-        default_value="${regex_host[0]}"
-        current_value="${custom_value:-$default_value}"
-        regex[host["$environment"]]="$current_value"
-        regex[hosts["$environment"]]="($current_value[ ,]?)+"
-    done
-    $error && exit 1
 
     unset environment custom_value default_value current_value error
 

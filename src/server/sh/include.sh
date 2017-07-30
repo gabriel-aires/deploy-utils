@@ -34,6 +34,10 @@ interactive=$aux_2
 # Cria diretórios necessários, com exceção de $tmp_dir, que deve ser gerenciado individualmente por cada script
 mkdir -p $cgi_dir $work_dir $history_dir ${app_history_dir_tree} $repo_dir $lock_dir $app_conf_dir $bak_dir &>> $error_log || exit 1
 
+# Valida ambientes definidos pelo usuário e especifica expressão regular correspondente
+valid "$ambientes" 'env_list' 'Erro. Lista de ambientes inválida.' || exit 1
+regex[ambiente]="$(echo "$ambientes" | tr ' ' '|')"
+
 unset aux_1
 unset aux_2
 rm -f $error_log
