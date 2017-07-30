@@ -106,7 +106,7 @@ valid "$service_log_size" "qtd" "Valor inválido para o tamanho máximo do log d
 $error && end 1
 
 mkdir -p "$tmp_dir" "$remote_conf_dir" "$remote_lock_dir" "$log_dir" "$lock_dir" || end 1
-lock 'agent_tasks' "A rotina já está em execução."
+lock 'agent_tasks' "A rotina já está em execução." || end 1
 log="$log_dir/service.log" && touch "$log"
 host="$(echo $HOSTNAME | cut -d '.' -f1)"
 
