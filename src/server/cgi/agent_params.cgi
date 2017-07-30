@@ -108,7 +108,7 @@ else
 
         if [ -n "$host" ]; then
             valid "$host" "host" "<p><b>O hostname é inválido: '$host'.</b></p>" || end 1
-            lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>"
+            lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>" || end 1
             test "$operation" == "$operation_add" || test "$operation" == "$operation_erase" || echo "<p>Host: <b>$host</b></p>"
             running_tasks="$(find "$lock_dir"/ -maxdepth 1 -type f -name "run_agent_${host}_*" | wc -l)"
         fi
