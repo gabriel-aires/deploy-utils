@@ -376,12 +376,14 @@ if [ ! -x $agent_script ]; then
     end 1
 fi
 
+# "exportar" arrays associativos
+export BASH_ENV="$tmp_dir/load_arrays"
+declare -p regex not_regex > "$BASH_ENV"
+
 # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
 export -f 'valid'
 export -f 'log'
 export -f 'write_history'
-export 'regex_csv_value'
-export 'regex_flag'
 export 'delim'
 export 'execution_mode'
 export 'verbosity'
