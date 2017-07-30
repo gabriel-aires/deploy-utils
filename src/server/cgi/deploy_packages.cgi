@@ -125,7 +125,7 @@ elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
     valid "$app" "app" "Erro. Nome de aplicação inválido." || end 1
     valid "$env" "ambiente" "Erro. Nome de ambiente inválido." || end 1
 
-    lock "package_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>"
+    lock "package_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>" || end 1
 
     case "$proceed" in
 
