@@ -71,7 +71,7 @@ else
 
     if [ -n "$user" ] && [ -n "$operation" ] && [ -n "$submit" ]; then
 
-        valid "user" "<p><b>O nome do usuário é inválido: '$user'.</b></p>"
+        valid "$user" "user" "<p><b>O nome do usuário é inválido: '$user'.</b></p>" || end 1
         lock "edit_user_$user" "<p><b>Usuário $user bloqueado para edição</b></p>"
         echo "      <p>Usuário: <b>$user</b></p>"
 
@@ -264,7 +264,7 @@ else
                     "$submit_permission_save")
 
                         resource_list="$(echo "$arg_string" | sed -rn "s/^.*&resource_list=([^\&]+)&.*$/\1/p")"
-                        valid 'resource_list' "      <p></b>Erro. '$resource_list' não é uma lista de recursos válida.</b></p>"
+                        valid "$resource_list" "resource_list" "      <p></b>Erro. '$resource_list' não é uma lista de recursos válida.</b></p>" || end 1
 
                         mklist "$resource_list" | while read resource_name; do
                             resource_type="$(echo "$arg_string" | sed -rn "s/^.*&resource_type=([^\&]+)&.*$/\1/p")"
