@@ -362,9 +362,9 @@ else
             question_txt="$(head -n 1 "$question_file")"
             question_dir="$(echo "$faq_dir_tree/$category" | sed -r "s|/+|/|g;s|/$||")"
 
-            test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b>Erro. Lista de tags inválida: '$tag'</b></p>"
-            valid "category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>"
-            valid "question_filetype" "regex_faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$question_filetype'</b></p>"
+            test -n "$tag" && valid "$tag" "faq_taglist" "<p><b>Erro. Lista de tags inválida: '$tag'</b></p>" || end 1
+            valid "$category" "faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>" || end 1
+            valid "$question_filetype" "faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$question_filetype'</b></p>" || end 1
             chk_conflict "$question_filename" "$question_dir"
 
             mkdir -p "$question_dir"
@@ -401,7 +401,7 @@ else
             question_txt="$(head -n 1 "$question_file")"
             question_tag="$(tail -n 1 "$question_file")"
 
-            valid "update_filetype" "regex_faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$update_filetype'</b></p>"
+            valid "$update_filetype" "faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$update_filetype'</b></p>" || end 1
 
             if [ "$update_txt" != "$question_txt" ]; then
                 echo "<p><b>Erro. O tópico '$update_txt' não corresponde ao original: '$question_txt'.</b></p>"
@@ -420,7 +420,7 @@ else
             test -f "$question_file" || end 1
             test -n "$category" || end 1
             test -n "$update_category" || end 1
-            valid "update_category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$update_category'</b></p>"
+            valid "$update_category" "faq_category" "<p><b>Erro. Categoria inválida: '$update_category'</b></p>" || end 1
             question_txt="$(head -n 1 "$question_file")"
             category="$(echo "$category" | sed -r "s|/+|/|g;s|/$||")"
             update_category="$(echo "$update_category" | sed -r "s|/+|/|g;s|/$||")"
@@ -428,7 +428,7 @@ else
 
             # Alterar tags
             if [ "$update_tag" != "$tag" ]; then
-                test -n "$update_tag" && valid "update_tag" "regex_faq_taglist" "<p><b>Erro. Lista de tags inválida: '$update_tag'</b></p>"
+                test -n "$update_tag" && valid "$update_tag" "faq_taglist" "<p><b>Erro. Lista de tags inválida: '$update_tag'</b></p>" || end 1
                 sed -i -r "\$s|^$tag$|$update_tag|" "$question_file"
                 echo "<p><b>Tags atualizadas para o tópico '$question_txt'.</b></p>"
                 question_updated=true
