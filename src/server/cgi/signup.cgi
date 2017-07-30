@@ -88,9 +88,9 @@ if [ -n "$POST_STRING" ]; then
 
             if [ -n "$user" ] && [ -n "$email" ] && [ -n "$password" ] && [ -n "$assure_password" ]; then
 
-                valid "user" "<p><b>Login inválido.</b></p>"
-                valid "email" "<p><b>Email inválido.</b></p>"
-                valid "password" "<p><b>Senha inválida.</b></p>"
+                valid "$user" "user" "<p><b>Login inválido.</b></p>" || end 1
+                valid "$email" "email" "<p><b>Email inválido.</b></p>" || end 1
+                valid "$password" "password" "<p><b>Senha inválida.</b></p>" || end 1
 
                 test "$password" != "$assure_password" && echo "<p><b>Erro. Senhas não correspondentes.</b></p>" && end 1
                 grep -E "^$user:" "$web_users_file" > /dev/null && echo "<p><b>O login '$user' não está disponível. Favor escolher outro nome de usuário.</b></p>" && end 1
@@ -111,8 +111,8 @@ if [ -n "$POST_STRING" ]; then
 
             if [ -n "$user" ] && [ -n "$email" ]; then
 
-                valid "user" "<p><b>Login inválido.</b></p>"
-                valid "email" "<p><b>Email inválido.</b></p>"
+                valid "$user" "user" "<p><b>Login inválido.</b></p>" || end 1
+                valid "$email" "email" "<p><b>Email inválido.</b></p>" || end 1
                 
                 grep -E "^$user:" "$web_users_file" > /dev/null || { echo "<p><b>O login '$user' não foi encontrado.</b></p>" && end 1 ; }
                 test "$(get_email "$user")" == "$email" > /dev/null || { echo "<p><b>O email informado não corresponde ao usuário '$user'.</b></p>" && end 1 ; }
