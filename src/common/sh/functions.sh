@@ -46,7 +46,7 @@ function log () {    ##### log de execução detalhado.
 
 function lock () {                                            #argumentos: nome_trava, mensagem_erro, (instrução)
 
-    local exit_cmd="end 1 2> /dev/null || exit 1"
+    local exit_cmd="return 1"
 
     if [ -d $lock_dir ] && [ -n "$1" ] && [ -n "$2" ]; then
 
@@ -60,7 +60,7 @@ function lock () {                                            #argumentos: nome_
         esac
 
         while [ -f "$lock_dir/$lockfile" ] && [ $miliseconds -le $timeout ]; do
-            sleep 0.001
+            sleep 0.05
             miliseconds=$(date +%s%3N)
         done
 
