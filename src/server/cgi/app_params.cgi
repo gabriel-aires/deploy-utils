@@ -110,7 +110,7 @@ elif [ -n "$POST_STRING" ]; then
 
     if [ -n "$app_name" ]; then
         valid "$app_name" "app" "<p><b>O nome da aplicação é inválido: '$app_name'.</b></p>" || end 1
-        lock "edit_app_$app_name" "<p><b>Aplicação '$app_name' bloqueada para edição.</b></p>"
+        lock "edit_app_$app_name" "<p><b>Aplicação '$app_name' bloqueada para edição.</b></p>" || end 1
 
         if [ "$save" == "$save_value" ]; then
             test -f $app_conf_dir/$app_name.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$app_name.conf"
@@ -133,7 +133,7 @@ elif [ -n "$POST_STRING" ]; then
             echo "      </p>"
 
         elif [ "$erase" == "$erase_yes" ]; then
-            lock "$app_name" "<p><b>Deploy da aplicação '$app_name' em andamento. Tente mais tarde.</b></p>"
+            lock "$app_name" "<p><b>Deploy da aplicação '$app_name' em andamento. Tente mais tarde.</b></p>" || end 1
             rm -f "$app_conf_dir/$app_name.conf"
             echo "      <p><b>Parâmetros da aplicação $app_name removidos.</b></p>"
 
