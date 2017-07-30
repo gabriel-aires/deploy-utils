@@ -37,9 +37,9 @@ esac
 source $src_dir/common/sh/include.sh || end 1
 source $install_dir/sh/include.sh || end 1
 
-valid "ssl_enable" "regex_bool" "\nErro. A variável ssl_enable é booleana (true/false)."
-valid "set_apache_listen_directive" "regex_bool" "\nErro. A variável set_apache_listen_directive é booleana (true/false)."
-valid "set_apache_namevirtualhost_directive" "regex_bool" "\nErro. A variável set_apache_namevirtualhost_directive é booleana (true/false)."
+valid "$ssl_enable" "bool" "\nErro. A variável ssl_enable é booleana (true/false)." || end 1
+valid "$set_apache_listen_directive" "bool" "\nErro. A variável set_apache_listen_directive é booleana (true/false)." || end 1
+valid "$set_apache_namevirtualhost_directive" "bool" "\nErro. A variável set_apache_namevirtualhost_directive é booleana (true/false)." || end 1
 
 #verify apache params
 test -d "$apache_confd_dir" || end 1
