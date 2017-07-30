@@ -72,7 +72,7 @@ else
     if [ -n "$user" ] && [ -n "$operation" ] && [ -n "$submit" ]; then
 
         valid "$user" "user" "<p><b>O nome do usuário é inválido: '$user'.</b></p>" || end 1
-        lock "edit_user_$user" "<p><b>Usuário $user bloqueado para edição</b></p>"
+        lock "edit_user_$user" "<p><b>Usuário $user bloqueado para edição</b></p>" || end 1
         echo "      <p>Usuário: <b>$user</b></p>"
 
         case "$operation" in
