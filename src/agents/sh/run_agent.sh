@@ -360,7 +360,7 @@ fi
 
 # "exportar" arrays associativos
 export BASH_ENV="$tmp_dir/load_arrays"
-declare -p regex not_regex > "$BASH_ENV"
+declare -p col regex not_regex > "$BASH_ENV"
 
 # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
 export -f 'valid'
