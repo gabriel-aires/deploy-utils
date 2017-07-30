@@ -52,8 +52,8 @@ function submit_deploy() {
                         echo "                  <tr><td colspan=\"2\"><b>##$key</b></td></tr>"
                     else
                         show_param=true
-                        echo "$key" | grep -Ex ".*_($regex[ambiente)" > /dev/null  && show_param]=false
-                        ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
+                        echo "$key" | grep -Ex ".*\[(${regex[ambiente]})\]" > /dev/null  && show_param=false
+                        ! $show_param && echo "$key" | grep -Ex ".*\[$env_name\]" > /dev/null && show_param=true
                         $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
                     fi
                 done < "$app_conf_dir/$app_name.conf"
