@@ -311,9 +311,7 @@ trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
 # Valida o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
-test -f "$global_conf" || exit 1
-chk_template "$global_conf"
-source "$global_conf" || exit 1
+chk_template "$global_conf" "global" && source "$global_conf" || exit 1
 
 # cria diretório temporário
 tmp_dir="$work_dir/$pid"
@@ -347,10 +345,8 @@ $erro && end 1 || unset erro
 lock "$agent_name_input $agent_task $(basename $agent_conf | cut -d '.' -f1)" "Uma tarefa concorrente já está em andamento. Aguarde..." || end 1
 test ! -f "$remote_lock_dir/edit_agent_${host}" && touch "$remote_lock_dir/run_agent_${host}_${pid}" || end 1
 
-# Valida o arquivo de configurações $agent_conf, que deve atender aos templates local.template e $agent_name.template
-chk_template "$agent_conf" 'agent'
-chk_template "$agent_conf" "$agent_name_input"
-source "$agent_conf" || end 1
+# Valida o arquivo de configurações $agent_conf, que deve atender aos templates agent.template e $agent_name.template
+chk_template "$agent_conf" 'agent' && chk_template "$agent_conf" "$agent_name_input" && source "$agent_conf" || end 1
 
 # validar parâmetros do arquivo $agent_conf:
 erro=false
