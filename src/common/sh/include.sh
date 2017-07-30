@@ -24,7 +24,8 @@ if ! "$INCLUDE"; then
     touch $error_log || exit 1
 
     # Declara arrays associativos
-    declare -A regex_host
+    declare -A regex
+    declare -A not_regex
     declare -A auto
     declare -A branch
     declare -A revisao
