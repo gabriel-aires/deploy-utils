@@ -115,55 +115,38 @@ function mklist () {
 
 }
 
-function chk_template () {
+function chk_template () { # argumentos: caminho_arquivo nome_template
 
-    if [ -f "$1" ] && [ "$#" -le 3 ]; then
+    if [ -f "$1" ] && [ -n "$2" ]; then
 
-        local arquivo="$1"
-        local nome_template="$2"        # parâmetro opcional, especifica um template para validação do arquivo.
-        local flag="$3"                    # indica se o script deve ser encerrado ou não ao encontrar inconsistências. Para prosseguir, deve ser passado o valor "continue"
+        local file="$1"
+        local template_name="$2"
 
         paint 'fg' 'yellow'
 
-        if [ -z "$nome_template" ] && [ -f "$install_dir/template/$(basename $arquivo | cut -f1 -d '.').template" ]; then
-            nome_template="$(basename $arquivo | cut -f1 -d '.')"
-        fi
-
-        if [ -z $nome_template ]; then
+        if [ ! -f "$install_dir/template/$template_name.template" ]; then
             case $verbosity in
-                'quiet') log "ERRO" "Não foi indentificado um template para validação do arquivo $arquivo.";;
-                'verbose') echo -e "\nErro. Não foi indentificado um template para validação do arquivo $arquivo.";;
+                'quiet') log "ERRO" "O template espeficicado não foi encontrado: $template_name.";;
+                'verbose') echo -e "\nErro. O template espeficicado não foi encontrado: $template_name.";;
             esac
             paint 'default'
-            end 1 2> /dev/null || exit 1
+            return 1
 
-        elif [ ! -f "$install_dir/template/$nome_template.template" ]; then
+        elif [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$template_name.template | wc -l)" -ne "0" ]; then
             case $verbosity in
-                'quiet') log "ERRO" "O template espeficicado não foi encontrado: $nome_template.";;
-                'verbose') echo -e "\nErro. O template espeficicado não foi encontrado.";;
+                'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $file:";;
+                'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $file:";;
             esac
-            paint 'default'
-            end 1 2> /dev/null || exit 1
-
-        elif [ "$(cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template | wc -l)" -ne "0" ]; then
-            case $execution_mode in
-                'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
-                'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
-            esac
-            cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template
+            cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$template_name.template
 
             paint 'default'
-            if [ "$flag" == "continue" ]; then
-                return 1
-            else
-                end 1 2> /dev/null || exit 1
-            fi
+            return 1
         fi
 
         paint 'default'
 
     else
-        end 1 2> /dev/null || exit 1
+        return 1
     fi
 
     return 0
