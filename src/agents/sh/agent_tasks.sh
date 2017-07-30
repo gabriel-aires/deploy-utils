@@ -88,9 +88,7 @@ trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 # Verifica o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
-test -f "$global_conf" || exit 1
-chk_template "$global_conf"
-source "$global_conf" || exit 1
+chk_template "$global_conf" "global" && source "$global_conf" || exit 1
 tmp_dir="$work_dir/$pid"
 
 # Validações
