@@ -568,11 +568,11 @@ function chk_permission() { #subject_type (user/group), #subject_name, #resource
     local resource_name="$4"
     local permission="$5"
 
-    valid "subject_type" "Erro. 'subject_type': '$subject_type'.<br>" "continue" || return 1
-    valid "subject_name" "Erro. 'subject_name': '$subject_name'.<br>" "continue" || return 1
-    valid "resource_type" "Erro. 'resource_type': '$resource_type'.<br>" "continue" || return 1
-    valid "resource_name" "Erro. 'resource_name': '$resource_name'.<br>" "continue" || return 1
-    valid "permission" "Erro. 'permission': '$permission'.<br>" "continue" || return 1
+    valid "$subject_type" "subject_type" "Erro. 'subject_type': '$subject_type'.<br>" || return 1
+    valid "$subject_name" "subject_name" "Erro. 'subject_name': '$subject_name'.<br>" || return 1
+    valid "$resource_type" "resource_type" "Erro. 'resource_type': '$resource_type'.<br>" || return 1
+    valid "$resource_name" "resource_name" "Erro. 'resource_name': '$resource_name'.<br>" || return 1
+    valid "$permission" "permission" "Erro. 'permission': '$permission'.<br>" || return 1
 
     return 0
 
