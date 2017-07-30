@@ -344,7 +344,7 @@ test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o históric
 $erro && end 1 || unset erro
 
 #criar lockfile
-lock "$agent_name_input $agent_task $(basename $agent_conf | cut -d '.' -f1)" "Uma tarefa concorrente já está em andamento. Aguarde..."
+lock "$agent_name_input $agent_task $(basename $agent_conf | cut -d '.' -f1)" "Uma tarefa concorrente já está em andamento. Aguarde..." || end 1
 test ! -f "$remote_lock_dir/edit_agent_${host}" && touch "$remote_lock_dir/run_agent_${host}_${pid}" || end 1
 
 # Valida o arquivo de configurações $agent_conf, que deve atender aos templates local.template e $agent_name.template
