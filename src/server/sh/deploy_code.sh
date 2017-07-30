@@ -419,7 +419,7 @@ lock $app "Deploy abortado: há outro deploy da aplicação $app em curso." || e
 echo -e "\nObtendo parâmetros da aplicação $app..."
 
 touch "${app_conf_dir}/${app}.conf"
-chk_template "${app_conf_dir}/${app}.conf" "app" "continue" && error=false || error=true
+chk_template "${app_conf_dir}/${app}.conf" "app" && error=false || error=true
 
 if $interactive && $error; then
     echo "-----------------------------------------------"
