@@ -92,44 +92,8 @@ col_resource_type=
 col_resource_name=
 col_permission=
 # Expressões de validação utilizadas na interface Web
-regex[user]=
-regex[email]=
-regex[group]=
-regex[password]=
-regex[subject_type]=
-regex[subject_name]=
-regex[resource_type]=
-regex[resource_name]=
-regex[resource_list]=
-regex[permission]=
-regex[faq_category]=
-regex[faq_tag]=
-regex[faq_taglist]=
-regex[faq_filetype]=
-regex[agent_interval]=
 # Expressões de validação de diretórios utilizados no processo de deploy
-regex[tmp_dir]=
-regex[bak_dir]=
-regex[history_dir]=
-regex[cgi_dir]=
-regex[repo_dir]=
-regex[upload_dir]=
-regex[agent_conf_dir]=
-regex[lock_dir]=
 # Expressões de validação de parâmetros das aplicações
-regex[hash]=
-regex[tag]=
-regex[branch]=
-regex[repo]=
-regex[rev]=
-regex[raiz]=
-regex[mount_type]=
-regex[share]=
-regex[force_gid]=
-regex[force_uid]=
-regex[branch\[[a-zA-Z0-9._-]*\]]=
-regex[revisao\[[a-zA-Z0-9._-]*\]]=
-regex[modo\[[a-zA-Z0-9._-]*\]]=
-regex[auto\[[a-zA-Z0-9._-]*\]]=
+regex\[[a-zA-Z0-9._-]*\]=
 # Expressões inválidas
-not_regex[[a-z][0-9a-z_]*]=
+not_regex\[[a-zA-Z0-9._-]*\]=
