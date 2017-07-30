@@ -93,6 +93,7 @@ fi
 mklist "$ambientes" "$tmp_dir/lista_ambientes"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
+qtd_dir="${#dir[@]}"
 
 if ! $parsed; then
 

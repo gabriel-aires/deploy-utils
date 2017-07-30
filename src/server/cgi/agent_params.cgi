@@ -10,10 +10,9 @@ function get_path_id_regex() {
     local path_id=''
     path_id_regex=''
 
-    while [ "$i" -lt "$qtd_dir" ]; do
+    while [ "$i" -lt "${#dir[@]}" ]; do        
+        path_id_regex="${path_id_regex}|${dir[$i]}"
         ((i++))
-        path_id="$(eval "echo \$dir_$i")"
-        path_id_regex="${path_id_regex}|${path_id}"
     done
 
     path_id_regex="$(echo "$path_id_regex" | sed -r "s/^\|//")"
@@ -54,8 +53,8 @@ submit_save="Salvar"
 submit_erase="Remover"
 submit_erase_yes="Sim"
 submit_erase_no="Nao"
+qtd_dir="${#dir[@]}"
 
-valid "$qtd_dir" "qtd" "<p><b>Erro. Valor inválido para a quantidade de subníveis do diretório de upload.</b></p>" || end 1
 valid "$upload_dir" "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>" || end 1
 valid "$agent_conf_dir" "agent_conf_dir" "<p><b>Erro. Caminho inválido para o diretório de configuração de agentes.</b></p>" || end 1
 test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p>" && end 1

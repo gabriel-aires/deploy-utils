@@ -31,52 +31,38 @@ function end () {
 
 function set_dir () {
 
-    # Encontra os diretórios de origem/destino com base na hierarquia definida em global.conf. IMPORTANTE: TODOS os parâmetros de configuração devem ser validados previamente.
+    test -d "$1" || return 1
+    test -n "$2" || return 1
 
-    local raiz="$1"
-    local dir_acima="$raiz"
-    local set_var="$2"
+    local dir_path="$1"
+    local path_key="$2"
+    local subdir=''
+    local error=false
 
-    unset "$2"
-
-    local fim=0
-    local n=1
-    local var_n="dir_$n"
-
-    if [ "$(eval "echo \$$var_n")" == '' ];then
-        fim=1
-    else
-        local dir_n="$(eval "echo \$$var_n")"
-        dir_n="$(eval "echo \$$dir_n")"
-        local nivel=1
-    fi
-
-    while [ "$fim" -eq '0' ]; do
-
-        dir_acima=$dir_acima/$dir_n
-
-        ((n++))
-        var_n="dir_$n"
-
-        if [ "$(eval "echo \$$var_n")" == '' ];then
-            fim=1
-        else
-            dir_n="$(eval "echo \$$var_n")"
-            dir_n="$(eval "echo \$$dir_n")"
-            ((nivel++))
-        fi
-
+    for dir_level in ${dir[@]}; do
+        subdir="$(eval "echo \$$dir_level")"
+        test -n "$subdir" && dir_path="$dir_path/$subdir" || { error=true ; break ; }
     done
 
-    if [ "$nivel" == "$qtd_dir" ]; then
-        set_var="$set_var=$(find "$raiz" -wholename "$dir_acima" 2> /dev/null)"
-        eval $set_var
-    else
+    if $error; then
         log "ERRO" "Parâmetros incorretos no arquivo '$agent_conf'."
+        return 1    
+    fi
+    
+    application_path["$path_key"]="$(find $dir_path -type d -maxdepth 0)"
+
+    if [ ! -d ${application_path["$path_key"]} ]; then
+        log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado."
+        return 1
+    fi
+
+    if [ $( echo "${application_path[$path_key]}" | wc -w ) -ne 1 ]; then
+        log "ERRO" "O caminho para o diretório de pacotes / logs possui espaços."
         return 1
     fi
 
     return 0
+
 }
 
 chk_dir () {
@@ -114,9 +100,9 @@ function deploy_agent () {
 
     local file_path_regex=''
 
-    if [ $(ls "${origem}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
+    if [ $(ls "${application_path['from']}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir ${origem} "deploy" "$filetypes"
+        chk_dir ${application_path['from']} "deploy" "$filetypes"
 
         # Verificar se há arquivos para deploy.
 
@@ -125,7 +111,7 @@ function deploy_agent () {
         file_path_regex="^.*\."
         file_path_regex="$(echo "$file_path_regex" | sed -r "s|^(.*)$|\1$filetypes\$|ig" | sed -r "s: :\$\|$file_path_regex:g")"
 
-        find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
+        find "${application_path['from']}" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
 
         if [ $(cat $tmp_dir/arq.list | wc -l) -lt 1 ]; then
             log "INFO" "Não foram encontrados novos pacotes para deploy."
@@ -137,8 +123,8 @@ function deploy_agent () {
 
             while read l; do
 
-                pkg_name=$( echo $l | sed -r "s|^${origem}/[^/]+/deploy/([^/]+)\.[a-z0-9]+$|\1|i" )
-                app=$( echo $l | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" )
+                pkg_name=$( echo $l | sed -r "s|^${application_path['from']}/[^/]+/deploy/([^/]+)\.[a-z0-9]+$|\1|i" )
+                app=$( echo $l | sed -r "s|^${application_path['from']}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" )
 
                 if [ $(echo $pkg_name | grep -Ei "^$app" | wc -l) -ne 1 ]; then
                     echo $l >> "$tmp_dir/remove_incorretos.list"
@@ -153,15 +139,15 @@ function deploy_agent () {
 
             # Caso haja pacotes, deve haver no máximo um pacote por diretório
 
-            find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
+            find "${application_path['from']}" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
 
             rm -f "$tmp_dir/remove_versoes.list"
             touch "$tmp_dir/remove_versoes.list"
 
             while read l; do
 
-                pkg_name=$( echo $l | sed -r "s|^${origem}/[^/]+/deploy/([^/]+)\.[a-z0-9]+$|\1|i" )
-                dir=$( echo $l | sed -r "s|^(${origem}/[^/]+/deploy)/[^/]+\.[a-z0-9]+$|\1|i" )
+                pkg_name=$( echo $l | sed -r "s|^${application_path['from']}/[^/]+/deploy/([^/]+)\.[a-z0-9]+$|\1|i" )
+                dir=$( echo $l | sed -r "s|^(${application_path['from']}/[^/]+/deploy)/[^/]+\.[a-z0-9]+$|\1|i" )
 
                 if [ $( find $dir -type f | wc -l ) -ne 1 ]; then
                     echo $l >> $tmp_dir/remove_versoes.list
@@ -175,7 +161,7 @@ function deploy_agent () {
             fi
 
             # O arquivo pkg.list será utilizado para realizar a contagem de pacotes existentes
-            find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/pkg.list
+            find "${application_path['from']}" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/pkg.list
 
             if [ $(cat $tmp_dir/pkg.list | wc -l) -lt 1 ]; then
                 log "INFO" "Não há novos pacotes para deploy."
@@ -184,7 +170,7 @@ function deploy_agent () {
                 cat $tmp_dir/pkg.list
 
                 # A variável pkg_list foi criada para permitir a iteração entre a lista de pacotes, uma vez que o diretório temporário precisa ser limpo.
-                pkg_list="$(find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex")"
+                pkg_list="$(find "${application_path['from']}" -type f -regextype posix-extended -iregex "$file_path_regex")"
                 pkg_list="$(echo "$pkg_list" | sed -r "s%(.)$%\1|%g")"
 
                 echo $pkg_list | while read -d '|' pkg; do
@@ -215,7 +201,7 @@ function deploy_agent () {
                     fi
 
                     export user_name=$(echo $(basename $pkg) | sed -rn "s|^.*%user_([^%]+)%md5_[^%]+%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
-                    export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+$|\1|i" | tr '[:upper:]' '[:lower:]')
+                    export app=$(echo $pkg | sed -r "s|^${application_path['from']}/([^/]+)/deploy/[^/]+$|\1|i" | tr '[:upper:]' '[:lower:]')
 
                     case $ext in
                         war|ear|sar)
@@ -259,23 +245,23 @@ function deploy_agent () {
         fi
 
     else
-        log "ERRO" "Não foram encontrados os diretórios das aplicações em $origem"
+        log "ERRO" "Não foram encontrados os diretórios das aplicações em ${application_path['from']}"
     fi
 
 }
 
 function log_agent () {
 
-    if [ $(ls "${destino}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
+    if [ $(ls "${application_path['to']}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir "$destino" "log" "$filetypes refresh"
+        chk_dir "${application_path['to']}" "log" "$filetypes refresh"
 
-        app_list="$(find $destino/* -type d -name 'log' -print | sed -r "s|^${destino}/([^/]+)/log|\1|ig")"
+        app_list="$(find ${application_path['to']}/* -type d -name 'log' -print | sed -r "s|^${application_path['to']}/([^/]+)/log|\1|ig")"
         app_list=$(echo "$app_list" | sed -r "s%(.)$%\1|%g" | tr '[:upper:]' '[:lower:]')
 
         echo $app_list | while read -d '|' app; do
 
-            shared_log_dir=$(find "$destino/" -type d -wholename "$destino/$app/log" 2> /dev/null)
+            shared_log_dir=$(find "${application_path['to']}/" -type d -wholename "${application_path['to']}/$app/log" 2> /dev/null)
 
             if [ -d "$shared_log_dir" ]; then
 
@@ -301,7 +287,7 @@ function log_agent () {
         done
 
     else
-        log "ERRO" "Não foram encontrados os diretórios das aplicações em $destino"
+        log "ERRO" "Não foram encontrados os diretórios das aplicações em ${application_path['to']}"
     fi
 
 }
@@ -361,13 +347,9 @@ $erro && end 1 || unset erro
 filetypes=$(grep -Ex "${agent_task}_filetypes=.*" "$agent_conf" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')
 
 # verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
-set_dir "$remote_pkg_dir_tree" 'origem' || end 1
-set_dir "$remote_log_dir_tree" 'destino' || end 1
-
-if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
-    log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
-    end 1
-fi
+declare -A application_path
+set_dir "$remote_pkg_dir_tree" 'from' || end 1
+set_dir "$remote_log_dir_tree" 'to' || end 1
 
 # Identifica script do agente.
 agent_script="${install_dir}/sh/$agent_name.sh"
