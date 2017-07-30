@@ -55,9 +55,9 @@ submit_erase="Remover"
 submit_erase_yes="Sim"
 submit_erase_no="Nao"
 
-valid "qtd_dir" "regex_qtd" "<p><b>Erro. Valor inválido para a quantidade de subníveis do diretório de upload.</b></p>"
-valid "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>"
-valid "agent_conf_dir" "<p><b>Erro. Caminho inválido para o diretório de configuração de agentes.</b></p>"
+valid "$qtd_dir" "qtd" "<p><b>Erro. Valor inválido para a quantidade de subníveis do diretório de upload.</b></p>" || end 1
+valid "$upload_dir" "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>" || end 1
+valid "$agent_conf_dir" "agent_conf_dir" "<p><b>Erro. Caminho inválido para o diretório de configuração de agentes.</b></p>" || end 1
 test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p>" && end 1
 test ! -w "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" && end 1
 test ! -d "$agent_conf_dir" && "<p><b>Erro. Diretório de configuração de agentes inexistente.</b></p>" && end 1
@@ -107,7 +107,7 @@ else
     if [ -n "$operation" ] && [ -n "$submit" ]; then
 
         if [ -n "$host" ]; then
-            valid "host" "<p><b>O hostname é inválido: '$host'.</b></p>"
+            valid "$host" "host" "<p><b>O hostname é inválido: '$host'.</b></p>" || end 1
             lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>"
             test "$operation" == "$operation_add" || test "$operation" == "$operation_erase" || echo "<p>Host: <b>$host</b></p>"
             running_tasks="$(find "$lock_dir"/ -maxdepth 1 -type f -name "run_agent_${host}_*" | wc -l)"
@@ -512,7 +512,7 @@ else
                         test -n "$enable_deploy" || enable_deploy=false
 
                         mklist "$app" | while read app_name; do
-                            valid "app_name" "regex[app" "<p><b>Erro. Nome de aplicação inválido: $app_name.</b></p>" "continue" && dir_created]=false || continue
+                            valid "$app_name" "app" "<p><b>Erro. Nome de aplicação inválido: $app_name.</b></p>" && dir_created=false || continue
                             $enable_log && mkdir -p "$upload_path/$app_name/log" && echo "<p>Diretório '$upload_path/$app_name/log' criado.</p>" && dir_created=true
                             $enable_deploy && mkdir -p "$upload_path/$app_name/deploy" && echo "<p>Diretório '$upload_path/$app_name/deploy' criado.</p>" && dir_created=true
                             $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app_name'.</p>"
