@@ -74,7 +74,7 @@ mklist "$ambientes" "$tmp_dir/lista_ambientes"
 proceed_view="Continuar"
 proceed_log="Acessar"
 
-valid "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>"
+valid "$upload_dir" "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>" || end 1
 test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p>" && end 1
 test ! -x "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" && end 1
 
@@ -114,8 +114,8 @@ else
 
     if [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
-        valid "app" "Erro. Nome de aplicação inválido."
-        valid "env" "regex_ambiente" "Erro. Nome de ambiente inválido."
+        valid "$app" "app" "Erro. Nome de aplicação inválido." || end 1
+        valid "$env" "ambiente" "Erro. Nome de ambiente inválido." || end 1
 
         case "$proceed" in
 
