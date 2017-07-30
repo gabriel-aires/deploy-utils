@@ -78,12 +78,12 @@ function checkout () {                                                   #o coma
 
     if $auto; then
 
-        valid "revisao_${ambiente}" "\nInforme um valor válido para o parâmetro revisao_${ambiente}: [commit/tag]."
-        revisao_auto=$(eval "echo \$revisao_${ambiente}")
+        valid "${revisao[$ambiente]}" "rev:$ambiente" "\nInforme um valor válido para o parâmetro revisao[${ambiente}]: [commit/tag]." || end 1
+        revisao_auto="${revisao[$ambiente]}"
         $interactive && editconf "revisao_${ambiente}" "$revisao_auto" "$app_conf_dir/${app}.conf"
 
-        valid "branch_${ambiente}" "\nInforme um valor válido para o parâmetro branch_${ambiente} (Ex: 'master')."
-        branch_auto=$(eval "echo \$branch_${ambiente}")
+        valid "${branch[$ambiente]}" "branch:$ambiente" "\nInforme um valor válido para o parâmetro branch_${ambiente} (Ex: 'master')." || end 1
+        branch_auto="${branch[$ambiente]}"
         $interactive && editconf "revisao_${ambiente}" "$revisao_auto" "$app_conf_dir/${app}.conf"
 
         git branch -a | grep -v remotes/origin/HEAD | cut -b 3- > $tmp_dir/branches
@@ -408,9 +408,9 @@ mklist "$ambientes" "$tmp_dir/ambientes"
 
 echo "Iniciando processo de deploy..."
 
-valid "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas)."
-valid "rev" "\nInforme a revisão corretamente."
-valid "ambiente" "\nInforme o ambiente corretamente."
+valid "$app" "app" "\nInforme o nome do sistema corretamente (somente letras minúsculas)." || end 1
+valid "$rev" "rev" "\nInforme a revisão corretamente." || end 1
+valid "$ambiente" "ambiente" "\nInforme o ambiente corretamente." || end 1
 
 lock $app "Deploy abortado: há outro deploy da aplicação $app em curso."
 
@@ -434,20 +434,20 @@ fi
 
 $error && end 1 || source "${app_conf_dir}/${app}.conf"
 
-valid "repo" "\nInforme um caminho válido para o repositório GIT."
-valid "raiz" "\nInforme um caminho válido para a raiz da aplicação."
-valid "hosts_${ambiente}" "\nInforme uma lista válida de hosts para deploy, separando-os por espaço ou vírgula."
-valid "modo_${ambiente}" "\nInforme um modo válido para deploy no ambiente ${ambiente} [p/d]."
-valid "auto_${ambiente}" "\nInforme um valor válido para a flag de deploy automático no ambiente ${ambiente} [0/1]."
-valid "share_${ambiente}" "regex[share" "\nInforme um compartilhamento válido para deploy no ambiente ${ambiente}, suprimindo o nome do host (Ex: //host/a\$/b/c ]=> a\$/b/c, hostname:/a/b/c => /a/b/c)."
-valid "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]."
-valid "force_gid" "\nInforme um group id válido para a aplicação $app."
-valid "force_uid" "\nInforme um user id válido para a aplicação $app."
+valid "$repo" "repo" "\nInforme um caminho válido para o repositório GIT." || end 1
+valid "$raiz" "raiz" "\nInforme um caminho válido para a raiz da aplicação." || end 1
+valid "${hosts[$ambiente]}" "hosts:$ambiente" "\nInforme uma lista válida de hosts para deploy, separando-os por espaço ou vírgula." || end 1
+valid "${modo[$ambiente]}" "modo:$ambiente" "\nInforme um modo válido para deploy no ambiente ${ambiente} [p/d]." || end 1
+valid "${auto[$ambiente]}" "auto:$ambiente" "\nInforme um valor válido para a flag de deploy automático no ambiente ${ambiente} [0/1]." || end 1
+valid "${share[$ambiente]}" "share:$ambiente" "\nInforme um compartilhamento válido para deploy no ambiente ${ambiente}, suprimindo o nome do host (Ex: //host/a\$/b/c ]=> a\$/b/c, hostname:/a/b/c => /a/b/c)." || end 1
+valid "$mount_type" "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]." || end 1
+valid "$force_gid" "force_gid" "\nInforme um group id válido para a aplicação $app." || end 1
+valid "$force_uid" "force_uid" "\nInforme um user id válido para a aplicação $app." || end 1
 
-hosts_deploy=$(eval "echo \$hosts_${ambiente}")
-modo_deploy=$(eval "echo \$modo_${ambiente}")
-auto_deploy=$(eval "echo \$auto_${ambiente}")
-share_deploy=$(eval "echo \$share_${ambiente}")
+hosts_deploy="${hosts[$ambiente]}"
+modo_deploy="${modo[$ambiente]}"
+auto_deploy="${auto[$ambiente]}"
+share_deploy="${share[$ambiente]}"
 
 if $interactive; then
     editconf "repo" "$repo" "$app_conf_dir/${app}.conf"
