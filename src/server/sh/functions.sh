@@ -586,7 +586,7 @@ function add_permission() { #subject_type (user/group), #subject_name, #resource
     local error=false
 
     if [ "$(cat $web_permissions_file | wc -l)" -eq 0 ]; then
-        local header="$(echo "$col_subject_type$col_subject_name$col_resource_type$col_resource_name$col_permission" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
+        local header="$(echo "${col[subject_type]}${col[subject_name]}${col[resource_type]}${col[resource_name]}${col[permission]}" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
         echo "$header" >> "$web_permissions_file" || error=true
         $error && cp -f "$web_permissions_file.bak" "$web_permissions_file" && return 1
     fi

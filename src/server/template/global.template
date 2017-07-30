@@ -86,11 +86,7 @@ cgi_profile_title=
 cgi_faq_title=
 cgi_table_size=
 # Estrutura da tabela de permissões:
-col_subject_type=
-col_subject_name=
-col_resource_type=
-col_resource_name=
-col_permission=
+col\[[a-zA-Z0-9._-]*\]=
 # Expressões de validação utilizadas na interface Web
 # Expressões de validação de diretórios utilizados no processo de deploy
 # Expressões de validação de parâmetros das aplicações

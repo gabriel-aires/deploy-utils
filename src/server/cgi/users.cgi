@@ -176,17 +176,17 @@ else
 
                         if [ "$(cat "$web_permissions_file" | wc -l)" -ge 2 ]; then
                             query_file.sh --delim "$delim" --replace-delim "</td><td>" --header 1 \
-                                --select $col_resource_type $col_resource_name $col_permission \
+                                --select ${col[resource_type]} ${col[resource_name]} ${col[permission]} \
                                 --from "$web_permissions_file" \
-                                --where $col_subject_type=='user' $col_subject_name=="$user" \
-                                --order-by $col_resource_type $col_subject_name asc \
+                                --where ${col[subject_type]}=='user' ${col[subject_name]}=="$user" \
+                                --order-by ${col[resource_type]} ${col[subject_name]} asc \
                                 > $tmp_dir/permissions_user
 
                             if [ "$(cat "$tmp_dir/permissions_user" | wc -l)" -ge 1 ]; then
                                 erase_option=true
 
                                 query_file.sh --delim "$delim" --replace-delim "</th><th>" \
-                                    --select $col_resource_type $col_resource_name $col_permission \
+                                    --select ${col[resource_type]} ${col[resource_name]} ${col[permission]} \
                                     --top 1 \
                                     --from "$web_permissions_file" \
                                     > $tmp_dir/permissions_header
