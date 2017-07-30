@@ -109,7 +109,7 @@ elif [ -n "$POST_STRING" ]; then
     erase=$(echo "$arg_string" | sed -rn "s/^.*&erase=([^\&]+)&.*$/\1/p")
 
     if [ -n "$app_name" ]; then
-        valid "app_name" "regex_app" "<p><b>O nome da aplicação é inválido: '$app_name'.</b></p>"
+        valid "$app_name" "app" "<p><b>O nome da aplicação é inválido: '$app_name'.</b></p>" || end 1
         lock "edit_app_$app_name" "<p><b>Aplicação '$app_name' bloqueada para edição.</b></p>"
 
         if [ "$save" == "$save_value" ]; then
