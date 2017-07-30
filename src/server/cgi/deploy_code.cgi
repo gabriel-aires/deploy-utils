@@ -224,11 +224,11 @@ else
 
     if [ -n "$app_name" ] && [ -n "$rev_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
 
-        valid "enable_redeploy" "regex_bool" "Erro. Opção inválida."
-        valid "enable_deletion" "regex_bool" "Erro. Opção inválida."
-        valid "app_name" "regex_app" "Erro. Nome de aplicação inválido."
-        valid "rev_name" "regex_rev" "Erro. Nome de revisão inválido."
-        valid "env_name" "regex_ambiente" "Erro. Nome de ambiente inválido."
+        valid "$enable_redeploy" "bool" "Erro. Opção inválida." || end 1
+        valid "$enable_deletion" "bool" "Erro. Opção inválida." || end 1
+        valid "$app_name" "app" "Erro. Nome de aplicação inválido." || end 1
+        valid "$rev_name" "rev" "Erro. Nome de revisão inválido." || end 1
+        valid "$env_name" "ambiente" "Erro. Nome de ambiente inválido." || end 1
 
         lock "pages_${app_name}_${env_name}" "<p><b>Há outro deploy da aplicação '$app_name' no ambiente '$env_name' em execução. Tente novamente.</b></p>"
 
