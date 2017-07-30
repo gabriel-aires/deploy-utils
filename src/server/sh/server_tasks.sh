@@ -97,7 +97,7 @@ function end {
 
 trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
-lock 'server_tasks' "A rotina já está em execução."
+lock 'server_tasks' "A rotina já está em execução." || end 1
 
 valid "$service_log_size" "qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas." || end 1
 valid "$app_log_max" "qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações." || end 1
