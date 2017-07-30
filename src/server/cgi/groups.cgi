@@ -74,7 +74,8 @@ else
 
     if [ -n "$operation" ] && [ -n "$submit" ]; then
 
-        test -n "$group" && valid "group" "<p><b>O nome do grupo é inválido: '$group'.</b></p>" && lock "edit_group_$group" "<p><b>Grupo $group bloqueado para edição</b></p>" && echo "      <p>Grupo: <b>$group</b></p>"
+        test -n "$group" && valid "$group" "group" "<p><b>O nome do grupo é inválido: '$group'.</b></p>" || end 1
+        lock "edit_group_$group" "<p><b>Grupo $group bloqueado para edição</b></p>" && echo "      <p>Grupo: <b>$group</b></p>"
 
         case "$operation" in
 
@@ -295,7 +296,7 @@ else
                     "$submit_permission_save")
 
                         resource_list="$(echo "$arg_string" | sed -rn "s/^.*&resource_list=([^\&]+)&.*$/\1/p")"
-                        valid 'resource_list' "      <p></b>Erro. '$resource_list' não é uma lista de recursos válida.</b></p>"
+                        valid "$resource_list" 'resource_list' "      <p></b>Erro. '$resource_list' não é uma lista de recursos válida.</b></p>" || end 1
 
                         mklist "$resource_list" | while read resource_name; do
                             resource_type="$(echo "$arg_string" | sed -rn "s/^.*&resource_type=([^\&]+)&.*$/\1/p")"
