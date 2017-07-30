@@ -99,9 +99,9 @@ trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 lock 'server_tasks' "A rotina já está em execução."
 
-valid "service_log_size" "regex_qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas."
-valid "app_log_max" "regex_qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações."
-valid "global_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico global."
+valid "$service_log_size" "qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas." || end 1
+valid "$app_log_max" "qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações." || end 1
+valid "$global_history_size" "qtd" "\nErro. Tamanho inválido para o histórico global." || end 1
 
 case "$1" in
     --test)
