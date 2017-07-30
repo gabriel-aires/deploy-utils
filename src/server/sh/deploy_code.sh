@@ -412,7 +412,7 @@ valid "$app" "app" "\nInforme o nome do sistema corretamente (somente letras min
 valid "$rev" "rev" "\nInforme a revisão corretamente." || end 1
 valid "$ambiente" "ambiente" "\nInforme o ambiente corretamente." || end 1
 
-lock $app "Deploy abortado: há outro deploy da aplicação $app em curso."
+lock $app "Deploy abortado: há outro deploy da aplicação $app em curso." || end 1
 
 # Validação dos parãmetros de deploy da aplicação $app
 
@@ -470,7 +470,7 @@ if [ "$rev" == "auto" ]; then
 fi
 
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
-lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositório $repo."
+lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositório $repo." || end 1
 
 mklist "$hosts_deploy" $tmp_dir/hosts_${ambiente}
 
@@ -480,9 +480,11 @@ while read host; do
         'nfs') dir_destino=$(echo "$host:$share_deploy" | sed -r "s|(:)([^/])|\1/\2|" | sed -r "s|/$||") ;;
     esac
     nomedestino=$(echo $dir_destino | sed -r "s|[/:]|_|g")
-    lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino."
+    lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino." || error=true
     echo "$dir_destino" >> $tmp_dir/dir_destino
 done < $tmp_dir/hosts_${ambiente}
+
+$error && end 1
 
 #### Diretórios onde serão armazenados os logs de deploy (define e cria os diretórios app_history_dir e deploy_log_dir)
 set_app_history_dirs
