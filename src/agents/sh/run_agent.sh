@@ -15,7 +15,6 @@ agent_conf="$3"
 pid="$$"
 execution_mode="agent"
 verbosity="quiet"
-interactive=false
 host=$(echo $HOSTNAME | cut -f1 -d '.')
 
 ###### FUNÇÕES ######
@@ -369,7 +368,6 @@ export -f 'write_history'
 export 'delim'
 export 'execution_mode'
 export 'verbosity'
-export 'interactive'
 export 'host'
 export 'lock_history'
 export 'agent_timeout'

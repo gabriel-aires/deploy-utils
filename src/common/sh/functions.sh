@@ -2,33 +2,6 @@
 
 # Define funções comuns.
 
-function paint () {
-
-    if $interactive; then
-        local color
-
-        case $2 in
-            black) color=0;;
-            red) color=1;;
-            green) color=2;;
-            yellow) color=3;;
-            blue) color=4;;
-            magenta) color=5;;
-            cyan) color=6;;
-            white) color=7;;
-        esac
-
-        case $1 in
-            fg) tput setaf $color;;
-            bg) tput setab $color;;
-            default) tput sgr0;;
-        esac
-    fi
-
-    return 0
-
-}
-
 function log () {    ##### log de execução detalhado.
 
     local msg="$(date +"%F %Hh%Mm%Ss")  $1  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
@@ -122,14 +95,11 @@ function chk_template () { # argumentos: caminho_arquivo nome_template
         local file="$1"
         local template_name="$2"
 
-        paint 'fg' 'yellow'
-
         if [ ! -f "$install_dir/template/$template_name.template" ]; then
             case $verbosity in
                 'quiet') log "ERRO" "O template espeficicado não foi encontrado: $template_name.";;
                 'verbose') echo -e "\nErro. O template espeficicado não foi encontrado: $template_name.";;
             esac
-            paint 'default'
             return 1
 
         elif [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$template_name.template | wc -l)" -ne "0" ]; then
@@ -138,12 +108,8 @@ function chk_template () { # argumentos: caminho_arquivo nome_template
                 'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $file:";;
             esac
             cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$template_name.template
-
-            paint 'default'
             return 1
         fi
-
-        paint 'default'
 
     else
         return 1
@@ -211,10 +177,8 @@ function write_history () {
     local obs_log="<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=${ambiente}&deploy_id=$deploy_id\">$1</a>"
     local flag_log="$2"
 
-    local aux="$interactive"; interactive=false
     valid "$obs_log" "csv_value" "'$obs_log': mensagem inválida." || return 1
     valid "$flag_log" "flag" "'$flag_log': flag de deploy inválida." || return 1
-    interactive=$aux
 
     local header="$(echo "${col[day]}${col[month]}${col[year]}${col[time]}${col[user]}${col[app]}${col[rev]}${col[env]}${col[host]}${col[obs]}${col[flag]}" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
     local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$user_log$delim$app_log$delim$rev_log$delim${ambiente_log}$delim$host_log$delim$obs_log$delim$flag_log$delim"

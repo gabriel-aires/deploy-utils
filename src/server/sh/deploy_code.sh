@@ -5,7 +5,6 @@ source $install_dir/sh/include.sh || exit 1
 estado="validacao"
 pid=$$
 user_name="$(id --user --name)"
-interactive="true"
 auto="false"
 simulation="false"
 redeploy="false"
@@ -21,13 +20,10 @@ fi
 
 #### UTILIZAÇÃO: deploy_pages.sh -opções <aplicação> <revisão> <ambiente> ############
 
-while getopts ":dfnru:h" opcao; do
+while getopts ":dnru:h" opcao; do
     case $opcao in
         d)
             modo='d'
-            ;;
-        f)
-            interactive="false"
             ;;
         n)
             simulation="true"
@@ -42,13 +38,12 @@ while getopts ":dfnru:h" opcao; do
             echo -e "O script requer os seguintes parâmetros: (opções) <aplicação> <revisão> <ambiente>."
             echo -e "Opções:"
             echo -e "\t-d\thabilitar o modo de deleção de arquivos obsoletos."
-            echo -e "\t-f\tsimular deploy."
-            echo -e "\t-f\tforçar a execução do script de forma não interativa."
+            echo -e "\t-n\tsimular deploy."
             echo -e "\t-r\tpermitir redeploy."
             exit 0
             ;;
         \?)
-            echo "-$OPTARG não é uma opção válida ( -d -f -n -r -h )." && exit 1
+            echo "-$OPTARG não é uma opção válida ( -d -n -r -h )." && exit 1
             ;;
     esac
 done
@@ -80,11 +75,9 @@ function checkout () {                                                   #o coma
 
         valid "${revisao[$ambiente]}" "rev:$ambiente" "\nInforme um valor válido para o parâmetro revisao[${ambiente}]: [commit/tag]." || end 1
         revisao_auto="${revisao[$ambiente]}"
-        $interactive && editconf "revisao_${ambiente}" "$revisao_auto" "$app_conf_dir/${app}.conf"
 
         valid "${branch[$ambiente]}" "branch:$ambiente" "\nInforme um valor válido para o parâmetro branch_${ambiente} (Ex: 'master')." || end 1
         branch_auto="${branch[$ambiente]}"
-        $interactive && editconf "revisao_${ambiente}" "$revisao_auto" "$app_conf_dir/${app}.conf"
 
         git branch -a | grep -v remotes/origin/HEAD | cut -b 3- > $tmp_dir/branches
 
@@ -233,9 +226,7 @@ function check_last_deploy () {
             fi
 
             if $downgrade; then
-                paint 'bg' 'red' && paint 'fg' 'black'
                 echo -e "\nAVISO! Foi detectado um deploy anterior de uma revisão mais recente: $last_rev"
-                paint 'default'
             fi
         fi
     fi
@@ -262,7 +253,6 @@ function clean_temp () {                                        #cria pasta temp
 function end () {
 
     trap "" SIGQUIT SIGTERM SIGINT SIGHUP
-    paint 'default'
 
     local erro=$1
     local qtd_rollback=0
@@ -276,8 +266,6 @@ function end () {
     wait
 
     if [ "$erro" -eq 1 ] && [ -f "$deploy_log_dir/progresso_$host.txt" ]; then
-
-        paint 'fg' 'yellow'
 
         echo -e "\nDeploy abortado."
 
@@ -372,10 +360,7 @@ function end () {
     clean_locks
     clean_temp
     wait
-
-    paint 'default'
     echo -e "\n$end_msg"
-
     exit $erro
 }
 
@@ -387,14 +372,9 @@ else
     trap "end 1; exit" SIGQUIT SIGTERM SIGINT SIGHUP                #a função será chamada quando o script for finalizado ou interrompido.
 fi
 
-if $interactive; then
-    clear
-fi
-
 if [ -z "$modo_padrao" ] \
     || [ -z "$rsync_opts" ] \
     || [ -z "$ambientes" ] \
-    || [ -z "$interactive" ];
 then
     echo 'Favor preencher corretamente o arquivo global.conf / user.conf e tentar novamente.'
     exit 1
@@ -417,22 +397,7 @@ lock $app "Deploy abortado: há outro deploy da aplicação $app em curso." || e
 # Validação dos parãmetros de deploy da aplicação $app
 
 echo -e "\nObtendo parâmetros da aplicação $app..."
-
-touch "${app_conf_dir}/${app}.conf"
-chk_template "${app_conf_dir}/${app}.conf" "app" && error=false || error=true
-
-if $interactive && $error; then
-    echo "-----------------------------------------------"
-    read -p "Remover as entradas inválidas acima? (s/n): " -e -r ans
-    if [ "$ans" == "s" ] || [ "$ans" == "S" ]; then
-        grep --file="$install_dir/template/app.template" "${app_conf_dir}/${app}.conf" > "$tmp_dir/app_conf_new"
-        cp -f "$tmp_dir/app_conf_new" "${app_conf_dir}/${app}.conf"
-        echo -e "\nArquivo ${app}.conf alterado."
-        error=false
-    fi
-fi
-
-$error && end 1 || source "${app_conf_dir}/${app}.conf"
+chk_template "${app_conf_dir}/${app}.conf" "app" && source "${app_conf_dir}/${app}.conf" || end 1
 
 valid "$repo" "repo" "\nInforme um caminho válido para o repositório GIT." || end 1
 valid "$raiz" "raiz" "\nInforme um caminho válido para a raiz da aplicação." || end 1
@@ -449,18 +414,6 @@ modo_deploy="${modo[$ambiente]}"
 auto_deploy="${auto[$ambiente]}"
 share_deploy="${share[$ambiente]}"
 
-if $interactive; then
-    editconf "repo" "$repo" "$app_conf_dir/${app}.conf"
-    editconf "raiz" "$raiz" "$app_conf_dir/${app}.conf"
-    editconf "hosts_${ambiente}" "$hosts_deploy" "$app_conf_dir/${app}.conf"
-    editconf "modo_${ambiente}" "$modo_deploy" "$app_conf_dir/${app}.conf"
-    editconf "auto_${ambiente}" "$auto_deploy" "$app_conf_dir/${app}.conf"
-    editconf "share_${ambiente}" "$share_deploy" "$app_conf_dir/${app}.conf"
-    editconf "mount_type" "$mount_type" "$app_conf_dir/${app}.conf"
-    editconf "force_gid" "$force_gid" "$app_conf_dir/${app}.conf"
-    editconf "force_uid" "$force_uid" "$app_conf_dir/${app}.conf"
-fi
-
 if [ "$rev" == "auto" ]; then
     if [ "$auto_deploy" == "1" ]; then
         auto="true"
@@ -474,6 +427,7 @@ lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositó
 
 mklist "$hosts_deploy" $tmp_dir/hosts_${ambiente}
 
+error=false
 while read host; do
     case $mount_type in
         'cifs') dir_destino=$(echo "//$host/$share_deploy" | sed -r "s|^(//.+)//(.*$)|\1/\2|g" | sed -r "s|/$||") ;;
@@ -638,6 +592,5 @@ while read dir_destino; do
 
 done < $tmp_dir/dir_destino
 
-paint 'fg' 'green'
 echo "$obs_log"
 end 0

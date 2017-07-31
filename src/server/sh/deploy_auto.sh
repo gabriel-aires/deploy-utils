@@ -3,7 +3,6 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 source $install_dir/sh/include.sh || exit 1
 
 lock_history=false
-interactive=false
 execution_mode="server"
 verbosity="quiet"
 running=0

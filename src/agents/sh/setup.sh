@@ -1,6 +1,5 @@
 #!/bin/bash
 
-interactive='false'
 verbosity='verbose'
 
 function end() {

@@ -2,7 +2,6 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 lock_history=false
-interactive=false
 execution_mode="agent"
 verbosity="quiet"
 running=0
