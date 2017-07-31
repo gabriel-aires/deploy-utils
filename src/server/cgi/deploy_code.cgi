@@ -255,7 +255,7 @@ else
             sleep $cgi_timeout > "$deploy_queue" &
             sleep_pid=$!
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
-            deploy_options="-u $user_name -f"
+            deploy_options="-u $user_name"
             if $enable_options; then
                 $enable_redeploy && deploy_options="${deploy_options} -r"
                 $enable_deletion && deploy_options="${deploy_options} -d"
