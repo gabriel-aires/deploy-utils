@@ -96,45 +96,29 @@ function mklist () {
 
 function chk_template () { # argumentos: caminho_arquivo nome_template
 
-    if [ -f "$1" ] && [ -n "$2" ]; then
+    test -f "$1" || return 1
+    test -n "$2" || return 1
 
-        local file="$1"
-        local template_name="$2"
-        local template_file="$install_dir/template/$template_name.template"
-        local key
+    local file="$1"
+    local template_name="$2"
+    local template_file="$install_dir/template/$template_name.template"
+    local inconsistency=''
 
-        if [ ! -f "$template_file" ]; then
-            message "ERRO" "O template espeficicado não foi encontrado: $template_name."
-            return 1
-
-        else
-        
-            key=$(cat "$template_file" | sed -rn "s/^.*@([^@]+)@.*$/\1/gp" | sort | uniq)
-
-            if [ -n "$key" ]; then
-
-                if [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -Evx --file <( sed -r "s/@[^@]+@$/${regex[$key]}/g" "$template_file") | wc -l)" -ne "0" ]; then
-                    message "ERRO" "Há parâmetros incorretos no arquivo $file:"
-                    cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -Evx --file <( sed -r "s/@[^@]+@$/${regex[$key]}/g" "$template_file")
-                    return 1
-                fi            
-
-            else
-
-                if [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file "$template_file" | wc -l)" -ne "0" ]; then
-                    message "ERRO" "Há parâmetros incorretos no arquivo $file:"
-                    cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file "$template_file"
-                    return 1
-                fi
-            fi
-                                                                
-        fi
-    else
+    if [ ! -f "$template_file" ]; then
+        message "ERRO" "O template espeficicado não foi encontrado: $template_name."
         return 1
+
+    else
+        inconsistency="$(sed -r 's/=.*$/=/;/^$|^#/d' $file | grep -Evx --file <( sed -r "s/\[.*\]=$/\\\[${regex[key]}\\\]=/;s/^\.\.\.$/${regex[var]}=/" "$template_file"))"
+        if [ -n "$inconsistency" ]; then
+            message "ERRO" "Há parâmetros incorretos no arquivo $file:"
+            echo -e "$inconsistency"
+            return 1
+        fi
+                                                            
     fi
 
     return 0
-
 }
 
 function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ; retorna 0 para string válida e 1 para inválida ou argumentos incorretos
