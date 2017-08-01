@@ -360,16 +360,18 @@ else
 
                     "$submit_save")
 
+                        error=false
                         test -f "$agent_conf_dir/$host/$agent_conf.conf" || cp "$src_dir/agents/template/$agent_template.template" "$agent_conf_dir/$host/$agent_conf.conf"
 
                         while read l; do
                             if echo "$l" | grep -Ev "^#" > /dev/null; then
                                 key="$(echo "$l" | cut -f1 -d '=')"
                                 new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]*)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                                editconf "$key" "$new_value" "$agent_conf_dir/$host/$agent_conf.conf"
+                                editconf "$key" "$new_value" "$agent_conf_dir/$host/$agent_conf.conf" || { error=true ; break ; }
                             fi
                         done < "$agent_conf_dir/$host/$agent_conf.conf"
 
+                        $error && end 1
                         echo "      <p><b>Arquivo de configuração '$agent_conf.conf' atualizado.</b></p>"
                         ;;
 

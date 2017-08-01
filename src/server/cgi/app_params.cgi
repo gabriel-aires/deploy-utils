@@ -114,12 +114,14 @@ elif [ -n "$POST_STRING" ]; then
 
         if [ "$save" == "$save_value" ]; then
             test -f $app_conf_dir/$app_name.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$app_name.conf"
+            error=false
             while read l; do
                 key="$(echo "$l" | cut -f1 -d '=')"
                 echo "$arg_string" | grep -Ex "^.*&$key=([^\&]*)&.*$" > /dev/null || continue
                 new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]*)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                editconf "$key" "$new_value" "$app_conf_dir/$app_name.conf"
+                editconf "$key" "$new_value" "$app_conf_dir/$app_name.conf" || { error=true ; break ; }
             done < "$app_conf_dir/$app_name.conf"
+            $error && end 1
             echo "      <p><b>Parâmetros da aplicação $app_name atualizados.</b></p>"
 
         elif [ "$erase" == "$erase_value" ]; then
