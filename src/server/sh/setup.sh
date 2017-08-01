@@ -1,6 +1,6 @@
 #!/bin/bash
 
-verbosity='verbose'
+message_format='simple'
 skip_upgrade=false
 src_dir="$(dirname $(dirname $(dirname $(readlink -f $0))))"
 

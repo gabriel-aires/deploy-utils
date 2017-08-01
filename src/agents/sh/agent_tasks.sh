@@ -3,7 +3,7 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 
 lock_history=false
 execution_mode="agent"
-verbosity="quiet"
+message_format='detailed'
 running=0
 pid="$$"
 

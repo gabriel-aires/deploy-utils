@@ -4,7 +4,7 @@ source $install_dir/sh/include.sh || exit 1
 
 lock_history=false
 execution_mode="server"
-verbosity="quiet"
+message_format='detailed'
 running=0
 
 function async_deploy() {

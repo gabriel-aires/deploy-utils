@@ -20,14 +20,14 @@ pid=$$
 tmp_dir="$work_dir/$pid"
 
 # Valida caminhos de diretório
-aux_1=$verbosity; verbosity='quiet'
+aux_1=$message_format; message_format='detailed'
 valid "$bak_dir" "bak_dir" "\nErro. Diretório de backup informado incorretamente." &>> $error_log || exit 1
 valid "$cgi_dir" "cgi_dir" "\nErro. Diretório de cgi informado incorretamente." &>> $error_log || exit 1
 valid "$tmp_dir" "tmp_dir" "\nErro. Diretório temporário informado incorretamente." &>> $error_log || exit 1
 valid "$history_dir" "history_dir" "\nErro. Diretório de histórico informado incorretamente." &>> $error_log || exit 1
 valid "$repo_dir" "repo_dir" "\nErro. Diretório de repositórios git informado incorretamente." &>> $error_log || exit 1
 valid "$lock_dir" "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente." &>> $error_log || exit 1
-verbosity=$aux_1
+message_format=$aux_1
 
 # Cria diretórios necessários, com exceção de $tmp_dir, que deve ser gerenciado individualmente por cada script
 mkdir -p $cgi_dir $work_dir $history_dir ${app_history_dir_tree} $repo_dir $lock_dir $app_conf_dir $bak_dir &>> $error_log || exit 1

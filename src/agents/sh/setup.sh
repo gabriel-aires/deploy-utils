@@ -1,6 +1,6 @@
 #!/bin/bash
 
-verbosity='verbose'
+message_format='simple'
 
 function end() {
 

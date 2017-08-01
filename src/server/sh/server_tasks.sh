@@ -5,7 +5,7 @@ source $install_dir/sh/include.sh || exit 1
 lock_history=false
 purge_time=0
 execution_mode="server"
-verbosity="quiet"
+message_format='detailed'
 pid="$$"
 
 ##### Execução somente como usuário root ######

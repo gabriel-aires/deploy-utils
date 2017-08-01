@@ -7,7 +7,7 @@ INCLUDE=${INCLUDE:=false}
 
 if ! "$INCLUDE"; then
 
-    verbosity='verbose'
+    message_format='simple'
 
     # Define caminhos padrão
     install_dir="$(dirname $(dirname $(readlink -f $0)))"

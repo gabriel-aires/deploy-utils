@@ -9,7 +9,7 @@ auto="false"
 simulation="false"
 redeploy="false"
 execution_mode="server"
-verbosity="verbose"
+message_format="simple"
 
 ##### Execução somente como usuário root ######
 

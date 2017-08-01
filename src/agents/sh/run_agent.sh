@@ -14,7 +14,7 @@ agent_task="$2"
 agent_conf="$3"
 pid="$$"
 execution_mode="agent"
-verbosity="quiet"
+message_format='detailed'
 host=$(echo $HOSTNAME | cut -f1 -d '.')
 
 ###### FUNÇÕES ######
@@ -367,7 +367,7 @@ export -f 'log'
 export -f 'write_history'
 export 'delim'
 export 'execution_mode'
-export 'verbosity'
+export 'message_format'
 export 'host'
 export 'lock_history'
 export 'agent_timeout'

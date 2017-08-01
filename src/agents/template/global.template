@@ -2,7 +2,7 @@
 
 ### modo de execução (server/agent)
 execution_mode=
-verbosity=
+message_format=
 
 ### compartilhamentos para obtenção de pacotes e disponbilização de logs (os caminhos podem ser iguais):
 remote_pkg_dir_tree=

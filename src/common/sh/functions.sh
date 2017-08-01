@@ -22,9 +22,9 @@ function message () {
     local type="$1"
     local msg="$2"
 
-    case $verbosity in
-        'quiet') log "$type" "$msg";;
-        'verbose') echo -e "\n$msg";;
+    case $message_format in
+        'detailed') log "$type" "$msg";;
+        'simple') echo -e "\n$msg";;
     esac
 
 }
