@@ -647,25 +647,25 @@ function clearance() { #subject_type (user/group), #subject_name, #resource_type
 
 function editconf () {      # Atualiza entrada em arquivo de configuração
 
-    local exit_cmd="end 1 2> /dev/null || exit 1"
-    local campo="$1"
-    local valor_campo="$2"
-    local arquivo_conf="$3"
+    local param="$1"
+    local match="$(echo "$param" | sed -r 's#(\[|\])#\\&#g' )"
+    local value="$2"
+    local file="$3"
+    local error=false
+    local message="Erro. Não foi possível editar o arquivo de configuração."
 
-    if [ -n "$campo" ] && [ -n "$arquivo_conf" ]; then
+    test -n "$param" || error=true
+    test -n "$file" || error=true
+    touch "$file" || error=true
+    $error && echo "$message" && return 1
 
-        touch $arquivo_conf || eval "$exit_cmd"
-
-        if [ $(grep -Ex "^$campo\=.*$" $arquivo_conf | wc -l) -ne 1 ]; then
-            sed -i -r "/^$campo\=.*$/d" "$arquivo_conf"
-            echo "$campo='$valor_campo'" >> "$arquivo_conf"
-        else
-            grep -Ex "$campo='$valor_campo'|$campo=\"$valor_campo\"" "$arquivo_conf" > /dev/null
-            test "$?" -eq 1 && sed -i -r "s|^($campo\=).*$|\1\'$valor_campo\'|" "$arquivo_conf"
-        fi
-
+    if [ $(grep -Ex "$match=.*" "$file" | wc -l) -ne 1 ]; then
+        sed -i -r "/^$match=.*$/d" "$file"
+        echo "$param='$value'" >> "$file"
     else
-        echo "Erro. Não foi possível editar o arquivo de configuração." && $exit_cmd
+        grep -Ex "$match=('$value'|\"$value\")" "$file" > /dev/null
+        test "$?" -eq 1 && sed -i -r "s|^($match=).*$|\1\'$value\'|" "$file"
     fi
 
+    return 0
 }
