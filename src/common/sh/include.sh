@@ -39,11 +39,7 @@ if ! "$INCLUDE"; then
     PATH="$PATH:$src_dir/common/sh"
 
     # carrega configurações default comuns
-    test -f "$src_dir/common/conf/include.conf" || exit 1
-    #chk_template "$src_dir/common/conf/include.conf"
-    source "$src_dir/common/conf/include.conf" || exit 1
-
-    unset environment custom_value default_value current_value error
+    test -f "$src_dir/common/conf/include.conf" && source "$src_dir/common/conf/include.conf" || exit 1
 
     INCLUDE=true
 
