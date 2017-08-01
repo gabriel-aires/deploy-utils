@@ -17,20 +17,26 @@ function log () {    ##### log de execução detalhado.
 
 }
 
-function lock () {                                            #argumentos: nome_trava, mensagem_erro, (instrução)
+function message () {
 
-    local exit_cmd="return 1"
+    local type="$1"
+    local msg="$2"
+
+    case $verbosity in
+        'quiet') log "$type" "$msg";;
+        'verbose') echo -e "\n$msg";;
+    esac
+
+}
+
+function lock () {                                            #argumentos: nome_trava, mensagem_erro, (instrução)
 
     if [ -d $lock_dir ] && [ -n "$1" ] && [ -n "$2" ]; then
 
         local lockfile="$(echo "$1" | sed -r "s|[;, \:\.]+|_|g")"
         local miliseconds=$(date +%s%3N)
         local timeout=$(($lock_timeout+$miliseconds))
-
-        case $verbosity in
-            'quiet') exit_cmd="log 'INFO' '$2'; $exit_cmd";;
-            'verbose') exit_cmd="echo -e '\n$2'; $exit_cmd";;
-        esac
+        local msg="$2"
 
         while [ -f "$lock_dir/$lockfile" ] && [ $miliseconds -le $timeout ]; do
             sleep 0.05
@@ -43,15 +49,15 @@ function lock () {                                            #argumentos: nome_
             if [ $(head -n 1 "$lock_dir/$lockfile") == "$$" ]; then
                 lock_array[$lock_index]="$lock_dir/$lockfile" && ((lock_index++))
             else
-                eval "$exit_cmd"
+                message 'INFO' "$msg" ; return 1
             fi
 
         else
-            eval "$exit_cmd"
+            message 'INFO' "$msg" ; return 1
         fi
 
     else
-        eval "$exit_cmd"
+        return 1
     fi
 
     return 0
@@ -98,10 +104,7 @@ function chk_template () { # argumentos: caminho_arquivo nome_template
         local key
 
         if [ ! -f "$template_file" ]; then
-            case $verbosity in
-                'quiet') log "ERRO" "O template espeficicado não foi encontrado: $template_name.";;
-                'verbose') echo -e "\nErro. O template espeficicado não foi encontrado: $template_name.";;
-            esac
+            message "ERRO" "O template espeficicado não foi encontrado: $template_name."
             return 1
 
         else
@@ -111,10 +114,7 @@ function chk_template () { # argumentos: caminho_arquivo nome_template
             if [ -n "$key" ]; then
 
                 if [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -Evx --file <( sed -r "s/@[^@]+@$/${regex[$key]}/g" "$template_file") | wc -l)" -ne "0" ]; then
-                    case $verbosity in
-                        'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $file:";;
-                        'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $file:";;
-                    esac
+                    message "ERRO" "Há parâmetros incorretos no arquivo $file:"
                     cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -Evx --file <( sed -r "s/@[^@]+@$/${regex[$key]}/g" "$template_file")
                     return 1
                 fi            
@@ -122,15 +122,12 @@ function chk_template () { # argumentos: caminho_arquivo nome_template
             else
 
                 if [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file "$template_file" | wc -l)" -ne "0" ]; then
-                    case $verbosity in
-                        'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $file:";;
-                        'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $file:";;
-                    esac
+                    message "ERRO" "Há parâmetros incorretos no arquivo $file:"
                     cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file "$template_file"
                     return 1
                 fi
             fi
-        
+                                                                
         fi
     else
         return 1
@@ -165,20 +162,12 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
     fi
 
     if [ -z "$valid_regex" ]; then
-        case "$verbosity" in
-            'quiet') log "ERRO" "$missing_rule_msg";;
-            'verbose') echo "Erro. $missing_rule_msg";;
-        esac
+        message "ERRO" "$missing_rule_msg"
         return 1
-    
     elif [[ $value =~ ^$valid_regex$ ]] && [[ $value =~ ^$alt_valid_regex$ ]] && [[ ! $value =~ ^$forbidden_regex$ ]] && [[ ! $value =~ ^$alt_forbidden_regex$ ]]; then
         return 0
-
     else
-        case "$verbosity" in
-            'quiet') log "ERRO" "$error_msg";;
-            'verbose') echo -e "$error_msg";;
-        esac
+        message "ERRO" "$error_msg"
         return 1
     fi
 
