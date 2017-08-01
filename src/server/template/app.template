@@ -3,15 +3,15 @@ app=
 repo=
 raiz=
 # Deploy Automático
-auto\[[a-zA-Z0-9._-]*\]=
-branch\[[a-zA-Z0-9._-]*\]=
-revisao\[[a-zA-Z0-9._-]*\]=
+auto\[@ambiente@\]=
+branch\[@ambiente@\]=
+revisao\[@ambiente@\]=
 # Servidor de Aplicação (destino)
-hosts\[[a-zA-Z0-9._-]*\]=
-share\[[a-zA-Z0-9._-]*\]=
+hosts\[@ambiente@\]=
+share\[@ambiente@\]=
 mount_type=
 mount_options=
 force_gid=
 force_uid=
 # Modo de Deploy
-modo\[[a-zA-Z0-9._-]*\]=
+modo\[@ambiente@\]=

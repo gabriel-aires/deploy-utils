@@ -94,23 +94,44 @@ function chk_template () { # argumentos: caminho_arquivo nome_template
 
         local file="$1"
         local template_name="$2"
+        local template_file="$install_dir/template/$template_name.template"
+        local key
 
-        if [ ! -f "$install_dir/template/$template_name.template" ]; then
+        if [ ! -f "$template_file" ]; then
             case $verbosity in
                 'quiet') log "ERRO" "O template espeficicado não foi encontrado: $template_name.";;
                 'verbose') echo -e "\nErro. O template espeficicado não foi encontrado: $template_name.";;
             esac
             return 1
 
-        elif [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$template_name.template | wc -l)" -ne "0" ]; then
-            case $verbosity in
-                'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $file:";;
-                'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $file:";;
-            esac
-            cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$template_name.template
-            return 1
-        fi
+        else
+        
+            key=$(cat "$template_file" | sed -rn "s/^.*@([^@]+)@.*$/\1/gp" | sort | uniq)
 
+            if [ -n "$key" ]; then
+
+                if [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -Evx --file <( sed -r "s/@[^@]+@$/${regex[$key]}/g" "$template_file") | wc -l)" -ne "0" ]; then
+                    case $verbosity in
+                        'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $file:";;
+                        'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $file:";;
+                    esac
+                    cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -Evx --file <( sed -r "s/@[^@]+@$/${regex[$key]}/g" "$template_file")
+                    return 1
+                fi            
+
+            else
+
+                if [ "$(cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file "$template_file" | wc -l)" -ne "0" ]; then
+                    case $verbosity in
+                        'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $file:";;
+                        'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $file:";;
+                    esac
+                    cat $file | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file "$template_file"
+                    return 1
+                fi
+            fi
+        
+        fi
     else
         return 1
     fi
