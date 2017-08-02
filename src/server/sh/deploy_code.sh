@@ -372,17 +372,12 @@ else
     trap "end 1; exit" SIGQUIT SIGTERM SIGINT SIGHUP                #a função será chamada quando o script for finalizado ou interrompido.
 fi
 
-if [ -z "$modo_padrao" ] \
-    || [ -z "$rsync_opts" ] \
-    || [ -z "$ambientes" ] \
-then
+if [ -z "$modo_padrao" ] || [ -z "$rsync_opts" ] || [ -z "$ambientes" ]; then
     echo 'Favor preencher corretamente o arquivo global.conf / user.conf e tentar novamente.'
     exit 1
 fi
 
 mkdir -p $tmp_dir        # os outros diretórios são criados pelo include.sh
-
-mklist "$ambientes" "$tmp_dir/ambientes"
 
 # Validação dos argumentos do script
 
@@ -425,8 +420,6 @@ fi
 nomerepo=$(echo $repo | sed -r "s|^.*/([^/]+)\.git$|\1|")
 lock "${nomerepo}_git" "Deploy abortado: há outro deploy utilizando o repositório $repo." || end 1
 
-mklist "$hosts_deploy" $tmp_dir/hosts_${ambiente}
-
 error=false
 while read host; do
     case $mount_type in
@@ -436,8 +429,7 @@ while read host; do
     nomedestino=$(echo $dir_destino | sed -r "s|[/:]|_|g")
     lock $nomedestino "Deploy abortado: há outro deploy utilizando o diretório $dir_destino." || error=true
     echo "$dir_destino" >> $tmp_dir/dir_destino
-done < $tmp_dir/hosts_${ambiente}
-
+done < <(mklist "$hosts_deploy")
 $error && end 1
 
 #### Diretórios onde serão armazenados os logs de deploy (define e cria os diretórios app_history_dir e deploy_log_dir)

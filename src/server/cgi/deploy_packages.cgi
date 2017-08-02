@@ -90,7 +90,6 @@ if [ "$REQUEST_METHOD" == "POST" ]; then
     fi
 fi
 
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
 qtd_dir="${#dir[@]}"
@@ -111,7 +110,7 @@ if ! $parsed; then
     echo "              <p>"
     echo "      		<select class=\"select_default\" name=\"env\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
-    cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+    mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
     # Submit

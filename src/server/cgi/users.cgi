@@ -27,7 +27,6 @@ web_header
 
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 operation_erase="Remover"
 operation_groups="Gerenciar Grupos"
 operation_permissions="Gerenciar Permissoes"

@@ -27,7 +27,6 @@ web_header
 
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 app_param="$(echo "${col[app]}" | sed -r 's/\[//;s/\]//')"
 env_param="$(echo "${col[env]}" | sed -r 's/\[//;s/\]//')"
 save_value='Salvar'
@@ -55,7 +54,7 @@ echo "                      <td>Ambiente: </td>"
 echo "                      <td>"
 echo "                          <select class=\"select_default\" name=\"$env_param\">"
 echo "                              <option value=\"\" selected>Todos</option>"
-cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
+mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t\t<option>\1</option>|"
 echo "                          </select>"
 echo "                      </td>"
 echo "                  </tr>"
@@ -78,7 +77,6 @@ if [ -n "$QUERY_STRING" ]; then
     echo "          <form action=\"$start_page\" method=\"post\">"
     echo "              <div class=\"column zero_padding cfg_color box_shadow\">"
     echo "                  <table>"
-    test -f "$app_conf_dir/$app_name.conf" && form_file="$app_conf_dir/$app_name.conf" || form_file="$install_dir/template/app.template"
     while read l; do
         key="$(echo "$l" | cut -f1 -d '=')"
         value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
@@ -92,7 +90,7 @@ if [ -n "$QUERY_STRING" ]; then
             fi
             $show_param && echo "                   <tr><td>$key: </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
         fi
-    done < "$form_file"
+    done < <(cat "$app_conf_dir/$app_name.conf" 2> /dev/null || build_template "app")
     echo "                      <tr><td><input type=\"submit\" name=\"save\" value=\"$save_value\"> <input type=\"submit\" name=\"erase\" value=\"$erase_value\"></td>"
     echo "                  </table>"
     echo "              </div>"
@@ -113,7 +111,7 @@ elif [ -n "$POST_STRING" ]; then
         lock "edit_app_$app_name" "<p><b>Aplicação '$app_name' bloqueada para edição.</b></p>" || end 1
 
         if [ "$save" == "$save_value" ]; then
-            test -f $app_conf_dir/$app_name.conf || cp "$install_dir/template/app.template" "$app_conf_dir/$app_name.conf"
+            test -f $app_conf_dir/$app_name.conf || build_template "app" > "$app_conf_dir/$app_name.conf"
             error=false
             while read l; do
                 key="$(echo "$l" | cut -f1 -d '=')"

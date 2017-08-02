@@ -25,8 +25,6 @@ mkdir $tmp_dir
 web_header
 
 # Inicializar variáveis e constantes
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
-
 valid "$upload_dir" "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>" || end 1
 test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p>" && end 1
 test ! -x "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" && end 1
@@ -47,7 +45,7 @@ if [ -z "$QUERY_STRING" ]; then
     echo "              <p>"
     echo "      		<select class=\"select_default\" name=\"env\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
-    cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+    mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
     # Submit

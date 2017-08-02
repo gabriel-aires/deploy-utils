@@ -85,12 +85,45 @@ function clean_locks () {
 
 function mklist () {
 
-    if [ -n "$1" ]; then
-        local lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/\|/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g')
-        test -n "$2" && echo "$lista" > $2 || echo -e "$lista"
+    test -n "$1" || return 1
+    echo "$1" | sed -r 's/,/ /g;s/;/ /g;s/\|/ /g;s/ +/ /g;s/ $//g;s/^ //g;s/ /\n/g' || return 1
+    return 0
+
+}
+
+function build_template () { # argumentos: caminho_arquivo nome_template
+
+    test -n "$1" || return 1
+
+    local template_name="$1"
+    local template_file="$install_dir/template/$template_name.template"
+    local line=''
+    local key=''
+    local keygroup=''
+
+    if [ ! -f "$template_file" ]; then
+        message "ERRO" "O template especificado não foi encontrado: $template_name."
+        return 1
+
     else
-        end 1 2> /dev/null || exit 1
+
+        while read line; do
+
+            keygroup="$(echo "$line" | sed -rn "s/\[@(.+)\]=$/\1/p")"
+
+            if [ -n "$keygroup" ]; then
+                mklist "${regex[$keygroup]}" | while read key; do
+                    echo "$line" | sed -r "s/\[@.+\]=$/\[$key\]=/"
+                done
+            else
+                echo "$line"
+            fi
+
+        done < "$template_file"
+                                                            
     fi
+
+    return 0
 
 }
 
@@ -105,7 +138,7 @@ function chk_template () { # argumentos: caminho_arquivo nome_template
     local inconsistency=''
 
     if [ ! -f "$template_file" ]; then
-        message "ERRO" "O template espeficicado não foi encontrado: $template_name."
+        message "ERRO" "O template especificado não foi encontrado: $template_name."
         return 1
 
     else

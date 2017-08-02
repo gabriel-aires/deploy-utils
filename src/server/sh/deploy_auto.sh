@@ -78,7 +78,6 @@ fi
 
 lock 'deploy_auto' "Rotina de deploy automático em andamento..." || exit 1
 mkdir -p $tmp_dir
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 
 # Identifica deploys automáticos
 
@@ -103,7 +102,7 @@ while read ambiente; do
 
     fi
 
-done < "$tmp_dir/lista_ambientes"
+done < <(mklist "$ambientes")
 
 # Executa todos os deploys da fila.
 

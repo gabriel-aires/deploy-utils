@@ -150,12 +150,12 @@ function web_filter() {   # Filtra o input de formulários cgi
 
 function web_links () {
 
-    mklist "$cgi_admin_pages" $tmp_dir/cgi_admin_pages
-    mklist "$cgi_search_pages" $tmp_dir/cgi_search_pages
-    mklist "$cgi_deploy_pages" $tmp_dir/cgi_deploy_pages
-    mklist "$cgi_log_pages" $tmp_dir/cgi_log_pages
-    mklist "$cgi_help_pages" $tmp_dir/cgi_help_pages
-    mklist "$cgi_account_pages" $tmp_dir/cgi_account_pages
+    mklist "$cgi_admin_pages" > $tmp_dir/cgi_admin_pages
+    mklist "$cgi_search_pages" > $tmp_dir/cgi_search_pages
+    mklist "$cgi_deploy_pages" > $tmp_dir/cgi_deploy_pages
+    mklist "$cgi_log_pages" > $tmp_dir/cgi_log_pages
+    mklist "$cgi_help_pages" > $tmp_dir/cgi_help_pages
+    mklist "$cgi_account_pages" > $tmp_dir/cgi_account_pages
     
     local categories=([0]='admin' [1]='search' [2]='deploy' [3]='log' [4]='help' [5]='account')
     local category_titles=([0]='Administração' [1]='Pesquisa' [2]='Deploy' [3]='Logs' [4]='Ajuda' [5]="${REMOTE_USER:-Conta}")

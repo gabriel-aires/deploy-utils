@@ -70,7 +70,6 @@ web_header
 
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 proceed_view="Continuar"
 proceed_log="Acessar"
 qtd_dir="${#dir[@]}"
@@ -95,7 +94,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>"
     echo "      		<select class=\"select_default\" name=\"env\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
-    cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+    mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
     # Submit

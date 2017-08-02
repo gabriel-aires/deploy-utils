@@ -25,7 +25,6 @@ web_header
 content_loading
 
 # Inicializar variáveis e constantes
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 app_param="$(echo "${col[app]}" | sed -r 's/\[//;s/\]//')"
 env_param="$(echo "${col[env]}" | sed -r 's/\[//;s/\]//')"
 WHERE=''
@@ -44,7 +43,7 @@ echo "		        </select>"
 # Ambiente...
 echo "      		<select class=\"select_small\" name=\"$env_param\">"
 echo "		        	<option value=\"\" selected>Ambiente...</option>"
-cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
 echo "		        </select>"
 # Paginação...
 echo "      		<select class=\"select_small\" name=\"n\">"

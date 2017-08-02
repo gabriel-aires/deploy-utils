@@ -160,7 +160,6 @@ web_header
 
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 app_param="$(echo "${col[app]}" | sed -r 's/\[//;s/\]//')"
 rev_param="$(echo "${col[rev]}" | sed -r 's/\[//;s/\]//')"
 env_param="$(echo "${col[env]}" | sed -r 's/\[//;s/\]//')"
@@ -185,7 +184,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>"
     echo "      		<select class=\"select_default\" name=\"$env_param\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
-    cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+    mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
     # Revisão...
