@@ -186,7 +186,7 @@ function check_last_deploy () {
                 '--select' ${col[rev]} \
                 --top $top \
                 --from "${history_dir}/$history_csv_file" \
-                --where $col[app]==$app $col[flag]==1 $col[env]==${ambiente} \
+                --where ${col[app]}==$app ${col[flag]}==1 ${col[env]}==${ambiente} \
                 --order-by ${col[year]} ${col[month]} ${col[day]} ${col[time]} desc \
                 | tail -n 1 2> /dev/null \
             )
