@@ -83,7 +83,7 @@ mkdir -p $tmp_dir
 
 while read ambiente; do
 
-    grep -REl "^auto_${ambiente}='1'$" $app_conf_dir > $tmp_dir/lista_aplicacoes
+    grep -REl "^auto\[${ambiente}\]='1'$" $app_conf_dir > $tmp_dir/lista_aplicacoes
     sed -i -r "s|^$app_conf_dir/(.+)\.conf$|\1|g" $tmp_dir/lista_aplicacoes
 
     if [ -n "$(cat $tmp_dir/lista_aplicacoes)" ]; then
