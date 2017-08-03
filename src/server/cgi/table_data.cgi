@@ -20,18 +20,18 @@ trap "end 1" SIGQUIT SIGINT SIGHUP SIGTERM
 mkdir -p $tmp_dir
 
 # Valores default para a construção da query
-test -z "$SELECT" && SELECT="--select all $col_flag"
+test -z "$SELECT" && SELECT="--select all ${col[flag]}"
 test -z "$DISTINCT" && DISTINCT=''
 test -z "$TOP" && TOP=''
 test -z "$WHERE" && WHERE=''
-test -z "$ORDERBY" && ORDERBY="--order-by $col_year $col_month $col_day desc"
+test -z "$ORDERBY" && ORDERBY="--order-by ${col[year]} ${col[month]} ${col[day]} desc"
 
 # Para que haja diferenciação entre deploys com erro e sucesso, a flag de deploy deve ser a última coluna
 change_color=false
-col_flag_aux=$(echo "$col_flag" | sed -r 's|(\[)|\\\1|' | sed -r 's|(\])|\\\1|')
-col_flag_name=$(echo "$col_flag" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_flag_aux=$(echo "${col[flag]}" | sed -r 's|(\[)|\\\1|' | sed -r 's|(\])|\\\1|')
+col_flag_name=$(echo "${col[flag]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 if echo "$SELECT" | grep -E " $col_flag_aux" > /dev/null; then
-    SELECT="$(echo "$SELECT" | sed -r "s| $col_flag_aux||") $col_flag"
+    SELECT="$(echo "$SELECT" | sed -r "s| $col_flag_aux||") ${col[flag]}"
     change_color=true
 fi
 

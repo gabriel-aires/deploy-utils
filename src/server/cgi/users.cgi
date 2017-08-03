@@ -27,7 +27,6 @@ web_header
 
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 operation_erase="Remover"
 operation_groups="Gerenciar Grupos"
 operation_permissions="Gerenciar Permissoes"
@@ -71,8 +70,8 @@ else
 
     if [ -n "$user" ] && [ -n "$operation" ] && [ -n "$submit" ]; then
 
-        valid "user" "<p><b>O nome do usuário é inválido: '$user'.</b></p>"
-        lock "edit_user_$user" "<p><b>Usuário $user bloqueado para edição</b></p>"
+        valid "$user" "user" "<p><b>O nome do usuário é inválido: '$user'.</b></p>" || end 1
+        lock "edit_user_$user" "<p><b>Usuário $user bloqueado para edição</b></p>" || end 1
         echo "      <p>Usuário: <b>$user</b></p>"
 
         case "$operation" in
@@ -176,17 +175,17 @@ else
 
                         if [ "$(cat "$web_permissions_file" | wc -l)" -ge 2 ]; then
                             query_file.sh --delim "$delim" --replace-delim "</td><td>" --header 1 \
-                                --select $col_resource_type $col_resource_name $col_permission \
+                                --select ${col[resource_type]} ${col[resource_name]} ${col[permission]} \
                                 --from "$web_permissions_file" \
-                                --where $col_subject_type=='user' $col_subject_name=="$user" \
-                                --order-by $col_resource_type $col_subject_name asc \
+                                --where ${col[subject_type]}=='user' ${col[subject_name]}=="$user" \
+                                --order-by ${col[resource_type]} ${col[subject_name]} asc \
                                 > $tmp_dir/permissions_user
 
                             if [ "$(cat "$tmp_dir/permissions_user" | wc -l)" -ge 1 ]; then
                                 erase_option=true
 
                                 query_file.sh --delim "$delim" --replace-delim "</th><th>" \
-                                    --select $col_resource_type $col_resource_name $col_permission \
+                                    --select ${col[resource_type]} ${col[resource_name]} ${col[permission]} \
                                     --top 1 \
                                     --from "$web_permissions_file" \
                                     > $tmp_dir/permissions_header
@@ -235,7 +234,7 @@ else
                         echo "              <p>"
                         echo "                  Tipo de recurso:<br>"
                         echo "      		    <select class=\"select_large\" name=\"resource_type\">"
-                        mklist "$regex_resource_type" | while read resource_type; do
+                        mklist "${regex[resource_type]}" | while read resource_type; do
                             echo "		        	<option>$resource_type</option>"
                         done
                         echo "		            </select>"
@@ -249,7 +248,7 @@ else
                         echo "              <p>"
                         echo "                  Permissão:<br>"
                         echo "      		    <select class=\"select_large\" name=\"permission\">"
-                        mklist "$regex_permission" | while read permission; do
+                        mklist "${regex[permission]}" | while read permission; do
                             echo "		        	<option>$permission</option>"
                         done
                         echo "		            </select>"
@@ -264,7 +263,7 @@ else
                     "$submit_permission_save")
 
                         resource_list="$(echo "$arg_string" | sed -rn "s/^.*&resource_list=([^\&]+)&.*$/\1/p")"
-                        valid 'resource_list' "      <p></b>Erro. '$resource_list' não é uma lista de recursos válida.</b></p>"
+                        valid "$resource_list" "resource_list" "      <p></b>Erro. '$resource_list' não é uma lista de recursos válida.</b></p>" || end 1
 
                         mklist "$resource_list" | while read resource_name; do
                             resource_type="$(echo "$arg_string" | sed -rn "s/^.*&resource_type=([^\&]+)&.*$/\1/p")"

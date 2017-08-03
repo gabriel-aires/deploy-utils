@@ -14,8 +14,7 @@ agent_task="$2"
 agent_conf="$3"
 pid="$$"
 execution_mode="agent"
-verbosity="quiet"
-interactive=false
+message_format='detailed'
 host=$(echo $HOSTNAME | cut -f1 -d '.')
 
 ###### FUNÇÕES ######
@@ -31,52 +30,38 @@ function end () {
 
 function set_dir () {
 
-    # Encontra os diretórios de origem/destino com base na hierarquia definida em global.conf. IMPORTANTE: TODOS os parâmetros de configuração devem ser validados previamente.
+    test -d "$1" || return 1
+    test -n "$2" || return 1
 
-    local raiz="$1"
-    local dir_acima="$raiz"
-    local set_var="$2"
+    local dir_path="$1"
+    local path_key="$2"
+    local subdir=''
+    local error=false
 
-    unset "$2"
-
-    local fim=0
-    local n=1
-    local var_n="dir_$n"
-
-    if [ "$(eval "echo \$$var_n")" == '' ];then
-        fim=1
-    else
-        local dir_n="$(eval "echo \$$var_n")"
-        dir_n="$(eval "echo \$$dir_n")"
-        local nivel=1
-    fi
-
-    while [ "$fim" -eq '0' ]; do
-
-        dir_acima=$dir_acima/$dir_n
-
-        ((n++))
-        var_n="dir_$n"
-
-        if [ "$(eval "echo \$$var_n")" == '' ];then
-            fim=1
-        else
-            dir_n="$(eval "echo \$$var_n")"
-            dir_n="$(eval "echo \$$dir_n")"
-            ((nivel++))
-        fi
-
+    for dir_level in ${dir[@]}; do
+        subdir="$(eval "echo \$$dir_level")"
+        test -n "$subdir" && dir_path="$dir_path/$subdir" || { error=true ; break ; }
     done
 
-    if [ "$nivel" == "$qtd_dir" ]; then
-        set_var="$set_var=$(find "$raiz" -wholename "$dir_acima" 2> /dev/null)"
-        eval $set_var
-    else
+    if $error; then
         log "ERRO" "Parâmetros incorretos no arquivo '$agent_conf'."
+        return 1    
+    fi
+    
+    application_path["$path_key"]="$(find $dir_path -type d -maxdepth 0)"
+
+    if [ ! -d ${application_path["$path_key"]} ]; then
+        log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado."
+        return 1
+    fi
+
+    if [ $( echo "${application_path[$path_key]}" | wc -w ) -ne 1 ]; then
+        log "ERRO" "O caminho para o diretório de pacotes / logs possui espaços."
         return 1
     fi
 
     return 0
+
 }
 
 chk_dir () {
@@ -103,7 +88,7 @@ chk_dir () {
 
     else
         log "ERRO" "chk_dir: falha na validação dos parâmetros: $@"
-        end 1
+        return 1
     fi
 
     return 0
@@ -114,9 +99,9 @@ function deploy_agent () {
 
     local file_path_regex=''
 
-    if [ $(ls "${origem}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
+    if [ $(ls "${application_path['from']}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir ${origem} "deploy" "$filetypes"
+        chk_dir ${application_path['from']} "deploy" "$filetypes" || end 1
 
         # Verificar se há arquivos para deploy.
 
@@ -125,7 +110,7 @@ function deploy_agent () {
         file_path_regex="^.*\."
         file_path_regex="$(echo "$file_path_regex" | sed -r "s|^(.*)$|\1$filetypes\$|ig" | sed -r "s: :\$\|$file_path_regex:g")"
 
-        find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
+        find "${application_path['from']}" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
 
         if [ $(cat $tmp_dir/arq.list | wc -l) -lt 1 ]; then
             log "INFO" "Não foram encontrados novos pacotes para deploy."
@@ -137,8 +122,8 @@ function deploy_agent () {
 
             while read l; do
 
-                pkg_name=$( echo $l | sed -r "s|^${origem}/[^/]+/deploy/([^/]+)\.[a-z0-9]+$|\1|i" )
-                app=$( echo $l | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" )
+                pkg_name=$( echo $l | sed -r "s|^${application_path['from']}/[^/]+/deploy/([^/]+)\.[a-z0-9]+$|\1|i" )
+                app=$( echo $l | sed -r "s|^${application_path['from']}/([^/]+)/deploy/[^/]+\.[a-z0-9]+$|\1|i" )
 
                 if [ $(echo $pkg_name | grep -Ei "^$app" | wc -l) -ne 1 ]; then
                     echo $l >> "$tmp_dir/remove_incorretos.list"
@@ -153,15 +138,15 @@ function deploy_agent () {
 
             # Caso haja pacotes, deve haver no máximo um pacote por diretório
 
-            find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
+            find "${application_path['from']}" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/arq.list
 
             rm -f "$tmp_dir/remove_versoes.list"
             touch "$tmp_dir/remove_versoes.list"
 
             while read l; do
 
-                pkg_name=$( echo $l | sed -r "s|^${origem}/[^/]+/deploy/([^/]+)\.[a-z0-9]+$|\1|i" )
-                dir=$( echo $l | sed -r "s|^(${origem}/[^/]+/deploy)/[^/]+\.[a-z0-9]+$|\1|i" )
+                pkg_name=$( echo $l | sed -r "s|^${application_path['from']}/[^/]+/deploy/([^/]+)\.[a-z0-9]+$|\1|i" )
+                dir=$( echo $l | sed -r "s|^(${application_path['from']}/[^/]+/deploy)/[^/]+\.[a-z0-9]+$|\1|i" )
 
                 if [ $( find $dir -type f | wc -l ) -ne 1 ]; then
                     echo $l >> $tmp_dir/remove_versoes.list
@@ -175,7 +160,7 @@ function deploy_agent () {
             fi
 
             # O arquivo pkg.list será utilizado para realizar a contagem de pacotes existentes
-            find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/pkg.list
+            find "${application_path['from']}" -type f -regextype posix-extended -iregex "$file_path_regex" > $tmp_dir/pkg.list
 
             if [ $(cat $tmp_dir/pkg.list | wc -l) -lt 1 ]; then
                 log "INFO" "Não há novos pacotes para deploy."
@@ -184,7 +169,7 @@ function deploy_agent () {
                 cat $tmp_dir/pkg.list
 
                 # A variável pkg_list foi criada para permitir a iteração entre a lista de pacotes, uma vez que o diretório temporário precisa ser limpo.
-                pkg_list="$(find "$origem" -type f -regextype posix-extended -iregex "$file_path_regex")"
+                pkg_list="$(find "${application_path['from']}" -type f -regextype posix-extended -iregex "$file_path_regex")"
                 pkg_list="$(echo "$pkg_list" | sed -r "s%(.)$%\1|%g")"
 
                 echo $pkg_list | while read -d '|' pkg; do
@@ -215,7 +200,7 @@ function deploy_agent () {
                     fi
 
                     export user_name=$(echo $(basename $pkg) | sed -rn "s|^.*%user_([^%]+)%md5_[^%]+%\.$ext$|\1|pi" | tr '[:upper:]' '[:lower:]')
-                    export app=$(echo $pkg | sed -r "s|^${origem}/([^/]+)/deploy/[^/]+$|\1|i" | tr '[:upper:]' '[:lower:]')
+                    export app=$(echo $pkg | sed -r "s|^${application_path['from']}/([^/]+)/deploy/[^/]+$|\1|i" | tr '[:upper:]' '[:lower:]')
 
                     case $ext in
                         war|ear|sar)
@@ -239,8 +224,8 @@ function deploy_agent () {
                     export deploy_id
 
                     #valida variáveis antes da chamada do agente.
-                    valid 'app' "'$app': Nome de aplicação inválido" "continue" || continue
-                    valid 'host' "regex_hosts_$ambiente" "'$host': Host inválido para o ambiente $ambiente" "continue" || continue
+                    valid "$app" 'app' "'$app': Nome de aplicação inválido" || continue
+                    valid "$host" "hosts:${ambiente}" "'$host': Host inválido para o ambiente ${ambiente}" || continue
 
                     #inicio deploy
                     deploy_log_file=$deploy_log_dir/deploy_${host}.log
@@ -259,28 +244,28 @@ function deploy_agent () {
         fi
 
     else
-        log "ERRO" "Não foram encontrados os diretórios das aplicações em $origem"
+        log "ERRO" "Não foram encontrados os diretórios das aplicações em ${application_path['from']}"
     fi
 
 }
 
 function log_agent () {
 
-    if [ $(ls "${destino}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
+    if [ $(ls "${application_path['to']}/" -l | grep -E "^d" | wc -l) -ne 0 ]; then
 
-        chk_dir "$destino" "log" "$filetypes refresh"
+        chk_dir "${application_path['to']}" "log" "$filetypes refresh" || end 1
 
-        app_list="$(find $destino/* -type d -name 'log' -print | sed -r "s|^${destino}/([^/]+)/log|\1|ig")"
+        app_list="$(find ${application_path['to']}/* -type d -name 'log' -print | sed -r "s|^${application_path['to']}/([^/]+)/log|\1|ig")"
         app_list=$(echo "$app_list" | sed -r "s%(.)$%\1|%g" | tr '[:upper:]' '[:lower:]')
 
         echo $app_list | while read -d '|' app; do
 
-            shared_log_dir=$(find "$destino/" -type d -wholename "$destino/$app/log" 2> /dev/null)
+            shared_log_dir=$(find "${application_path['to']}/" -type d -wholename "${application_path['to']}/$app/log" 2> /dev/null)
 
             if [ -d "$shared_log_dir" ]; then
 
                 test -f "$shared_log_dir/.refresh" || continue
-                valid 'app' "'$app': Nome de aplicação inválido." "continue" || continue
+                valid "$app" 'app' "'$app': Nome de aplicação inválido." || continue
 
                 export shared_log_dir
                 export app
@@ -301,7 +286,7 @@ function log_agent () {
         done
 
     else
-        log "ERRO" "Não foram encontrados os diretórios das aplicações em $destino"
+        log "ERRO" "Não foram encontrados os diretórios das aplicações em ${application_path['to']}"
     fi
 
 }
@@ -311,30 +296,28 @@ trap "end 1; exit" SIGQUIT SIGINT SIGHUP SIGTERM
 
 # Valida o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
-test -f "$global_conf" || exit 1
-chk_template "$global_conf"
-source "$global_conf" || exit 1
+chk_template "$global_conf" "global" && source "$global_conf" || exit 1
 
 # cria diretório temporário
 tmp_dir="$work_dir/$pid"
-valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" && mkdir -p $tmp_dir
+valid "$tmp_dir" 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" && mkdir -p $tmp_dir || end 1
 
 # cria log do agente
 log="$tmp_dir/agent.log"
 touch $log
 
 # cria diretório de locks
-valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles do agente." && mkdir -p $lock_dir
+valid "$lock_dir" 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles do agente." && mkdir -p $lock_dir || end 1
 
 #valida caminho para diretórios do servidor e argumentos do script
 erro=false
-valid 'agent_name_input' 'regex_agent_name' "'$agent_name_input': Nome inválido para o agente." 'continue' || erro=true
-valid 'agent_task' "'$agent_task': Nome inválido para a tarefa." 'continue' || erro=true
-valid 'remote_pkg_dir_tree' 'regex_remote_dir' "'$remote_pkg_dir_tree': Caminho inválido para o repositório de pacotes." 'continue' || erro=true
-valid 'remote_log_dir_tree' 'regex_remote_dir' "'$remote_log_dir_tree': Caminho inválido para o diretório raiz de cópia dos logs." 'continue' || erro=true
-valid 'remote_lock_dir' 'regex_remote_dir' "'$remote_lock_dir': Caminho inválido para o diretório de lockfiles do servidor" 'continue' || erro=true
-valid 'remote_history_dir' 'regex_remote_dir' "'$remote_history_dir': Caminho inválido para o diretório de gravação do histórico" 'continue' || erro=true
-valid 'remote_app_history_dir_tree' 'regex_remote_dir' "'$remote_app_history_dir_tree': Caminho inválido para o histórico de deploy das aplicações" 'continue' || erro=true
+valid "$agent_name_input" 'agent_name' "'$agent_name_input': Nome inválido para o agente." || erro=true
+valid "$agent_task" 'agent_task' "'$agent_task': Nome inválido para a tarefa." || erro=true
+valid "$remote_pkg_dir_tree" 'remote_dir' "'$remote_pkg_dir_tree': Caminho inválido para o repositório de pacotes." || erro=true
+valid "$remote_log_dir_tree" 'remote_dir' "'$remote_log_dir_tree': Caminho inválido para o diretório raiz de cópia dos logs." || erro=true
+valid "$remote_lock_dir" 'remote_dir' "'$remote_lock_dir': Caminho inválido para o diretório de lockfiles do servidor" || erro=true
+valid "$remote_history_dir" 'remote_dir' "'$remote_history_dir': Caminho inválido para o diretório de gravação do histórico" || erro=true
+valid "$remote_app_history_dir_tree" 'remote_dir' "'$remote_app_history_dir_tree': Caminho inválido para o histórico de deploy das aplicações" || erro=true
 test ! -f "$agent_conf" && log 'ERRO' "'$agent_conf': Arquivo de configuração inexistente."  && erro=true
 test ! -d "$remote_pkg_dir_tree" && log 'ERRO' 'Caminho para o repositório de pacotes inexistente.' && erro=true
 test ! -d "$remote_log_dir_tree" && log 'ERRO' 'Caminho para o diretório raiz de cópia dos logs inexistente.' && erro=true
@@ -344,32 +327,28 @@ test ! -d "$remote_app_history_dir_tree" && log 'ERRO' 'Caminho para o históric
 $erro && end 1 || unset erro
 
 #criar lockfile
-lock "$agent_name_input $agent_task $(basename $agent_conf | cut -d '.' -f1)" "Uma tarefa concorrente já está em andamento. Aguarde..."
+lock "$agent_name_input $agent_task $(basename $agent_conf | cut -d '.' -f1)" "Uma tarefa concorrente já está em andamento. Aguarde..." || end 1
 test ! -f "$remote_lock_dir/edit_agent_${host}" && touch "$remote_lock_dir/run_agent_${host}_${pid}" || end 1
 
-# Valida o arquivo de configurações $agent_conf, que deve atender aos templates local.template e $agent_name.template
-chk_template "$agent_conf" 'agent'
-chk_template "$agent_conf" "$agent_name_input"
-source "$agent_conf" || end 1
+# Valida o arquivo de configurações $agent_conf, que deve atender aos templates agent.template e $agent_name.template
+chk_template "$agent_conf" 'agent' && chk_template "$agent_conf" "$agent_name_input" && source "$agent_conf" || end 1
 
 # validar parâmetros do arquivo $agent_conf:
 erro=false
-valid 'ambiente' "'$ambiente': Nome inválido para o ambiente." "continue" || erro=true
-valid "run_${agent_task}_agent" 'regex_bool' "Valor inválido para o parâmetro 'run_${agent_task}_agent' (booleano)." "continue" || erro=true
-valid "${agent_task}_filetypes" 'regex_filetypes' "Lista de extensões inválida para o agente de '${agent_task}'." "continue" || erro=true
+valid "$ambiente" 'ambiente' "'${ambiente}': Nome inválido para o ambiente." || erro=true
+valid "$run_deploy_agent" 'bool' "Valor inválido para o parâmetro 'run_deploy_agent' (booleano)." || erro=true
+valid "$run_log_agent" 'bool' "Valor inválido para o parâmetro 'run_log_agent' (booleano)." || erro=true
+valid "$deploy_filetypes" 'filetypes' "Lista de extensões inválida para o agente de 'deploy'." || erro=true
+valid "$log_filetypes" 'filetypes' "Lista de extensões inválida para o agente de 'log'." || erro=true
 test "$agent_name_input" != "$agent_name" && log 'ERRO' "O nome de agente informado não corresponde àquele no arquivo '$agent_conf'"  && erro=true
 $erro && end 1 || unset erro
 
 filetypes=$(grep -Ex "${agent_task}_filetypes=.*" "$agent_conf" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')
 
 # verificar se o caminho para obtenção dos pacotes / gravação de logs está disponível.
-set_dir "$remote_pkg_dir_tree" 'origem' || end 1
-set_dir "$remote_log_dir_tree" 'destino' || end 1
-
-if [ $( echo "$origem" | wc -w ) -ne 1 ] || [ ! -d "$origem" ] || [ $( echo "$destino" | wc -w ) -ne 1 ] || [ ! -d "$destino" ]; then
-    log "ERRO" "O caminho para o diretório de pacotes / logs não foi encontrado ou possui espaços."
-    end 1
-fi
+declare -A application_path
+set_dir "$remote_pkg_dir_tree" 'from' || end 1
+set_dir "$remote_log_dir_tree" 'to' || end 1
 
 # Identifica script do agente.
 agent_script="${install_dir}/sh/$agent_name.sh"
@@ -378,17 +357,19 @@ if [ ! -x $agent_script ]; then
     end 1
 fi
 
+# "exportar" arrays associativos
+export BASH_ENV="$tmp_dir/load_arrays"
+declare -p col regex not_regex > "$BASH_ENV"
+
 # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
 export -f 'valid'
 export -f 'log'
 export -f 'compress'
+export -f 'message'
 export -f 'write_history'
-export 'regex_csv_value'
-export 'regex_flag'
 export 'delim'
 export 'execution_mode'
-export 'verbosity'
-export 'interactive'
+export 'message_format'
 export 'host'
 export 'lock_history'
 export 'agent_timeout'

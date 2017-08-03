@@ -1,8 +1,8 @@
 #!/bin/bash
 
-interactive='false'
-verbosity='verbose'
+message_format='simple'
 skip_upgrade=false
+src_dir="$(dirname $(dirname $(dirname $(readlink -f $0))))"
 
 function end() {
 
@@ -17,14 +17,15 @@ function end() {
 case "$1" in
     --install)
         echo "Instalando serviço..."
-        $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
+        $src_dir/common/sh/reconfigure.sh || end 1
         echo "$version_latest" > $version_file || end 1
         echo "$release_latest" > $release_file || end 1
         skip_upgrade=true
         ;;
     --reconfigure)
         echo "Reconfigurando serviço..."
-        $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/reconfigure.sh || end 1
+        $src_dir/common/sh/reconfigure.sh || end 1
+        $src_dir/common/sh/reset_config.sh "$src_dir/server/conf/user.conf" "$src_dir/server/template/user.template" || end 1
         ;;
     '') echo "Configurando serviço..."
         ;;
@@ -32,12 +33,12 @@ case "$1" in
         ;;
 esac
 
-source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || end 1
+source $src_dir/common/sh/include.sh || end 1
 source $install_dir/sh/include.sh || end 1
 
-valid "ssl_enable" "regex_bool" "\nErro. A variável ssl_enable é booleana (true/false)."
-valid "set_apache_listen_directive" "regex_bool" "\nErro. A variável set_apache_listen_directive é booleana (true/false)."
-valid "set_apache_namevirtualhost_directive" "regex_bool" "\nErro. A variável set_apache_namevirtualhost_directive é booleana (true/false)."
+valid "$ssl_enable" "bool" "\nErro. A variável ssl_enable é booleana (true/false)." || end 1
+valid "$set_apache_listen_directive" "bool" "\nErro. A variável set_apache_listen_directive é booleana (true/false)." || end 1
+valid "$set_apache_namevirtualhost_directive" "bool" "\nErro. A variável set_apache_namevirtualhost_directive é booleana (true/false)." || end 1
 
 #verify apache params
 test -d "$apache_confd_dir" || end 1
@@ -139,7 +140,8 @@ fi
 
 #setup owner/permissions
 chmod 775 $install_dir/conf || end 1
-chmod 640 $install_dir/conf/global.conf || end 1
+chmod 440 $install_dir/conf/global.conf || end 1
+chmod 640 $install_dir/conf/user.conf || end 1
 chmod 775 $common_work_dir || end 1
 chmod 775 $common_log_dir || end 1
 chmod 755 $src_dir/common/sh/query_file.sh || end 1
@@ -166,6 +168,7 @@ chmod 644 $src_dir/server/css/* || end 1
 
 chgrp $apache_group $install_dir/conf || end 1
 chgrp $apache_group $install_dir/conf/global.conf || end 1
+chgrp $apache_group $install_dir/conf/user.conf || end 1
 chgrp $apache_group $common_work_dir || end 1
 chgrp $apache_group $common_log_dir || end 1
 chgrp $apache_group $src_dir/common/sh/query_file.sh || end 1

@@ -12,3 +12,6 @@ test -f $src_dir/server/conf/global.conf && cp -f $src_dir/server/conf/global.co
 cp -f $src_dir/common/conf/default_include.conf $src_dir/common/conf/include.conf
 cp -f $src_dir/agents/conf/default_global.conf $src_dir/agents/conf/global.conf
 cp -f $src_dir/server/conf/default_global.conf $src_dir/server/conf/global.conf
+
+#enable overrides
+test -f $src_dir/server/conf/user.conf || cp -f $src_dir/server/conf/default_user.conf $src_dir/server/conf/user.conf

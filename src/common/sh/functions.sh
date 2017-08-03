@@ -2,33 +2,6 @@
 
 # Define funções comuns.
 
-function paint () {
-
-    if $interactive; then
-        local color
-
-        case $2 in
-            black) color=0;;
-            red) color=1;;
-            green) color=2;;
-            yellow) color=3;;
-            blue) color=4;;
-            magenta) color=5;;
-            cyan) color=6;;
-            white) color=7;;
-        esac
-
-        case $1 in
-            fg) tput setaf $color;;
-            bg) tput setab $color;;
-            default) tput sgr0;;
-        esac
-    fi
-
-    return 0
-
-}
-
 function log () {    ##### log de execução detalhado.
 
     local msg="$(date +"%F %Hh%Mm%Ss")  $1  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
@@ -42,6 +15,17 @@ function log () {    ##### log de execução detalhado.
         echo -e "$msg    \t$2"
     fi
 
+}
+
+function message () {
+
+    local type="$1"
+    local msg="$2"
+
+    case $message_format in
+        'detailed') log "$type" "$msg";;
+        'simple') echo -e "\n$msg";;
+    esac
 }
 
 function compress () {         ##### padroniza a metodologia de compressão de arquivos (argumentos: pacote [arquivo1 arquivo2 arquivo3...])
@@ -76,21 +60,15 @@ function compress () {         ##### padroniza a metodologia de compressão de a
 
 function lock () {                                            #argumentos: nome_trava, mensagem_erro, (instrução)
 
-    local exit_cmd="end 1 2> /dev/null || exit 1"
-
     if [ -d $lock_dir ] && [ -n "$1" ] && [ -n "$2" ]; then
 
         local lockfile="$(echo "$1" | sed -r "s|[;, \:\.]+|_|g")"
         local miliseconds=$(date +%s%3N)
         local timeout=$(($lock_timeout+$miliseconds))
-
-        case $verbosity in
-            'quiet') exit_cmd="log 'INFO' '$2'; $exit_cmd";;
-            'verbose') exit_cmd="echo -e '\n$2'; $exit_cmd";;
-        esac
+        local msg="$2"
 
         while [ -f "$lock_dir/$lockfile" ] && [ $miliseconds -le $timeout ]; do
-            sleep 0.001
+            sleep 0.05
             miliseconds=$(date +%s%3N)
         done
 
@@ -100,15 +78,15 @@ function lock () {                                            #argumentos: nome_
             if [ $(head -n 1 "$lock_dir/$lockfile") == "$$" ]; then
                 lock_array[$lock_index]="$lock_dir/$lockfile" && ((lock_index++))
             else
-                eval "$exit_cmd"
+                message 'INFO' "$msg" ; return 1
             fi
 
         else
-            eval "$exit_cmd"
+            message 'INFO' "$msg" ; return 1
         fi
 
     else
-        eval "$exit_cmd"
+        return 1
     fi
 
     return 0
@@ -136,172 +114,108 @@ function clean_locks () {
 
 function mklist () {
 
-    if [ -n "$1" ]; then
-        local lista=$(echo "$1" | sed -r 's/,/ /g' | sed -r 's/;/ /g' | sed -r 's/\|/ /g' | sed -r 's/ +/ /g' | sed -r 's/ $//g' | sed -r 's/^ //g' | sed -r 's/ /\n/g')
-        test -n "$2" && echo "$lista" > $2 || echo -e "$lista"
-    else
-        end 1 2> /dev/null || exit 1
-    fi
+    test -n "$1" || return 1
+    echo "$1" | sed -r 's/,/ /g;s/;/ /g;s/\|/ /g;s/ +/ /g;s/ $//g;s/^ //g;s/ /\n/g' || return 1
+    return 0
 
 }
 
-function chk_template () {
+function build_template () { # argumentos: caminho_arquivo nome_template
 
-    if [ -f "$1" ] && [ "$#" -le 3 ]; then
+    test -n "$1" || return 1
 
-        local arquivo="$1"
-        local nome_template="$2"        # parâmetro opcional, especifica um template para validação do arquivo.
-        local flag="$3"                    # indica se o script deve ser encerrado ou não ao encontrar inconsistências. Para prosseguir, deve ser passado o valor "continue"
+    local template_name="$1"
+    local template_file="$install_dir/template/$template_name.template"
+    local line=''
+    local key=''
+    local keygroup=''
 
-        paint 'fg' 'yellow'
-
-        if [ -z "$nome_template" ] && [ -f "$install_dir/template/$(basename $arquivo | cut -f1 -d '.').template" ]; then
-            nome_template="$(basename $arquivo | cut -f1 -d '.')"
-        fi
-
-        if [ -z $nome_template ]; then
-            case $verbosity in
-                'quiet') log "ERRO" "Não foi indentificado um template para validação do arquivo $arquivo.";;
-                'verbose') echo -e "\nErro. Não foi indentificado um template para validação do arquivo $arquivo.";;
-            esac
-            paint 'default'
-            end 1 2> /dev/null || exit 1
-
-        elif [ ! -f "$install_dir/template/$nome_template.template" ]; then
-            case $verbosity in
-                'quiet') log "ERRO" "O template espeficicado não foi encontrado: $nome_template.";;
-                'verbose') echo -e "\nErro. O template espeficicado não foi encontrado.";;
-            esac
-            paint 'default'
-            end 1 2> /dev/null || exit 1
-
-        elif [ "$(cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template | wc -l)" -ne "0" ]; then
-            case $execution_mode in
-                'quiet') log "ERRO" "Há parâmetros incorretos no arquivo $arquivo:";;
-                'verbose') echo -e "\nErro. Há parâmetros incorretos no arquivo $arquivo:";;
-            esac
-            cat $arquivo | grep -Ev "^$|^#" | sed -r 's|(=).*$|\1|' | grep -vx --file=$install_dir/template/$nome_template.template
-
-            paint 'default'
-            if [ "$flag" == "continue" ]; then
-                return 1
-            else
-                end 1 2> /dev/null || exit 1
-            fi
-        fi
-
-        paint 'default'
+    if [ ! -f "$template_file" ]; then
+        message "ERRO" "O template especificado não foi encontrado: $template_name."
+        return 1
 
     else
-        end 1 2> /dev/null || exit 1
+
+        while read line; do
+
+            keygroup="$(echo "$line" | sed -rn "s/\[@(.+)\]=$/\1/p")"
+
+            if [ -n "$keygroup" ]; then
+                mklist "${regex[$keygroup]}" | while read key; do
+                    echo "$line" | sed -r "s/\[@.+\]=$/\[$key\]=/"
+                done
+            else
+                echo "$line"
+            fi
+
+        done < "$template_file"
+                                                            
     fi
 
     return 0
 
 }
 
-function valid () {
+function chk_template () { # argumentos: caminho_arquivo nome_template
 
-    #argumentos: nome_variável (nome_regra) (nome_regra_inversa) mensagem_erro ("continue").
-    #O comportamento padrão é a finalização do script quando a validação falha.
-    #Esse comportamento pode ser alterado se a palavra "continue" for adicionada como último argumento,
-    #nesse caso a função simplesmente retornará 1 caso a validação falhe.
+    test -f "$1" || return 1
+    test -n "$2" || return 1
 
-    if [ ! -z "$1" ] && [ ! -z "${!#}" ]; then
+    local file="$1"
+    local template_name="$2"
+    local template_file="$install_dir/template/$template_name.template"
+    local inconsistency=''
 
-        #argumentos
-        local nome_var="$1"            # obrigatório
-        local nome_regra            # opcional, se informado, é o segundo argumento.
-        local nome_regra_inversa    # opcional, se informado, é o terceiro argumento.
-        local msg                    # mensagem de erro: obrigatório.
-
-        #variaveis internas
-        local exit_cmd="end 1 2> /dev/null || exit 1"
-        local flag_count=0
-        local valor
-        local regra
-        local regra_inversa
-        local retry="$interactive"
-
-        test "$retry" == "true" || retry=false
-
-        if [ "${!#}" == "continue" ]; then
-            ((flag_count++))
-            exit_cmd="return 1"
-            msg=$(eval "echo \$$(($#-1))")
-        else
-            msg="${!#}"
-        fi
-
-        if [ "$#" -gt "$((2 + $flag_count))" ] && [ ! -z "$2" ]; then
-            nome_regra="$2"
-
-            if [ $(echo "$nome_regra" | grep -Ex "^regex_[a-z_]+$" | wc -l) -ne 1 ]; then
-                echo "Erro. O argumento especificado não é uma regra de validação."
-                eval "$exit_cmd"
-            fi
-
-            if [ "$#" -gt "$((3 + $flag_count))" ] && [ ! -z "$3" ]; then
-                nome_regra_inversa="$3"
-
-                if [ $(echo "${nome_regra_inversa}" | grep -Ex "^not_regex_[a-z_]+$" | wc -l) -ne 1 ]; then
-                    echo "Erro. O argumento especificado não é uma regra de validação inversa."
-                    eval "$exit_cmd"
-                fi
-            fi
-        fi
-
-        if [ -z "$nome_regra" ]; then
-            regra="echo \$regex_${nome_var}"
-        else
-            regra="echo \$$nome_regra"
-        fi
-
-        if [ -z "${nome_regra_inversa}" ]; then
-            regra_inversa="echo \$not_regex_${nome_var}"
-        else
-            regra_inversa="echo \$${nome_regra_inversa}"
-        fi
-
-        set -f
-        regra="$(eval $regra)"
-        regra_inversa="$(eval ${regra_inversa})"
-        valor="echo \$${nome_var}"
-        valor="$(eval $valor)"
-        set +f
-
-        if [ -z "$regra" ]; then
-            case "$verbosity" in
-                'quiet') log "ERRO" "Não há uma regra para validação da variável $nome_var";;
-                'verbose') echo "Erro. Não há uma regra para validação da variável $nome_var";;
-            esac
-            eval "$exit_cmd"
-
-        elif "$retry"; then
-
-            while [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; do
-                paint 'fg' 'yellow'
-                echo -e "$msg"
-                paint 'default'
-                read -p "$nome_var: " -e -r $nome_var
-                valor="echo \$${nome_var}"
-                valor="$(eval $valor)"
-            done
-
-        elif [ $(echo "$valor" | grep -Ex "$regra" | grep -Exv "${regra_inversa}" | wc -l) -eq 0 ]; then
-            case "$verbosity" in
-                'quiet') log "ERRO" "$msg";;
-                'verbose') echo -e "$msg";;
-            esac
-            eval "$exit_cmd"
-
-        fi
+    if [ ! -f "$template_file" ]; then
+        message "ERRO" "O template especificado não foi encontrado: $template_name."
+        return 1
 
     else
-        eval "$exit_cmd"
+        inconsistency="$(sed -r 's/=.*$/=/;/^$|^#/d' $file | grep -Evx --file <( sed -r "s/\[.*\]=$/\\\[${regex[key]}\\\]=/;s/^\.\.\.$/${regex[var]}=/" "$template_file"))"
+        if [ -n "$inconsistency" ]; then
+            message "ERRO" "Há parâmetros incorretos no arquivo $file:"
+            echo -e "$inconsistency"
+            return 1
+        fi
+                                                            
     fi
 
-    return 0        # o script continua somente se a variável tiver sido validada corretamente.
+    return 0
+}
+
+function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ; retorna 0 para string válida e 1 para inválida ou argumentos incorretos
+
+    test "$#" -eq "3" || return 1
+    
+    local value="$1"     
+    local rule_id="$2"
+    local error_msg="$3"
+
+    local valid_regex="${regex[$rule_id]}"
+    local forbidden_regex="${not_regex[$rule_id]}"
+    local alt_valid_regex='.*'
+    local alt_forbidden_regex=''
+    local compound_rule="$([[ $rule_id =~ : ]] && echo true || echo false)"
+    local rule_name="$rule_id"
+    local missing_rule_msg="Não há uma regra correspondente à chave '$rule_name'"
+    
+    if $compound_rule; then
+        rule_name="${rule_id//:*}"
+        valid_regex="${regex[$rule_name]}"
+        forbidden_regex="${not_regex[$rule_name]}"
+        alt_valid_regex="${regex[$rule_id]}"
+        alt_forbidden_regex="${not_regex[$rule_id]}"
+    fi
+
+    if [ -z "$valid_regex" ]; then
+        message "ERRO" "$missing_rule_msg"
+        return 1
+    elif [[ $value =~ ^$valid_regex$ ]] && [[ $value =~ ^$alt_valid_regex$ ]] && [[ ! $value =~ ^$forbidden_regex$ ]] && [[ ! $value =~ ^$alt_forbidden_regex$ ]]; then
+        return 0
+    else
+        message "ERRO" "$error_msg"
+        return 1
+    fi
 
 }
 
@@ -314,18 +228,16 @@ function write_history () {
     local user_log="$(echo "$user_name" | tr '[:upper:]' '[:lower:]')"
     local app_log="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
     local rev_log="$(echo "$rev" | sed -r "s|$delim|_|g")"
-    local ambiente_log="$(echo "$ambiente" | tr '[:upper:]' '[:lower:]')"
+    local ambiente_log="$(echo "${ambiente}" | tr '[:upper:]' '[:lower:]')"
     local host_log="$(echo "$host" | grep -Eiv '[a-z]' || echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
-    local obs_log="<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=$ambiente&deploy_id=$deploy_id\">$1</a>"
+    local obs_log="<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=${ambiente}&deploy_id=$deploy_id\">$1</a>"
     local flag_log="$2"
 
-    local aux="$interactive"; interactive=false
-    valid "obs_log" "regex_csv_value" "'$obs_log': mensagem inválida." "continue" || return 1
-    valid "flag_log" "regex_flag" "'$flag_log': flag de deploy inválida." "continue" || return 1
-    interactive=$aux
+    valid "$obs_log" "csv_value" "'$obs_log': mensagem inválida." || return 1
+    valid "$flag_log" "flag" "'$flag_log': flag de deploy inválida." || return 1
 
-    local header="$(echo "$col_day$col_month$col_year$col_time$col_user$col_app$col_rev$col_env$col_host$col_obs$col_flag" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
-    local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$user_log$delim$app_log$delim$rev_log$delim$ambiente_log$delim$host_log$delim$obs_log$delim$flag_log$delim"
+    local header="$(echo "${col[day]}${col[month]}${col[year]}${col[time]}${col[user]}${col[app]}${col[rev]}${col[env]}${col[host]}${col[obs]}${col[flag]}" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
+    local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$user_log$delim$app_log$delim$rev_log$delim${ambiente_log}$delim$host_log$delim$obs_log$delim$flag_log$delim"
 
     local lock_path
     local history_path

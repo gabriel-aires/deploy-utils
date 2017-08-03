@@ -2,8 +2,7 @@
 
 ### modo de execução (server/agent)
 execution_mode=
-verbosity=
-interactive=
+message_format=
 
 ### compartilhamentos para obtenção de pacotes e disponbilização de logs (os caminhos podem ser iguais):
 remote_pkg_dir_tree=
@@ -26,12 +25,12 @@ agent_timeout=
 service_log_size=
 
 ### Validação de diretórios utilizados pelo agente.
-regex_tmp_dir=
-regex_log_dir=
-regex_lock_dir=
-regex_remote_dir=
+regex[tmp_dir]=
+regex[log_dir]=
+regex[lock_dir]=
+regex[remote_dir]=
 
 ### expressões regulares relacionadas a variáveis utilizadas pelo agente.
-regex_agent_name=
-regex_agent_task=
-regex_filetypes=
+regex[agent_name]=
+regex[agent_task]=
+regex[filetypes]=

@@ -1,6 +1,6 @@
 # modo de execução (server/agent)
 execution_mode=
-verbosity=
+message_format=
 # Caminhos para diretórios e arquivos utilizados no processo de deploy.
 work_dir=
 bak_dir=
@@ -86,66 +86,10 @@ cgi_profile_title=
 cgi_faq_title=
 cgi_table_size=
 # Estrutura da tabela de permissões:
-col_subject_type=
-col_subject_name=
-col_resource_type=
-col_resource_name=
-col_permission=
+col[...]=
 # Expressões de validação utilizadas na interface Web
-regex_user=
-regex_email=
-regex_group=
-regex_password=
-regex_subject_type=
-regex_subject_name=
-regex_resource_type=
-regex_resource_name=
-regex_resource_list=
-regex_permission=
-regex_faq_category=
-regex_faq_tag=
-regex_faq_taglist=
-regex_faq_filetype=
-regex_agent_interval=
 # Expressões de validação de diretórios utilizados no processo de deploy
-regex_tmp_dir=
-regex_bak_dir=
-regex_history_dir=
-regex_cgi_dir=
-regex_repo_dir=
-regex_upload_dir=
-regex_agent_conf_dir=
-regex_lock_dir=
 # Expressões de validação de parâmetros das aplicações
-regex_hash=
-regex_tag=
-regex_branch=
-regex_repo=
-regex_rev=
-regex_raiz=
-regex_mount_type=
-regex_share=
-regex_force_gid=
-regex_force_uid=
-regex_branch_desenvolvimento=
-regex_branch_teste=
-regex_branch_homologacao=
-regex_branch_sustentacao=
-regex_branch_producao=
-regex_revisao_desenvolvimento=
-regex_revisao_teste=
-regex_revisao_homologacao=
-regex_revisao_sustentacao=
-regex_revisao_producao=
-regex_modo_desenvolvimento=
-regex_modo_teste=
-regex_modo_homologacao=
-regex_modo_sustentacao=
-regex_modo_producao=
-regex_auto_desenvolvimento=
-regex_auto_teste=
-regex_auto_homologacao=
-regex_auto_sustentacao=
-regex_auto_producao=
+regex[...]=
 # Expressões inválidas
-not_regex_[a-z][0-9a-z_]*=
+not_regex[...]=

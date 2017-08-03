@@ -3,10 +3,9 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 source $install_dir/sh/include.sh || exit 1
 
 lock_history=false
-interactive=false
 purge_time=0
 execution_mode="server"
-verbosity="quiet"
+message_format='detailed'
 pid="$$"
 
 ##### Execução somente como usuário root ######
@@ -97,11 +96,11 @@ function end {
 
 trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
-lock 'server_tasks' "A rotina já está em execução."
+lock 'server_tasks' "A rotina já está em execução." || end 1
 
-valid "service_log_size" "regex_qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas."
-valid "app_log_max" "regex_qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações."
-valid "global_history_size" "regex_qtd" "\nErro. Tamanho inválido para o histórico global."
+valid "$service_log_size" "qtd" "\nErro. Tamanho inválido para o log de tarefas agendadas." || end 1
+valid "$app_log_max" "qtd" "\nErro. Valor inválido para a quantidade de logs de aplicações." || end 1
+valid "$global_history_size" "qtd" "\nErro. Tamanho inválido para o histórico global." || end 1
 
 case "$1" in
     --test)

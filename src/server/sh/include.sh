@@ -9,35 +9,32 @@ mkdir -p $log_dir || exit 1
 error_log="$log_dir/error_$$_$(basename $0).log"
 touch $error_log || exit 1
 
-# Carrega valores default para o servidor
-test -f "$install_dir/conf/global.conf" || exit 1
-chk_template $install_dir/conf/global.conf &>> $error_log
-source "$install_dir/conf/global.conf" &>> $error_log  || exit 1
+# Carrega preferências do usuário (overrides)
+chk_template "$install_dir/conf/user.conf" 'user' &>> $error_log && source "$install_dir/conf/user.conf" &>> $error_log || exit 1
 
-# Carrega preferências do usuário
-if [ -f "$install_dir/conf/user.conf" ]; then
-    chk_template $install_dir/conf/user.conf &>> $error_log
-    source "$install_dir/conf/user.conf" &>> $error_log || exit 1
-fi
+# Carrega valores default para o servidor
+chk_template "$install_dir/conf/global.conf" 'global' &>> $error_log && source "$install_dir/conf/global.conf" &>> $error_log  || exit 1
 
 # Define diretório temporário.
 pid=$$
 tmp_dir="$work_dir/$pid"
 
 # Valida caminhos de diretório
-aux_1=$verbosity; verbosity='quiet'
-aux_2=$interactive; interactive=false
-valid "bak_dir" "\nErro. Diretório de backup informado incorretamente." &>> $error_log
-valid "cgi_dir" "\nErro. Diretório de cgi informado incorretamente." &>> $error_log
-valid "tmp_dir" "\nErro. Diretório temporário informado incorretamente." &>> $error_log
-valid "history_dir" "\nErro. Diretório de histórico informado incorretamente." &>> $error_log
-valid "repo_dir" "\nErro. Diretório de repositórios git informado incorretamente." &>> $error_log
-valid "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente." &>> $error_log
-verbosity=$aux_1
-interactive=$aux_2
+aux_1=$message_format; message_format='detailed'
+valid "$bak_dir" "bak_dir" "\nErro. Diretório de backup informado incorretamente." &>> $error_log || exit 1
+valid "$cgi_dir" "cgi_dir" "\nErro. Diretório de cgi informado incorretamente." &>> $error_log || exit 1
+valid "$tmp_dir" "tmp_dir" "\nErro. Diretório temporário informado incorretamente." &>> $error_log || exit 1
+valid "$history_dir" "history_dir" "\nErro. Diretório de histórico informado incorretamente." &>> $error_log || exit 1
+valid "$repo_dir" "repo_dir" "\nErro. Diretório de repositórios git informado incorretamente." &>> $error_log || exit 1
+valid "$lock_dir" "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente." &>> $error_log || exit 1
+message_format=$aux_1
 
 # Cria diretórios necessários, com exceção de $tmp_dir, que deve ser gerenciado individualmente por cada script
 mkdir -p $cgi_dir $work_dir $history_dir ${app_history_dir_tree} $repo_dir $lock_dir $app_conf_dir $bak_dir &>> $error_log || exit 1
+
+# Valida ambientes definidos pelo usuário e especifica expressão regular correspondente
+valid "$ambientes" 'env_list' 'Erro. Lista de ambientes inválida.' || exit 1
+regex[ambiente]="$(echo "$ambientes" | tr ' ' '|')"
 
 unset aux_1
 unset aux_2
