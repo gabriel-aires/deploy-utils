@@ -364,6 +364,7 @@ declare -p col regex not_regex > "$BASH_ENV"
 # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
 export -f 'valid'
 export -f 'log'
+export -f 'compress'
 export -f 'message'
 export -f 'write_history'
 export 'delim'
