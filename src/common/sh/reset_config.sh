@@ -32,10 +32,10 @@ $error && log "ERRO" "Impossível escrever no diretório $(dirname $config)" && 
 processed=";"
 
 while read line; do
-    param="$(echo $line | sed -rn "s/^($regex[var)\[${regex[key]}\]]=.*$/\1/p")"
+    param="$(echo $line | sed -rn "s/^(${regex[var]})\[${regex[key]}\]=.*$/\1/p")"
     test -z "$param" && continue
     echo "$processed" | grep -qF ";$param;" && continue
-    replace_array=$(grep -Ex "$param\[$regex[key\]]=.*" "$config" | tr "\n" "\t")
+    replace_array=$(grep -Ex "$param\[${regex[key]}\]=.*" "$config" | tr "\n" "\t")
     sed -i -r "s|^$param\[.*$|$replace_array|" "$config.aux" || error=true
     processed="$processed$param;"
 done < "$config"
