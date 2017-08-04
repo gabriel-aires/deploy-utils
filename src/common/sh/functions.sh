@@ -187,7 +187,7 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
     local valid_regex="${regex[$rule_id]}"
     local forbidden_regex="${not_regex[$rule_id]}"
     local alt_valid_regex='.*'
-    local alt_forbidden_regex='.*[;&<>`].*'
+    local alt_forbidden_regex='.*[;&`].*'
     local compound_rule="$([[ $rule_id =~ : ]] && echo true || echo false)"
     local rule_name="$rule_id"
     local missing_rule_msg="Não há uma regra correspondente à chave '$rule_name'"
