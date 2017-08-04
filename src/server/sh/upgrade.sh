@@ -73,6 +73,21 @@ while $outdated; do
 
         echo "110" > $version_file
 
+######################### 4.0-alfa1
+
+    elif [ "$version_sequential" -lt "112" ]; then
+        log "INFO" "Aplicando migrações para a versão 112..."
+
+        find $app_conf_dir/ -type f -iname '*.conf' | while read config; do
+            touch $config
+            sed -i.bak -r 's/^(auto|branch|revisao|hosts|share|modo)_([^=]+)=/\1\[\2\]=/' $config
+            reset_config.sh "$config" "$install_dir/template/app.template"
+            chown $apache_user:$apache_group $config
+            log "INFO" "Arquivo $config atualizado com sucesso."
+        done
+
+        echo "112" > $version_file        
+
 ######################## LATEST
 
     elif [ "$version_sequential" -le "$version_latest" ]; then
