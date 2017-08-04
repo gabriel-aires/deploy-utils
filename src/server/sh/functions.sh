@@ -137,7 +137,7 @@ function web_filter() {   # Filtra o input de formulários cgi
         sed -r 's|%3D|=|g' | \
         sed -r 's|%40|@|g' | \
         sed -r 's|%5B|\[|g' | \
-        sed -r 's|%5D|\]|g' | \                
+        sed -r 's|%5D|\]|g' | \
         sed -r 's|%..||g' | \
         sed -r 's|\*||g' | \
         sed -r 's|::percent::|%|g' | \
