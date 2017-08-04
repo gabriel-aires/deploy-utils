@@ -31,12 +31,6 @@ function message () {
 function compress () {         ##### padroniza a metodologia de compressão de arquivos (argumentos: pacote [arquivo1 arquivo2 arquivo3...])
 
     local error_msg='Impossível criar arquivo zip'
-    local error_cmd='return 1'
-
-    case $verbosity in
-        'quiet') error_cmd="log 'ERRO' '$error_msg'; $error_cmd";;
-        'verbose') error_cmd="echo -e '\n$error_msg'; $error_cmd";;
-    esac
 
     if [ "$#" -ge 2 ]; then
 
@@ -45,17 +39,16 @@ function compress () {         ##### padroniza a metodologia de compressão de a
         shift 1
         local filelist="$@"
 
-        touch "$filename" || eval "$error_cmd"                                                              #verifica se o pacote pode ser escrito
+        touch "$filename" || { message "ERRO" "$error_msg" ; return 1 ; }                                                            #verifica se o pacote pode ser escrito
         zip -rql9 --filesync "$filename" $filelist &> /dev/null && success="true"                           #tenta utilizar o parâmetro --filesync (disponível a partir da versão 3.0)
         ! $success && rm -f "$filename" && zip -rql1 "$filename" $filelist &> /dev/null && success="true"   #recria o pacote (caso exista) e usa taxa de compressão menor para reduzir tempo
-        $success || eval "$error_cmd"
+        $success || { message "ERRO" "$error_msg" ; return 1 ; }
 
     else
-
-        eval "$error_cmd"
-
+        message "ERRO" "$error_msg" ; return 1
     fi
 
+    return 0
 }
 
 function lock () {                                            #argumentos: nome_trava, mensagem_erro, (instrução)
