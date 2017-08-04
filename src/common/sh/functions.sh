@@ -196,7 +196,7 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
         rule_name="${rule_id//:*}"
         valid_regex="${regex[$rule_name]}"
         forbidden_regex="${not_regex[$rule_name]}"
-        alt_valid_regex="${regex[$rule_id]}"
+        alt_valid_regex="${alt_valid_regex:-${regex[$rule_id]}}"
         alt_forbidden_regex="${not_regex[$rule_id]}"
     fi
 
