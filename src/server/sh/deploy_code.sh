@@ -438,7 +438,7 @@ set_app_history_dirs
 echo -e "\nSistema:\t$app"
 echo -e "Revisão:\t$rev"
 echo -e "Ambiente:\t${ambiente}"
-echo -e "Deploy ID:\t$deploy_id\n"
+echo -e "Deploy ID:\t<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=${ambiente}&deploy_id=$deploy_id\">$deploy_id</a>\n"
 
 ##### MODO DE DEPLOY #####
 

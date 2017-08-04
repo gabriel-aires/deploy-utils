@@ -187,7 +187,7 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
     local valid_regex="${regex[$rule_id]}"
     local forbidden_regex="${not_regex[$rule_id]}"
     local alt_valid_regex='.*'
-    local alt_forbidden_regex='.*[;&`].*'
+    local alt_forbidden_regex='.*[;&`<>].*'
     local compound_rule="$([[ $rule_id =~ : ]] && echo true || echo false)"
     local rule_name="$rule_id"
     local missing_rule_msg="Não há uma regra correspondente à chave '$rule_name'"
@@ -214,6 +214,9 @@ function valid () {    #argumentos obrigatórios: valor id_regra mensagem_erro ;
 
 function write_history () {
 
+    valid "$1" "csv_value" "'$1': mensagem inválida." || return 1
+    valid "$2" "flag" "'$2': flag de deploy inválida." || return 1
+
     local day_log=$(echo "$(date +%d)")
     local month_log=$(echo "$(date +%m)")
     local year_log=$(echo "$(date +%Y)")
@@ -225,9 +228,6 @@ function write_history () {
     local host_log="$(echo "$host" | grep -Eiv '[a-z]' || echo "$host" | cut -f1 -d '.' | tr '[:upper:]' '[:lower:]')"
     local obs_log="<a href=\"$web_context_path/deploy_logs.cgi?app=$app&env=${ambiente}&deploy_id=$deploy_id\">$1</a>"
     local flag_log="$2"
-
-    valid "$obs_log" "csv_value" "'$obs_log': mensagem inválida." || return 1
-    valid "$flag_log" "flag" "'$flag_log': flag de deploy inválida." || return 1
 
     local header="$(echo "${col[day]}${col[month]}${col[year]}${col[time]}${col[user]}${col[app]}${col[rev]}${col[env]}${col[host]}${col[obs]}${col[flag]}" | sed -r 's/\[//g' | sed -r "s/\]/$delim/g")"
     local msg_log="$day_log$delim$month_log$delim$year_log$delim$time_log$delim$user_log$delim$app_log$delim$rev_log$delim${ambiente_log}$delim$host_log$delim$obs_log$delim$flag_log$delim"
