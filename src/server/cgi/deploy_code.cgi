@@ -48,11 +48,12 @@ function submit_deploy() {
                 while read l; do
                     key="$(echo "$l" | cut -f1 -d '=')"
                     value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                    test -n "$key" || continue
                     if echo "$key" | grep -E "^#" > /dev/null; then
                         echo "                  <tr><td colspan=\"2\"><b>##$key</b></td></tr>"
                     else
                         show_param=true
-                        echo "$key" | grep -Ex ".*\[(${regex[ambiente]})\]" > /dev/null  && show_param=false
+                        echo "$key" | grep -Ex ".*\[.*\]" > /dev/null  && show_param=false
                         ! $show_param && echo "$key" | grep -Ex ".*\[$env_name\]" > /dev/null && show_param=true
                         $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
                     fi
