@@ -85,7 +85,7 @@ if [ -n "$QUERY_STRING" ]; then
         else
             show_param=true
             if [ -n "$env_name" ]; then
-                echo "$key" | grep -Ex ".*\[(${regex[ambiente]})\]" > /dev/null  && show_param=false
+                echo "$key" | grep -Ex ".*\[.*\]" > /dev/null  && show_param=false
                 ! $show_param && echo "$key" | grep -Ex ".*\[$env_name\]" > /dev/null && show_param=true
             fi
             $show_param && echo "                   <tr><td>$key: </td><td><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\"></td></tr>"
