@@ -80,6 +80,7 @@ if [ -n "$QUERY_STRING" ]; then
     while read l; do
         key="$(echo "$l" | cut -f1 -d '=')"
         value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+        test -n "$key" || continue
         if echo "$key" | grep -E "^#" > /dev/null; then
             echo "                      <tr><td colspan=\"2\">$key</td></tr>"
         else
