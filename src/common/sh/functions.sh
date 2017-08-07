@@ -131,7 +131,7 @@ function build_template () { # argumentos: caminho_arquivo nome_template
 
         while read line; do
 
-            keygroup="$(echo "$line" | sed -rn "s/\[@(.+)\]=$/\1/p")"
+            keygroup="$(echo "$line" | sed -rn "s/^.+\[@(.+)\]=$/\1/p")"
 
             if [ -n "$keygroup" ]; then
                 mklist "${regex[$keygroup]}" | while read key; do
