@@ -81,7 +81,9 @@ if [ -n "$QUERY_STRING" ]; then
         key="$(echo "$l" | cut -f1 -d '=')"
         value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
         test -n "$key" || continue
-        if echo "$key" | grep -E "^#" > /dev/null; then
+        if [ "$key" == "app" ] && [ -n "$value" ]; then
+            echo "                   <tr><td>$key: </td><td><input type=\"hidden\" name=\"$key\" value=\"$value\"><input type=\"text\" size=\"100\" name=\"$key\" value=\"$value\" disabled></td></tr>"
+        elif echo "$key" | grep -E "^#" > /dev/null; then
             echo "                      <tr><td colspan=\"2\">$key</td></tr>"
         else
             show_param=true
