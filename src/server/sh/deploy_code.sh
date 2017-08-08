@@ -399,7 +399,7 @@ valid "$raiz" "raiz" "\nInforme um caminho válido para a raiz da aplicação." 
 valid "${hosts[$ambiente]}" "hosts:$ambiente" "\nInforme uma lista válida de hosts para deploy, separando-os por espaço ou vírgula." || end 1
 valid "${modo[$ambiente]}" "modo:$ambiente" "\nInforme um modo válido para deploy no ambiente ${ambiente} [p/d]." || end 1
 valid "${auto[$ambiente]}" "auto:$ambiente" "\nInforme um valor válido para a flag de deploy automático no ambiente ${ambiente} [0/1]." || end 1
-valid "${share[$ambiente]}" "share:$ambiente" "\nInforme um compartilhamento válido para deploy no ambiente ${ambiente}, suprimindo o nome do host (Ex: //host/a\$/b/c ]=> a\$/b/c, hostname:/a/b/c => /a/b/c)." || end 1
+valid "${deploy_path[$ambiente]}" "deploy_path:$ambiente" "\nInforme um compartilhamento válido para deploy no ambiente ${ambiente}, suprimindo o nome do host (Ex: //host/a\$/b/c ]=> a\$/b/c, hostname:/a/b/c => /a/b/c)." || end 1
 valid "$mount_type" "mount_type" "\nInforme um protocolo de compartilhamento válido [cifs/nfs]." || end 1
 valid "$force_gid" "force_gid" "\nInforme um group id válido para a aplicação $app." || end 1
 valid "$force_uid" "force_uid" "\nInforme um user id válido para a aplicação $app." || end 1
@@ -407,7 +407,7 @@ valid "$force_uid" "force_uid" "\nInforme um user id válido para a aplicação 
 hosts_deploy="${hosts[$ambiente]}"
 modo_deploy="${modo[$ambiente]}"
 auto_deploy="${auto[$ambiente]}"
-share_deploy="${share[$ambiente]}"
+share_deploy="${deploy_path[$ambiente]}"
 
 if [ "$rev" == "auto" ]; then
     if [ "$auto_deploy" == "1" ]; then

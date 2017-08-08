@@ -8,7 +8,7 @@ branch[@ambiente]=
 revisao[@ambiente]=
 # Servidor de Aplicação (destino)
 hosts[@ambiente]=
-share[@ambiente]=
+deploy_path[@ambiente]=
 mount_type=
 mount_options=
 force_gid=
