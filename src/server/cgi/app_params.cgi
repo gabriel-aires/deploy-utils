@@ -116,8 +116,9 @@ elif [ -n "$POST_STRING" ]; then
             error=false
             while read l; do
                 key="$(echo "$l" | cut -f1 -d '=')"
-                echo "$arg_string" | grep -Ex "^.*&$key=([^\&]*)&.*$" > /dev/null || continue
-                new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]*)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                match="$(echo "$key" | sed -r 's#(\[|\])#\\&#g' )"
+                echo "$arg_string" | grep -Ex "^.*&$match=([^\&]*)&.*$" > /dev/null || continue
+                new_value="$(echo "$arg_string" | sed -rn "s/^.*&$match=([^\&]*)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
                 editconf "$key" "$new_value" "$app_conf_dir/$app_name.conf" || { error=true ; break ; }
             done < "$app_conf_dir/$app_name.conf"
             $error && end 1
