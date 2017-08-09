@@ -1,17 +1,17 @@
 app=
-# Repositório Git (origem)
+# Repositório Git
 repo=
 raiz=
-# Deploy Automático
-auto[@ambiente]=
 branch[@ambiente]=
 revisao[@ambiente]=
-# Servidor de Aplicação (destino)
+# Servidor de Aplicação
 hosts[@ambiente]=
 deploy_path[@ambiente]=
+log_path[@ambiente]=
 mount_type=
 mount_options=
 force_gid=
 force_uid=
-# Modo de Deploy
+# Opções de Deploy
+auto[@ambiente]=
 modo[@ambiente]=
