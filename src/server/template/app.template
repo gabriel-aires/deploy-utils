@@ -5,13 +5,17 @@ raiz=
 branch[@ambiente]=
 revisao[@ambiente]=
 # Servidor de Aplicação
+server_type=
 hosts[@ambiente]=
-deploy_path[@ambiente]=
-log_path[@ambiente]=
 mount_type=
 mount_options=
-force_gid=
-force_uid=
 # Opções de Deploy
+deploy_path[@ambiente]=
 auto[@ambiente]=
 modo[@ambiente]=
+force_gid=
+force_uid=
+# Coleta de Logs
+log_path[@ambiente]=
+log_depth=
+log_filetypes=
