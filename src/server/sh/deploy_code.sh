@@ -174,6 +174,21 @@ function deploy () {
 
 }
 
+function check_branch () {  #argumentos: branch revisão(commit ou tag)
+
+    local branch_name="$1"
+    local rev_name="$2"
+    local branch_regex="$(echo "$branch_name" | sed -r 's|([ \.\-])|\\\1|g' )"
+
+    git fetch --all --force --quiet || return 1
+    git checkout --force --quiet "$branch_name" || return 1
+    git pull --force --quiet origin "$branch_name" || return 1
+    git branch --contains "$rev_name" | grep -Exq "\*?[[:blank:]]*$branch_regex[[:blank:]]*" || return 1
+
+    return 0
+
+}
+
 function check_last_deploy () {
 
     cd $origem
