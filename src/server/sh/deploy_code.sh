@@ -94,7 +94,7 @@ function checkout () {                                                   #o coma
     fi
 
     if [ -n "${revisao[$ambiente]}" ]; then
-        valid "${revisao[$ambiente]}" "rev:$ambiente" "\nInforme um valor válido para o parâmetro revisao[${ambiente}]: [commit/tag]." || end 1
+        valid "${revisao[$ambiente]}" "revisao:$ambiente" "\nInforme um valor válido para o parâmetro revisao[${ambiente}]: [commit/tag]." || end 1
         test "${revisao[$ambiente]}" == "tag" && git tag | grep -qxF "$rev" && tagged=true || { echo "A revisão '$rev' não é uma tag. Abortando..." ; end 1 ; }
     else
         auto=false
