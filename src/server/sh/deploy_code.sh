@@ -60,6 +60,21 @@ ambiente=$3
 
 #### Funções ##########
 
+function check_branch () {  #argumentos: branch revisão(commit ou tag)
+
+    local branch_name="$1"
+    local rev_name="$2"
+    local branch_regex="$(echo "$branch_name" | sed -r 's|([ \.\-])|\\\1|g' )"
+
+    git checkout --force --quiet "$branch_name" || return 1
+    git branch -a | grep -v remotes/origin/HEAD | cut -b 3- | grep -qxF "remotes/origin/$branch_name" || return 1
+    git pull --force --quiet origin "$branch_name" || return 1
+    test "$rev_name" != "auto" && git branch --contains "$rev_name" | grep -Exq "\*?[[:blank:]]*$branch_regex[[:blank:]]*" 2> /dev/null || return 1
+
+    return 0
+
+}
+
 function checkout () {                                                   #o comando cd precisa estar encapsulado para funcionar adequadamente num script, por isso foi criada a função.
 
     if [ ! -d "$repo_dir/$nomerepo/.git" ]; then
@@ -71,25 +86,27 @@ function checkout () {                                                   #o coma
     git fetch origin --force --quiet || end 1                            #atualiza commits (nesse caso, o fetch é realizado com o refspec default do repositório, normalmente é +refs/heads/*:refs/remotes/origin/*)
     git fetch origin --force --quiet +refs/tags/*:refs/tags/* || end 1   #atualiza tags (a opção --tags não foi utilizada, pq seu comportamento foi alterado a partir do git 1.9)
 
-    if $auto; then
-
-        valid "${revisao[$ambiente]}" "rev:$ambiente" "\nInforme um valor válido para o parâmetro revisao[${ambiente}]: [commit/tag]." || end 1
-        revisao_auto="${revisao[$ambiente]}"
-
+    if [ -n "${branch[$ambiente]}" ]; then
         valid "${branch[$ambiente]}" "branch:$ambiente" "\nInforme um valor válido para o parâmetro branch_${ambiente} (Ex: 'master')." || end 1
-        branch_auto="${branch[$ambiente]}"
+        check_branch "${branch[$ambiente]}" "$rev" || { echo "A revisão '$rev' não está contida na branch '${branch[$ambiente]}'. Abortando..." ; end 1 ; }
+    else
+        auto=false
+    fi
 
-        git branch -a | grep -v remotes/origin/HEAD | cut -b 3- > $tmp_dir/branches
+    if [ -n "${revisao[$ambiente]}" ]; then
+        valid "${revisao[$ambiente]}" "rev:$ambiente" "\nInforme um valor válido para o parâmetro revisao[${ambiente}]: [commit/tag]." || end 1
+        test "${revisao[$ambiente]}" == "tag" && git tag | grep -qxF "$rev" && tagged=true || { echo "A revisão '$rev' não é uma tag. Abortando..." ; end 1 ; }
+    else
+        auto=false
+    fi
 
-        if [ $(grep -Ei "^remotes/origin/${branch_auto}$" $tmp_dir/branches | wc -l) -ne 1 ]; then
-            end 1
-        fi
+    if $auto; then
 
         last_commit=''
 
-        case $revisao_auto in
+        case ${revisao[$ambiente]} in
             tag)
-                git log "origin/$branch_auto" --oneline | cut -f1 -d ' ' > $tmp_dir/commits
+                git log "origin/${branch[$ambiente]}" --oneline | cut -f1 -d ' ' > $tmp_dir/commits
                 git tag -l | sort -V > $tmp_dir/tags
 
                 while read tag; do
@@ -111,10 +128,10 @@ function checkout () {                                                   #o coma
                 fi
                 ;;
             commit)
-                last_commit=$(git log "origin/$branch_auto" --oneline | head -1 | cut -f1 -d ' ')
+                last_commit=$(git log "origin/${branch[$ambiente]}" --oneline | head -1 | cut -f1 -d ' ')
 
                 if [ ! -z $last_commit ]; then
-                    echo -e "\nObtendo a revisão $last_commit a partir da branch $branch_auto."
+                    echo -e "\nObtendo a revisão $last_commit a partir da branch ${branch[$ambiente]}."
                     rev=$last_commit
                 else
                     echo "Erro ao obter a revisão especificada. Deploy abortado"
@@ -126,7 +143,7 @@ function checkout () {                                                   #o coma
         echo -e "\nObtendo a revisão ${rev}..."
     fi
 
-    git checkout --force --quiet $rev || end 1
+    git checkout --force --quiet "$rev" || end 1
 
     if [ -z "$(git branch | grep -x '* (no branch)' )" ]; then
         echo -e "\nDeploys a partir do nome de uma branch são proibidos, pois prejudicam a rastreabilidade do processo. Deploy abortado"
@@ -171,21 +188,6 @@ function deploy () {
     echo -e "Total de operações de exclusão ..... $total_del\n" >> $deploy_log_dir/resumo_$host.txt
 
     cat $deploy_log_dir/resumo_$host.txt
-
-}
-
-function check_branch () {  #argumentos: branch revisão(commit ou tag)
-
-    local branch_name="$1"
-    local rev_name="$2"
-    local branch_regex="$(echo "$branch_name" | sed -r 's|([ \.\-])|\\\1|g' )"
-
-    git fetch --all --force --quiet || return 1
-    git checkout --force --quiet "$branch_name" || return 1
-    git pull --force --quiet origin "$branch_name" || return 1
-    git branch --contains "$rev_name" | grep -Exq "\*?[[:blank:]]*$branch_regex[[:blank:]]*" || return 1
-
-    return 0
 
 }
 
