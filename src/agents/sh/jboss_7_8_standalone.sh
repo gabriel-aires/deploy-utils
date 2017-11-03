@@ -11,7 +11,7 @@ function jboss_script_init () {
     if [ -n "$jboss_instance" ] && [ -d  "$jboss_servers_dir/$jboss_instance" ]; then
 
         unset script_init
-        find /etc/init.d/ -type f -iname '*jboss*' > "$tmp_dir/scripts_jboss.list"
+        find /etc/init.d/ -type f -regextype posix-extended -iregex '.*(jboss|wildfly).*' > "$tmp_dir/scripts_jboss.list"
 
         #verifica todos os scripts de jboss encontrados em /etc/init.d até localizar o correto.
         while read script_jboss && [ -z "$script_init" ]; do
