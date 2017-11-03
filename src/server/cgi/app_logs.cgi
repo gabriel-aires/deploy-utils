@@ -33,7 +33,7 @@ function submit_log() {
             echo "              <input type=\"hidden\" name=\"env\" value=\"$env\"></td></tr>"
             echo "                  <select class=\"select_large\" name=\"log_subpath\">"
             echo "		                <option value=\"\" selected>Selecionar Caminho...</option>"
-            cat $tmp_dir/log_path | sed -r "s|^$upload_dir/(.*)$|\t\t\t\t\t\t<option>\1</option>|"
+            sed -r "s|^$upload_dir/(.*)$|\t\t\t\t\t\t<option>\1</option>|" $tmp_dir/log_path
             echo "                  </select>"
             echo "              <input type=\"submit\" name=\"proceed\" value=\"$proceed_log\">"
             echo "          </form>"
