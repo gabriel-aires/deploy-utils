@@ -73,6 +73,24 @@ while $outdated; do
 
         echo "110" > $version_file
 
+######################### 3.8.4
+
+    elif [ "$version_sequential" -lt "112" ]; then
+        log "INFO" "Aplicando migrações para a versão 112..."
+
+        find $agent_conf_dir/ -type f -iname '*.conf' | while read config; do
+            grep -E "^agent_name=[\"']?jboss_7_8_standalone[\"']?$" "$config" > /dev/null || continue
+            touch "$config"
+            cp "$config" "$config.bak"
+            echo "hard_reset_after='120'" >> "$config"
+            echo "kill_jboss_after='60'" >> "$config"
+            reset_config.sh "$config" "$src_dir/agents/template/jboss_7_8_standalone.template"
+            chown $apache_user:$apache_group "$config"
+            log "INFO" "Arquivo '$config' atualizado com sucesso."
+        done
+
+        echo "112" > $version_file
+
 ######################## LATEST
 
     elif [ "$version_sequential" -le "$version_latest" ]; then
