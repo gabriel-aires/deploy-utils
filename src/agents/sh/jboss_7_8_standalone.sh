@@ -158,7 +158,7 @@ function deploy_pkg () {
             sleep 1
             t=$(date +%s)
 
-            if ! $server_restarted && [ $((t-t0)) -gt "hard_reset_after" ]; then
+            if ! $server_restarted && [ $((t-t0)) -gt "$hard_reset_after" ]; then
                 log "WARN" "Jboss - timeout excedido para hotdeploy. Forçando reinicialização da instância $jboss_instance..."
                 restart_server || continue 2
             elif [ $((t-t0)) -gt "$((agent_timeout/2))" ]; then
