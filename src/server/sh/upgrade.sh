@@ -82,7 +82,7 @@ while $outdated; do
             grep -E "^agent_name=[\"']?jboss_7_8_standalone[\"']?$" "$config" > /dev/null || continue
             touch "$config"
             cp "$config" "$config.bak"
-            echo "hard_reset_after'120'" >> "$config"
+            echo "hard_reset_after='120'" >> "$config"
             echo "kill_jboss_after='60'" >> "$config"
             reset_config.sh "$config" "$src_dir/agents/template/jboss_7_8_standalone.template"
             chown $apache_user:$apache_group "$config"
