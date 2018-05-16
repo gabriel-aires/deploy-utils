@@ -17,3 +17,5 @@ jboss_gid=
 restart_required=
 restart_delay=
 deployment_delay=
+hard_reset_after=
+kill_jboss_after=

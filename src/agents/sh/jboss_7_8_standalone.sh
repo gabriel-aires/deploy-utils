@@ -11,7 +11,7 @@ function jboss_script_init () {
     if [ -n "$jboss_instance" ] && [ -d  "$jboss_servers_dir/$jboss_instance" ]; then
 
         unset script_init
-        find /etc/init.d/ -type f -iname '*jboss*' > "$tmp_dir/scripts_jboss.list"
+        find /etc/init.d/ -type f -regextype posix-extended -iregex '.*(jboss|wildfly).*' > "$tmp_dir/scripts_jboss.list"
 
         #verifica todos os scripts de jboss encontrados em /etc/init.d até localizar o correto.
         while read script_jboss && [ -z "$script_init" ]; do
@@ -25,12 +25,12 @@ function jboss_script_init () {
 
             if [ -n "$jboss_server_base_dir" ]; then
 
-                test "$jboss_server_base_dir" == "$jboss_servers_dir/$jboss_instance" && script_init="$script_jboss"                
+                test "$jboss_server_base_dir" == "$jboss_servers_dir/$jboss_instance" && script_init="$script_jboss"
 
             elif [ "$jboss_instance" == 'standalone' ]; then
 
                 jboss_home="$(sed -rn "s/^[[:blank:]]*JBOSS_HOME=([[:graph:]]+)[[:blank:]]*$/\1/p" "$script_jboss" | tr -d \"\' | head -1)"
-                test "$jboss_home" == "$jboss_servers_dir" && script_init="$script_jboss"                
+                test "$jboss_home" == "$jboss_servers_dir" && script_init="$script_jboss"
 
             fi
 
@@ -60,7 +60,55 @@ function file_operations () {
         return 1
     fi
 
+    package_installed=true
     return 0
+}
+
+function restart_server () {
+
+    #tenta localizar o script de inicialização da instância e seta a variável $script_init, caso tenha sucesso
+    jboss_script_init "$jboss_instance"
+
+    if [ -z "$script_init" ]; then
+        log "ERRO" "Não foi encontrado o script de inicialização da instância jboss. O deploy deverá ser feito manualmente."
+        write_history "Deploy abortado. Script de inicialização não encontrado." "0"
+        return 1
+    fi
+
+    log "INFO" "Script de inicialização:\t$script_init"
+    stop_instance="timeout -s KILL $((agent_timeout/2)) $script_init stop"
+    start_instance="timeout -s KILL $((agent_timeout/2)) $script_init start"
+
+    # o script de inicialização deve permitir um parâmetro opcional para o tempo máximo de parada do servidor
+    $stop_instance "$kill_jboss_after"
+
+    if [ $? -ne 0 ] || [ $(pgrep -f "\-Djboss\.server\.base\.dir=$jboss_servers_dir/$jboss_instance \-c standalone\.xml" | wc -l) -ne 0 ]; then
+        log "ERRO" "Não foi possível parar a instância $jboss_instance do jboss. Deploy abortado."
+        write_history "Deploy abortado. Impossível parar a instância $jboss_instance." "0"
+        return 1
+    fi
+
+    if ! $package_installed; then
+        file_operations || { sleep "$restart_delay" ; $start_instance ; return 1 ; }
+    fi
+
+    if [ -d "$jboss_temp" ]; then
+        rm -Rf $jboss_temp/*
+    fi
+
+    sleep "$restart_delay"
+    $start_instance
+
+    if [ $? -ne 0 ] || [ $(pgrep -f "\-Djboss\.server\.base\.dir=$jboss_servers_dir/$jboss_instance \-c standalone\.xml" | wc -l) -eq 0 ]; then
+        log "ERRO" "O deploy do arquivo $war foi concluído, porém não foi possível reiniciar a instância do jboss."
+        write_history "Deploy não concluído. Erro ao reiniciar a instância $jboss_instance." "0"
+        return 1
+    fi
+
+    sleep 1
+    server_restarted=true
+    return 0
+
 }
 
 function deploy_pkg () {
@@ -79,6 +127,8 @@ function deploy_pkg () {
     while read old; do
 
         error=false
+        server_restarted=false
+        package_installed=false
         log "INFO" "O pacote $old será substituído".
 
         jboss_deployments_dir=$(echo $old | sed -r "s|^(${jboss_servers_dir}/[^/]+/deployments)/[^/]+\.[ew]ar$|\1|i")
@@ -91,43 +141,7 @@ function deploy_pkg () {
 
         if $restart_required; then
 
-            #tenta localizar o script de inicialização da instância e seta a variável $script_init, caso tenha sucesso
-            jboss_script_init "$jboss_instance"
-
-            if [ -z "$script_init" ]; then
-                log "ERRO" "Não foi encontrado o script de inicialização da instância jboss. O deploy deverá ser feito manualmente."
-                write_history "Deploy abortado. Script de inicialização não encontrado." "0"
-                continue
-            fi
-            
-            log "INFO" "Script de inicialização:\t$script_init"
-            stop_instance="timeout -s KILL $((agent_timeout/2)) $script_init stop"
-            start_instance="timeout -s KILL $((agent_timeout/2)) $script_init start"
-
-            $stop_instance
-
-            if [ $? -ne 0 ] || [ $(pgrep -f "\-Djboss\.server\.base\.dir=$jboss_servers_dir/$jboss_instance \-c standalone\.xml" | wc -l) -ne 0 ]; then
-                log "ERRO" "Não foi possível parar a instância $jboss_instance do jboss. Deploy abortado."
-                write_history "Deploy abortado. Impossível parar a instância $jboss_instance." "0"
-                continue
-            fi
-
-            file_operations || { sleep "$restart_delay" ; $start_instance ; continue ; }
-            
-            if [ -d "$jboss_temp" ]; then
-                rm -Rf $jboss_temp/*
-            fi
-
-            sleep "$restart_delay"
-            $start_instance
-
-            if [ $? -ne 0 ] || [ $(pgrep -f "\-Djboss\.server\.base\.dir=$jboss_servers_dir/$jboss_instance \-c standalone\.xml" | wc -l) -eq 0 ]; then
-                log "ERRO" "O deploy do arquivo $war foi concluído, porém não foi possível reiniciar a instância do jboss."
-                write_history "Deploy não concluído. Erro ao reiniciar a instância $jboss_instance." "0"
-                continue
-            fi
-
-            sleep 1
+            restart_server || continue
 
         else
 
@@ -136,17 +150,21 @@ function deploy_pkg () {
 
         fi
 
-        t=0      
+        t0=$(date +%s)
         log "INFO" "Jboss - realizando deploy do pacote $(basename $old) na instância $jboss_instance..."
 
         while [ -f "$old.isdeploying" ]; do
-            
-            sleep 1
 
-            if [ $((++t)) -gt "$((agent_timeout/2))" ]; then
+            sleep 1
+            t=$(date +%s)
+
+            if ! $server_restarted && [ $((t-t0)) -gt "$hard_reset_after" ]; then
+                log "WARN" "Jboss - timeout excedido para hotdeploy. Forçando reinicialização da instância $jboss_instance..."
+                restart_server || continue 2
+            elif [ $((t-t0)) -gt "$((agent_timeout/2))" ]; then
                 log "ERRO" "Jboss - timeout atingido no deploy do pacote $(basename $old) na instância $jboss_instance:"
                 write_history "Deploy abortado. Jboss - timeout atingido no deploy do pacote $(basename $old) na instância $jboss_instance." "0"
-                continue 2            
+                continue 2
             else
                 log "INFO" "Jboss - realizando deploy do pacote $(basename $old) na instância $jboss_instance..."
             fi
@@ -212,6 +230,8 @@ id -Gn "$jboss_uid" | grep -Exq "$jboss_gid|.* $jboss_gid|$jboss_gid .*|.* $jbos
 [ "$restart_required" == "true" ] || [ "$restart_required" == "false" ] || { log "ERRO" "O parâmetro 'restart_required' deve ser um valor booleano (true/false)." && exit 1 ; }
 [ "$restart_delay" -ge "0" ] 2> /dev/null || { log "ERRO" "O parâmetro 'restart_delay' deve ser um inteiro maior ou igual a zero." && exit 1 ; }
 [ "$deployment_delay" -ge "0" ] 2> /dev/null || { log "ERRO" "O parâmetro 'deployment_delay' deve ser um inteiro maior ou igual a zero." && exit 1 ; }
+[ "$hard_reset_after" -ge "1" ] 2> /dev/null || { log "ERRO" "O parâmetro 'hard_reset_after' deve ser um inteiro maior ou igual a um." && exit 1 ; }
+[ "$kill_jboss_after" -ge "1" ] 2> /dev/null || { log "ERRO" "O parâmetro 'kill_jboss_after' deve ser um inteiro maior ou igual a um." && exit 1 ; }
 
 case $1 in
     log) copy_log;;

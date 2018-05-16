@@ -97,8 +97,12 @@ chkconfig --add deploy_agent
 chkconfig deploy_agent on
 ```
 
+### OBSERVAÇÃO
+
+O presente sistema está sendo evoluído através do projeto https://github.com/gabriel-aires/odin, criado a partir da branch tcl_rewrite (deletada em 16/05/2018). Os projetos serão mantidos separadamente.
+
 ## Autor:
 
 Gabriel Aires Guedes - airesgabriel@gmail.com
 
-Atualizado pela última vez em 12/04/2016.
+Atualizado pela última vez em 16/05/2018.
