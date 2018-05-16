@@ -1,7 +1,6 @@
 #!/bin/bash
 
-interactive='false'
-verbosity='verbose'
+message_format='simple'
 
 function end() {
 
@@ -30,20 +29,18 @@ source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh |
 
 # Valida o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
-test -f "$global_conf" || end 1
-chk_template "$global_conf"
-source "$global_conf" || end 1
+chk_template "$global_conf" 'global' && source "$global_conf" || end 1
 
 error=false
-valid "work_dir" "regex_tmp_dir" "\nErro. Diretório 'work' informado incorretamente." "continue" || error=true
-valid "log_dir" "\nErro. Diretório de lockfiles informado incorretamente." "continue" || error=true
-valid "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente." "continue" || error=true
-valid "remote_pkg_dir_tree" "regex_remote_dir" "\nErro. Repositório de pacotes remoto informado incorretamente." "continue" || error=true
-valid "remote_log_dir_tree" "regex_remote_dir" "\nErro. Repositório de logs remoto informado incorretamente." "continue" || error=true
-valid "remote_lock_dir" "regex_remote_dir" "\nErro. Diretório de lockfiles remoto informado incorretamente." "continue" || error=true
-valid "remote_conf_dir" "regex_remote_dir" "\nErro. Diretório de configurações remoto informado incorretamente." "continue" || error=true
-valid "remote_history_dir" "regex_remote_dir" "\nErro. Diretório de histórico remoto informado incorretamente." "continue" || error=true
-valid "remote_app_history_dir_tree" "regex_remote_dir" "\nErro. Diretório de histórico de aplicações remoto informado incorretamente." "continue" || error=true
+valid "$work_dir" "tmp_dir" "\nErro. Diretório 'work' informado incorretamente." || error=true
+valid "$log_dir" "log_dir" "\nErro. Diretório de lockfiles informado incorretamente." || error=true
+valid "$lock_dir" "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente." || error=true
+valid "$remote_pkg_dir_tree" "remote_dir" "\nErro. Repositório de pacotes remoto informado incorretamente." || error=true
+valid "$remote_log_dir_tree" "remote_dir" "\nErro. Repositório de logs remoto informado incorretamente." || error=true
+valid "$remote_lock_dir" "remote_dir" "\nErro. Diretório de lockfiles remoto informado incorretamente." || error=true
+valid "$remote_conf_dir" "remote_dir" "\nErro. Diretório de configurações remoto informado incorretamente." || error=true
+valid "$remote_history_dir" "remote_dir" "\nErro. Diretório de histórico remoto informado incorretamente." || error=true
+valid "$remote_app_history_dir_tree" "remote_dir" "\nErro. Diretório de histórico de aplicações remoto informado incorretamente." || error=true
 $error && end 1
 
 #backup agent

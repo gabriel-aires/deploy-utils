@@ -90,9 +90,9 @@ if [ "$REQUEST_METHOD" == "POST" ]; then
     fi
 fi
 
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
 proceed_view="Continuar"
 proceed_deploy="Deploy"
+qtd_dir="${#dir[@]}"
 
 if ! $parsed; then
 
@@ -110,7 +110,7 @@ if ! $parsed; then
     echo "              <p>"
     echo "      		<select class=\"select_default\" name=\"env\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
-    cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+    mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
     # Submit
@@ -122,10 +122,10 @@ if ! $parsed; then
 
 elif [ -n "$app" ] && [ -n "$env" ] && [ -n "$proceed" ]; then
 
-    valid "app" "Erro. Nome de aplicação inválido."
-    valid "env" "regex_ambiente" "Erro. Nome de ambiente inválido."
+    valid "$app" "app" "Erro. Nome de aplicação inválido." || end 1
+    valid "$env" "ambiente" "Erro. Nome de ambiente inválido." || end 1
 
-    lock "package_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>"
+    lock "package_${app}_${env}" "<p><b>Há outro deploy da aplicação $app no ambiente $env em execução. Tente novamente.</b></p>" || end 1
 
     case "$proceed" in
 

@@ -3,20 +3,13 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 function end() {
-    if [ -d "$tmp_dir" ]; then
-        rm -f $tmp_dir/*
-        rmdir $tmp_dir
-    fi
-
     wait
     exit $1
 }
 
 trap "break 10 2> /dev/null; end 1" SIGQUIT SIGINT SIGHUP
 
-end_flag=0
-pid="$$"
-tmp_dir="$work_dir/$pid"
+end_bool=false
 file=''
 delim=''
 output_delim='\t'
@@ -35,12 +28,15 @@ max_order=0
 o_index=0
 top=''
 head_cmd="head -n"
-top_cmd='cat'
+top_cmd=''
+top_bool=false
 uniq_cmd='uniq'
-distinct_cmd='cat'
+distinct_cmd=''
+distinct_bool=false
 grep_cmd="grep -E -x"
 sort_cmd="sort"
-order_cmd='cat'
+order_cmd=''
+order_bool=false
 file_size=0
 header_size=0
 size=1
@@ -86,6 +82,7 @@ while true; do
 
         "-u"|"--unique"|"--distinct")
             distinct_cmd="$uniq_cmd"
+            distinct_bool=true
             shift
             ;;
 
@@ -93,6 +90,7 @@ while true; do
             if echo "$2" | grep -Ex "$arg_num_regex" > /dev/null; then
                 top="$2"
                 top_cmd="$head_cmd $top"
+                top_bool=true
                 shift
             fi
             shift
@@ -117,6 +115,7 @@ while true; do
         "-o"|"--order-by")
             while echo "$2" | grep -Ex "$arg_num_regex|$arg_name_regex|asc|desc" > /dev/null; do
                 order_cmd="$sort_cmd"
+                order_bool=true
                 if [ "$2" == "asc" ]; then
                     shift; break
                 elif [ "$2" == "desc" ]; then
@@ -146,7 +145,7 @@ while true; do
             echo "-o|--order-by: especificar ordenação dos resultados. Ex: '1' '2' '[nome_coluna3]' 'asc', '4' ' 5' 'desc', etc (opcional)"
             echo ""
             echo "OBS: Nas opções select, order-by e where, as colunas podem ser especificadas por número (1 2, etc) ou nome ([coluna1] [coluna2], etc)."
-            end_flag=1
+            end_bool=true
             break
             ;;
 
@@ -156,28 +155,25 @@ while true; do
 
         *)
             echo "'$1':Argumento inválido." 1>&2
-            end_flag=1
+            end_bool=true
             break
             ;;
 
     esac
 done
 
-if [ $end_flag -eq 1 ]; then
-    end 1
-elif [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}" ]; then
+$end_bool && end 1
+
+if [ ! -f "$file" ] || [ -z "$delim" ] || [ -z "${columns[0]}" ]; then
     echo "Erro. Argumentos insuficientes." 1>&2; end 1
-elif [ "$distinct_cmd" == "$uniq_cmd" ] && [ "$order_cmd" == 'cat' ]; then
+elif $distinct_bool && ! $order_bool; then
     echo "Erro. A opção '-u|--unique|--distinct' deve ser utilizada em conjunto com a opção '-o|--order-by'." 1>&2; end 1
 elif ! echo "$delim" | grep -Ex "[[:print:]]+" > /dev/null; then
     echo "Delimitador inválido." 1>&2; end 1
 fi
 
-mkdir -p $tmp_dir
-file_size=$(cat $file | wc -l)
-preview=$tmp_dir/raw_data
-
-tail -n $(($header_size-$file_size)) $file > $preview
+file_size=$(wc -l < $file)
+data=$(tail -n $(($header_size-$file_size)) $file)
 test $header_size -gt 0 && header="$(head -n $header_size $file | tail -n 1)" || header=$(head -n 1 $file)
 part_regex="(.*)$delim"
 
@@ -216,7 +212,7 @@ for index in $(seq 0 $(($s_index-1))) ; do
         test ${columns[$index]} -gt $max_column && max_column=${columns[$index]}
     elif echo ${columns[$index]} | grep -Ex "$arg_name_regex" &> /dev/null; then
         echo "Coluna de seleção inválida. O campo ${columns[$index]} não foi encontrado no cabeçalho."
-        end_flag=1
+        end_bool=true
     fi
 done
 
@@ -225,7 +221,7 @@ for index in $(seq 0 $(($f_index-1))) ; do
         test ${filter[$index]} -gt $max_filter && max_filter=${filter[$index]}
     else
         echo "Coluna de filtro inválida. O campo ${filter[$index]} não foi encontrado no cabeçalho."
-        end_flag=1
+        end_bool=true
     fi
 done
 
@@ -234,16 +230,16 @@ for index in $(seq 0 $(($o_index-1))) ; do
         test ${order[$index]} -gt $max_order && max_order=${order[$index]}
     else
         echo "Coluna de ordenação inválida. O campo ${order[$index]} não foi encontrado no cabeçalho."
-        end_flag=1
+        end_bool=true
     fi
 done
 
-test $end_flag -eq 1 && end 1
-test $max_column -gt $size && end_flag=1
-test $max_filter -gt $size && end_flag=1
-test $max_order -gt $size && end_flag=1
+$end_bool && end 1
+test $max_column -gt $size && end_bool=true
+test $max_filter -gt $size && end_bool=true
+test $max_order -gt $size && end_bool=true
 
-if [ $end_flag -eq 1 ]; then
+if $end_bool; then
     echo "Erro. O arquivo $file possui apenas $size campos. Favor indicar colunas entre 1 e $size." 1>&2; end 1
 fi
 
@@ -287,10 +283,10 @@ mv $last_preview $preview
 for index in $(seq 0 $(($f_index-1))) ; do
     last_preview=$preview
     preview="$tmp_dir/preview_filter_$(($index+1))"
-    ${filter_cmd[$index]} "${filter_regex[$index]}" $last_preview > $preview && rm -f $last_preview || end_flag=1
+    ${filter_cmd[$index]} "${filter_regex[$index]}" $last_preview > $preview && rm -f $last_preview || end_bool=true
 done
 
-test $end_flag -eq 1 && end 1
+$end_bool && end 1
 
 # Ordenação
 for index in $(seq 0 $(($o_index-1))) ; do
@@ -309,6 +305,11 @@ for index in $(seq 0 $(($s_index-1))) ; do
 done
 
 # Retorna colunas de (ordenação auxiliares + ) seleção do usuário, (ordena), (limpa colunas de ordenação auxiliares), (remove linhas duplicadas), (exibe n primeiras linhas), substitui delimitador
+
+
+
+
+
 awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $distinct_cmd | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
 
 end 0

@@ -56,7 +56,7 @@ if [ -n "$POST_STRING" ]; then
     changes=false
 
     if [ -n "$email" ]; then
-        valid "email" "<p><b>Email inválido.</b></p>"
+        valid "$email" "email" "<p><b>Email inválido.</b></p>" || end 1
         delete_email "$REMOTE_USER" || end 1
         add_email "$REMOTE_USER" "$email" || end 1
         changes=true
@@ -64,7 +64,7 @@ if [ -n "$POST_STRING" ]; then
 
     if [ -n "$password" ]; then
         test "$password" != "$assure_password" && echo "<p><b>Erro. Senhas não correspondentes.</b></p>" && end 1
-        valid "password" "<p><b>Senha inválida.</b></p>"
+        valid "$password" "password" "<p><b>Senha inválida.</b></p>" || end 1
         add_login "$REMOTE_USER" "$password" || end 1
         changes=true
     fi

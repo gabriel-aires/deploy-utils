@@ -79,11 +79,11 @@ function display_faq() {
     sed -i -r "s|^$faq_dir_tree/||" $tmp_dir/results
     sed -i -r "s|^([^;]*);([^;]*);([^;]*);([^;]*);$|<a_href=\"$start_page\?category=\1\&proceed=$proceed_search\">\1</a>;<a_href=\"$start_page\?category=\1\&question=\2\&proceed=$proceed_view\">\4</a>;\3;|" $tmp_dir/results
 
-    while grep -Ex "([^;]*;){2}(<a_href.*/a> )?$regex_faq_tag [^;]*;" $tmp_dir/results > /dev/null; do
-        sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag) ([^;]*;)$|\1<a_href=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a> \5|" $tmp_dir/results
+    while grep -Ex "([^;]*;){2}(<a_href.*/a> )?${regex[faq_tag]} [^;]*;" $tmp_dir/results > /dev/null; do
+        sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)(${regex[faq_tag]}) ([^;]*;)$|\1<a_href=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a> \5|" $tmp_dir/results
     done
 
-    sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)($regex_faq_tag);$|\1<a_href=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a>;|" $tmp_dir/results
+    sed -i -r "s|^(([^;]*;){2}(<a_href.*/a> )?)(${regex[faq_tag]});$|\1<a_href=\"$start_page\?tag=\4\&proceed=$proceed_search\">\4</a>;|" $tmp_dir/results
 
     while grep -E "<a_href=\"$start_page\?[^\"]*/[^\"]*\">" $tmp_dir/results > /dev/null; do
         sed -i -r "s|(<a_href=\"$start_page\?[^\"]*)/([^\"]*\">)|\1\%2F\2|" $tmp_dir/results
@@ -193,9 +193,9 @@ membership "$REMOTE_USER" | grep -Ex 'admin' > /dev/null && allow_edit=true
 echo "      <div class=\"column_small\" id=\"faq_sidebar\">"
 
 test -d "$faq_dir_tree" || end 1
-test -n "$regex_faq_category" || end 1
-test -n "$regex_faq_tag" || end 1
-test -n "$regex_faq_taglist" || end 1
+test -n "${regex[faq_category]}" || end 1
+test -n "${regex[faq_tag]}" || end 1
+test -n "${regex[faq_taglist]}" || end 1
 
 # listas de tópicos, categorias e tags
 touch $tmp_dir/questions.list
@@ -362,9 +362,9 @@ else
             question_txt="$(head -n 1 "$question_file")"
             question_dir="$(echo "$faq_dir_tree/$category" | sed -r "s|/+|/|g;s|/$||")"
 
-            test -n "$tag" && valid "tag" "regex_faq_taglist" "<p><b>Erro. Lista de tags inválida: '$tag'</b></p>"
-            valid "category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>"
-            valid "question_filetype" "regex_faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$question_filetype'</b></p>"
+            test -n "$tag" && valid "$tag" "faq_taglist" "<p><b>Erro. Lista de tags inválida: '$tag'</b></p>" || end 1
+            valid "$category" "faq_category" "<p><b>Erro. Categoria inválida: '$category'</b></p>" || end 1
+            valid "$question_filetype" "faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$question_filetype'</b></p>" || end 1
             chk_conflict "$question_filename" "$question_dir"
 
             mkdir -p "$question_dir"
@@ -401,7 +401,7 @@ else
             question_txt="$(head -n 1 "$question_file")"
             question_tag="$(tail -n 1 "$question_file")"
 
-            valid "update_filetype" "regex_faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$update_filetype'</b></p>"
+            valid "$update_filetype" "faq_filetype" "<p><b>Erro. Tipo de arquivo inválido: '$update_filetype'</b></p>" || end 1
 
             if [ "$update_txt" != "$question_txt" ]; then
                 echo "<p><b>Erro. O tópico '$update_txt' não corresponde ao original: '$question_txt'.</b></p>"
@@ -420,7 +420,7 @@ else
             test -f "$question_file" || end 1
             test -n "$category" || end 1
             test -n "$update_category" || end 1
-            valid "update_category" "regex_faq_category" "<p><b>Erro. Categoria inválida: '$update_category'</b></p>"
+            valid "$update_category" "faq_category" "<p><b>Erro. Categoria inválida: '$update_category'</b></p>" || end 1
             question_txt="$(head -n 1 "$question_file")"
             category="$(echo "$category" | sed -r "s|/+|/|g;s|/$||")"
             update_category="$(echo "$update_category" | sed -r "s|/+|/|g;s|/$||")"
@@ -428,7 +428,7 @@ else
 
             # Alterar tags
             if [ "$update_tag" != "$tag" ]; then
-                test -n "$update_tag" && valid "update_tag" "regex_faq_taglist" "<p><b>Erro. Lista de tags inválida: '$update_tag'</b></p>"
+                test -n "$update_tag" && valid "$update_tag" "faq_taglist" "<p><b>Erro. Lista de tags inválida: '$update_tag'</b></p>" || end 1
                 sed -i -r "\$s|^$tag$|$update_tag|" "$question_file"
                 echo "<p><b>Tags atualizadas para o tópico '$question_txt'.</b></p>"
                 question_updated=true

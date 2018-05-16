@@ -10,10 +10,9 @@ function get_path_id_regex() {
     local path_id=''
     path_id_regex=''
 
-    while [ "$i" -lt "$qtd_dir" ]; do
+    while [ "$i" -lt "${#dir[@]}" ]; do        
+        path_id_regex="${path_id_regex}|${dir[$i]}"
         ((i++))
-        path_id="$(eval "echo \$dir_$i")"
-        path_id_regex="${path_id_regex}|${path_id}"
     done
 
     path_id_regex="$(echo "$path_id_regex" | sed -r "s/^\|//")"
@@ -54,17 +53,17 @@ submit_save="Salvar"
 submit_erase="Remover"
 submit_erase_yes="Sim"
 submit_erase_no="Nao"
+qtd_dir="${#dir[@]}"
 
-valid "qtd_dir" "regex_qtd" "<p><b>Erro. Valor inválido para a quantidade de subníveis do diretório de upload.</b></p>"
-valid "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>"
-valid "agent_conf_dir" "<p><b>Erro. Caminho inválido para o diretório de configuração de agentes.</b></p>"
+valid "$upload_dir" "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>" || end 1
+valid "$agent_conf_dir" "agent_conf_dir" "<p><b>Erro. Caminho inválido para o diretório de configuração de agentes.</b></p>" || end 1
 test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p>" && end 1
 test ! -w "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" && end 1
 test ! -d "$agent_conf_dir" && "<p><b>Erro. Diretório de configuração de agentes inexistente.</b></p>" && end 1
 test ! -w "$agent_conf_dir" && "<p><b>Erro. Permissões insuficientes no diretório de configuração de agentes.</b></p>" && end 1
-test ! -n "$regex_bool" && "<p><b>Erro. A expressão regular 'regex_bool' não foi definida.</b></p>" && end 1
-test ! -n "$regex_ambiente" && "<p><b>Erro. A expressão regular 'regex_ambiente' não foi definida.</b></p>" && end 1
-test ! -n "$regex_agent_interval" && "<p><b>Erro. A expressão regular 'regex_agent_interval' não foi definida.</b></p>" && end 1
+test ! -n "${regex[bool]}" && "<p><b>Erro. A expressão regular 'regex_bool' não foi definida.</b></p>" && end 1
+test ! -n "${regex[ambiente]}" && "<p><b>Erro. A expressão regular 'regex_ambiente' não foi definida.</b></p>" && end 1
+test ! -n "${regex[agent_interval]}" && "<p><b>Erro. A expressão regular 'regex_agent_interval' não foi definida.</b></p>" && end 1
 
 if [ -z "$POST_STRING" ]; then
 
@@ -107,8 +106,8 @@ else
     if [ -n "$operation" ] && [ -n "$submit" ]; then
 
         if [ -n "$host" ]; then
-            valid "host" "<p><b>O hostname é inválido: '$host'.</b></p>"
-            lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>"
+            valid "$host" "host" "<p><b>O hostname é inválido: '$host'.</b></p>" || end 1
+            lock "edit_agent_$host" "<p><b>Host $host bloqueado para edição</b></p>" || end 1
             test "$operation" == "$operation_add" || test "$operation" == "$operation_erase" || echo "<p>Host: <b>$host</b></p>"
             running_tasks="$(find "$lock_dir"/ -maxdepth 1 -type f -name "run_agent_${host}_*" | wc -l)"
         fi
@@ -297,7 +296,7 @@ else
                                             test -n "$value" && field_disabled=true && field_attributes="$field_attributes disabled"
                                             echo "                      <$field_tag $field_attributes>"
                                             echo "                          <option value=\"\">selecionar...</option>"
-                                            mklist "$regex_ambiente" | while read option; do
+                                            mklist "${regex[ambiente]}" | while read option; do
                                                 test "$option" == "$value" && echo "                          <option selected>$value</option>" || echo "                      <option>$option</option>"
                                             done
                                             echo "                      </$field_tag>"
@@ -308,7 +307,7 @@ else
                                             field_tag="select"
                                             field_attributes="class=\"select_large\" name=\"$key\""
                                             echo "                      <$field_tag $field_attributes>"
-                                            mklist "$regex_bool" | while read option; do
+                                            mklist "${regex[bool]}" | while read option; do
                                                 test "$option" == "$value" && echo "                 <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
                                             echo "                      </$field_tag>"
@@ -319,7 +318,7 @@ else
                                             field_tag="select"
                                             field_attributes="class=\"select_large\" name=\"$key\""
                                             echo "                      <$field_tag $field_attributes>"
-                                            mklist "$regex_agent_interval" | while read option; do
+                                            mklist "${regex[agent_interval]}" | while read option; do
                                                 test "$option" == "$value" && echo "                   <option selected>$value</option>" || echo "               <option>$option</option>"
                                             done
                                             echo "                      </$field_tag>"
@@ -361,16 +360,18 @@ else
 
                     "$submit_save")
 
+                        error=false
                         test -f "$agent_conf_dir/$host/$agent_conf.conf" || cp "$src_dir/agents/template/$agent_template.template" "$agent_conf_dir/$host/$agent_conf.conf"
 
                         while read l; do
                             if echo "$l" | grep -Ev "^#" > /dev/null; then
                                 key="$(echo "$l" | cut -f1 -d '=')"
                                 new_value="$(echo "$arg_string" | sed -rn "s/^.*&$key=([^\&]*)&.*$/\1/p" | sed -r "s/'//g" | sed -r 's/"//g')"
-                                editconf "$key" "$new_value" "$agent_conf_dir/$host/$agent_conf.conf"
+                                editconf "$key" "$new_value" "$agent_conf_dir/$host/$agent_conf.conf" || { error=true ; break ; }
                             fi
                         done < "$agent_conf_dir/$host/$agent_conf.conf"
 
+                        $error && end 1
                         echo "      <p><b>Arquivo de configuração '$agent_conf.conf' atualizado.</b></p>"
                         ;;
 
@@ -512,7 +513,7 @@ else
                         test -n "$enable_deploy" || enable_deploy=false
 
                         mklist "$app" | while read app_name; do
-                            valid "app_name" "regex_app" "<p><b>Erro. Nome de aplicação inválido: $app_name.</b></p>" "continue" && dir_created=false || continue
+                            valid "$app_name" "app" "<p><b>Erro. Nome de aplicação inválido: $app_name.</b></p>" && dir_created=false || continue
                             $enable_log && mkdir -p "$upload_path/$app_name/log" && echo "<p>Diretório '$upload_path/$app_name/log' criado.</p>" && dir_created=true
                             $enable_deploy && mkdir -p "$upload_path/$app_name/deploy" && echo "<p>Diretório '$upload_path/$app_name/deploy' criado.</p>" && dir_created=true
                             $dir_created || echo "<p>Nenhum diretório adicionado para a aplicação '$app_name'.</p>"

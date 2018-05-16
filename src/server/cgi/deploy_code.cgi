@@ -48,12 +48,13 @@ function submit_deploy() {
                 while read l; do
                     key="$(echo "$l" | cut -f1 -d '=')"
                     value="$(echo "$l" | sed -rn "s/^[^\=]+=//p" | sed -r "s/'//g" | sed -r 's/"//g')"
+                    test -n "$key" || continue
                     if echo "$key" | grep -E "^#" > /dev/null; then
                         echo "                  <tr><td colspan=\"2\"><b>##$key</b></td></tr>"
                     else
                         show_param=true
-                        echo "$key" | grep -Ex ".*_($regex_ambiente)" > /dev/null  && show_param=false
-                        ! $show_param && echo "$key" | grep -Ex ".*_$env_name" > /dev/null && show_param=true
+                        echo "$key" | grep -Ex ".*\[.*\]" > /dev/null  && show_param=false
+                        ! $show_param && echo "$key" | grep -Ex ".*\[$env_name\]" > /dev/null && show_param=true
                         $show_param && echo "              <tr><td>$key:      </td><td>$value</td></tr>"
                     fi
                 done < "$app_conf_dir/$app_name.conf"
@@ -160,10 +161,9 @@ web_header
 
 # Inicializar variáveis e constantes
 test "$REQUEST_METHOD" == "POST" && test -n "$CONTENT_LENGTH" && read -n "$CONTENT_LENGTH" POST_STRING
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
-app_param="$(echo "$col_app" | sed -r 's/\[//;s/\]//')"
-rev_param="$(echo "$col_rev" | sed -r 's/\[//;s/\]//')"
-env_param="$(echo "$col_env" | sed -r 's/\[//;s/\]//')"
+app_param="$(echo "${col[app]}" | sed -r 's/\[//;s/\]//')"
+rev_param="$(echo "${col[rev]}" | sed -r 's/\[//;s/\]//')"
+env_param="$(echo "${col[env]}" | sed -r 's/\[//;s/\]//')"
 proceed_view="Continuar"
 proceed_simulation="Simular"
 proceed_deploy="Deploy"
@@ -185,7 +185,7 @@ if [ -z "$POST_STRING" ]; then
     echo "              <p>"
     echo "      		<select class=\"select_default\" name=\"$env_param\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
-    cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+    mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
     # Revisão...
@@ -224,13 +224,13 @@ else
 
     if [ -n "$app_name" ] && [ -n "$rev_name" ] && [ -n "$env_name" ] && [ -n "$proceed" ]; then
 
-        valid "enable_redeploy" "regex_bool" "Erro. Opção inválida."
-        valid "enable_deletion" "regex_bool" "Erro. Opção inválida."
-        valid "app_name" "regex_app" "Erro. Nome de aplicação inválido."
-        valid "rev_name" "regex_rev" "Erro. Nome de revisão inválido."
-        valid "env_name" "regex_ambiente" "Erro. Nome de ambiente inválido."
+        valid "$enable_redeploy" "bool" "Erro. Opção inválida." || end 1
+        valid "$enable_deletion" "bool" "Erro. Opção inválida." || end 1
+        valid "$app_name" "app" "Erro. Nome de aplicação inválido." || end 1
+        valid "$rev_name" "rev" "Erro. Nome de revisão inválido." || end 1
+        valid "$env_name" "ambiente" "Erro. Nome de ambiente inválido." || end 1
 
-        lock "pages_${app_name}_${env_name}" "<p><b>Há outro deploy da aplicação '$app_name' no ambiente '$env_name' em execução. Tente novamente.</b></p>"
+        lock "pages_${app_name}_${env_name}" "<p><b>Há outro deploy da aplicação '$app_name' no ambiente '$env_name' em execução. Tente novamente.</b></p>" || end 1
 
         if [ "$proceed" == "$proceed_view" ]; then
 
@@ -255,7 +255,7 @@ else
             sleep $cgi_timeout > "$deploy_queue" &
             sleep_pid=$!
             test -n "$REMOTE_USER" && user_name="$REMOTE_USER" || user_name="$(id --user --name)"
-            deploy_options="-u $user_name -f"
+            deploy_options="-u $user_name"
             if $enable_options; then
                 $enable_redeploy && deploy_options="${deploy_options} -r"
                 $enable_deletion && deploy_options="${deploy_options} -d"

@@ -77,7 +77,7 @@ while $outdated; do
 
     elif [ "$version_sequential" -lt "112" ]; then
         log "INFO" "Aplicando migrações para a versão 112..."
-
+        
         find $agent_conf_dir/ -type f -iname '*.conf' | while read config; do
             grep -E "^agent_name=[\"']?jboss_7_8_standalone[\"']?$" "$config" > /dev/null || continue
             touch "$config"
@@ -90,6 +90,21 @@ while $outdated; do
         done
 
         echo "112" > $version_file
+
+######################### 4.0
+
+    elif [ "$version_sequential" -lt "999" ]; then
+        log "INFO" "Aplicando migrações para a versão 999..."
+        
+        find $app_conf_dir/ -type f -iname '*.conf' | while read config; do
+            touch $config
+            sed -i.bak -r 's/^(auto|branch|revisao|hosts|share|modo)_([^=]+)=/\1\[\2\]=/' $config
+            reset_config.sh "$config" "$install_dir/template/app.template"
+            chown $apache_user:$apache_group $config
+            log "INFO" "Arquivo $config atualizado com sucesso."
+        done
+
+        echo "999" > $version_file        
 
 ######################## LATEST
 

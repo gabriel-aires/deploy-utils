@@ -25,17 +25,17 @@ web_header
 test -n "$QUERY_STRING" && content_loading
 
 # Inicializar variáveis e constantes
-col_day_name=$(echo "$col_day" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_month_name=$(echo "$col_month" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_year_name=$(echo "$col_year" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_time_name=$(echo "$col_time" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_user_name=$(echo "$col_user" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_app_name=$(echo "$col_app" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_rev_name=$(echo "$col_rev" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_env_name=$(echo "$col_env" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_host_name=$(echo "$col_host" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_obs_name=$(echo "$col_obs" | sed -r 's|(\[)||' | sed -r 's|(\])||')
-col_flag_name=$(echo "$col_flag" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_day_name=$(echo "${col[day]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_month_name=$(echo "${col[month]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_year_name=$(echo "${col[year]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_time_name=$(echo "${col[time]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_user_name=$(echo "${col[user]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_app_name=$(echo "${col[app]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_rev_name=$(echo "${col[rev]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_env_name=$(echo "${col[env]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_host_name=$(echo "${col[host]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_obs_name=$(echo "${col[obs]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
+col_flag_name=$(echo "${col[flag]}" | sed -r 's|(\[)||' | sed -r 's|(\])||')
 SELECT=''
 DISTINCT=''
 WHERE=''

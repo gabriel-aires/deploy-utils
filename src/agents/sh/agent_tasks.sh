@@ -2,9 +2,8 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 lock_history=false
-interactive=false
 execution_mode="agent"
-verbosity="quiet"
+message_format='detailed'
 running=0
 pid="$$"
 
@@ -26,8 +25,8 @@ function async_agent() {
 
     local agent_task="$1"
     local agent_conf="$2"
-    local agent_name="$(grep -Ex "agent_name=[\"']?$regex_agent_name[\"']?" "$agent_conf" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')"
-    local agent_wait="$(grep -Ex "${agent_task}_interval=[\"']?$regex_qtd[\"']?" "$agent_conf" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')"
+    local agent_name="$(grep -Ex "agent_name=[\"']?${regex[agent_name]}[\"']?" "$agent_conf" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')"
+    local agent_wait="$(grep -Ex "${agent_task}_interval=[\"']?${regex[qtd]}[\"']?" "$agent_conf" | cut -d '=' -f2 | sed -r "s/'//g" | sed -r 's/"//g')"
 
     test -n "$agent_name" || return 1
     test -n "$agent_wait" || return 1
@@ -88,23 +87,23 @@ trap "end 1" SIGQUIT SIGTERM SIGINT SIGHUP
 
 # Verifica o arquivo global.conf e carrega configurações
 global_conf="${install_dir}/conf/global.conf"
-test -f "$global_conf" || exit 1
-chk_template "$global_conf"
-source "$global_conf" || exit 1
+chk_template "$global_conf" "global" && source "$global_conf" || exit 1
+tmp_dir="$work_dir/$pid"
 
 # Validações
-tmp_dir="$work_dir/$pid"
-valid 'tmp_dir' "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários"
-valid "remote_conf_dir" "regex_remote_dir" "Diretório de configuração de agentes inválido"
-valid "remote_lock_dir" "regex_remote_dir" "Diretório de lockfiles remoto inválido"
-valid 'log_dir' "'$log_dir': Caminho inválido para o diretório de armazenamento de logs"
-valid 'lock_dir' "'$lock_dir': Caminho inválido para o diretório de lockfiles"
-valid "max_running" "regex_qtd" "Valor inválido para a quantidade máxima de tarefas simultâneas"
-valid "agent_timeout" "regex_qtd" "Valor inválido para o timeout de tarefas global"
-valid "service_log_size" "regex_qtd" "Valor inválido para o tamanho máximo do log do agente"
+error=false
+valid "$tmp_dir" "tmp_dir" "'$tmp_dir': Caminho inválido para armazenamento de diretórios temporários" || error=true
+valid "$remote_conf_dir" "remote_dir" "Diretório de configuração de agentes inválido" || error=true
+valid "$remote_lock_dir" "remote_dir" "Diretório de lockfiles remoto inválido" || error=true
+valid "$log_dir" "log_dir" "'$log_dir': Caminho inválido para o diretório de armazenamento de logs" || error=true
+valid "$lock_dir" "lock_dir" "'$lock_dir': Caminho inválido para o diretório de lockfiles" || error=true
+valid "$max_running" "qtd" "Valor inválido para a quantidade máxima de tarefas simultâneas" || error=true
+valid "$agent_timeout" "qtd" "Valor inválido para o timeout de tarefas global" || error=true
+valid "$service_log_size" "qtd" "Valor inválido para o tamanho máximo do log do agente" || error=true
+$error && end 1
 
 mkdir -p "$tmp_dir" "$remote_conf_dir" "$remote_lock_dir" "$log_dir" "$lock_dir" || end 1
-lock 'agent_tasks' "A rotina já está em execução."
+lock 'agent_tasks' "A rotina já está em execução." || end 1
 log="$log_dir/service.log" && touch "$log"
 host="$(echo $HOSTNAME | cut -d '.' -f1)"
 

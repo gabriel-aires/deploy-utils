@@ -25,9 +25,7 @@ mkdir $tmp_dir
 web_header
 
 # Inicializar variáveis e constantes
-mklist "$ambientes" "$tmp_dir/lista_ambientes"
-
-valid "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>"
+valid "$upload_dir" "upload_dir" "<p><b>Erro. Caminho inválido para o diretório de upload.</b></p>" || end 1
 test ! -d "$upload_dir" && "<p><b>Erro. Diretório de upload inexistente.</b></p>" && end 1
 test ! -x "$upload_dir" && "<p><b>Erro. Permissões insuficientes no diretório de upload.</b></p>" && end 1
 
@@ -47,7 +45,7 @@ if [ -z "$QUERY_STRING" ]; then
     echo "              <p>"
     echo "      		<select class=\"select_default\" name=\"env\">"
     echo "		        	<option value=\"\" selected>Ambiente...</option>"
-    cat $tmp_dir/lista_ambientes | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
+    mklist "$ambientes" | sort | sed -r "s|(.*)|\t\t\t\t\t<option>\1</option>|"
     echo "		        </select>"
     echo "              </p>"
     # Submit
@@ -67,8 +65,8 @@ else
 
     if [ -n "$app" ] && [ -n "$env" ]; then
 
-        valid "app" "Erro. Nome de aplicação inválido."
-        valid "env" "regex_ambiente" "Erro. Nome de ambiente inválido."
+        valid "$app" "app" "Erro. Nome de aplicação inválido." || end 1
+        valid "$env" "ambiente" "Erro. Nome de ambiente inválido." || end 1
 
         if [ -z "$deploy_id" ]; then
 
@@ -82,7 +80,7 @@ else
 
         else
 
-            valid "deploy_id" "Erro. 'Deploy ID' inválido."
+            valid "$deploy_id" "deploy_id" "Erro. 'Deploy ID' inválido." || end 1
             test ! -d "$app_history_dir_tree/$env/$app/$deploy_id/" && echo "Diretório de log não encontrado." && end 0
 
             echo "          <p>Sistema: $app</p>"
