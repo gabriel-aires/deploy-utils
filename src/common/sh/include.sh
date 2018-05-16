@@ -31,7 +31,7 @@ if ! "$INCLUDE"; then
     declare -A branch
     declare -A revisao
     declare -A hosts
-    declare -A share
+    declare -A deploy_path
     declare -A modo
 
     # carrega funções comuns e define PATH
