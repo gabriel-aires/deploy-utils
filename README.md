@@ -1,14 +1,14 @@
-# deploy-utils
+# BashTable (formerly known as deploy-utils)
 
-## Descrição:
+## Description:
 
-Sistema para automatização e rastreabilidade do processo de implantação de releases.
+Platform for app deployment automation and information retrieval written in shell script.
 
-## Dependências:
+## Dependencies:
 
-O sistema foi testado na distribuição Red Hat Enterprise Linux Server 6.7 com os pacotes abaixo:
+These are the system requirements for the RHEL/CentOS 6 distribution:
 
-**Pacote**|**Versão**
+**Package**|**Version**
 ----------|----------
 bash      |     4.1.2
 dos2unix  |       3.1
@@ -25,25 +25,25 @@ sed       |     4.2.1
 perl      |    5.10.1
 httpd     |    2.2.15
 
-## Instalação do Servidor:
+## Server Setup:
 
-A última versão estável do sistema pode ser obtida a partir do git. Para a primeira instalação, executar os comandos abaixo como administrador:
+Run the following commands as root for the initial setup:
 
-### Atualização de pacotes
+### System Update
 ```
 yum update bash dos2unix unix2dos coreutils findutils cifs-utils nfs-utils samba git rsync grep sed perl httpd -y
 ```
 
-### Instalação do servidor de deploy
+### Deployment Server Installation
 ```
 cd /opt
-git clone git@git.anatel.gov.br:producao/deploy-utils.git
-/opt/deploy-utils/src/server/sh/setup.sh --reconfigure
+git clone https://github.com/gabriel-aires/BashTable.git
+/opt/BashTable/src/server/sh/setup.sh --reconfigure
 chkconfig --add deploy_server
 chkconfig deploy_server on
 ```
 
-### Configuração HTTPS (opcional)
+### SSL/TLS Configuration (optional)
 ```
 service deploy_server stop
 yum install mod_ssl openssl
@@ -53,56 +53,56 @@ openssl x509 -req -days 365 -in ca.csr -signkey ca.key -out ca.crt
 cp ca.crt /etc/pki/tls/certs
 cp ca.key /etc/pki/tls/private/ca.key
 cp ca.csr /etc/pki/tls/private/ca.csr
-vim /opt/deploy-utils/src/server/conf/global.conf  # alterar as variáveis ssl_enable, ssl_crt_path, ssl_key_path e apache_vhost_port
-/opt/deploy-utils/src/server/sh/setup.sh
+vim /opt/BashTable/src/server/conf/global.conf  #update parameters ssl_enable, ssl_crt_path, ssl_key_path and apache_vhost_port
+/opt/BashTable/src/server/sh/setup.sh
 ```
 
-### Compartilhamento de diretórios utilizados pelos agentes
+### Shared Directories Setup
 ```
 service nfs stop
 chkconfig nfs on
-echo /opt/deploy-utils/src/server/conf/agents >> /etc/exports
-echo /var/lock/deploy-utils >> /etc/exports
-echo /opt/deploy-utils/src/server/log/ >> /etc/exports
-echo /opt/deploy-utils/src/server/upload/ >> /etc/exports
-vim /etc/exports # editar cada entrada conforme o exemplo a seguir: /var/lock/deploy-utils máquina01(rw,no_root_squash) máquina02(rw,no_root_squash) ...
+echo /opt/BashTable/src/server/conf/agents >> /etc/exports
+echo /var/lock/BashTable >> /etc/exports
+echo /opt/BashTable/src/server/log/ >> /etc/exports
+echo /opt/BashTable/src/server/upload/ >> /etc/exports
+vim /etc/exports # edit entries as following: /var/lock/BashTable $host01(rw,no_root_squash) $host02(rw,no_root_squash) ...
 service nfs restart
 ```
 
-## Instalação do Agente:
+## Agents Setup:
 
-O procedimento deve ser executado em todos os hosts para os quais se deseja habilitar o deploy de pacotes e o acesso a logs através do servidor de deploy:
+The following steps must be applied to all the machines where automated log retrieval and package deployment are desired:
 
-### Atualização de pacotes
+### System Update
 ```
 yum update bash dos2unix unix2dos coreutils findutils cifs-utils nfs-utils samba git rsync grep sed perl -y
 ```
 
-### Montagem de diretórios compartilhados no servidor de deploy
+### Mount NFS Shares (previously exported from the deployment server)
 ```
 cd /mnt
 mkdir deploy_upload deploy_lock deploy_log deploy_conf
-mount -t nfs servidor_deploy:/opt/deploy-utils/src/server/conf/agents deploy_conf
-mount -t nfs servidor_deploy:/opt/deploy-utils/src/server/log deploy_log
-mount -t nfs servidor_deploy:/opt/deploy-utils/src/server/upload deploy_upload
-mount -t nfs servidor_deploy:/var/lock/deploy-utils deploy_lock
+mount -t nfs $deployment_server:/opt/BashTable/src/server/conf/agents deploy_conf
+mount -t nfs $deployment_server:/opt/BashTable/src/server/log deploy_log
+mount -t nfs $deployment_server:/opt/BashTable/src/server/upload deploy_upload
+mount -t nfs $deployment_server:/var/lock/BashTable deploy_lock
 ```
 
-### Instalação do agente de deploy
+### Agent Installation
 ```
 cd /opt
-git clone git@git.anatel.gov.br:producao/deploy-utils.git
-/opt/deploy-utils/src/agents/sh/setup.sh --reconfigure
+git clone https://github.com/gabriel-aires/BashTable.git
+/opt/BashTable/src/agents/sh/setup.sh --reconfigure
 chkconfig --add deploy_agent
 chkconfig deploy_agent on
 ```
 
-### OBSERVAÇÃO
+### Observation
 
-O presente sistema está sendo evoluído através do projeto https://github.com/gabriel-aires/odin, criado a partir da branch tcl_rewrite (deletada em 16/05/2018). Os projetos serão mantidos separadamente.
+This system is being reworked under the following project https://github.com/gabriel-aires/odin, originally intended to be a complete TCL rewrite of BashTables. Both platforms shall be independently maintained for the foreseeable future.
 
-## Autor:
+## Author:
 
 Gabriel Aires Guedes - airesgabriel@gmail.com
 
-Atualizado pela última vez em 16/05/2018.
+Last updated at 2018-05-16.
