@@ -1,6 +1,5 @@
 #!/bin/bash
 task="$1"                           #deploy, log
-forbidden_chars='[[:blank:];&`<>]'  #forbidden_user_input
 
 function config_deployment_defaults () {
     state="r"                                   #r (read), w (write), x (execute)
@@ -20,66 +19,6 @@ function config_deployment_defaults () {
     timeout_after="${timeout_after:=300}"    
 }
 
-function join_path () {
-    echo "$@" | sed -r 's%[[:blank:]]%%g;s%/+%/%g;s%/$%%'
-}
-
-function option () {
-    [ -n "$1" ] && return 0 || return 1
-}
-
-function chk_arg () {
-    [[ ! "$1" =~ $forbidden_chars ]] && return 0 || return 1
-}
-
-function chk_num () {
-    chk_arg "$1" && [ "$1" -gt 0 ] 2> /dev/null && return 0 || return 1
-}
-
-function chk_bool () {
-    [[ "$1" =~ ^(true|false)$ ]] && return 0 || return 1
-}
-
-function chk_path () {
-    chk_arg "$1" && [ -d "$1" ] && return 0 || return 1
-}
-
-function chk_exec () {
-    chk_arg "$1" && [ -x "$1" ] && return 0 || return 1
-}
-
-function starts_with () [
-    chk_arg "$2" && [[ "$1" =~ ^$2 ]] && return 0 || return 1
-]
-
-function ends_with () [
-    chk_arg "$2" && [[ "$1" =~ $2$ ]] && return 0 || return 1
-]
-
-function contains () [
-    chk_arg "$2" && [[ "$1" =~ $2 ]] && return 0 || return 1
-]
-
-function assert () {
-    #test_message="$1", param="$2", value="$3"
-    [ "$2" == "$3" ] && return 0 || return 1
-}
-
-function set_state () {
-    [[ "$1" =~ ^(r|w|x)$ ]] && state="$1" && return 0 || return 1    
-}
-
-function try_catch () {
-    #try
-    last_command="$1"
-    log "DEBUG" "Executando $last_command..."
-    $1 2>&1 && return 0
-    #catch
-    obs="Falha ao executar: $last_command. Encerrando..."
-    $simulation || write_history "$obs" "0"
-    log "ERRO" "$obs" && finalize 1
-}
-
 function config_simulation () {
     [[ $rev ~ !$ ]] && simulation=true && extra_opts="$extra_opts --dry-run" 
 }
@@ -90,11 +29,11 @@ function config_rollback () {
 
 function prepare_checkout () {
     if $update; then
-        try_catch "mkdir -p '$tmp_dir/$app'"
-        try_catch "unzip '$pkg' -d '$tmp_dir/$app/'"
+        try_catch "mkdir -p '$tmp_dir/$app'" || finalize 1
+        try_catch "unzip '$pkg' -d '$tmp_dir/$app/'" || finalize 1
         src_path="$(join_path $tmp_dir / $app / $app_root)"
         dir_test="$(chk_path $src_path && echo found || echo not_found)" 
-        try_catch "assert 'app_root $src_path' $dir_test found"
+        try_catch "assert 'app_root $src_path' $dir_test found" || finalize 1
     else
         #file $app-rollback.md
         log "INFO" "Descrição do rollback:"
@@ -112,8 +51,8 @@ function prepare_filters () {
         cat "$rollback_filter" > "$filter"
 
     elif [ -f "$src_path/.gitignore" ]; then
-        try_catch "dos2unix -n $src_path/.gitignore $filter"
-        try_catch "sed -r -i /^$|^[[:blank:]]|^#/d $filter"
+        try_catch "dos2unix -n $src_path/.gitignore $filter" || finalize 1
+        try_catch "sed -r -i /^$|^[[:blank:]]|^#/d $filter" || finalize 1
 
         if [ "$app_root" != "/" ]; then
             pattern=$(echo "$app_root" | sed -r "s|^/||;s|/$||")
@@ -124,7 +63,7 @@ function prepare_filters () {
         sed -i -r "s|^([^+])|- \1|" $filter #excludes
     fi
 
-    try_catch "cp $filter $deploy_log_dir/"                                        
+    try_catch "cp $filter $deploy_log_dir/" || finalize 1
     rsync_opts="$rsync_opts --filter='. $filter'"
 
     return 0
@@ -133,18 +72,18 @@ function prepare_filters () {
 function prepare_backup () {
 
     if $update; then
-        try_catch "rm -Rf $bkp_path"
-        try_catch "mkdir -p $bkp_path"
-        try_catch "rsync $rsync_bkp_opts $rsync_opts $install_path/ $bkp_path/"
+        try_catch "rm -Rf $bkp_path" || finalize 1
+        try_catch "mkdir -p $bkp_path" || finalize 1
+        try_catch "rsync $rsync_bkp_opts $rsync_opts $install_path/ $bkp_path/" || finalize 1
 
         #### backup deploy-filter ###
-        try_catch "cp $filter $rollback_filter"
+        try_catch "cp $filter $rollback_filter" || finalize 1
     fi
 }
 
 function sync_files () {
 
-    try_catch "$wait $timeout_deploy rsync $rsync_opts $extra_opts --log-file=$rsync_log $src_path/ $install_path/"
+    try_catch "$wait $timeout_deploy rsync $rsync_opts $extra_opts --log-file=$rsync_log $src_path/ $install_path/" || finalize 1
     set_state 'r'
 
     added="$(grep -E "^>f\+" $rsync_log | wc -l)"
@@ -179,7 +118,7 @@ function set_owner () {
     if option "$own_cmd"; then
         log "INFO" "Atribuindo usuário/grupo..."
         set_state 'x'
-        try_catch "$own_cmd -R $own_args $install_path"
+        try_catch "$own_cmd -R $own_args $install_path" || finalize 1
         set_state 'r'
     fi
 }
@@ -187,8 +126,8 @@ function set_owner () {
 function run_script () {
     log "INFO" "Verificando script de ${1}install..."
     case "$1" in
-        'pre') option "$script_before" && set_state 'x' && try_catch "$wait $timeout_before $script_before" && set_state 'r';;
-        'post') option "$script_after" && set_state 'x' && try_catch "$wait $timeout_after $script_after" && set_state 'r';;
+        'pre') option "$script_before" && set_state 'x' && { try_catch "$wait $timeout_before $script_before" || finalize 1 ; } && set_state 'r';;
+        'post') option "$script_after" && set_state 'x' && { try_catch "$wait $timeout_after $script_after" || finalize 1 ; } && set_state 'r';;
         *) return 1;;
     esac
 }
@@ -224,18 +163,18 @@ function deploy_pkg () {
 
     #configure
     log "INFO" "Validando configurações..."
-    try_catch "chk_path '$install_path'"
-    try_catch "chk_path '$bkp_path'"
-    try_catch "starts_with '$app_root' /"
-    option "$timeout_before" && try_catch "chk_num '$timeout_before'"
-    option "$timeout_deploy" && try_catch "chk_num '$timeout_deploy'"
-    option "$timeout_after" && try_catch "chk_num '$timeout_after'"
-    option "$script_before" && try_catch "chk_exec '$script_before'"    
-    option "$script_after" && try_catch "chk_exec '$script_after'"    
-    option "$rsync_opts" && try_catch "starts_with '$rsync_opts' -"
-    option "$enable_deletion" && try_catch "chk_bool '$rsync_deletion'"
-    option "$force_uid" && try_catch "chk_arg '$force_uid'"
-    option "$force_gid" && try_catch "chk_arg '$force_gid'"
+    try_catch "chk_path '$install_path'" || finalize 1
+    try_catch "chk_path '$bkp_path'" || finalize 1
+    try_catch "starts_with '$app_root' /" || finalize 1
+    option "$timeout_before" && { try_catch "chk_num '$timeout_before'" || finalize 1 ; }
+    option "$timeout_deploy" && { try_catch "chk_num '$timeout_deploy'" || finalize 1 ; }
+    option "$timeout_after" && { try_catch "chk_num '$timeout_after'" || finalize 1 ; }
+    option "$script_before" && { try_catch "chk_exec '$script_before'" || finalize 1 ; }
+    option "$script_after" && { try_catch "chk_exec '$script_after'"  || finalize 1 ; }
+    option "$rsync_opts" && { try_catch "starts_with '$rsync_opts' -" || finalize 1 ; }
+    option "$enable_deletion" && { try_catch "chk_bool '$rsync_deletion'" || finalize 1 ; }
+    option "$force_uid" && { try_catch "chk_arg '$force_uid'" || finalize 1 ; }
+    option "$force_gid" && { try_catch "chk_arg '$force_gid'" || finalize 1 ; }
     config_deployment_defaults
     config_simulation
     config_rollback
@@ -262,16 +201,6 @@ function deploy_pkg () {
 
     finalize 0
 }
-
-export -f join_path
-export -f option
-export -f chk_arg
-export -f chk_num
-export -f chk_path
-export -f chk_bool
-export -f chk_exec
-export -f contains
-export -f assert
 
 case "$task" in
     log) copy_log;;
