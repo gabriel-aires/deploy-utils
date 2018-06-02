@@ -4,7 +4,8 @@ task="$1"                           #deploy, log
 function config_deployment_defaults () {
     state="r"                                   #r (read), w (write), x (execute)
     simulation=false                    
-    update=true                         
+    update=true
+    bkp_path="$bkp_dir/$ambiente/$app"                         
     enable_deletion="${rsync_deletion:=false}"
     force_uid="${force_uid:=''}"
     force_gid="${force_gid:=''}"
@@ -164,7 +165,6 @@ function deploy_pkg () {
     #configure
     log "INFO" "Validando configurações..."
     try_catch "chk_path $install_path" || finalize 1
-    try_catch "chk_path $bkp_path" || finalize 1
     try_catch "starts_with $app_root /" || finalize 1
     option "$timeout_before" && { try_catch "chk_num $timeout_before" || finalize 1 ; }
     option "$timeout_deploy" && { try_catch "chk_num $timeout_deploy" || finalize 1 ; }
