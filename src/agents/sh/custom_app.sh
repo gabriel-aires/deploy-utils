@@ -6,7 +6,7 @@ function config_deployment_defaults () {
     simulation=false                    
     update=true
     bkp_path="$bkp_dir/$ambiente/$app"                         
-    enable_deletion="${rsync_deletion:=false}"
+    enable_deletion="${enable_deletion:=false}"
     force_uid="${force_uid:=''}"
     force_gid="${force_gid:=''}"
     rsync_opts="${rsync_opts:='--recursive --checksum --inplace --safe-links --exclude=.git/***'}"
@@ -172,7 +172,7 @@ function deploy_pkg () {
     option "$script_before" && { try_catch "chk_exec $script_before" || finalize 1 ; }
     option "$script_after" && { try_catch "chk_exec $script_after"  || finalize 1 ; }
     option "$rsync_opts" && { try_catch "starts_with $rsync_opts -" || finalize 1 ; }
-    option "$enable_deletion" && { try_catch "chk_bool $rsync_deletion" || finalize 1 ; }
+    option "$enable_deletion" && { try_catch "chk_bool $enable_deletion" || finalize 1 ; }
     option "$force_uid" && { try_catch "chk_arg $force_uid" || finalize 1 ; }
     option "$force_gid" && { try_catch "chk_arg $force_gid" || finalize 1 ; }
     config_deployment_defaults
