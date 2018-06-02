@@ -36,8 +36,9 @@ source "$global_conf" || end 1
 
 error=false
 valid "work_dir" "regex_tmp_dir" "\nErro. Diretório 'work' informado incorretamente." "continue" || error=true
-valid "log_dir" "\nErro. Diretório de lockfiles informado incorretamente." "continue" || error=true
+valid "log_dir" "\nErro. Diretório de logs informado incorretamente." "continue" || error=true
 valid "lock_dir" "\nErro. Diretório de lockfiles informado incorretamente." "continue" || error=true
+valid "bkp_dir" "\nErro. Diretório de backup informado incorretamente." "continue" || error=true
 valid "remote_pkg_dir_tree" "regex_remote_dir" "\nErro. Repositório de pacotes remoto informado incorretamente." "continue" || error=true
 valid "remote_log_dir_tree" "regex_remote_dir" "\nErro. Repositório de logs remoto informado incorretamente." "continue" || error=true
 valid "remote_lock_dir" "regex_remote_dir" "\nErro. Diretório de lockfiles remoto informado incorretamente." "continue" || error=true
@@ -65,6 +66,7 @@ mkdir -p "$common_log_dir" || end 1
 mkdir -p "$work_dir" || end 1
 mkdir -p "$log_dir" || end 1
 mkdir -p "$lock_dir" || end 1
+mkdir -p "$bkp_dir" || end 1
 mkdir -p "$remote_pkg_dir_tree" || end 1
 mkdir -p "$remote_log_dir_tree" || end 1
 mkdir -p "$remote_lock_dir" || end 1
@@ -80,6 +82,7 @@ chmod 755 "$service_init_script" || end 1
 chmod 775 "$work_dir" || end 1
 chmod 775 "$log_dir" || end 1
 chmod 775 "$lock_dir" || end 1
+chmod 775 "$bkp_dir" || end 1
 chmod 770 "$remote_pkg_dir_tree" || end 1
 chmod 770 "$remote_log_dir_tree" || end 1
 chmod 770 "$remote_lock_dir" || end 1
