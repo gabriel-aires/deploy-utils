@@ -20,7 +20,7 @@ function config_deployment_defaults () {
 }
 
 function config_simulation () {
-    [[ $rev ~ !$ ]] && simulation=true && extra_opts="$extra_opts --dry-run" 
+    [[ $rev =~ !$ ]] && simulation=true && extra_opts="$extra_opts --dry-run" 
 }
 
 function config_rollback () {
@@ -52,7 +52,7 @@ function prepare_filters () {
 
     elif [ -f "$src_path/.gitignore" ]; then
         try_catch "dos2unix -n $src_path/.gitignore $filter" || finalize 1
-        try_catch "sed -r -i /^$|^[[:blank:]]|^#/d $filter" || finalize 1
+        try_catch "sed -r -i '/^$|^[[:blank:]]|^#/d' $filter" || finalize 1
 
         if [ "$app_root" != "/" ]; then
             pattern=$(echo "$app_root" | sed -r "s|^/||;s|/$||")
