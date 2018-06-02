@@ -47,17 +47,17 @@ function chk_exec () {
     chk_arg "$1" && [ -x "$1" ] && return 0 || return 1
 }
 
-function starts_with () [
+function starts_with () {
     chk_arg "$2" && [[ "$1" =~ ^$2 ]] && return 0 || return 1
-]
+}
 
-function ends_with () [
+function ends_with () {
     chk_arg "$2" && [[ "$1" =~ $2$ ]] && return 0 || return 1
-]
+}
 
-function contains () [
+function contains () {
     chk_arg "$2" && [[ "$1" =~ $2 ]] && return 0 || return 1
-]
+}
 
 function assert () {
     #test_message="$1", param="$2", value="$3"
