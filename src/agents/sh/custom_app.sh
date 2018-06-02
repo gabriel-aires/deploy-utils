@@ -29,8 +29,8 @@ function config_rollback () {
 
 function prepare_checkout () {
     if $update; then
-        try_catch "mkdir -p '$tmp_dir/$app'" || finalize 1
-        try_catch "unzip '$pkg' -d '$tmp_dir/$app/'" || finalize 1
+        try_catch "mkdir -p $tmp_dir/$app" || finalize 1
+        try_catch "unzip $pkg -d $tmp_dir/$app/" || finalize 1
         src_path="$(join_path $tmp_dir / $app / $app_root)"
         dir_test="$(chk_path $src_path && echo found || echo not_found)" 
         try_catch "assert 'app_root $src_path' $dir_test found" || finalize 1
@@ -52,7 +52,7 @@ function prepare_filters () {
 
     elif [ -f "$src_path/.gitignore" ]; then
         try_catch "dos2unix -n $src_path/.gitignore $filter" || finalize 1
-        try_catch "sed -r -i '/^$|^[[:blank:]]|^#/d' $filter" || finalize 1
+        try_catch "sed -r -i /^$|^[[:blank:]]|^#/d $filter" || finalize 1
 
         if [ "$app_root" != "/" ]; then
             pattern=$(echo "$app_root" | sed -r "s|^/||;s|/$||")
@@ -163,18 +163,18 @@ function deploy_pkg () {
 
     #configure
     log "INFO" "Validando configurações..."
-    try_catch "chk_path '$install_path'" || finalize 1
-    try_catch "chk_path '$bkp_path'" || finalize 1
-    try_catch "starts_with '$app_root' /" || finalize 1
-    option "$timeout_before" && { try_catch "chk_num '$timeout_before'" || finalize 1 ; }
-    option "$timeout_deploy" && { try_catch "chk_num '$timeout_deploy'" || finalize 1 ; }
-    option "$timeout_after" && { try_catch "chk_num '$timeout_after'" || finalize 1 ; }
-    option "$script_before" && { try_catch "chk_exec '$script_before'" || finalize 1 ; }
-    option "$script_after" && { try_catch "chk_exec '$script_after'"  || finalize 1 ; }
-    option "$rsync_opts" && { try_catch "starts_with '$rsync_opts' -" || finalize 1 ; }
-    option "$enable_deletion" && { try_catch "chk_bool '$rsync_deletion'" || finalize 1 ; }
-    option "$force_uid" && { try_catch "chk_arg '$force_uid'" || finalize 1 ; }
-    option "$force_gid" && { try_catch "chk_arg '$force_gid'" || finalize 1 ; }
+    try_catch "chk_path $install_path" || finalize 1
+    try_catch "chk_path $bkp_path" || finalize 1
+    try_catch "starts_with $app_root /" || finalize 1
+    option "$timeout_before" && { try_catch "chk_num $timeout_before" || finalize 1 ; }
+    option "$timeout_deploy" && { try_catch "chk_num $timeout_deploy" || finalize 1 ; }
+    option "$timeout_after" && { try_catch "chk_num $timeout_after" || finalize 1 ; }
+    option "$script_before" && { try_catch "chk_exec $script_before" || finalize 1 ; }
+    option "$script_after" && { try_catch "chk_exec $script_after"  || finalize 1 ; }
+    option "$rsync_opts" && { try_catch "starts_with $rsync_opts -" || finalize 1 ; }
+    option "$enable_deletion" && { try_catch "chk_bool $rsync_deletion" || finalize 1 ; }
+    option "$force_uid" && { try_catch "chk_arg $force_uid" || finalize 1 ; }
+    option "$force_gid" && { try_catch "chk_arg $force_gid" || finalize 1 ; }
     config_deployment_defaults
     config_simulation
     config_rollback
