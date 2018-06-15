@@ -2,7 +2,117 @@
 
 # Define funções comuns.
 
+function join_path () {
+    echo "$@" | sed -r 's%[[:blank:]]%%g;s%/+%/%g;s%/$%%'
+}
+
+function option () {
+    [ -n "$1" ] && return 0 || return 1
+}
+
+function chk_arg () {
+    local forbidden_chars='[[:blank:];&`<>]'  #forbidden_user_input
+    [[ ! "$1" =~ $forbidden_chars ]] && return 0 || return 1
+}
+
+function chk_num () {
+    chk_arg "$1" && [ "$1" -gt 0 ] 2> /dev/null && return 0 || return 1
+}
+
+function chk_bool () {
+    [[ "$1" =~ ^(true|false)$ ]] && return 0 || return 1
+}
+
+function chk_path () {
+    chk_arg "$1" && [ -d "$1" ] && return 0 || return 1
+}
+
+function chk_pipe () {
+    chk_arg "$1" && [ -p "$1" ] && return 0 || return 1
+}
+
+function chk_file () {
+    chk_arg "$1" && [ -f "$1" ] && return 0 || return 1
+}
+
+function chk_read () {
+    chk_arg "$1" && [ -r "$1" ] && return 0 || return 1
+}
+
+function chk_write () {
+    chk_arg "$1" && [ -w "$1" ] && return 0 || return 1
+}
+
+function chk_exec () {
+    chk_arg "$1" && [ -x "$1" ] && return 0 || return 1
+}
+
+function starts_with () {
+    chk_arg "$2" && [[ "$1" =~ ^$2 ]] && return 0 || return 1
+}
+
+function ends_with () {
+    chk_arg "$2" && [[ "$1" =~ $2$ ]] && return 0 || return 1
+}
+
+function contains () {
+    chk_arg "$2" && [[ "$1" =~ $2 ]] && return 0 || return 1
+}
+
+function assert () {
+    #test_message="$1", param="$2", value="$3"
+    [ "$2" == "$3" ] && return 0 || return 1
+}
+
+function set_state () {
+    [[ "$1" =~ ^(r|w|x)$ ]] && state="$1" && return 0 || return 1    
+}
+
+function try_catch () {
+    #try
+    last_command="$1"
+    log "DEBUG" "Executando $last_command..."
+    $1 2>&1 && return 0
+    #catch
+    obs="Falha ao executar: $last_command."
+    $simulation || write_history "$obs" "0"
+    log "ERRO" "$obs" && return 1
+}
+
+function paint () {
+
+    if $interactive; then
+        local color
+
+        case $2 in
+            black) color=0;;
+            red) color=1;;
+            green) color=2;;
+            yellow) color=3;;
+            blue) color=4;;
+            magenta) color=5;;
+            cyan) color=6;;
+            white) color=7;;
+        esac
+
+        case $1 in
+            fg) tput setaf $color;;
+            bg) tput setab $color;;
+            default) tput sgr0;;
+        esac
+    fi
+
+    return 0
+
+}
+
 function log () {    ##### log de execução detalhado.
+
+    case "$1" in
+	INFO) paint fg blue; paint bg white;;
+	ERRO) paint fg white; paint bg red;;
+	WARN) paint fg black; paint bg yellow;;
+    esac
 
     local msg="$(date +"%F %Hh%Mm%Ss")  $1  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
     local len=$(echo "$msg" | wc -c)
@@ -15,6 +125,7 @@ function log () {    ##### log de execução detalhado.
         echo -e "$msg    \t$2"
     fi
 
+    paint default
 }
 
 function message () {

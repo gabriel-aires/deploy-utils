@@ -16,7 +16,7 @@ remote_app_history_dir_tree=
 work_dir=
 lock_dir=
 log_dir=
-log=
+bkp_dir=
 service_init_script=
 
 ### parâmetros de execução de agentes
@@ -28,6 +28,8 @@ service_log_size=
 regex[tmp_dir]=
 regex[log_dir]=
 regex[lock_dir]=
+regex[bkp_dir]=
+regex[repo_dir]=
 regex[remote_dir]=
 
 ### expressões regulares relacionadas a variáveis utilizadas pelo agente.

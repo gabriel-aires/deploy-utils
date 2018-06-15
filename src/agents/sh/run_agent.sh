@@ -362,6 +362,23 @@ export BASH_ENV="$tmp_dir/load_arrays"
 declare -p col regex not_regex > "$BASH_ENV"
 
 # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
+export -f 'join_path'
+export -f 'option'
+export -f 'chk_arg'
+export -f 'chk_num'
+export -f 'chk_bool'
+export -f 'chk_path'
+export -f 'chk_pipe'
+export -f 'chk_file'
+export -f 'chk_read'
+export -f 'chk_write'
+export -f 'chk_exec'
+export -f 'starts_with'
+export -f 'ends_with'
+export -f 'contains'
+export -f 'assert'
+export -f 'set_state'
+export -f 'try_catch'
 export -f 'valid'
 export -f 'log'
 export -f 'compress'

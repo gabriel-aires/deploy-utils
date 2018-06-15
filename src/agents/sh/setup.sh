@@ -41,6 +41,7 @@ valid "$remote_lock_dir" "remote_dir" "\nErro. Diretório de lockfiles remoto in
 valid "$remote_conf_dir" "remote_dir" "\nErro. Diretório de configurações remoto informado incorretamente." || error=true
 valid "$remote_history_dir" "remote_dir" "\nErro. Diretório de histórico remoto informado incorretamente." || error=true
 valid "$remote_app_history_dir_tree" "remote_dir" "\nErro. Diretório de histórico de aplicações remoto informado incorretamente." || error=true
+valid "$bkp_dir" "\nErro. Diretório de backup informado incorretamente."|| error=true
 $error && end 1
 
 #backup agent
@@ -62,6 +63,7 @@ mkdir -p "$common_log_dir" || end 1
 mkdir -p "$work_dir" || end 1
 mkdir -p "$log_dir" || end 1
 mkdir -p "$lock_dir" || end 1
+mkdir -p "$bkp_dir" || end 1
 mkdir -p "$remote_pkg_dir_tree" || end 1
 mkdir -p "$remote_log_dir_tree" || end 1
 mkdir -p "$remote_lock_dir" || end 1
@@ -77,6 +79,7 @@ chmod 755 "$service_init_script" || end 1
 chmod 775 "$work_dir" || end 1
 chmod 775 "$log_dir" || end 1
 chmod 775 "$lock_dir" || end 1
+chmod 775 "$bkp_dir" || end 1
 chmod 770 "$remote_pkg_dir_tree" || end 1
 chmod 770 "$remote_log_dir_tree" || end 1
 chmod 770 "$remote_lock_dir" || end 1
