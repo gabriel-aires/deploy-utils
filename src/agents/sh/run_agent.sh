@@ -230,7 +230,7 @@ function deploy_agent () {
                     #inicio deploy
                     deploy_log_file=$deploy_log_dir/deploy_${host}.log
                     qtd_log_inicio=$(cat $log | wc -l)
-                    find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
+                    find $tmp_dir/ -type f | grep -Evx "$log|$agent_script" | xargs -d '\n' -r rm -f
                     find $tmp_dir/ -type p | xargs -d '\n' -r rm -f
                     $agent_script 'deploy'
                     qtd_log_fim=$(cat $log | wc -l)
@@ -270,7 +270,7 @@ function log_agent () {
                 export shared_log_dir
                 export app
 
-                find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
+                find $tmp_dir/ -type f | grep -Evx "$log|$agent_script" | xargs -d '\n' -r rm -f
                 find $tmp_dir/ -type p | xargs -d '\n' -r rm -f
                 $agent_script 'log'
                 echo -e "Log de execução do agente:\n\n" > "$shared_log_dir/agent_$host.log"
