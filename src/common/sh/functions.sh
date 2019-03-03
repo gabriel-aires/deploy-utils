@@ -70,9 +70,9 @@ function set_state () {
 
 function try_catch () {
     #try
-    last_command="$@"
+    last_command="$1"
     log "DEBUG" "Executando $last_command..."
-    $@ 2>&1 && return 0
+    $1 2>&1 && return 0
     #catch
     obs="Falha ao executar: $last_command."
     $simulation || write_history "$obs" "0"
@@ -109,9 +109,9 @@ function paint () {
 function log () {    ##### log de execução detalhado.
 
     case "$1" in
-	INFO) paint fg blue; paint bg white;;
-	ERRO) paint fg white; paint bg red;;
-	WARN) paint fg black; paint bg yellow;;
+	INFO) paint fg blue;;
+	ERRO) paint fg red;;
+	WARN) paint fg yellow;;
     esac
 
     local msg="$(date +"%F %Hh%Mm%Ss")  $1  $HOSTNAME  $(basename  $(readlink -f $0))  (${FUNCNAME[1]})"
