@@ -39,7 +39,7 @@ yum update -y
 ```
 cd /opt
 git clone https://github.com/gabriel-aires/deploy-utils.git
-/opt/deploy-utils/src/server/sh/setup.sh --reconfigure
+/opt/deploy-utils/src/server/sh/setup.sh --install
 chkconfig --add deploy_server
 chkconfig deploy_server on
 ```
