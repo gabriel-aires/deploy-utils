@@ -70,9 +70,9 @@ function set_state () {
 
 function try_catch () {
     #try
-    last_command="$1"
+    last_command="$@"
     log "DEBUG" "Executando $last_command..."
-    $1 2>&1 && return 0
+    $@ 2>&1 && return 0
     #catch
     obs="Falha ao executar: $last_command."
     $simulation || write_history "$obs" "0"
