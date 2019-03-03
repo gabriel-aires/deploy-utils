@@ -93,8 +93,8 @@ while $outdated; do
 
 ######################### 4.0
 
-    elif [ "$version_sequential" -lt "999" ]; then
-        log "INFO" "Aplicando migrações para a versão 999..."
+    elif [ "$version_sequential" -lt "400" ]; then
+        log "INFO" "Aplicando migrações para a versão 400..."
         
         find $app_conf_dir/ -type f -iname '*.conf' | while read config; do
             touch $config
@@ -104,7 +104,7 @@ while $outdated; do
             log "INFO" "Arquivo $config atualizado com sucesso."
         done
 
-        echo "999" > $version_file        
+        echo "400" > $version_file        
 
 ######################## LATEST
 
