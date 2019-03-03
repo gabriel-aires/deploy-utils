@@ -31,7 +31,8 @@ Run the following commands as root for the initial setup:
 
 ### System Update
 ```
-yum update bash dos2unix unix2dos coreutils findutils cifs-utils nfs-utils samba git rsync grep sed perl httpd -y
+yum install bash dos2unix unix2dos coreutils findutils cifs-utils nfs-utils samba git rsync grep sed perl httpd -y
+yum update -y
 ```
 
 ### Deployment Server Installation
