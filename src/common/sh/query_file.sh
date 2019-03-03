@@ -3,6 +3,11 @@
 source $(dirname $(dirname $(dirname $(readlink -f $0))))/common/sh/include.sh || exit 1
 
 function end() {
+    if [ -d "$tmp_dir" ]; then
+        rm -f $tmp_dir/*
+        rmdir $tmp_dir
+    fi
+    
     wait
     exit $1
 }
@@ -10,6 +15,10 @@ function end() {
 trap "break 10 2> /dev/null; end 1" SIGQUIT SIGINT SIGHUP
 
 end_bool=false
+pid="$$"
+tmp_dir="$work_dir/$pid"
+operation_code=0
+valid_codes="7 6 5 4 1 0"
 file=''
 delim=''
 output_delim='\t'
@@ -30,13 +39,16 @@ top=''
 head_cmd="head -n"
 top_cmd=''
 top_bool=false
+top_code=1
 uniq_cmd='uniq'
 distinct_cmd=''
 distinct_bool=false
+distinct_code=2
 grep_cmd="grep -E -x"
 sort_cmd="sort"
 order_cmd=''
 order_bool=false
+order_code=4
 file_size=0
 header_size=0
 size=1
@@ -172,6 +184,10 @@ elif ! echo "$delim" | grep -Ex "[[:print:]]+" > /dev/null; then
     echo "Delimitador inválido." 1>&2; end 1
 fi
 
+$distinct_bool && operation_code=$(($operation_code+$distinct_code))
+$order_bool && operation_code=$(($operation_code+$order_code))
+$top_bool && operation_code=$(($operation_code+$top_code))
+
 file_size=$(wc -l < $file)
 data=$(tail -n $(($header_size-$file_size)) $file)
 test $header_size -gt 0 && header="$(head -n $header_size $file | tail -n 1)" || header=$(head -n 1 $file)
@@ -306,10 +322,35 @@ done
 
 # Retorna colunas de (ordenação auxiliares + ) seleção do usuário, (ordena), (limpa colunas de ordenação auxiliares), (remove linhas duplicadas), (exibe n primeiras linhas), substitui delimitador
 
+case "$operation_code" in
 
+    7)  #ORDERBY, DISTINCT, TOP
+        awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $distinct_cmd | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
+        break
+        ;;
 
+    6)  #ORDERBY, DISTINCT
+        awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $distinct_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
+        break
+        ;;
 
+    5)  #ORDERBY, TOP
+        awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
+        break
+        ;;
+        
+    4)  #ORDERBY
+        awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
+        break
+        ;;
 
-awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $distinct_cmd | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
-
+    1)  #TOP
+        awk -F "$delim" "{print ${order_by}$selection}" $preview | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
+        break
+        ;;
+        
+    0)  #default query
+        awk -F "$delim" "{print ${order_by}$selection}" $preview | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
+        break
+        ;;        
 end 0
