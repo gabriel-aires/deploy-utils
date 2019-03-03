@@ -3,8 +3,6 @@
 message_format='simple'
 skip_upgrade=false
 src_dir="$(dirname $(dirname $(dirname $(readlink -f $0))))"
-version_file="$src_dir/common/conf/version.txt"
-release_file="$src_dir/common/conf/release.txt"
 
 function end() {
 
@@ -20,6 +18,7 @@ case "$1" in
     --install)
         echo "Instalando serviço..."
         $src_dir/common/sh/reconfigure.sh || end 1
+        source $src_dir/common/sh/include.sh || end 1
         echo "$version_latest" > $version_file || end 1
         echo "$release_latest" > $release_file || end 1
         skip_upgrade=true
