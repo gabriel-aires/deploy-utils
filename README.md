@@ -1,4 +1,4 @@
-# bashtables (formerly known as deploy-utils)
+# deploy-utils 
 
 ## Description:
 
@@ -37,8 +37,8 @@ yum update bash dos2unix unix2dos coreutils findutils cifs-utils nfs-utils samba
 ### Deployment Server Installation
 ```
 cd /opt
-git clone https://github.com/gabriel-aires/bashtables.git
-/opt/bashtables/src/server/sh/setup.sh --reconfigure
+git clone https://github.com/gabriel-aires/deploy-utils.git
+/opt/deploy-utils/src/server/sh/setup.sh --reconfigure
 chkconfig --add deploy_server
 chkconfig deploy_server on
 ```
@@ -53,19 +53,19 @@ openssl x509 -req -days 365 -in ca.csr -signkey ca.key -out ca.crt
 cp ca.crt /etc/pki/tls/certs
 cp ca.key /etc/pki/tls/private/ca.key
 cp ca.csr /etc/pki/tls/private/ca.csr
-vim /opt/bashtables/src/server/conf/global.conf  #update parameters ssl_enable, ssl_crt_path, ssl_key_path and apache_vhost_port
-/opt/bashtables/src/server/sh/setup.sh
+vim /opt/deploy-utils/src/server/conf/global.conf  #update parameters ssl_enable, ssl_crt_path, ssl_key_path and apache_vhost_port
+/opt/deploy-utils/src/server/sh/setup.sh
 ```
 
 ### Shared Directories Setup
 ```
 service nfs stop
 chkconfig nfs on
-echo /opt/bashtables/src/server/conf/agents >> /etc/exports
-echo /var/lock/bashtables >> /etc/exports
-echo /opt/bashtables/src/server/log/ >> /etc/exports
-echo /opt/bashtables/src/server/upload/ >> /etc/exports
-vim /etc/exports # edit entries as following: /var/lock/bashtables $host01(rw,no_root_squash) $host02(rw,no_root_squash) ...
+echo /opt/deploy-utils/src/server/conf/agents >> /etc/exports
+echo /var/lock/deploy-utils >> /etc/exports
+echo /opt/deploy-utils/src/server/log/ >> /etc/exports
+echo /opt/deploy-utils/src/server/upload/ >> /etc/exports
+vim /etc/exports # edit entries as following: /var/lock/deploy-utils $host01(rw,no_root_squash) $host02(rw,no_root_squash) ...
 service nfs restart
 ```
 
@@ -82,24 +82,24 @@ yum update bash dos2unix unix2dos coreutils findutils cifs-utils nfs-utils samba
 ```
 cd /mnt
 mkdir deploy_upload deploy_lock deploy_log deploy_conf
-mount -t nfs $deployment_server:/opt/bashtables/src/server/conf/agents deploy_conf
-mount -t nfs $deployment_server:/opt/bashtables/src/server/log deploy_log
-mount -t nfs $deployment_server:/opt/bashtables/src/server/upload deploy_upload
-mount -t nfs $deployment_server:/var/lock/bashtables deploy_lock
+mount -t nfs $deployment_server:/opt/deploy-utils/src/server/conf/agents deploy_conf
+mount -t nfs $deployment_server:/opt/deploy-utils/src/server/log deploy_log
+mount -t nfs $deployment_server:/opt/deploy-utils/src/server/upload deploy_upload
+mount -t nfs $deployment_server:/var/lock/deploy-utils deploy_lock
 ```
 
 ### Agent Installation
 ```
 cd /opt
-git clone https://github.com/gabriel-aires/bashtables.git
-/opt/bashtables/src/agents/sh/setup.sh --reconfigure
+git clone https://github.com/gabriel-aires/deploy-utils.git
+/opt/deploy-utils/src/agents/sh/setup.sh --reconfigure
 chkconfig --add deploy_agent
 chkconfig deploy_agent on
 ```
 
 ### Observation
 
-This system is being reworked under the following project https://github.com/gabriel-aires/odin, originally intended to be a complete TCL rewrite of bashtables. Both platforms shall be independently maintained for the foreseeable future.
+This system is being reworked under the following project https://github.com/gabriel-aires/odin, originally intended to be a complete TCL rewrite of deploy-utils. Both platforms shall be independently maintained for the foreseeable future.
 
 ## Author:
 
