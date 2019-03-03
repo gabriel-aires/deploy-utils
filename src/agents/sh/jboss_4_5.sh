@@ -1,5 +1,3 @@
-#!/bin/bash
-
 function jboss_script_init () {
 
     ##### LOCALIZA SCRIPT DE INICIALIZAÇÃO DA INSTÂNCIA JBOSS #####

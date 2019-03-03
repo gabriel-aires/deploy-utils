@@ -1,4 +1,3 @@
-#!/bin/bash
 task="$1"                           #deploy, log
 
 function config_deployment_defaults () {

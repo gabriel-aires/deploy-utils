@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # TODO: adicionar suporte a wildfly 8 standalone.
 
 function deploy_pkg () {

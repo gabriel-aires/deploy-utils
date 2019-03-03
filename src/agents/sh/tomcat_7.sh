@@ -1,5 +1,3 @@
-#!/bin/bash
-
 function tomcat_script_init () {
 
     ##### LOCALIZA SCRIPT DE INICIALIZAÇÃO DA INSTÂNCIA TOMCAT #####

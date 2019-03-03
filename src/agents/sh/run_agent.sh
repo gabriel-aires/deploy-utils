@@ -232,7 +232,7 @@ function deploy_agent () {
                     qtd_log_inicio=$(cat $log | wc -l)
                     find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
                     find $tmp_dir/ -type p | xargs -d '\n' -r rm -f
-                    bash --rcfile $initfile -i $agent_script 'deploy'
+                    bash --rcfile $initfile -i -x $agent_script 'deploy'
                     qtd_log_fim=$(cat $log | wc -l)
                     qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
                     tail -n ${qtd_info_deploy} $log > $deploy_log_file

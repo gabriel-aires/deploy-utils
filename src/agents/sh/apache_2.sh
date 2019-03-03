@@ -1,5 +1,3 @@
-#!/bin/bash
-
 function copy_log () {
 
     log "INFO" "Buscando logs do servidor apache..."
