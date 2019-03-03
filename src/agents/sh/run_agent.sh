@@ -207,7 +207,7 @@ function deploy_agent () {
                             rev=$(unzip -p -a $pkg META-INF/MANIFEST.MF | grep -i implementation-version | sed -r "s|^.+ (([[:graph:]])+).*$|\1|")
                             ;;
                         *)
-                            rev=$(echo $(basename $pkg) | sed -r "s|^$app||i" | sed -r "s|$ext$||i" | sed -r "s|%user_$user_name%md5_$pkg_chk%||i" | sed -r "s|^[\.\-_]||")
+                            rev=$(echo $(basename $pkg) | sed -r "s|^$app||i" | sed -r "s|$ext$||i" | sed -r "s|%user_$user_name%md5_$pkg_chk%||i" | sed -r 's/^[\._-]//')
                             ;;
                     esac
 
