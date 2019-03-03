@@ -29,11 +29,9 @@ function config_rollback () {
 
 function prepare_checkout () {
     if $update; then
-        try_catch "mkdir -p $tmp_dir/$app" || finalize 1
-        try_catch "unzip $pkg -d $tmp_dir/$app/" || finalize 1
         src_path="$(join_path $tmp_dir / $app / $(basename $pkg | sed -r s/\.$ext$//) / $app_root)"
-        dir_test="$(chk_path $src_path && echo found || echo not_found)" 
-        try_catch "assert app_root:$src_path $dir_test found" || finalize 1
+        try_catch "mkdir -p $src_path" || finalize 1
+        try_catch "unzip $pkg -d $src_path" || finalize 1
     else
         #file $app-rollback.md
         log "INFO" "Descrição do rollback:"
