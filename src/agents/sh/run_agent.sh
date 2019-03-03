@@ -232,7 +232,7 @@ function deploy_agent () {
                     qtd_log_inicio=$(cat $log | wc -l)
                     find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
                     find $tmp_dir/ -type p | xargs -d '\n' -r rm -f
-                    $agent_script 'deploy'
+                    bash --rcfile $initfile -i $agent_script 'deploy'
                     qtd_log_fim=$(cat $log | wc -l)
                     qtd_info_deploy=$(( $qtd_log_fim - $qtd_log_inicio ))
                     tail -n ${qtd_info_deploy} $log > $deploy_log_file
@@ -272,7 +272,7 @@ function log_agent () {
 
                 find $tmp_dir/ -type f | grep -vxF "$log" | xargs -d '\n' -r rm -f
                 find $tmp_dir/ -type p | xargs -d '\n' -r rm -f
-                $agent_script 'log'
+                bash --rcfile $initfile -i $agent_script 'log'
                 echo -e "Log de execução do agente:\n\n" > "$shared_log_dir/agent_$host.log"
                 test -f "$log_dir/service.log" && cat "$log_dir/service.log" >> "$shared_log_dir/agent_$host.log"
                 cat "$log" >> "$shared_log_dir/agent_$host.log"
@@ -352,14 +352,14 @@ set_dir "$remote_log_dir_tree" 'to' || end 1
 
 # Identifica script do agente.
 agent_script="${install_dir}/sh/$agent_name.sh"
-if [ ! -x $agent_script ]; then
+if [ ! -f $agent_script ]; then
     log "ERRO" "O arquivo executável correspondente ao agente $agent_name não foi identificado."
     end 1
 fi
 
 # "exportar" arrays associativos
-export BASH_ENV="$tmp_dir/load_arrays"
-declare -p col regex not_regex > "$BASH_ENV"
+initfile="$tmp_dir/load_arrays"
+declare -p col regex not_regex > $initfile
 
 # exportar funções e variáveis necessárias ao agente. Outras variáveis serão exportadas diretamente a partir das funções log_agent e deploy_agent
 export -f 'join_path'
