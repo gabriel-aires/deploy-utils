@@ -3,6 +3,8 @@
 message_format='simple'
 skip_upgrade=false
 src_dir="$(dirname $(dirname $(dirname $(readlink -f $0))))"
+version_file="$src_dir/common/conf/version.txt"
+release_file="$src_dir/common/conf/release.txt"
 
 function end() {
 
