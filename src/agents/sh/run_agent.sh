@@ -398,6 +398,7 @@ export 'web_context_path'
 export 'remote_history_dir'
 export 'history_csv_file'
 export 'tmp_dir'
+export 'bkp_dir'
 
 while read l ; do
     if [ $(echo $l | grep -Ex "[a-zA-Z0-9_]+=.*" | wc -l) -eq 1 ]; then

@@ -4,12 +4,12 @@ function config_deployment_defaults () {
     state="r"                                   #r (read), w (write), x (execute)
     simulation=false                    
     update=true
-    bkp_path="$bkp_dir/$ambiente/$app"                         
+    bkp_path="$bkp_dir/$ambiente/$app"
     enable_deletion="${enable_deletion:=false}"
     force_uid="${force_uid:=''}"
     force_gid="${force_gid:=''}"
-    rsync_opts="${rsync_opts:='--recursive --checksum --inplace --safe-links --exclude=.git/***'}"
-    rsync_bkp_opts='--owner --group --perms --times'               
+    rsync_opts="${rsync_opts:=--recursive --checksum --inplace --safe-links --exclude=.git/***}"
+    rsync_bkp_opts="--owner --group --perms --times"
     extra_opts=""
     rsync_log="$deploy_log_dir/rsync-$host.log"
     deployment_report="$deploy_log_dir/deployment-report-$host.txt"    
@@ -132,12 +132,16 @@ function run_script () {
 
 function unrecoverable () {
     log "ERRO" "Falha durante execução de '$last_command'. Verificar!"
+    write_history "Falha durante execução de '$last_command'. Verificar..." "0"
 }
 
 function write_recover () {
     if $update; then
         log "ERRO" "Falha durante a escrita. Revertendo alterações..."
-        rsync $rsync_bkp_opts $rsync_opts $bkp_path/ $install_path/ && rm -rf $bkp_path && log "INFO" "Rollback concluído."
+        rsync $rsync_bkp_opts $rsync_opts $bkp_path/ $install_path/
+        rm -rf $bkp_path
+        log "INFO" "Rollback concluído."
+        write_history "Falha durante a escrita. Rollback realizado." "0"
     else
         unrecoverable    
     fi    
@@ -151,10 +155,12 @@ function finalize () {
         elif [ "$state" == 'x' ]; then
             unrecoverable
         fi
-        log "ERRO" "Rotina concluída com erro(s)." && exit "$status"
+        
+        log "ERRO" "Rotina concluída com erro(s)."
     else
-        log "INFO" "Rotina concluída com sucesso." && exit "$status"
+        log "INFO" "Rotina concluída com sucesso."
     fi
+    exit "$status"
 }
 
 function deploy_pkg () {
