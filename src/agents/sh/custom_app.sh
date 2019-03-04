@@ -62,7 +62,7 @@ function prepare_filters () {
     fi
 
     try_catch "cp $filter $deploy_log_dir/" || finalize 1
-    rsync_opts="$rsync_opts --filter='. $filter'"
+    rsync_filter_opts="--filter='. $filter'"
 
     return 0
 }
@@ -72,7 +72,7 @@ function prepare_backup () {
     if $update; then
         try_catch "rm -Rf $bkp_path" || finalize 1
         try_catch "mkdir -p $bkp_path" || finalize 1
-        try_catch "rsync $rsync_bkp_opts $rsync_opts $install_path/ $bkp_path/" || finalize 1
+        try_catch "rsync $rsync_bkp_opts $rsync_opts $rsync_filter_opts $install_path/ $bkp_path/" || finalize 1
 
         #### backup deploy-filter ###
         try_catch "cp $filter $rollback_filter" || finalize 1
