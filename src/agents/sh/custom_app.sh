@@ -81,8 +81,9 @@ function prepare_backup () {
 }
 
 function sync_files () {
-
-    try_catch "$wait $timeout_deploy rsync $rsync_opts $extra_opts --log-file=$rsync_log $src_path/ $install_path/" || finalize 1
+    
+    rsync_cmd="$wait $timeout_deploy rsync $rsync_opts $extra_opts --log-file=$rsync_log $src_path/ $install_path/"
+    try_catch "eval $rsync_cmd" || finalize 1
     set_state 'r'
 
     added="$(grep -E "^>f\+" $rsync_log | wc -l)"
@@ -139,7 +140,8 @@ function unrecoverable () {
 function write_recover () {
     if $update; then
         log "ERRO" "Falha durante a escrita. Revertendo alterações..."
-        rsync $rsync_bkp_opts $rsync_opts $bkp_path/ $install_path/
+        rsync_cmd="rsync $rsync_bkp_opts $rsync_opts $bkp_path/ $install_path/"
+        eval $rsync_cmd
         rm -rf $bkp_path
         log "INFO" "Rollback concluído."
         write_history "Falha durante a escrita. Rollback realizado." "0"
