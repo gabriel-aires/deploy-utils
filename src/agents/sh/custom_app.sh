@@ -62,7 +62,7 @@ function prepare_filters () {
     fi
 
     try_catch "cp $filter $deploy_log_dir/" || finalize 1
-    rsync_filter_opts="--filter='. $filter'"
+    rsync_filter_opts="--filter=\'. $filter\'"
 
     return 0
 }
