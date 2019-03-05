@@ -188,8 +188,10 @@ $distinct_bool && operation_code=$(($operation_code+$distinct_code))
 $order_bool && operation_code=$(($operation_code+$order_code))
 $top_bool && operation_code=$(($operation_code+$top_code))
 
-file_size=$(wc -l < $file)
-data=$(tail -n $(($header_size-$file_size)) $file)
+mkdir -p $tmp_dir
+file_size=$(cat $file | wc -l)
+preview=$tmp_dir/raw_data
+tail -n $(($header_size-$file_size)) $file > $preview
 test $header_size -gt 0 && header="$(head -n $header_size $file | tail -n 1)" || header=$(head -n 1 $file)
 part_regex="(.*)$delim"
 
