@@ -5,9 +5,9 @@ function config_deployment_defaults () {
     simulation=false                    
     update=true
     bkp_path="$bkp_dir/$ambiente/$app"
-    enable_deletion="${enable_deletion:=false}"
-    force_uid="${force_uid:=''}"
-    force_gid="${force_gid:=''}"
+    enable_deletion=${enable_deletion:=false}
+    force_uid=${force_uid:=""}
+    force_gid=${force_gid:=""}
     rsync_opts="${rsync_opts:=--recursive --checksum --inplace --safe-links --exclude=.git/***}"
     rsync_bkp_opts="--owner --group --perms --times"
     extra_opts=""
