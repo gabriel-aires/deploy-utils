@@ -163,6 +163,7 @@ function finalize () {
     else
         log "INFO" "Rotina concluída com sucesso."
     fi
+    rm -f $pkg
     exit "$status"
 }
 
@@ -203,7 +204,7 @@ function deploy_pkg () {
     else
         log "INFO" "Simulação de deploy..."
         sync_files
-    fi 
+    fi
 
     finalize 0
 }
