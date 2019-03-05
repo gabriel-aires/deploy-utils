@@ -1,10 +1,10 @@
 # deploy-utils 
 
-![Application Screenshot](https://github.com/gabriel-aires/deploy-utils/blob/master/docs/deploy-utils-screenshot.png)
-
 ## Description:
 
 Platform for app deployment automation and information retrieval written in shell script.
+
+![Application Screenshot](https://github.com/gabriel-aires/deploy-utils/blob/master/docs/deploy-utils-screenshot.png)
 
 ## Dependencies:
 
@@ -108,4 +108,4 @@ This system is being reworked under the following project https://github.com/gab
 
 Gabriel Aires Guedes - airesgabriel@gmail.com
 
-Last updated at 2018-05-16.
+Last updated at 2019-03-05.
