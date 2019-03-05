@@ -8,7 +8,7 @@ function config_deployment_defaults () {
     enable_deletion=${enable_deletion:=false}
     force_uid=${force_uid:=""}
     force_gid=${force_gid:=""}
-    rsync_opts="${rsync_opts:=--recursive --checksum --inplace --safe-links --exclude=.git/***}"
+    rsync_opts="${rsync_opts:=--recursive --checksum --inplace --safe-links --itemize-changes --exclude=.git/***}"
     rsync_bkp_opts="--owner --group --perms --times"
     extra_opts=""
     rsync_log="$deploy_log_dir/rsync-$host.log"
@@ -82,7 +82,7 @@ function prepare_backup () {
 
 function sync_files () {
     
-    rsync_cmd="$wait $timeout_deploy rsync $rsync_opts $extra_opts --log-file=$rsync_log $src_path/ $install_path/"
+    rsync_cmd="$wait $timeout_deploy rsync $rsync_opts $extra_opts $src_path/ $install_path/ > $rsync_log"
     try_catch "eval $rsync_cmd" || finalize 1
     set_state 'r'
 
