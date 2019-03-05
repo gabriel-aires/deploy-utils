@@ -354,5 +354,7 @@ case "$operation_code" in
     0)  #default query
         awk -F "$delim" "{print ${order_by}$selection}" $preview | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
         break
-        ;;        
+        ;;
+        
+esac
 end 0
