@@ -328,32 +328,26 @@ case "$operation_code" in
 
     7)  #ORDERBY, DISTINCT, TOP
         awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $distinct_cmd | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
-        break
         ;;
 
     6)  #ORDERBY, DISTINCT
         awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $distinct_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
-        break
         ;;
 
     5)  #ORDERBY, TOP
         awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
-        break
         ;;
         
     4)  #ORDERBY
         awk -F "$delim" "{print ${order_by}$selection}" $preview | $order_cmd | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
-        break
         ;;
 
     1)  #TOP
         awk -F "$delim" "{print ${order_by}$selection}" $preview | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | $top_cmd | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
-        break
         ;;
         
     0)  #default query
         awk -F "$delim" "{print ${order_by}$selection}" $preview | awk -v FS="$delim" -v OFS="$delim" "{$clean_columns}" | sed -r "s|^($delim){$o_index}||;s|$delim|$output_delim|g" || end 1
-        break
         ;;
         
 esac
