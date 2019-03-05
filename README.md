@@ -1,7 +1,5 @@
 # deploy-utils 
 
-## Description:
-
 Platform for app deployment automation and information retrieval written in shell script.
 
 ![Application Screenshot](https://github.com/gabriel-aires/deploy-utils/blob/master/docs/deploy-utils-screenshot.png)
