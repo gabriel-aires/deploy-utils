@@ -115,7 +115,7 @@ function set_owner () {
     own_args="$(echo "$force_uid:$force_gid" | sed -r 's/^://;s/:$//')"
     option "$force_uid" && own_cmd="chown" 
     option "$force_gid" && own_cmd="${own_cmd:=chgrp}"
-    if option "$own_cmd"; then
+    if $(option "$own_cmd"); then
         log "INFO" "Atribuindo usuário/grupo..."
         set_state 'x'
         try_catch "$own_cmd -R $own_args $install_path" || finalize 1
